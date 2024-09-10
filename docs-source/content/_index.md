@@ -56,8 +56,11 @@ To run the application on bare-metal; download the source and from the top-level
 1. Start Streamlit.
 
    ```bash
-   streamlit run app/src/sandbox.py --server.port 8501
+   cd app/src
+   streamlit run sandbox.py --server.port 8501
    ```
+
+1. Navigate to `http://localhost:8501`
 
 ### Container Installation
 
