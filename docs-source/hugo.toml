@@ -1,0 +1,37 @@
+baseURL = 'https://github.com/oracle-samples/oaim-sandbox/'
+languageCode = 'en-us'
+title = 'AI Microservices Sandbox'
+theme = "hugo-geekdoc"
+
+pluralizeListTitles = false
+
+# Geekdoc required configuration
+pygmentsUseClasses = true
+pygmentsCodeFences = true
+disablePathToLower = true
+
+# Required if you want to render robots.txt template
+enableRobotsTXT = true
+
+# menu configuration
+[params]
+  # Render menu from data file in 'data/menu/main.yaml'
+  geekdocMenuBundle = true
+  geekdocCollapseAllSections = true
+  geekdocRepo = "https://github.com/oracle-samples/oaim-sandbox"
+  geekdocLogo = "o_tag.png"
+  [params.geekdocContentLicense]
+    name = "© 2024 Oracle and/or its affiliates"
+    link = "https://oss.oracle.com/licenses/upl"
+
+# Needed for mermaid shortcodes
+[markup]
+  [markup.goldmark.renderer]
+    # Needed for mermaid shortcode
+    unsafe = true
+  [markup.tableOfContents]
+    startLevel = 1
+    endLevel = 9
+
+[taxonomies]
+   tag = "tags"
