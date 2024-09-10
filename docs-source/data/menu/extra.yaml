@@ -1,6 +1,6 @@
 ---
 header:
   - name: GitHub
-    ref: https://oracle.github.com/oim-sandbox
+    ref: https://github.com/oracle-samples/oim-sandbox
     icon: gdoc_github
     external: true
