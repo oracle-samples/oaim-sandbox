@@ -1,1 +1,40 @@
-docs-source.bak
+##############################################################################
+# Developer Custom
+##############################################################################
+start.sh
+demo.sh
+start_template.sh
+app/src/rag_eval_report.html
+assets/docos/samples/oracle-ai-vector-search-users-guide-qa.jsonl
+assets/docos/oracle-ai-vector-search-users-guide.pdf
+app/src/reports/agent_answer.json
+/app/src/reports
+/app/reports
+/app/src/reports-bak
+
+##############################################################################
+# Project/User Specific
+##############################################################################
+**/requirements.txt
+!app/requirements.txt
+**/src/tns_admin
+app/THIRD_PARTY_LICENSES.txt
+rag/**
+sbin/**
+
+##############################################################################
+# Enviroment (PyVen, IDE, etc.)
+##############################################################################
+**/.venv
+**/.vscode
+**/.DS_Store
+**/*.swp
+**/.scannerwork
+sonar-project.properties
+
+##############################################################################
+# Python
+##############################################################################
+__pycache__/
+*.py[cod]
+*$py.class

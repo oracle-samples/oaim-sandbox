@@ -1,0 +1,35 @@
+## Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
+
+## Avoid overwriting this with a freeze as it causes version incompatibilities with multi-platform
+## Any new modules will require regenerating the 3PL, be selective
+
+## Installation Example (from repo root):
+### python3.11 -m venv .venv
+### source .venv/bin/activate
+### pip3 install --upgrade pip wheel
+### pip3 install -r app/requirements.txt
+
+## Top-Level brings in the required dependencies, if adding modules, try to find the minimum required
+beautifulsoup4==4.12.3
+griffe==0.48.0
+giskard[llm]==2.15.0
+langchain==0.2.16
+langchain_community==0.2.16
+langchain_huggingface==0.0.3
+langchain_ollama==0.1.3
+langchain_openai==0.1.23
+llama_index==0.11.5
+lxml==5.3.0
+oci>=2.131.0
+oracledb>=2.3.0
+plotly==5.24.0
+pytest>=8.3.2
+setuptools>=74.1.0
+streamlit==1.38.0
+IPython==8.27.0
+pypdf==4.3.1
+
+## For Licensing Purposes... this ensures no GPU modules
+-f https://download.pytorch.org/whl/cpu/torch
+torch==2.4.1+cpu
