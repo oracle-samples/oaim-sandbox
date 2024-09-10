@@ -22,7 +22,7 @@ enableRobotsTXT = true
   geekdocLogo = "o_tag.png"
   [params.geekdocContentLicense]
     name = "© 2024 Oracle and/or its affiliates"
-    link = "https://oss.oracle.com/licenses/upl/"
+    link = "https://oss.oracle.com/licenses/upl"
 
 # Needed for mermaid shortcodes
 [markup]
