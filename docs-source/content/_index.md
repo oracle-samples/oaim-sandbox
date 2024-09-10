@@ -10,7 +10,9 @@ geekdocBreadcrumb = false
 
 {{< hint type=[warning] icon=gdoc_fire title="Documentation In-Progress..." >}}{{< /hint >}}
 
-The **Oracle AI Microservices Sandbox** enables developers and data scientists to explore the potential of Generative Artificial Intelligence (GenAI) combined with Retrieval-Augmented Generation (RAG) capabilities. By utilizing the **Oracle Database** for vector storage, the Sandbox provides an easy-to-use interface for:
+The **Oracle AI Microservices Sandbox** provides a streamlined environment where developers and data scientists can explore the potential of Generative Artificial Intelligence (GenAI) combined with Retrieval-Augmented Generation (RAG) capabilities. By integrating the **Oracle Database** for Vector Storage, the Sandbox enables users to enhance existing Large Language Models (LLMs) through RAG. This method significantly improves the performance and accuracy of AI models, helping to avoid common issues such as knowledge cutoff and hallucinations.
+
+Main Features:
 
 - Configuring Embedding and Chat Models
 - Splitting and Embedding Documentation
@@ -54,8 +56,11 @@ To run the application on bare-metal; download the source and from the top-level
 1. Start Streamlit.
 
    ```bash
-   streamlit run app/src/sandbox.py --server.port 8501
+   cd app/src
+   streamlit run sandbox.py --server.port 8501
    ```
+
+1. Navigate to `http://localhost:8501`
 
 ### Container Installation
 
