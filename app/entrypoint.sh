@@ -6,5 +6,5 @@ if [ "$ENVIRONMENT" = "development" ]; then
     echo "Running in development mode..."
     exec bash
 else
-    exec streamlit run /app/sandbox.py
+    exec streamlit run /app/oaim-sandbox.py
 fi

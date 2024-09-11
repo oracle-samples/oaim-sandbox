@@ -24,7 +24,7 @@ FROM pyenv AS sandbox
 ARG ENVIRONMENT
 ENV PATH=/opt/venv/bin:$PATH
 
-COPY THIRD_PARTY_LICENSES.txt /THIRD_PARTY_LICENSES.txt
+#COPY THIRD_PARTY_LICENSES.txt /THIRD_PARTY_LICENSES.txt
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
