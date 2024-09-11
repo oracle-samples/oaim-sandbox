@@ -19,7 +19,7 @@ enableRobotsTXT = true
   # Render menu from data file in 'data/menu/main.yaml'
   geekdocMenuBundle = true
   geekdocCollapseAllSections = true
-  geekdocRepo = "https://github.com/oracle-samples/oaim-sandbox"
+  geekdocRepo = "https://oracle-samples.github.io/oaim-sandbox"
   geekdocLogo = "o_tag.png"
   [params.geekdocContentLicense]
     name = "© 2024 Oracle and/or its affiliates"
