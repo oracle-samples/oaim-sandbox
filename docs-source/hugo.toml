@@ -2,6 +2,7 @@ baseURL = 'https://oracle-samples.github.io/oaim-sandbox'
 languageCode = 'en-us'
 title = 'AI Microservices Sandbox'
 theme = "hugo-geekdoc"
+sectionPagesMenu = 'main'
 
 pluralizeListTitles = false
 
@@ -18,7 +19,7 @@ enableRobotsTXT = true
   # Render menu from data file in 'data/menu/main.yaml'
   geekdocMenuBundle = true
   geekdocCollapseAllSections = true
-  geekdocRepo = "https://oracle-samples.github.io/oaim-sandbox"
+  geekdocRepo = "https://github.com/oracle-samples/oaim-sandbox"
   geekdocLogo = "o_tag.png"
   [params.geekdocContentLicense]
     name = "© 2024 Oracle and/or its affiliates"

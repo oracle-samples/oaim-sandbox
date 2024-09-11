@@ -54,7 +54,7 @@ def main():
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
-    st.logo("images/logo.png")
+    st.logo("images/logo_light.png")
 
     # Page Definition
     state.disable_tools = os.environ.get("DISABLE_TOOLS", "false").lower() == "true"
@@ -72,7 +72,7 @@ def main():
 
     # Tools
     if not state.disable_tools:
-        prompt_eng = st.Page("content/prompt_eng.py", title="Prompt Engineering", icon="🎤")
+        prompt_eng = st.Page("content/prompt_eng.py", title="Prompts", icon="🎤")
         navigation["Tools"] = [prompt_eng]
 
     # Administration
@@ -80,15 +80,15 @@ def main():
     navigation["Configuration"] = [import_settings]
     if not state.disable_tools and not state.disable_admin:
         # Define Additional Pages
-        split_embed = st.Page("content/split_embed.py", title="Split and Embed", icon="📚")
-        model_config = st.Page("content/model_config.py", title="Model Configuration", icon="🤖")
-        db_config = st.Page("content/db_config.py", title="Database Configuration", icon="🗄️")
+        split_embed = st.Page("content/split_embed.py", title="Split/Embed", icon="📚")
+        model_config = st.Page("content/model_config.py", title="Model", icon="🤖")
+        db_config = st.Page("content/db_config.py", title="Database", icon="🗄️")
         # Update Navigation
         navigation["Tools"].insert(0, split_embed)
         navigation["Configuration"].insert(0, model_config)
         navigation["Configuration"].insert(1, db_config)
         if not state.disable_oci:
-            oci_config = st.Page("content/oci_config.py", title="OCI Configuration", icon="☁️")
+            oci_config = st.Page("content/oci_config.py", title="OCI", icon="☁️")
             navigation["Configuration"].insert(2, oci_config)
 
     pg = st.navigation(navigation)
