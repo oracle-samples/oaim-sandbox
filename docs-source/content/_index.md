@@ -1,14 +1,14 @@
 +++
-title = 'What is the Oracle AI Microservices Sandbox?'
+title = 'Getting Started'
 date = 2024-09-10T10:48:24Z
 description = 'AI Microservices Sandbox'
-keywords = 'oracle microservices development oracle genai rag'
+keywords = 'oracle microservices development genai rag'
 draft = false
-geekdocNav = false
 geekdocBreadcrumb = false
 +++
 
-{{< hint type=[warning] icon=gdoc_fire title="Documentation In-Progress..." >}}{{< /hint >}}
+{{< hint type=[warning] icon=gdoc_fire title="10-Sept-2024: Documentation In-Progress..." >}}
+Thank you for your patience as we work on updating the documentation. Please check back soon for the latest updates.{{< /hint >}}
 
 The **Oracle AI Microservices Sandbox** provides a streamlined environment where developers and data scientists can explore the potential of Generative Artificial Intelligence (GenAI) combined with Retrieval-Augmented Generation (RAG) capabilities. By integrating the **Oracle Database** for Vector Storage, the Sandbox enables users to enhance existing Large Language Models (LLMs) through RAG. This method significantly improves the performance and accuracy of AI models, helping to avoid common issues such as knowledge cutoff and hallucinations.
 
@@ -24,7 +24,7 @@ The **Oracle AI Microservices Sandbox** streamlines the entire workflow from pro
 
 # Getting Started
 
-The **Oracle AI Microservices Sandbox** is available to install in your own “custom” environment, which may be an developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on a bare-metal or within a container.
+The **Oracle AI Microservices Sandbox** is available to install in your own environment, which may be an developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on a bare-metal, within a container, or in a Kubernetes Cluster.
 
 ## Prerequisites
 
@@ -37,7 +37,7 @@ The **Oracle AI Microservices Sandbox** is available to install in your own “c
 
 ### Bare-Metal Installation
 
-To run the application on bare-metal; download the source and from the top-level directory:
+To run the application on bare-metal; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the top-level directory:
 
 1. Create and activate a Python Virtual Environment:
 
@@ -57,41 +57,34 @@ To run the application on bare-metal; download the source and from the top-level
 
    ```bash
    cd app/src
-   streamlit run sandbox.py --server.port 8501
+   streamlit run oaim-sandbox.py --server.port 8501
    ```
 
 1. Navigate to `http://localhost:8501`
 
+1. [Configure](configuration) the Sandbox
+
 ### Container Installation
 
-To run the application in a container; download the source and from the top-level directory:
+To run the application in a container; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the top-level directory:
 
 1. Build the image.
-
-   By specifying `--build-arg ENVIRONMENT=development`:
-
-   - The `app/src/.oci` directory will be copied to the image (if exists)
-   - The streamlit application will not start by default
 
    From the `app/` directory, build Image:
 
    ```bash
-   podman build --build-arg ENVIRONMENT=development -t oaim-sandbox .
+   podman build -t oaim-sandbox .
    ```
 
-1. Start Container (using local Environment Variables):
+1. Start Container:
 
    ```bash
    podman run -p 8501:8501 -it --rm oaim-sandbox
    ```
 
-1. Start Streamlit.
+1. Navigate to `http://localhost:8501`
 
-   From inside the container:
-
-   ```bash
-   streamlit run ./sandbox.py --server.port 8501
-   ```
+1. [Configure](configuration) the Sandbox
 
 # Need help?
 

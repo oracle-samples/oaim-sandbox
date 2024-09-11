@@ -2,6 +2,7 @@ baseURL = 'https://oracle-samples.github.io/oaim-sandbox'
 languageCode = 'en-us'
 title = 'AI Microservices Sandbox'
 theme = "hugo-geekdoc"
+sectionPagesMenu = 'main'
 
 pluralizeListTitles = false
 

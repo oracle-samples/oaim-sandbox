@@ -1,6 +1,6 @@
 ---
 header:
   - name: GitHub
-    ref: https://oracle-samples.github.io/oaim-sandbox
+    ref: https://github.com/oracle-samples/oaim-sandbox
     icon: gdoc_github
     external: true

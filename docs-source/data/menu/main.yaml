@@ -1,0 +1,36 @@
+main:
+  - name: Getting Started
+    ref: "/"
+  - name: Examples
+    ref: "/examples"
+  - name: The Sandbox
+    sub:
+      - name: "ChatBot 🏠"
+        ref: "/chatbot"
+      - name: "Test Framework 🧪"
+        ref: "/test_framework"
+      - name: "Tools"
+        ref: "/tools"
+        sub:
+          - name: "Prompts 🎤"
+            ref: "/tools/prompt_eng"
+          - name: "Split/Embed 📚"
+            ref: "/tools/split_embed"          
+      - name: "Configuration"
+        ref: "/configuration"
+        sub:
+          - name: "Model 🤖"
+            ref: "/configuration/model_config"
+          - name: "Database 🗄️"
+            ref: "/configuration/db_config"
+          - name: "OCI ☁️"
+            ref: "/configuration/oci_config"
+          - name: "Import Settings 💾"
+            ref: "/configuration/import_settings"
+  - name: Supported Models
+    ref: "/supported_models"
+  - name: Get Help
+    ref: "/help"
+    sub:
+      - name: "Troubleshooting"
+        ref: "/help/troubleshooting"
