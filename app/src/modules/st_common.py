@@ -96,7 +96,7 @@ def initialise_rag():
     logger.debug("Initilaising RAG")
     try:
         if not state.db_configured:
-            st.warning("Database is not configured, RAG functionality is disabled.", icon="🚨")
+            st.warning("Database is not configured, RAG functionality is disabled.", icon="⚠️")
 
         # Look-up Embedding Tables to generate RAG LOVs (don't use function)
         if state.db_configured:
