@@ -22,7 +22,7 @@ To configure the Database from the Sandbox, navigate to `Configuration -> Databa
 Provide the following input:
 - DB Username: The pre-created [database username](#database-user) where the embeddings will be stored
 - DB Password: The password for the `DB Username`
-- Database Connect String: The full connection string or [TNS Alias](#using-a-wallettns_admin-directory) for the Database.  This is normally in the form of (description=... (service_name=<service>)).
+- Database Connect String: The full connection string or [TNS Alias](#using-a-wallettns_admin-directory) for the Database.  This is normally in the form of `(description=... (service_name=<service>))`.
 - Wallet Password: If the connection to the database uses mTLS, provide the wallet password.  **NOTE**: Review [Using a Wallet](#using-a-wallettns_admin-directory) for additional setup instructions.
 
 Once all fields are set, click the `Save` button.
@@ -33,7 +33,7 @@ The following environment variables can be set, prior to starting the Sandbox, t
 
 - DB_USERNAME: The pre-created [database username](#database-user) where the embeddings will be stored
 - DB_PASSWORD: The password for the `DB Username`
-- DB_DSN: The full connection string or [TNS Alias](#using-a-wallettns_admin-directory) for the Database.  This is normally in the form of (description=... (service_name=<service>)).
+- DB_DSN: The full connection string or [TNS Alias](#using-a-wallettns_admin-directory) for the Database.  This is normally in the form of `(description=... (service_name=<service>))`.
 - DB_WALLET_PASSWORD: If the connection to the database uses mTLS, provide the wallet password.  **NOTE**: Review [Using a Wallet](#using-a-wallettns_admin-directory) for additional setup instructions.
 
 For Example:
