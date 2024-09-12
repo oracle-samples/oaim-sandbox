@@ -15,7 +15,7 @@ def test_db_initialise_streamlit(unset_db_env):
     """DB is not configured"""
     at = AppTest.from_file("content/split_embed.py", default_timeout=30).run()
     assert at.session_state.db_configured is False
-    assert at.warning[0].icon == "🚨", "Database is not configured, all functionality is disabled"
+    assert at.error[0].icon == "🚨", "Database is not configured, all functionality is disabled"
 
 
 ######################################

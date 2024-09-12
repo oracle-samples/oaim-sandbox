@@ -99,7 +99,7 @@ def main():
     """Streamlit GUI"""
     db_initialise_streamlit()
     if not state.db_configured:
-        st.warning("Database is not configured, all functionality is disabled", icon="🚨")
+        st.error("Database is not configured, all functionality is disabled", icon="🚨")
         st.stop()
 
     model_initialise()

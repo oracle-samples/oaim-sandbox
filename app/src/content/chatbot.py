@@ -73,26 +73,24 @@ def main():
     st_common.initialise_rag()
     # Setup History
     chat_history = StreamlitChatMessageHistory(key="sandbox_chat_history")
-    with st.chat_message("ai"):
-        # Do not put this in the history as messages must alternate human/ai
-        st.write("Hello, how can I help you?")
 
     #########################################################################
     # Sidebar Settings
     #########################################################################
-    # Chat History
-    enable_history = st.sidebar.checkbox(
-        "Enable History and Context?",
-        value=True,
-        key="user_chat_history",
-    )
-    if st.sidebar.button("Clear History", disabled=not enable_history):
-        chat_history.clear()
-
-    # Language Model
-    try:
+    enabled_llms = sum(model_info["enabled"] for model_info in state.lm_model_config.values())
+    if enabled_llms > 0:
+        with st.chat_message("ai"):
+            # Do not put this in the history as messages must alternate human/ai
+            st.write("Hello, how can I help you?")
+        enable_history = st.sidebar.checkbox(
+            "Enable History and Context?",
+            value=True,
+            key="user_chat_history",
+        )
+        if st.sidebar.button("Clear History", disabled=not enable_history):
+            chat_history.clear()
         lm_model = st_common.lm_sidebar()
-    except ValueError:
+    else:
         st.error("No chat models are configured and/or enabled.", icon="🚨",)
         st.stop()
 

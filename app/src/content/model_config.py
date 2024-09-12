@@ -76,56 +76,6 @@ def update_lm_model_config():
 def main():
     """Streamlit GUI"""
     initialise_streamlit()
-    st.header("Embedding Models")
-    
-    with st.form("update_embed_model_config"):
-        # Create table header
-        table1_col_format = st.columns([0.08, 0.3, 0.2, 0.2, 0.2])
-        col1_1, col2_1, col3_1, col4_1, col5_1 = table1_col_format
-        col1_1.markdown("**<u>Enabled</u>**", unsafe_allow_html=True)
-        col2_1.markdown("**<u>Model Name</u>**", unsafe_allow_html=True)
-        col3_1.markdown("**<u>API</u>**", unsafe_allow_html=True)
-        col4_1.markdown("**<u>API Server</u>**", unsafe_allow_html=True)
-        col5_1.markdown("**<u>API Key</u>**", unsafe_allow_html=True)
-
-        # Create table rows
-        for model_name, config in state.embed_model_config.items():
-            col1_1, col2_1, col3_1, col4_1, col5_1 = table1_col_format
-            col1_1.checkbox(
-                "Enabled",
-                value=config["enabled"],
-                label_visibility="collapsed",
-                key=f"embed_{model_name}_enabled",
-                disabled=False,               
-            )
-            col2_1.text_input(
-                "Model",
-                value=model_name,
-                label_visibility="collapsed",
-                key=f"embed_{model_name}",
-                disabled=True,
-            )
-            col3_1.text_input(
-                "API",
-                value=get_class_name(config["api"]),
-                label_visibility="collapsed",
-                key=f"embed_{model_name}_api",
-                disabled=True,
-            )
-            col4_1.text_input(
-                "Server",
-                value=config["url"],
-                key=f"embed_{model_name}_api_server",
-                label_visibility="collapsed",
-            )
-            col5_1.text_input(
-                "Key",
-                value=str(config["api_key"]),
-                key=f"embed_{model_name}_api_key",
-                type="password",
-                label_visibility="collapsed",
-            )
-        st.form_submit_button(label="Save", on_click=update_embed_model_config)
 
     st.header("Language Models")
     with st.form("update_lm_model_config"):
@@ -146,7 +96,7 @@ def main():
                 value=config["enabled"],
                 label_visibility="collapsed",
                 key=f"lm_{model_name}_enabled",
-                disabled=False,               
+                disabled=False,
             )
             col2_2.text_input(
                 "Model",
@@ -176,6 +126,56 @@ def main():
                 label_visibility="collapsed",
             )
         st.form_submit_button(label="Save", on_click=update_lm_model_config)
+
+    st.header("Embedding Models")
+    with st.form("update_embed_model_config"):
+        # Create table header
+        table1_col_format = st.columns([0.08, 0.3, 0.2, 0.2, 0.2])
+        col1_1, col2_1, col3_1, col4_1, col5_1 = table1_col_format
+        col1_1.markdown("**<u>Enabled</u>**", unsafe_allow_html=True)
+        col2_1.markdown("**<u>Model Name</u>**", unsafe_allow_html=True)
+        col3_1.markdown("**<u>API</u>**", unsafe_allow_html=True)
+        col4_1.markdown("**<u>API Server</u>**", unsafe_allow_html=True)
+        col5_1.markdown("**<u>API Key</u>**", unsafe_allow_html=True)
+
+        # Create table rows
+        for model_name, config in state.embed_model_config.items():
+            col1_1, col2_1, col3_1, col4_1, col5_1 = table1_col_format
+            col1_1.checkbox(
+                "Enabled",
+                value=config["enabled"],
+                label_visibility="collapsed",
+                key=f"embed_{model_name}_enabled",
+                disabled=False,
+            )
+            col2_1.text_input(
+                "Model",
+                value=model_name,
+                label_visibility="collapsed",
+                key=f"embed_{model_name}",
+                disabled=True,
+            )
+            col3_1.text_input(
+                "API",
+                value=get_class_name(config["api"]),
+                label_visibility="collapsed",
+                key=f"embed_{model_name}_api",
+                disabled=True,
+            )
+            col4_1.text_input(
+                "Server",
+                value=config["url"],
+                key=f"embed_{model_name}_api_server",
+                label_visibility="collapsed",
+            )
+            col5_1.text_input(
+                "Key",
+                value=str(config["api_key"]),
+                key=f"embed_{model_name}_api_key",
+                type="password",
+                label_visibility="collapsed",
+            )
+        st.form_submit_button(label="Save", on_click=update_embed_model_config)
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:

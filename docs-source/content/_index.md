@@ -47,22 +47,24 @@ To run the application on bare-metal; download the [source](https://github.com/o
    pip3 install --upgrade pip wheel
    ```
 
-1. Install the Python modules.
+1. Install the Python modules:
 
    ```bash
    pip3 install -r app/requirements.txt
    ```
 
-1. Start Streamlit.
+1. Start Streamlit:
 
    ```bash
    cd app/src
    streamlit run oaim-sandbox.py --server.port 8501
    ```
 
-1. Navigate to `http://localhost:8501`
+1. Navigate to `http://localhost:8501`.
 
-1. [Configure](configuration) the Sandbox
+1. [Configure](configuration) the Sandbox.
+
+1. Complete the [Walkthrough](walkthrough/) to get familiar with the Sandbox.
 
 ### Container Installation
 
@@ -76,15 +78,17 @@ To run the application in a container; download the [source](https://github.com/
    podman build -t oaim-sandbox .
    ```
 
-1. Start Container:
+1. Start the Container:
 
    ```bash
    podman run -p 8501:8501 -it --rm oaim-sandbox
    ```
 
-1. Navigate to `http://localhost:8501`
+1. Navigate to `http://localhost:8501`.
 
-1. [Configure](configuration) the Sandbox
+1. [Configure](configuration) the Sandbox.
+
+1. Complete the [Walkthrough](walkthrough/) to get familiar with the Sandbox.
 
 # Need help?
 
