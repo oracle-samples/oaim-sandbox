@@ -81,7 +81,7 @@ def main():
     if not state.disable_tools and not state.disable_admin:
         # Define Additional Pages
         split_embed = st.Page("content/split_embed.py", title="Split/Embed", icon="📚")
-        model_config = st.Page("content/model_config.py", title="Model", icon="🤖")
+        model_config = st.Page("content/model_config.py", title="Models", icon="🤖")
         db_config = st.Page("content/db_config.py", title="Database", icon="🗄️")
         # Update Navigation
         navigation["Tools"].insert(0, split_embed)

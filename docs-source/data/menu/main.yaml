@@ -1,8 +1,8 @@
 main:
   - name: Getting Started
     ref: "/"
-  - name: Examples
-    ref: "/examples"
+  - name: Walkthrough
+    ref: "/walkthrough"
   - name: The Sandbox
     sub:
       - name: "ChatBot 🏠"
@@ -13,20 +13,20 @@ main:
         ref: "/tools"
         sub:
           - name: "Prompts 🎤"
-            ref: "/tools/prompt_eng"
+            ref: "/tools/prompt_eng.md"
           - name: "Split/Embed 📚"
-            ref: "/tools/split_embed"          
+            ref: "/tools/split_embed.md"          
       - name: "Configuration"
         ref: "/configuration"
         sub:
-          - name: "Model 🤖"
-            ref: "/configuration/model_config"
+          - name: "Models 🤖"
+            ref: "/configuration/model_config.md"
           - name: "Database 🗄️"
-            ref: "/configuration/db_config"
+            ref: "/configuration/db_config.md"
           - name: "OCI ☁️"
-            ref: "/configuration/oci_config"
+            ref: "/configuration/oci_config.md"
           - name: "Import Settings 💾"
-            ref: "/configuration/import_settings"
+            ref: "/configuration/import_settings.md"
   - name: Supported Models
     ref: "/supported_models"
   - name: Get Help

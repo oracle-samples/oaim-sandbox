@@ -181,9 +181,9 @@ def embedding_models():
     embedding_models_dict = {
         # Model: [API, Chunk Size, API Server, API Key]
         "thenlper/gte-base": {
-            "enabled": os.getenv("ON_PREM_EMBED_URL") is not None,
+            "enabled": os.getenv("ON_PREM_HF_URL") is not None,
             "api": HuggingFaceEndpointEmbeddings,
-            "url": os.environ.get("ON_PREM_EMBED_URL", default="http://127.0.0.1:8080"),
+            "url": os.environ.get("ON_PREM_HF_URL", default="http://127.0.0.1:8080"),
             "api_key": "",
             "chunk_max": 512,
         },
