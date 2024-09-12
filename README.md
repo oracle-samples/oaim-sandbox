@@ -25,4 +25,4 @@ Please consult the [security guide](./SECURITY.md) for our responsible security 
 Copyright (c) 2024 Oracle and/or its affiliates.
 Released under the Universal Permissive License v1.0 as shown at [https://oss.oracle.com/licenses/upl/](https://oss.oracle.com/licenses/upl/)
 
-See [LICENSE](./LICENSE.md) for more details.
+See [LICENSE](./LICENSE.txt) for more details.
