@@ -48,10 +48,6 @@ To run the application on bare-metal; download the [source](https://github.com/o
 
 1. Navigate to `http://localhost:8501`.
 
-1. [Configure](configuration) the Sandbox.
-
-1. Complete the [Walkthrough](walkthrough/) to get familiar with the Sandbox.
-
 #### Container Installation
 
 To run the application in a container; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the top-level directory:
@@ -71,10 +67,6 @@ To run the application in a container; download the [source](https://github.com/
    ```
 
 1. Navigate to `http://localhost:8501`.
-
-1. [Configure](configuration) the Sandbox.
-
-1. Complete the [Walkthrough](walkthrough/) to get familiar with the Sandbox.
 
 ## Contributing
 
