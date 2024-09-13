@@ -5,12 +5,13 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 import json
 import copy
+import requests
 
 # Streamlit
 import streamlit as st
 from streamlit import session_state as state
 
-# Untilities
+# Utilities
 import modules.db_utils as db
 import modules.logging_config as logging_config
 import modules.metadata as meta
@@ -22,7 +23,7 @@ logger = logging_config.logging.getLogger("modules.st_common")
 
 
 def clear_initialised():
-    """Reset the initialisation of the ChatBot"""
+    """Reset the initialization of the ChatBot"""
     if "user_lm_model" in state:
         state.lm_model = state.user_lm_model
     state.pop("initialised", None)
@@ -34,7 +35,31 @@ def set_default_state(key, value):
         logger.debug("Setting %s in Session State", key)
         state[key] = value
 
-
+def is_url_accessible(url):
+    """Check that URL is Available"""
+    logger.debug("Checking %s is accessible", url)
+    try:
+        response = requests.get(url, timeout=2)
+        logger.info("Checking %s resulted in %s", url, response.status_code)
+        # Check if the response status code is 200 (OK) 403 (Forbidden)
+        if response.status_code in [200, 403]:
+            return True, None
+        else:
+            err_msg = f"{url} is not accessible. (Status: {response.status_code})"
+            logger.warning(err_msg)
+            return False, err_msg
+    except requests.exceptions.ConnectionError:
+        err_msg = f"{url} is not accessible. (Connection Error)"
+        logger.warning(err_msg)
+        return False, err_msg
+    except requests.exceptions.Timeout:
+        err_msg = f"{url} is not accessible. (Request Timeout)"
+        logger.warning(err_msg)
+        return False, err_msg
+    except requests.RequestException as ex:
+        logger.exception(ex, exc_info=False)
+        return False, ex
+    
 def update_rag():
     """Update rag_params state"""
     logger.debug("Updating rag_params session state.")
@@ -71,7 +96,7 @@ def set_prompt():
 
 def reset_rag():
     """Clear RAG values"""
-    logger.debug("Reseting RAG Parameters")
+    logger.debug("Resetting RAG Parameters")
     state.rag_user_idx = {}
     state.rag_filter = {}
     params = ["model", "chunk_size", "chunk_overlap", "distance_metric"]
@@ -93,7 +118,7 @@ def reset_rag():
 
 def initialise_rag():
     """Initialise the RAG LOVs"""
-    logger.debug("Initilaising RAG")
+    logger.debug("Initializing RAG")
     try:
         if not state.db_configured:
             st.warning("Database is not configured, RAG functionality is disabled.", icon="⚠️")
@@ -137,7 +162,7 @@ def initialise_rag():
 
 def initialise_chatbot(lm_model):
     """Initialise the Chatbot"""
-    logger.info("Initialising ChatBot using %s; RAG: %s", lm_model, state.rag_params["enable"])
+    logger.info("Initializing ChatBot using %s; RAG: %s", lm_model, state.rag_params["enable"])
     vectorstore = None
     ## RAG
     if state.rag_params["enable"]:
@@ -166,7 +191,7 @@ def initialise_chatbot(lm_model):
             state.rag_params["chunk_overlap"],
             state.rag_params["distance_metric"],
         )
-        # Initialise Retreiver
+        # Initialise Retriever
         vectorstore = vectorstorage.init_vs(
             state.db_conn,
             model,
@@ -174,14 +199,24 @@ def initialise_chatbot(lm_model):
             state.rag_params["distance_metric"],
         )
 
+    # Chatbot
+    lm_model_state = state.lm_model_config[lm_model]
+    if lm_model_state["api"] == "" or lm_model_state["url"] == "":
+        raise ValueError(f"{lm_model} not fully configured")
+    url_accessible, err_msg = is_url_accessible(lm_model_state["url"])
+    if not url_accessible:
+        raise ValueError(f"Unable to access {lm_model}: {err_msg}")
     cmd = chatbot.ChatCmd(
         lm_model,
-        state.lm_model_config[lm_model],
+        lm_model_state,
         vectorstore,
     )
-
     logger.info("Initialised ChatBot!")
     return cmd
+
+
+
+
 
 
 ###################################
@@ -201,10 +236,16 @@ def lm_sidebar():
 
     lm_parameters = meta.lm_parameters()
     st.sidebar.divider()
+    enabled_llms=list(key for key, value in state.lm_model_config.items() if value.get("enabled"))
+    logger.debug("Enabled LLMs: %s", enabled_llms)
+    try:
+        llm_idx = enabled_llms.index(state.lm_model)
+    except ValueError:
+        llm_idx = 0
     lm_model = st.sidebar.selectbox(
         "Chat model:",
-        options=list(key for key, value in state.lm_model_config.items() if value.get('enabled')),
-        index=list(key for key, value in state.lm_model_config.items() if value.get('enabled')).index(state.lm_model),
+        options=enabled_llms,
+        index=llm_idx,
         on_change=clear_initialised,
         key="user_lm_model",
     )
@@ -426,13 +467,13 @@ def save_settings_sidebar():
 
     def empty_key(obj):
         """Return a new object with excluded keys set to empty strings"""
-        exlcude_keys = ["password", "wallet_password", "api", "api_key", "additional_user_agent"]
+        exclude_keys = ["password", "wallet_password", "api", "api_key", "additional_user_agent"]
 
         if isinstance(obj, dict):
             # Create a new dictionary to hold the modified keys
             new_dict = {}
             for key, value in obj.items():
-                if key in exlcude_keys:
+                if key in exclude_keys:
                     new_dict[key] = ""
                 else:
                     # Recursively handle nested dictionaries or lists

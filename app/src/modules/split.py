@@ -72,7 +72,7 @@ def split_document(
     chunk_size: int,
     chunk_overlap: int,
     document: List[LangchainDocument],
-    extention: str,
+    extension: str,
 ) -> List[LangchainDocument]:
     """
     Split documents into chunks of size `chunk_size` characters and return a list of documents.
@@ -113,7 +113,7 @@ def split_document(
     ##################################
     # Splitters - End
     ##################################
-    match extention:
+    match extension:
         case "pdf":
             doc_split = text_splitter.split_documents(document)
         case "html":
@@ -201,7 +201,7 @@ def load_and_split_url(
     """
     split_docos = []
     split_files = []
-
+    
     logger.info("Loading %s", url)
     loader = WebBaseLoader(
         web_paths=(f"{url}",),
@@ -222,6 +222,6 @@ def load_and_split_url(
 
     logger.info("Total Number of Chunks: %i", len(split_docos))
     if len(split_docos) == 0:
-        raise ValueError("Input source cointains no chunkable data.")
+        raise ValueError("Input source contains no chunk-able data.")
 
     return split_docos, split_files

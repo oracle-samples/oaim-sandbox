@@ -6,6 +6,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # Avoid warnings (and temptation to substitute) about "input"
 # pylint: disable=redefined-builtin
 import modules.logging_config as logging_config
+import modules.st_common as st_common
 
 # Langchain Framework
 from langchain.chains.history_aware_retriever import create_history_aware_retriever
@@ -63,15 +64,13 @@ class ChatCmd:
 
         # Initialize the Chat Model Client (framework independent)
         logger.info("Establishing connection: %s (%s)", lm_model, lm_params["api"])
-        if lm_params["api"] == "" or lm_params["url"] == "":
-            raise ValueError(f"{lm_model} not fully configured")
-
         logger.info(
             "Configuring LLM - URL: %s; Temp - %s; Max Tokens - %s",
             lm_params["url"],
             lm_params["temperature"][0],
             lm_params["max_tokens"][0],
         )
+
         ## Start - Add Additional Model Authentication Here
         if lm_params["api"] == "OpenAI":
             self.llm = ChatOpenAI(

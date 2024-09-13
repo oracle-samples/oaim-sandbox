@@ -7,7 +7,7 @@ draft: false
 {{< hint type=[warning] icon=gdoc_fire title="10-Sept-2024: Documentation In-Progress..." >}}
 Thank you for your patience as we work on updating the documentation. Please check back soon for the latest updates.{{< /hint >}}
 
-To use the Retrieval-Augmented Generation (RAG) functionality of the Sandbox, you will need to setup/enable an [embedding model](model_config) and have access to an **Oracle Database 23ai**.  Both the [Always Free Oracle Autonomous Database Serverless (ADB-S)](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/autonomous-always-free.html) and the [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) are supported and a great way to get up and running quickly.
+To use the Retrieval-Augmented Generation (RAG) functionality of the Sandbox, you will need to setup/enable an [embedding model](model_config) and have access to an **Oracle Database 23ai**.  Both the [Always Free Oracle Autonomous Database Serverless (ADB-S)](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/autonomous-always-free.html) and the [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) are supported.  They are a great way to get up and running quickly.
 
 ## Configuration
 
