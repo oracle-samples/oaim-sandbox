@@ -24,7 +24,7 @@ The **Oracle AI Microservices Sandbox** streamlines the entire workflow from pro
 
 # Getting Started
 
-The **Oracle AI Microservices Sandbox** is available to install in your own environment, which may be an developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on a bare-metal, within a container, or in a Kubernetes Cluster.
+The **Oracle AI Microservices Sandbox** is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on a bare-metal, within a container, or in a Kubernetes Cluster.
 
 ## Prerequisites
 
