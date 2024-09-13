@@ -93,7 +93,7 @@ def unset_oci_env(monkeypatch):
 @pytest.fixture
 def mock_is_url_accessible():
     """Mock API Accessible"""
-    with patch("modules.vectorstorage.is_url_accessible") as mock:
+    with patch("modules.st_common.is_url_accessible") as mock:
         mock.return_value = (True, None)
         yield mock
 

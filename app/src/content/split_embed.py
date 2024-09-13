@@ -265,7 +265,7 @@ def main():
         web_url = st.text_input("URL:", key="text_input_web_url")
         web_load_button_disabled = True
         if web_url:
-            url_accessible, err_msg = vectorstorage.is_url_accessible(web_url)
+            url_accessible, err_msg = st_common.is_url_accessible(web_url)
             web_load_button_disabled = not url_accessible
 
         st.text(f"Vector Store: {store_table}")

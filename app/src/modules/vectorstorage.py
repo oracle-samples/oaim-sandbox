@@ -7,7 +7,6 @@ import json
 import re
 from typing import List
 import math
-import requests
 import modules.logging_config as logging_config
 
 from langchain.docstore.document import Document as LangchainDocument
@@ -16,6 +15,7 @@ from langchain_community.vectorstores.oraclevs import OracleVS
 
 from modules.db_utils import execute_sql
 import modules.metadata as meta
+import modules.st_common as st_common
 
 logger = logging_config.logging.getLogger("modules.vectorstorage")
 
@@ -32,30 +32,7 @@ def init_vs(db_conn, embedding_function, store_table, distance_metric):
     return vectorstore
 
 
-def is_url_accessible(url):
-    """Check that Embedding Server is Available"""
-    logger.debug("Checking %s is accessible", url)
-    try:
-        response = requests.get(url, timeout=2)
-        logger.info("Checking %s resulted in %s", url, response.status_code)
-        # Check if the response status code is 200 (OK) 403 (Forbidden)
-        if response.status_code in [200, 403]:
-            return True, None
-        else:
-            err_msg = f"{url} is not accessible. (Status: {response.status_code})"
-            logger.warning(err_msg)
-            return False, err_msg
-    except requests.exceptions.ConnectionError:
-        err_msg = f"{url} is not accessible. (Connection Error)"
-        logger.warning(err_msg)
-        return False, err_msg
-    except requests.exceptions.Timeout:
-        err_msg = f"{url} is not accessible. (Request Timeout)"
-        logger.warning(err_msg)
-        return False, err_msg
-    except requests.RequestException as ex:
-        logger.exception(ex, exc_info=False)
-        return False, ex
+
 
 
 def get_embedding_model(model, embed_model_config=None):
@@ -81,7 +58,7 @@ def get_embedding_model(model, embed_model_config=None):
     else:
         model = embed_api(model=embed_url)
 
-    api_accessible, err_msg = is_url_accessible(embed_url)
+    api_accessible, err_msg = st_common.is_url_accessible(embed_url)
 
     return model, api_accessible, err_msg
 

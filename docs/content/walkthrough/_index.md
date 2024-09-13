@@ -1,7 +1,18 @@
 +++
-title = 'Walk Through'
+title = 'Walkthrough'
 date = 2024-09-11T14:33:30Z
 draft = false
 +++
-{{< hint type=[warning] icon=gdoc_fire title="10-Sept-2024: Documentation In-Progress..." >}}
-Thank you for your patience as we work on updating the documentation. Please check back soon for the latest updates.{{< /hint >}}
+
+
+
+
+- An Oracle Database 23ai Free
+- An On-Premises Large Language Model (LLM)
+- An On-Premises Embedding Model
+
+
+- Experiment with LLM Parameters 
+- Split and Embed an online document 
+- Store tne embedding for Retrieval-Augmented Generation (RAG)
+- Observe the impact of RAG
