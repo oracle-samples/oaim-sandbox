@@ -237,7 +237,7 @@ def lm_sidebar():
     lm_parameters = meta.lm_parameters()
     st.sidebar.divider()
     enabled_llms=list(key for key, value in state.lm_model_config.items() if value.get("enabled"))
-    logger.info("Enabled LLMs: %s", enabled_llms)
+    logger.debug("Enabled LLMs: %s", enabled_llms)
     try:
         llm_idx = enabled_llms.index(state.lm_model)
     except ValueError:

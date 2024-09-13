@@ -72,7 +72,7 @@ def split_document(
     chunk_size: int,
     chunk_overlap: int,
     document: List[LangchainDocument],
-    extention: str,
+    extension: str,
 ) -> List[LangchainDocument]:
     """
     Split documents into chunks of size `chunk_size` characters and return a list of documents.
@@ -113,7 +113,7 @@ def split_document(
     ##################################
     # Splitters - End
     ##################################
-    match extention:
+    match extension:
         case "pdf":
             doc_split = text_splitter.split_documents(document)
         case "html":
