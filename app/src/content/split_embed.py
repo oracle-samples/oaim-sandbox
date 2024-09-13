@@ -6,6 +6,8 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 import math
 import tempfile
 import inspect
+import os
+import requests
 
 # Streamlit
 import streamlit as st
@@ -279,12 +281,31 @@ def main():
             with placeholder:
                 st.warning("Operation in progress... please be patient.", icon="⚠️")
             try:
-                split_docos, _ = split.load_and_split_url(
-                    selected_embed_model,
-                    web_url,
-                    state.chunk_size_input,
-                    chunk_overlap_size,
-                )
+                if web_url.endswith(".pdf"):
+                    logger.info("Loading PDF from web")
+                    file_name = os.path.basename(web_url)
+                    pdf_file = requests.get(web_url, timeout=60)
+                    with tempfile.TemporaryDirectory() as temp_dir:
+                        temp_file_path = os.path.join(temp_dir, file_name)
+                        # Write the content to a file with the extracted filename
+                        with open(temp_file_path, 'wb') as temp_file:
+                            temp_file.write(pdf_file.content)
+                        logger.info("Wrote %s",temp_file_path)
+                        split_docos, _ = split.load_and_split_documents(
+                            [temp_file_path],
+                            selected_embed_model,
+                            state.chunk_size_input,
+                            chunk_overlap_size,
+                            write_json=False,
+                            output_dir=None,
+                        )                    
+                else:
+                    split_docos, _ = split.load_and_split_url(
+                        selected_embed_model,
+                        web_url,
+                        state.chunk_size_input,
+                        chunk_overlap_size,
+                    )
                 db_conn = db_utils.connect(state.db_config)
                 # If API Key is needed and not set, it will except here
                 vectorstorage.populate_vs(

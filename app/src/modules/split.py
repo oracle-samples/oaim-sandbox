@@ -201,7 +201,7 @@ def load_and_split_url(
     """
     split_docos = []
     split_files = []
-
+    
     logger.info("Loading %s", url)
     loader = WebBaseLoader(
         web_paths=(f"{url}",),
@@ -222,6 +222,6 @@ def load_and_split_url(
 
     logger.info("Total Number of Chunks: %i", len(split_docos))
     if len(split_docos) == 0:
-        raise ValueError("Input source cointains no chunkable data.")
+        raise ValueError("Input source contains no chunk-able data.")
 
     return split_docos, split_files
