@@ -223,7 +223,7 @@ Depending on the infrastructure, the embedding process can take a few minutes.
 {{< hint type=[info] icon=gdoc_info_outline title="Thumb Twiddling" >}}
 You can watch the progress of the embedding by streaming the **Sandbox** logs: `podman logs -f oaim-sandbox`
 
-Chunks are processed in batches of 1,000. Wait until the **Sandbox** outputs: `(modules.db_utils): SQL Executed` before continuing.
+Chunks are processed in batches of 1,000. Wait until the **Sandbox** logs output: `(modules.db_utils): SQL Executed` before continuing.
 {{< /hint >}}
 
 ### Query the Vector Store
