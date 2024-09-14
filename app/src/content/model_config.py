@@ -75,6 +75,13 @@ def update_lm_model_config():
 #############################################################################
 def main():
     """Streamlit GUI"""
+    css = """
+    <style>
+        [data-testid="element-container"] .stCheckbox { min-height: 2.5em; !important }
+    </style>
+    """
+    st.markdown(css, unsafe_allow_html=True)
+
     initialise_streamlit()
 
     st.header("Language Models")
