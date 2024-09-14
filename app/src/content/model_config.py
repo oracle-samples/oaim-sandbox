@@ -77,7 +77,9 @@ def main():
     """Streamlit GUI"""
     css = """
     <style>
-        [data-testid="element-container"] .stCheckbox { min-height: 2.5em; !important }
+        div[data-testid="element-container"] .stCheckbox {
+            min-height: 2.5em !important;
+        }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
