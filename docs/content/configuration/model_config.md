@@ -9,10 +9,10 @@ Thank you for your patience as we work on updating the documentation. Please che
 
 ## Supported Models
 
-At a minimum, a Large Language Model (LLM) must be configured in **Oracle AI Microservices **Sandbox** for basic functionality. For Retrieval-Augmented Generation (**RAG**), an embedding model will also need to be configured.
+At a minimum, a Large Language Model (LLM) must be configured in **Oracle AI Microservices Sandbox** for basic functionality. For Retrieval-Augmented Generation (**RAG**), an embedding model will also need to be configured.
 
 {{< hint type=[note] icon=gdoc_info_outline title="Additional Model Support" >}}
-If there is a specific model that you would like to use with the **Oracle AI Microservices **Sandbox**, please [open an issue in GitHub](https://github.com/oracle-samples/oaim-sandbox/issues/new).{{< /hint >}}
+If there is a specific model that you would like to use with the **Oracle AI Microservices Sandbox**, please [open an issue in GitHub](https://github.com/oracle-samples/oaim-sandbox/issues/new).{{< /hint >}}
 
 | Model                          | Type  | API                                           | On-Premises |
 | ------------------------------ | ----- | --------------------------------------------- | ----------- |
