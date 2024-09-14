@@ -9,10 +9,10 @@ Thank you for your patience as we work on updating the documentation. Please che
 
 ## Supported Models
 
-At a minimum, a Large Language Model (LLM) must be configured in **Oracle AI Microservices Sandbox** for basic functionality. For Retrieval-Augmented Generation (RAG), an embedding model will also need to be configured.
+At a minimum, a Large Language Model (LLM) must be configured in **Oracle AI Microservices **Sandbox** for basic functionality. For Retrieval-Augmented Generation (**RAG**), an embedding model will also need to be configured.
 
 {{< hint type=[note] icon=gdoc_info_outline title="Additional Model Support" >}}
-If there is a specific model that you would like to use with the **Oracle AI Microservices Sandbox**, please [open an issue in GitHub](https://github.com/oracle-samples/oaim-sandbox/issues/new).{{< /hint >}}
+If there is a specific model that you would like to use with the **Oracle AI Microservices **Sandbox**, please [open an issue in GitHub](https://github.com/oracle-samples/oaim-sandbox/issues/new).{{< /hint >}}
 
 | Model                          | Type  | API                                           | On-Premises |
 | ------------------------------ | ----- | --------------------------------------------- | ----------- |
@@ -32,7 +32,7 @@ If there is a specific model that you would like to use with the **Oracle AI Mic
 
 ## Configuration
 
-To configure an LLM from the Sandbox, navigate to `Configuration -> Models`:
+To configure an LLM from the **Sandbox**, navigate to `Configuration -> Models`:
 
 ## Additional Information
 {{< tabs "uniqueid" >}}
@@ -40,9 +40,9 @@ To configure an LLM from the Sandbox, navigate to `Configuration -> Models`:
 # Ollama 
 [Ollama](https://ollama.com/) is an open-source project that simplifies the running of LLMs and Embedding Models On-Premises.
 
-When configuring an Ollama model in the Sandbox, set the `API Server` URL (e.g `http://127.0.0.1:11434`) and leave the API Key blank. Substitute the IP Address with IP of where Ollama is running.
+When configuring an Ollama model in the **Sandbox**, set the `API Server` URL (e.g `http://127.0.0.1:11434`) and leave the API Key blank. Substitute the IP Address with IP of where Ollama is running.
 
-{{< hint type=[tip] icon=gdoc_fire title="Auto Setup/Enable" >}}
+{{< hint type=[tip] icon=gdoc_star title="Auto Setup/Enable" >}}
 You can set the following environment variable to automatically set the `API Server` URL and enable Ollama models (change the IP address as required):
 
 ```shell
@@ -81,7 +81,7 @@ For more information and instructions on running Ollama on other platforms, plea
 
 [HuggingFace](https://huggingface.co/) is a platform where the machine learning community collaborates on models, datasets, and applications. It provides a large selection of models that can be run both in the cloud and On-Premises.
 
-{{< hint type=[tip] icon=gdoc_fire title="Auto Setup/Enable" >}}
+{{< hint type=[tip] icon=gdoc_star title="Auto Setup/Enable" >}}
 You can set the following environment variable to automatically set the `API Server` URL and enable HuggingFace models (change the IP address as required):
 
 ```shell
@@ -130,11 +130,11 @@ Example of running thenlper/gte-base in a container:
 {{< tab "OpenAI" >}}
 # OpenAI
 
-[OpenAI](https://openai.com/api/) is an AI research organization behind the popular, online ChatGPT chatbot. To use OpenAI models, you will need to sign-up, purchase credits, and provide the Sandbox an API Key.
+[OpenAI](https://openai.com/api/) is an AI research organization behind the popular, online ChatGPT chatbot. To use OpenAI models, you will need to sign-up, purchase credits, and provide the **Sandbox** an API Key.
 
-**NOTE:** OpenAI is a cloud model and you should familiarize yourself with their Privacy Policies if using it to experiment with private, sensitive data in the Sandbox.
+**WARNING:** OpenAI is a cloud model and you should familiarize yourself with their Privacy Policies if using it to experiment with private, sensitive data in the **Sandbox**.
 
-{{< hint type=[tip] icon=gdoc_fire title="Auto Setup/Enable" >}}
+{{< hint type=[tip] icon=gdoc_star title="Auto Setup/Enable" >}}
 You can set the following environment variable to automatically set the `API Key` and enable OpenAI models:
 
 ```shell
@@ -145,11 +145,11 @@ export OPENAI_API_KEY=<super-secret API Key>
 {{< tab "Perplexity AI" >}}
 # Perplexity AI
 
-[Perplexity AI](https://docs.perplexity.ai/getting-started) is an AI-powered answer engine. To use Perplexity AI models, you will need to sign-up, purchase credits, and provide the Sandbox an API Key.
+[Perplexity AI](https://docs.perplexity.ai/getting-started) is an AI-powered answer engine. To use Perplexity AI models, you will need to sign-up, purchase credits, and provide the **Sandbox** an API Key.
 
-**NOTE:** Perplexity AI is a cloud model and you should familiarize yourself with their Privacy Policies if using it to experiment with private, sensitive data in the Sandbox.
+**WARNING:** Perplexity AI is a cloud model and you should familiarize yourself with their Privacy Policies if using it to experiment with private, sensitive data in the **Sandbox**.
 
-{{< hint type=[tip] icon=gdoc_fire title="Auto Setup/Enable" >}}
+{{< hint type=[tip] icon=gdoc_star title="Auto Setup/Enable" >}}
 You can set the following environment variable to automatically set the `API Key` and enable Perplexity models:
 
 ```shell

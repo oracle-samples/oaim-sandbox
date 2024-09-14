@@ -33,7 +33,7 @@ The following environment variables can be set, prior to starting the Sandbox, t
 
 - DB_USERNAME: The pre-created [database username](#database-user) where the embeddings will be stored
 - DB_PASSWORD: The password for the `DB Username`
-- DB_DSN: The full connection string or [TNS Alias](#using-a-wallettns_admin-directory) for the Database.  This is normally in the form of `(description=... (service_name=<service>))`.
+- DB_DSN: The connection string or [TNS Alias](#using-a-wallettns_admin-directory) for the Database.  This is normally in the form of `(description=... (service_name=<service_name>))` or `//host:port/service_name`.
 - DB_WALLET_PASSWORD: If the connection to the database uses mTLS, provide the wallet password.  **NOTE**: Review [Using a Wallet](#using-a-wallettns_admin-directory) for additional setup instructions.
 
 For Example:
@@ -41,7 +41,7 @@ For Example:
 ```bash
 export DB_USERNAME="DEMO"
 export DB_PASSWORD=MYCOMPLEXSECRET
-export DB_DSN="(description=(address=(protocol=tcps)(port=1521)(host=database.host.com))(connect_data=(service_name=SANDBOXDB)))"
+export DB_DSN="//localhost:1521/SANDBOXDB"
 export DB_WALLET_PASSWORD=MYCOMPLEXWALLETSECRET
 ```
 
@@ -53,7 +53,7 @@ If using and ADB-S wallet, unzip the contents to one of the above (`TNS_ADMIN` o
 
 ## Database User
 
-A database user is required to store the embeddings used for RAG into a Vector Store. A non-privileged user should be used for this purpose, using the below syntax as an example:
+A database user is required to store the embeddings, used for **RAG**, into the Oracle Database. A non-privileged user should be used for this purpose, using the below syntax as an example:
 
 ```sql
 CREATE USER "DEMO" IDENTIFIED BY MYCOMPLEXSECRET
@@ -66,6 +66,6 @@ ALTER USER "DEMO" QUOTA UNLIMITED ON DATA;
 
 Replace "DEMO" as required.
 
-{{< hint type=[tip] icon=gdoc_fire title="Multiple Users" >}}
+{{< hint type=[tip] icon=gdoc_info_outline title="Multiple Users" >}}
 Creating multiple users in the same database allows developers to separate their experiments simply by changing the "Database User:"
 {{< /hint >}}
