@@ -48,7 +48,7 @@ You will run four container images to establish the "Infrastructure":
 
 ### LLM - llama3.1
 
-Use [Ollama](https://ollama.com/) to run the _llama3.1_ **LLM**.
+To enable the _ChatBot_ functionality, access to a **LLM** is required. The walkthrough will use [Ollama](https://ollama.com/) to run the _llama3.1_ **LLM**.
 
 1. Start the container :
 
@@ -79,7 +79,7 @@ Use [Ollama](https://ollama.com/) to run the _llama3.1_ **LLM**.
 
 ### Embedding - mxbai-embed-large
 
-Use the existing [Ollama](https://ollama.com/) container for the embedding model.
+To enable the **RAG** functionality, access to an embedding model is required. The walkthrough will use [Ollama](https://ollama.com/) to run the _mxbai-embed-large_ embedding model.
 
 1. Pull the embedding model into the container:
 
@@ -118,6 +118,8 @@ To start Oracle Database 23ai Free:
    ```
 
 ### Oracle AI Microservices Sandbox
+
+The **Sandbox** provides an easy to use front-end for experimenting with **LLM** parameters and **RAG**.
 
 1. Download and Unzip the latest version of the **Sandbox**:
 
@@ -167,6 +169,8 @@ To configure the On-Premises **LLM**, navigate to the _Configuration -> Models_ 
 
 ![Configure LLM](images/llm-config.png)
 
+{{< icon "gdoc_star" >}} More information about configuring **LLM**s in the **Sandbox** can be found in the [Model Configuration](../configuration/model_config) documentation.
+
 #### Say "Hello?"
 
 Navigate to the _ChatBot_ screen:
@@ -175,9 +179,10 @@ Navigate to the _ChatBot_ screen:
 
 The error about chat models will have disappeared, but the database warning will still be displayed. You'll take care of that in the next step.
 
-The `Chat model:` will have been pre-set to the only enabled **LLM** (`llama3.1`) and a dialog box to interact with the **LLM** will be ready for input.
+The `Chat model:` will have been pre-set to the only enabled **LLM** (_llama3.1_) and a dialog box to interact with the **LLM** will be ready for input.
 
-Feel free to play around with the different **LLM** Parameters, hovering over the "?" icons to get more information on what they do.
+Feel free to play around with the different **LLM** Parameters, hovering over the {{< q_icon >}}
+icons to get more information on what they do.
 
 You'll come back to the _ChatBot_ later to experiment further.
 
@@ -191,6 +196,8 @@ To configure the On-Premises Embedding Model, navigate back to the _Configuratio
 
 ![Configure Embedding Model](images/embed-config.png)
 
+{{< icon "gdoc_star" >}} More information about configuring embedding models in the **Sandbox** can be found in the [Model Configuration](../configuration/model_config) documentation.
+
 ### Configure the Database
 
 To configure Oracle Database 23ai Free, navigate to the _Configuration -> Database_ screen:
@@ -201,6 +208,8 @@ To configure Oracle Database 23ai Free, navigate to the _Configuration -> Databa
 1. Save
 
 ![Configure Database](images/db-config.png)
+
+{{< icon "gdoc_star" >}} More information about configuring the database in the **Sandbox** can be found in the [Database Configuration](../configuration/db_config) documentation.
 
 ## Split and Embed
 
@@ -215,7 +224,7 @@ Navigate to the _Split/Embed_ Screen:
 1. Please be patient...
 
 {{< hint type=[tip] icon=gdoc_fire title="Performance: Grab a beverage of your choosing..." >}}
-Depending on the infrastructure, the embedding process can take a few minutes.
+Depending on the infrastructure, the embedding process can take a few minutes. As long as the "RUNNING" dialog in the top-right corner is moving... it's working.
 {{< /hint >}}
 
 ![Split and Embed](images/split-embed.png)
@@ -250,27 +259,25 @@ With the **Oracle AI Microservices Sandbox** configured, you're ready for some e
 
 Navigate back to the _ChatBot_. There will be no more configuration warnings and `RAG?` will be automatically enabled:
 
-![RAG Enabled](images/rag-enabled.png)
-
 For this guided experiment, perform the following:
 
 1. Disable **RAG** by un-checking the _RAG?_ box
 
-!! Image
+![Disable RAG](images/disable_rag.png)
 
-1. Ask the ChatBot:
+1. Ask the _ChatBot_:
    ```text
    In Oracle Database 23ai, how do I determine the accuracy of my vector indexes?
    ```
 
-Responses may vary, but generally the ChatBot's response will be inaccurate, including:
+Responses may vary, but generally the _ChatBot_'s response will be inaccurate, including:
 
 - Not understanding that 23ai is an Oracle Database release. This is known as knowledge-cutoff.
 - Suggestions of running SELECTS, irrelevant DBMS stored procedures, and maybe an ANALYZE. These are hallucinations.
 
 Now enable _RAG?_ and simply ask: `Are you sure?`
 
-!!Image
+![Enable RAG](images/enable_rag.png)
 
 {{< hint type=[tip] icon=gdoc_fire title="Performance: Host Overload..." >}}
 With **RAG** enabled, all the services (**LLM**/Embedding Models and Database) are being utilized simultaneously:
@@ -296,3 +303,11 @@ To take your experiments to the next level, consider exploring these additional 
 - Investigate various strategies for splitting and embedding text data, such as adjusting chunk-sizes, overlaps, and distance metrics
 
 ## Clean Up
+
+To cleanup the walkthrough "Infrastructure", stop and remove the containers.
+
+```bash
+podman container rm OAIM --force
+podman container rm oaim-sandbox --force
+podman container rm ollama --force
+```
