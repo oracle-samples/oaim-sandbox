@@ -142,6 +142,8 @@ def get_namespace(config, retries=True):
         raise OciException("Invalid Config - Disabling OCI") from ex
     except oci.exceptions.ServiceError as ex:
         raise OciException("AuthN Error - Disabling OCI") from ex
+    except oci.exceptions.RequestException as ex:
+        raise OciException("No Network Access - Disabling OCI") from ex
     except FileNotFoundError as ex:
         raise OciException("Invalid Key Path") from ex
     except UnboundLocalError as ex:

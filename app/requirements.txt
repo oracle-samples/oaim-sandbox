@@ -32,4 +32,5 @@ pypdf==4.3.1
 
 ## For Licensing Purposes... this ensures no GPU modules
 -f https://download.pytorch.org/whl/cpu/torch
-torch==2.4.1+cpu
+torch==2.4.1+cpu ; sys_platform == "linux"
+torch==2.2.2 ; sys_platform == "darwin"
