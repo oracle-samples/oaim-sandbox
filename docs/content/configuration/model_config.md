@@ -4,46 +4,68 @@ date = 2024-09-11T07:30:34Z
 draft = false
 +++
 
-{{< hint type=[warning] icon=gdoc_fire title="10-Sept-2024: Documentation In-Progress..." >}}
-Thank you for your patience as we work on updating the documentation. Please check back soon for the latest updates.{{< /hint >}}
-
 ## Supported Models
 
-At a minimum, a Large Language Model (LLM) must be configured in **Oracle AI Microservices Sandbox** for basic functionality. For Retrieval-Augmented Generation (**RAG**), an embedding model will also need to be configured.
+At a minimum, a Large _Language Model_ (LLM) must be configured in **Oracle AI Microservices Sandbox** for basic functionality. For Retrieval-Augmented Generation (**RAG**), an _Embedding Model_ will also need to be configured.
 
 {{< hint type=[note] icon=gdoc_info_outline title="Additional Model Support" >}}
 If there is a specific model that you would like to use with the **Oracle AI Microservices Sandbox**, please [open an issue in GitHub](https://github.com/oracle-samples/oaim-sandbox/issues/new).{{< /hint >}}
 
-| Model                          | Type  | API                                           | On-Premises |
-| ------------------------------ | ----- | --------------------------------------------- | ----------- |
-| llama3.1                       | LLM   | [ChatOllama](#additional-information)         | X           |
-| gpt-3.5-turbo                  | LLM   | [OpenAI](#additional-information)             |             |
-| gpt-4o-mini                    | LLM   | [OpenAI](#additional-information)             |             |
-| gpt-4                          | LLM   | [OpenAI](#additional-information)             |             |
-| gpt-4o                         | LLM   | [OpenAI](#additional-information)             |             |
-| llama-3-sonar-small-32k-chat   | LLM   | [ChatPerplexity](#additional-information)     |             |
-| llama-3-sonar-small-32k-online | LLM   | [ChatPerplexity](#additional-information)     |             |
-| mxbai-embed-large              | Embed | [OllamaEmbeddings](#additional-information)   | X           |
-| nomic-embed-text               | Embed | [OllamaEmbeddings](#additional-information)   | X           |
-| all-minilm                     | Embed | [OllamaEmbeddings](#additional-information)   | X           |
-| thenlper/gte-base              | Embed | [HuggingFaceEndpointEmbeddings](#additional-information) | X|
-| text-embedding-3-small         | Embed | [OpenAIEmbeddings](#additional-information)   |             |
-| text-embedding-3-large         | Embed | [OpenAIEmbeddings](#additional-information)   |             |
+| Model                          | Type  | API                                                      | On-Premises |
+| ------------------------------ | ----- | -------------------------------------------------------- | ----------- |
+| llama3.1                       | LLM   | [ChatOllama](#additional-information)                    | X           |
+| gpt-3.5-turbo                  | LLM   | [OpenAI](#additional-information)                        |             |
+| gpt-4o-mini                    | LLM   | [OpenAI](#additional-information)                        |             |
+| gpt-4                          | LLM   | [OpenAI](#additional-information)                        |             |
+| gpt-4o                         | LLM   | [OpenAI](#additional-information)                        |             |
+| llama-3-sonar-small-32k-chat   | LLM   | [ChatPerplexity](#additional-information)                |             |
+| llama-3-sonar-small-32k-online | LLM   | [ChatPerplexity](#additional-information)                |             |
+| mxbai-embed-large              | Embed | [OllamaEmbeddings](#additional-information)              | X           |
+| nomic-embed-text               | Embed | [OllamaEmbeddings](#additional-information)              | X           |
+| all-minilm                     | Embed | [OllamaEmbeddings](#additional-information)              | X           |
+| thenlper/gte-base              | Embed | [HuggingFaceEndpointEmbeddings](#additional-information) | X           |
+| text-embedding-3-small         | Embed | [OpenAIEmbeddings](#additional-information)              |             |
+| text-embedding-3-large         | Embed | [OpenAIEmbeddings](#additional-information)              |             |
 
 ## Configuration
 
-To configure an LLM from the **Sandbox**, navigate to `Configuration -> Models`:
+The models can either be configured using environment variables or through the **Sandbox** interface. To configure models through environment variables, please read the [Additional Information](#additional-information) about the specific model you would like to configure.
+
+To configure an LLM or embedding model from the **Sandbox**, navigate to `Configuration -> Models`:
+
+![Model Config](../images/model_config.png)
+
+Here you can configure both Large _Language Models_ and _Embedding Models_. Set the API Keys and API URL as required. You can also Enable and Disable models.
+
+### API Keys
+
+Third-Party cloud models, such as [OpenAI](https://openai.com/api/) and [Perplexity AI](https://docs.perplexity.ai/getting-started), require API Keys. These keys are tied to registered, funded accounts on these platforms. For more information on creating an account, funding it, and generating API Keys for third-party cloud models, please visit their respective sites.
+
+![Cloud Model API Keys](../images/model_third-party-api-key.png)
+
+On-Premises models, such as those from [Ollama](https://ollama.com/) or [HuggingFace](https://huggingface.co/) usually do not require API Keys. These values can be left blank.
+
+![On-Premises Model API Keys](../images/model_on-prem-api-key.png)
+
+### API URL
+
+When using an on-premises model, for performance purposes, they should be running on hosts with GPUs. As the **Sandbox** does not require GPUs, often is the case that the API URL for these models will be the IP or hostname address of a remote host. Specify the API URL and Port of the remote host.
+
+![On-Premises Model API URL](../images/model_on-prem-api-url.png)
 
 ## Additional Information
+
 {{< tabs "uniqueid" >}}
 {{< tab "Ollama" >}}
-# Ollama 
+
+# Ollama
+
 [Ollama](https://ollama.com/) is an open-source project that simplifies the running of LLMs and Embedding Models On-Premises.
 
 When configuring an Ollama model in the **Sandbox**, set the `API Server` URL (e.g `http://127.0.0.1:11434`) and leave the API Key blank. Substitute the IP Address with IP of where Ollama is running.
 
 {{< hint type=[tip] icon=gdoc_star title="Auto Setup/Enable" >}}
-You can set the following environment variable to automatically set the `API Server` URL and enable Ollama models (change the IP address as required):
+You can set the following environment variable to automatically set the `API Server` URL and enable Ollama models (change the IP address and Port, as applicable to your environment):
 
 ```shell
 export ON_PREM_OLLAMA_URL=http://127.0.0.1:11434
@@ -76,13 +98,14 @@ ollama serve
 For more information and instructions on running Ollama on other platforms, please visit the [Ollama GitHub Repository](https://github.com/ollama/ollama/blob/main/README.md#quickstart).
 
 {{< /tab >}}
-{{< tab "HuggingFace" >}} 
+{{< tab "HuggingFace" >}}
+
 # HuggingFace
 
 [HuggingFace](https://huggingface.co/) is a platform where the machine learning community collaborates on models, datasets, and applications. It provides a large selection of models that can be run both in the cloud and On-Premises.
 
 {{< hint type=[tip] icon=gdoc_star title="Auto Setup/Enable" >}}
-You can set the following environment variable to automatically set the `API Server` URL and enable HuggingFace models (change the IP address as required):
+You can set the following environment variable to automatically set the `API Server` URL and enable HuggingFace models (change the IP address and Port, as applicable to your environment):
 
 ```shell
 export ON_PREM_HF_URL=http://127.0.0.1:8080
@@ -125,9 +148,10 @@ Example of running thenlper/gte-base in a container:
    docker inspect hftei-gte-base | grep IPA
    ```
 
-   **NOTE:** if there is no IP, use 127.0.0.1 
-{{< /tab >}}
-{{< tab "OpenAI" >}}
+   **NOTE:** if there is no IP, use 127.0.0.1
+   {{< /tab >}}
+   {{< tab "OpenAI" >}}
+
 # OpenAI
 
 [OpenAI](https://openai.com/api/) is an AI research organization behind the popular, online ChatGPT chatbot. To use OpenAI models, you will need to sign-up, purchase credits, and provide the **Sandbox** an API Key.
@@ -140,9 +164,11 @@ You can set the following environment variable to automatically set the `API Key
 ```shell
 export OPENAI_API_KEY=<super-secret API Key>
 ```
+
 {{< /hint >}}
 {{< /tab >}}
 {{< tab "Perplexity AI" >}}
+
 # Perplexity AI
 
 [Perplexity AI](https://docs.perplexity.ai/getting-started) is an AI-powered answer engine. To use Perplexity AI models, you will need to sign-up, purchase credits, and provide the **Sandbox** an API Key.
