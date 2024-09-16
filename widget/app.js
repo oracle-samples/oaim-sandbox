@@ -1,3 +1,8 @@
+/*
+Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
+*/
+
 const chatBotUrl = 'http://127.0.0.1:8000/v1/chat/completions';
 const api_key = "abc";
 
