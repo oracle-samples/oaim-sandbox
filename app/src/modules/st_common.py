@@ -18,6 +18,7 @@ import modules.metadata as meta
 import modules.help as custom_help
 import modules.vectorstorage as vectorstorage
 import modules.chatbot as chatbot
+import modules.chatbot_server as chatbot_server
 
 logger = logging_config.logging.getLogger("modules.st_common")
 
@@ -34,6 +35,7 @@ def set_default_state(key, value):
     if key not in state:
         logger.debug("Setting %s in Session State", key)
         state[key] = value
+
 
 def is_url_accessible(url):
     """Check that URL is Available"""
@@ -59,7 +61,8 @@ def is_url_accessible(url):
     except requests.RequestException as ex:
         logger.exception(ex, exc_info=False)
         return False, ex
-    
+
+
 def update_rag():
     """Update rag_params state"""
     logger.debug("Updating rag_params session state.")
@@ -215,10 +218,6 @@ def initialise_chatbot(lm_model):
     return cmd
 
 
-
-
-
-
 ###################################
 # Language Model Sidebar
 ###################################
@@ -236,7 +235,7 @@ def lm_sidebar():
 
     lm_parameters = meta.lm_parameters()
     st.sidebar.divider()
-    enabled_llms=list(key for key, value in state.lm_model_config.items() if value.get("enabled"))
+    enabled_llms = list(key for key, value in state.lm_model_config.items() if value.get("enabled"))
     logger.debug("Enabled LLMs: %s", enabled_llms)
     try:
         llm_idx = enabled_llms.index(state.lm_model)
@@ -457,6 +456,7 @@ def rag_sidebar():
         )
 
         st.sidebar.button("Reset RAG", type="primary", on_click=reset_rag)
+        chatbot_server.sidebar_start_server()
 
 
 ###################################
