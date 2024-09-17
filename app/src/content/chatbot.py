@@ -91,7 +91,10 @@ def main():
             chat_history.clear()
         lm_model = st_common.lm_sidebar()
     else:
-        st.error("No chat models are configured and/or enabled.", icon="🚨",)
+        st.error(
+            "No chat models are configured and/or enabled.",
+            icon="🚨",
+        )
         st.stop()
 
     # RAG

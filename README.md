@@ -6,11 +6,20 @@
 
 The **Oracle AI Microservices Sandbox** provides a streamlined environment where developers and data scientists can explore the potential of Generative Artificial Intelligence (GenAI) combined with Retrieval-Augmented Generation (RAG) capabilities. By integrating **Oracle Database 23ai** AI Vector Search, the Sandbox enables users to enhance existing Large Language Models (LLMs) through RAG.
 
+## Sandbox Features
+
+- [Configuring Embedding and Chat Models](configuration/model_config)
+- [Splitting and Embedding Documentation](tools/split_embed)
+- [Storing Embedded Documents into the Oracle Database](tools/split_embed)
+- [Modifying System Prompts (Prompt Engineering)](tools/prompt_eng)
+- [Experimenting with **LLM** Parameters](chatbot)
+- [Testing Framework on auto-generated or existing Q&A datasets](test_framework)
+
 ## Getting Started
 
 The **Oracle AI Microservices Sandbox** is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on a bare-metal, within a container, or in a Kubernetes Cluster.
 
-For more information, including additional information on **Setup and Configuration** please visit the [documentation](https://oracle-samples.github.io/oaim-sandbox)
+For more information, including more details on **Setup and Configuration** please visit the [documentation](https://oracle-samples.github.io/oaim-sandbox).
 
 ### Prerequisites
 
@@ -18,8 +27,10 @@ For more information, including additional information on **Setup and Configurat
 - Python 3.11 (for running Bare-Metal)
 - Container Runtime e.g. docker/podman (for running in a Container)
 - Access to an Embedding and Chat Model:
-  - API Keys for Third-Party Chat Model
-  - On-Premises Chat Model
+  - API Keys for Third-Party Models
+  - On-Premises Models<sub>\*</sub>
+
+<sub>\*Oracle recommends running On-Premises Models on hardware with GPUs. For more information, please review the [Infrastructure](infrastructure/) documentation.</sub>
 
 #### Bare-Metal Installation
 
@@ -48,6 +59,8 @@ To run the application on bare-metal; download the [source](https://github.com/o
 
 1. Navigate to `http://localhost:8501`.
 
+1. [Configure](configuration) the Sandbox.
+
 #### Container Installation
 
 To run the application in a container; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the top-level directory:
@@ -67,6 +80,8 @@ To run the application in a container; download the [source](https://github.com/
    ```
 
 1. Navigate to `http://localhost:8501`.
+
+1. [Configure](configuration) the Sandbox.
 
 ## Contributing
 

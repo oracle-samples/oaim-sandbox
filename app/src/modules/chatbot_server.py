@@ -48,6 +48,7 @@ def get_answer_fn(
 
 class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
     """Handler for mini-chatbot"""
+
     def __init__(
         self, *args, chat_manager=None, rag_params=None, lm_instr=None, context_instr=None, api_key=None, **kwargs
     ):

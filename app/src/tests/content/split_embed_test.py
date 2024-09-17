@@ -50,7 +50,7 @@ def test_split_embed_web_HuggingFaceEndpointEmbeddings(set_db_env, mock_oracledb
     at = AppTest.from_file("content/model_config.py", default_timeout=30).run()
     at.checkbox(key=check_box).set_value(True).run()
     at.text_input(key=api_field).set_value("http://127.0.0.1:8080").run()
-    at.button[0].click().run()
+    at.button[1].click().run()
     assert len(at.success) == 1, "Embedding Model Configuration Saved"
     assert at.session_state.embed_model_config[model_name]["enabled"] is True
     assert at.session_state.embed_model_config[model_name]["url"] == ("http://127.0.0.1:8080")
@@ -99,7 +99,7 @@ def test_split_embed_web_OpenAIEmbeddings_manual_key(unset_api_env, set_db_env, 
     at = AppTest.from_file("content/model_config.py", default_timeout=30).run()
     at.checkbox(key=check_box).set_value(True).run()
     at.text_input(key=api_field).set_value("testing").run()
-    at.button[0].click().run()
+    at.button[1].click().run()
     assert len(at.success) == 1, "Embedding Model Configuration Saved"
     assert at.session_state.embed_model_config[model_name]["enabled"] is True
     assert at.session_state.embed_model_config[model_name]["api_key"] == ("testing")

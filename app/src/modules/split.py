@@ -201,7 +201,7 @@ def load_and_split_url(
     """
     split_docos = []
     split_files = []
-    
+
     logger.info("Loading %s", url)
     loader = WebBaseLoader(
         web_paths=(f"{url}",),
