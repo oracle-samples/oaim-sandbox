@@ -32,9 +32,6 @@ def init_vs(db_conn, embedding_function, store_table, distance_metric):
     return vectorstore
 
 
-
-
-
 def get_embedding_model(model, embed_model_config=None):
     """Return a formatted embedding model"""
     logger.debug("Retrieving Embedding Model for: %s", model)
@@ -125,7 +122,6 @@ def populate_vs(
     # Need to consider this, it duplicates from_documents
     LangchainVS.drop_table_purge(db_conn, store_table)
 
-    logger.debug("Here at last: %s", model_name)
     vectorstore = OracleVS(
         client=db_conn,
         embedding_function=model_name,
@@ -144,6 +140,13 @@ def populate_vs(
             len(unique_chunks),
         )
         OracleVS.add_documents(vectorstore, documents=batch)
+
+    # Build the Index
+    logger.info("Creating index on: %s", store_table)
+    try:
+        LangchainVS.create_index(db_conn, vectorstore)
+    except Exception as ex:
+        logger.error("Unable to create vector index: %s", ex)
 
     # Comment the VS table
     comment = f"COMMENT ON TABLE {store_table} IS 'GENAI: {store_comment}'"

@@ -10,21 +10,30 @@ geekdocBreadcrumb = false
 {{< hint type=[warning] icon=gdoc_fire title="10-Sept-2024: Documentation In-Progress..." >}}
 Thank you for your patience as we work on updating the documentation. Please check back soon for the latest updates.{{< /hint >}}
 
-The **Oracle AI Microservices Sandbox** provides a streamlined environment where developers and data scientists can explore the potential of Generative Artificial Intelligence (GenAI) combined with Retrieval-Augmented Generation (RAG) capabilities. By integrating the **Oracle Database** for Vector Storage, the Sandbox enables users to enhance existing Large Language Models (LLMs) through RAG. This method significantly improves the performance and accuracy of AI models, helping to avoid common issues such as knowledge cutoff and hallucinations.
+The **Oracle AI Microservices Sandbox** (the **Sandbox**) provides a streamlined environment where developers and data scientists can explore the potential of Generative Artificial Intelligence (**GenAI**) combined with Retrieval-Augmented Generation (**RAG**) capabilities. By integrating the Oracle Database AI Vector Search, the **Sandbox** enables users to enhance existing Large Language Models (**LLM**s) through **RAG**. This method significantly improves the performance and accuracy of AI models, helping to avoid common issues such as knowledge cutoff and hallucinations.
 
-Main Features:
+- **GenAI**: Powers the generation of text, images, or other data based on prompts using pre-trained **LLM**s.
+- **RAG**: Enhances **LLM**s by retrieving relevant, real-time information from vector storage allowing models to provide up-to-date and accurate responses.
+- **Vector Database**: A database, including Oracle Database 23ai, that can natively store and manage vector embeddings and handle the unstructured data they describe, such as documents, images, video, or audio.
 
-- Configuring Embedding and Chat Models
-- Splitting and Embedding Documentation
-- Storing Embedded Documents into the Oracle Database
-- Modifying System Prompts
-- Experimenting with Large Language Model (LLM) Parameters
+## Sandbox Features
 
-The **Oracle AI Microservices Sandbox** streamlines the entire workflow from prototyping to production, making it easier to create and deploy RAG-powered GenAI solutions using the **Oracle Database**.
+- [Configuring Embedding and Chat Models](configuration/model_config)
+- [Splitting and Embedding Documentation](tools/split_embed)
+- [Storing Embedded Documents into the Oracle Database](tools/split_embed)
+- [Modifying System Prompts (Prompt Engineering)](tools/prompt_eng)
+- [Experimenting with **LLM** Parameters](chatbot)
+- [Testing Framework on auto-generated or existing Q&A datasets](test_framework)
+
+The **Sandbox** streamlines the entire workflow from prototyping to production, making it easier to create and deploy RAG-powered GenAI solutions using the **Oracle Database**.
 
 # Getting Started
 
-The **Oracle AI Microservices Sandbox** is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on a bare-metal, within a container, or in a Kubernetes Cluster.
+The **Sandbox** is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on a bare-metal, within a container, or in a Kubernetes Cluster.
+
+{{< hint type=[info] icon=gdoc_info_outline title="Prefer a Step-by-Step?" >}}
+The [Walkthrough](walkthrough/) is a great way to familiarize yourself with the **Sandbox** and its features.
+{{< /hint >}}
 
 ## Prerequisites
 
@@ -32,8 +41,10 @@ The **Oracle AI Microservices Sandbox** is available to install in your own envi
 - Python 3.11 (for running Bare-Metal)
 - Container Runtime e.g. docker/podman (for running in a Container)
 - Access to an Embedding and Chat Model:
-  - API Keys for Third-Party Chat Model
-  - On-Premises Chat Model
+  - API Keys for Third-Party Models
+  - On-Premises Models<sub>\*</sub>
+
+<sub>\*Oracle recommends running On-Premises Models on hardware with GPUs. For more information, please review the [Infrastructure](infrastructure/) documentation.</sub>
 
 ### Bare-Metal Installation
 
@@ -64,9 +75,11 @@ To run the application on bare-metal; download the [source](https://github.com/o
 
 1. [Configure](configuration) the Sandbox.
 
-1. Complete the [Walkthrough](walkthrough/) to get familiar with the Sandbox.
-
 ### Container Installation
+
+{{< hint type=[info] icon=gdoc_info_outline title="Same... but Different" >}}
+Reference to `podman` commands, if applicable to your environment, can be substituted with `docker`.
+{{< /hint >}}
 
 To run the application in a container; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the top-level directory:
 
@@ -87,8 +100,6 @@ To run the application in a container; download the [source](https://github.com/
 1. Navigate to `http://localhost:8501`.
 
 1. [Configure](configuration) the Sandbox.
-
-1. Complete the [Walkthrough](walkthrough/) to get familiar with the Sandbox.
 
 # Need help?
 

@@ -39,26 +39,25 @@ logger = logging_config.logging.getLogger("test_framework")
 def reset_test_set():
     """Clear all Test Set Data"""
 
-    if 'index' in st.session_state:
-        state.pop("index", None) 
-    if 'hide_input' in st.session_state:
-        state.pop("hide_input", None) 
-    if 'question_input' in st.session_state:
+    if "index" in st.session_state:
+        state.pop("index", None)
+    if "hide_input" in st.session_state:
+        state.pop("hide_input", None)
+    if "question_input" in st.session_state:
         state.pop("question_input", None)
-    if 'reference_answer_input' in st.session_state:
-        state.pop("reference_answer_input" , None)
-    if 'reference_context_input' in st.session_state:
-        state.pop("reference_context_input" , None)
-    if 'metadata_input' in st.session_state:
-        state.pop("metadata_input" , None)
-
+    if "reference_answer_input" in st.session_state:
+        state.pop("reference_answer_input", None)
+    if "reference_context_input" in st.session_state:
+        state.pop("reference_context_input", None)
+    if "metadata_input" in st.session_state:
+        state.pop("metadata_input", None)
 
     state.test_uploader_key += 1
     state.pop("test_set_report", None)
     state.pop("test_set", None)
     state.pop("temp_dir", None)
-    state.pop("file_temp",None)
-    
+    state.pop("file_temp", None)
+
 
 def get_answer_fn(question: str, history=None) -> str:
     """Send for completion"""
@@ -155,7 +154,10 @@ def main():
     try:
         lm_model = st_common.lm_sidebar()
     except ValueError:
-        st.error("No models are configured and/or enabled.", icon="🚨",)
+        st.error(
+            "No models are configured and/or enabled.",
+            icon="🚨",
+        )
         st.stop()
     # Used to clear the uploader files
     if "test_uploader_key" not in state:
@@ -173,10 +175,9 @@ def main():
     st_common.set_default_state("temp_dir", None)
 
     # TO CHECK
-    #file_path = "temp_file.csv"
-    #if os.path.exists(file_path):
+    # file_path = "temp_file.csv"
+    # if os.path.exists(file_path):
     #    os.remove(file_path)
-
 
     if state.toggle_generate_test:
         ###### TEST DATASET GENERATION ######
@@ -222,7 +223,7 @@ def main():
 
     if not state.toggle_generate_test:
         ###### TEST LOAD EXISTING ######
-        
+
         test_set_file = st.file_uploader(
             "Select a local, existing Q&A pair testing dataset:",
             key=f"uploader_{state.test_uploader_key}",
@@ -240,11 +241,11 @@ def main():
                 st.info("Loading Test Sets... please be patient.", icon="⚠️")
             qa_files = split.write_files(test_set_file)
             state.temp_dir = os.path.dirname(qa_files[0])
-            logger.info("Temp dir created with Generate Q&A: "+state.temp_dir)
+            logger.info("Temp dir created with Generate Q&A: " + state.temp_dir)
             merged_test_file = test_framework.merge_jsonl_files(qa_files, state["temp_dir"])
             state.merged_test_file = merged_test_file
             state.test_set = QATestset.load(merged_test_file)
-            
+
             with placeholder:
                 st.success("Test Sets Loaded.", icon="✅")
             placeholder.empty()
@@ -265,15 +266,14 @@ def main():
 
         # Load Test data in Panda Dataframe
 
-
         if not state.toggle_generate_test:
             logger.info("LOAD MERGED FILE")
-            st.session_state.test_set_edited = pd.read_json(state["merged_test_file"], orient="records",lines=True)
+            st.session_state.test_set_edited = pd.read_json(state["merged_test_file"], orient="records", lines=True)
         else:
             logger.info("LOAD FILE GENERATED")
-            st.session_state.test_set_edited = pd.read_json(state["qa_file"], orient="records",lines=True)
+            st.session_state.test_set_edited = pd.read_json(state["qa_file"], orient="records", lines=True)
 
-        #state["test_set_report"] = state["test_set"].to_pandas()
+        # state["test_set_report"] = state["test_set"].to_pandas()
 
         st.session_state.test_set_edited["hide"] = False
         cols = st.session_state.test_set_edited.columns.tolist()
@@ -284,15 +284,14 @@ def main():
         logger.info(st.session_state.test_set_edited.columns)
 
         # EDIT DATASET
-        #state["test_set_edited"] = st.data_editor(state["test_set_report"], hide_index=True, height=250)
-              
+        # state["test_set_edited"] = st.data_editor(state["test_set_report"], hide_index=True, height=250)
+
         ### Record one-by-one
         report_utils.record_update()
         # Write Edited Test Set and offer Download
         edited_test_file = os.path.join(state["temp_dir"], "edited_test_set.json")
         new_test_dataset = report_utils.clean_hide(edited_test_file)
         download_file(new_test_dataset, "Download Q&A Test Set")
-        
 
         #################
         # Evaluator
@@ -321,7 +320,7 @@ def main():
                     st.info("Starting Q&A evaluation... please be patient.", icon="⚠️")
 
                 # Run Evaluation
-                logger.info("state.test_set = QATestset.load(edited_test_file): "+edited_test_file)
+                logger.info("state.test_set = QATestset.load(edited_test_file): " + edited_test_file)
 
                 clean_test_file = report_utils.clean_hide(edited_test_file)
                 state.test_set = QATestset.load(clean_test_file)

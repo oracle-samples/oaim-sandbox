@@ -65,7 +65,7 @@ To enable the _ChatBot_ functionality, access to a **LLM** is required. The walk
 1. Test the **LLM**:
 
    {{< hint type=[warning] icon=gdoc_fire title="Performance: Fail Fast..." >}}
-   Unfortunately, if the below `curl` does not respond within a couple of minutes, the rest of the walkthrough will be unbearable.
+   Unfortunately, if the below `curl` does not respond within five minutes, the rest of the walkthrough will be unbearable.
    If this is the case, please consider using different hardware.
    {{< /hint >}}
 
@@ -96,16 +96,18 @@ To start Oracle Database 23ai Free:
 1. Start the container:
 
    ```bash
-   podman run -d --name OAIM -p 1521:1521 container-registry.oracle.com/database/free:latest
+   podman run -d --name oaim-db -p 1521:1521 container-registry.oracle.com/database/free:latest
    ```
 
-1. Create a [new database user](../configuration/db_config#database-user):
+1. Alter the `vector_memory_size` parameter and create a [new database user](../configuration/db_config#database-user):
 
    ```bash
-   podman exec -it OAIM sqlplus '/ as sysdba'
+   podman exec -it oaim-db sqlplus '/ as sysdba'
    ```
 
    ```sql
+   alter system set vector_memory_size=512M scope=spfile;
+
    alter session set container=FREEPDB1;
 
    CREATE USER "WALKTHROUGH" IDENTIFIED BY ORA_41_M_SANDBOX
@@ -115,6 +117,12 @@ To start Oracle Database 23ai Free:
    ALTER USER "WALKTHROUGH" DEFAULT ROLE ALL;
    ALTER USER "WALKTHROUGH" QUOTA UNLIMITED ON USERS;
    EXIT;
+   ```
+
+1. Bounce the database for the `vector_memory_size` to take effect:
+
+   ```bash
+   podman container restart oaim-db
    ```
 
 ### Oracle AI Microservices Sandbox
@@ -244,7 +252,7 @@ From the command line:
 1. Connect to the Oracle Database 23ai Database:
 
    ```bash
-   podman exec -it OAIM sqlplus 'WALKTHROUGH/ORA_41_M_SANDBOX@FREEPDB1'
+   podman exec -it oaim-db sqlplus 'WALKTHROUGH/ORA_41_M_SANDBOX@FREEPDB1'
    ```
 
 1. Query the Vector Store:
@@ -307,7 +315,7 @@ To take your experiments to the next level, consider exploring these additional 
 To cleanup the walkthrough "Infrastructure", stop and remove the containers.
 
 ```bash
-podman container rm OAIM --force
+podman container rm oaim-db --force
 podman container rm oaim-sandbox --force
 podman container rm ollama --force
 ```

@@ -128,7 +128,10 @@ def main():
         embed_url = state.embed_model_config[selected_embed_model]["url"]
         st.write(f"Embedding Server: {embed_url}")
     except KeyError:
-        st.error("No embedding models are are configured and/or enabled.", icon="⚠️",)
+        st.error(
+            "No embedding models are are configured and/or enabled.",
+            icon="⚠️",
+        )
         st.stop()
     except ValueError:
         st.error(
@@ -136,7 +139,6 @@ def main():
             icon="🚨",
         )
         st.stop()
-
 
     # Check access to embedding server
     if not api_accessible:
@@ -288,9 +290,9 @@ def main():
                     with tempfile.TemporaryDirectory() as temp_dir:
                         temp_file_path = os.path.join(temp_dir, file_name)
                         # Write the content to a file with the extracted filename
-                        with open(temp_file_path, 'wb') as temp_file:
+                        with open(temp_file_path, "wb") as temp_file:
                             temp_file.write(pdf_file.content)
-                        logger.info("Wrote %s",temp_file_path)
+                        logger.info("Wrote %s", temp_file_path)
                         split_docos, _ = split.load_and_split_documents(
                             [temp_file_path],
                             selected_embed_model,
@@ -298,7 +300,7 @@ def main():
                             chunk_overlap_size,
                             write_json=False,
                             output_dir=None,
-                        )                    
+                        )
                 else:
                     split_docos, _ = split.load_and_split_url(
                         selected_embed_model,

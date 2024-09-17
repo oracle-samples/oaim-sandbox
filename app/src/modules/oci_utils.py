@@ -9,7 +9,7 @@ import modules.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("modules.oci_utils")
 
-# Avoid OCI logging overridding
+# Avoid OCI logging overriding
 import oci  # pylint: disable=wrong-import-position
 
 

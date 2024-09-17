@@ -33,10 +33,9 @@ def compare_dicts_recursive(current, uploaded):
             nested_diff = compare_dicts_recursive(current[key], uploaded[key])
             if nested_diff:
                 diff[key] = nested_diff
-        elif current.get(key) != uploaded.get(key):
-            if uploaded.get(key) != "":
-                # Report differences for non-dict values
-                diff[key] = {"current": current.get(key), "uploaded": uploaded.get(key)}
+        elif current.get(key) != uploaded.get(key) and uploaded.get(key) != "":
+            # Report differences for non-dict values
+            diff[key] = {"current": current.get(key), "uploaded": uploaded.get(key)}
 
     return diff
 
@@ -59,6 +58,7 @@ def compare_with_uploaded_json(current_state, uploaded_json):
 
 
 def update_session_state_recursive(session_state, updates):
+    """Apply settings to the Session State"""
     for key, value in updates.items():
         if value == "" or value is None:
             # Skip empty string values
