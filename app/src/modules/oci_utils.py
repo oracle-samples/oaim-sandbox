@@ -256,7 +256,7 @@ def get_object(config, namespace, bucket_name, directory, object_name, retries=T
 def put_object(config, namespace, compartment, bucket_name, file_path, retries=True):
     """Upload file to Object Storage"""
     file_name = os.path.basename(file_path)
-    file_name = os.path.basename(file_path)
+    logger.info("Uploading %s to %s as %s ", file_path, bucket_name, file_name)
     client = init_client(oci.object_storage.ObjectStorageClient, config, retries)
     upload_manager = oci.object_storage.UploadManager(client, allow_parallel_uploads=True, parallel_process_count=10)
     try:

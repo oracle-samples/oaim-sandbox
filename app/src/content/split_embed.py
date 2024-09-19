@@ -7,6 +7,7 @@ import math
 import tempfile
 import inspect
 import os
+import re
 import requests
 
 # Streamlit
@@ -43,8 +44,18 @@ def get_compartments():
     return oci.get_compartments(state.oci_config)
 
 
-def filesdataframe(objects, process=False):
-    """Produce a dataframe of files"""
+@st.cache_data
+def get_buckets(compartment):
+    return oci.get_buckets(
+        state.oci_config,
+        state.oci_namespace,
+        compartment,
+    )
+
+
+@st.cache_resource
+def files_data_frame(objects, process=False):
+    """Produce a data frame of files"""
     files = pd.DataFrame({"File": [], "Process": []})
     if len(objects) >= 1:
         files = pd.DataFrame(
@@ -56,8 +67,8 @@ def filesdataframe(objects, process=False):
     return files
 
 
-def filesdataeditor(files, key):
-    """Edit Dataframe"""
+def files_data_editor(files, key):
+    """Edit data frame"""
     return st.data_editor(
         files,
         key=key,
@@ -199,136 +210,68 @@ def main():
         list(state.distance_metric_config.keys()),
         key="select_box_distance_metric",
     )
+    # Create a text input widget
+    embed_alias = st.text_input(
+        "Embedding Alias:",
+        max_chars=20,
+        help="""
+            (Optional) Provide an alias to help identify the embedding during RAG experimentation.
+            It must start with a character and only contain alphanumerics and underscores.
+            Max Characters: 20
+            """,
+        key="text_input_embed_alias",
+        placeholder="Optional; press Enter to set.",
+    )
+    # Define the regex pattern: starts with a letter, followed by alphanumeric characters or underscores
+    pattern = r"^[A-Za-z][A-Za-z0-9_]*$"
+    # Check if input is valid
+    if embed_alias and not re.match(pattern, embed_alias):
+        st.error(
+            "Invalid Alias! It must start with a letter and only contain alphanumeric characters and underscores."
+        )
+
     chunk_overlap_size = math.ceil((state.chunk_overlap_input / 100) * state.chunk_size_input)
     store_table, store_comment = vectorstorage.get_vs_table(
-        selected_embed_model, state.chunk_size_input, chunk_overlap_size, distance_metric
+        selected_embed_model, state.chunk_size_input, chunk_overlap_size, distance_metric, embed_alias
     )
+
     ######################################
     # Splitting
     ######################################
     st.header("Load and Split Documents", divider="rainbow")
     file_source = st.radio("File Source:", file_sources, key="radio_file_source", horizontal=True)
+    store_button_disabled = True
 
     ######################################
     # Local Source
     ######################################
     if file_source == "Local":
+        button_help = """
+            This button is disabled if no local files have been provided.
+        """
         st.subheader("Local Files", divider=False)
         local_files = st.file_uploader("Choose a file:", key="local_file_uploader", accept_multiple_files=True)
-        src_files = []
-        split_docos = []
-        if len(local_files) > 0:
-            src_files = split.write_files(local_files)
-            split_docos, _ = split.load_and_split_documents(
-                src_files,
-                selected_embed_model,
-                state.chunk_size_input,
-                chunk_overlap_size,
-                write_json=False,
-                output_dir=None,
-            )
-
-        # List out Split Files
-        if len(split_docos) == 0:
-            store_button_disabled = True
-        else:
-            store_button_disabled = False
-
-        st.text(f"Vector Store: {store_table}")
-        if st.button(
-            "Populate Vector Store",
-            type="primary",
-            key="button_local_load",
-            disabled=store_button_disabled,
-        ):
-            placeholder = st.empty()
-            with placeholder:
-                st.warning("Populating Vector Store... please be patient.", icon="⚠️")
-            try:
-                db_conn = db_utils.connect(state.db_config)
-                vectorstorage.populate_vs(
-                    db_conn,
-                    store_table,
-                    store_comment,
-                    model,
-                    distance_metric,
-                    documents=split_docos,
-                )
-                placeholder.empty()
-                st_common.reset_rag()
-                st.success("Vector Store Populated.", icon="✅")
-            except Exception as ex:
-                placeholder.empty()
-                st.error(f"Operation Failed: {ex}.", icon="🚨")
+        store_button_disabled = len(local_files) == 0
 
     ######################################
     # Web Source
     ######################################
     if file_source == "Web":
+        button_help = """
+            This button is disabled if there the URL was unable to be validated.  Please check the URL.
+        """
         st.subheader("Web Pages", divider=False)
         web_url = st.text_input("URL:", key="text_input_web_url")
-        web_load_button_disabled = True
-        if web_url:
-            url_accessible, err_msg = st_common.is_url_accessible(web_url)
-            web_load_button_disabled = not url_accessible
-
-        st.text(f"Vector Store: {store_table}")
-        if st.button(
-            "Load, Split, and Populate Vector Store",
-            type="primary",
-            key="button_web_load",
-            disabled=web_load_button_disabled,
-        ):
-            placeholder = st.empty()
-            with placeholder:
-                st.warning("Operation in progress... please be patient.", icon="⚠️")
-            try:
-                if web_url.endswith(".pdf"):
-                    logger.info("Loading PDF from web")
-                    file_name = os.path.basename(web_url)
-                    pdf_file = requests.get(web_url, timeout=60)
-                    with tempfile.TemporaryDirectory() as temp_dir:
-                        temp_file_path = os.path.join(temp_dir, file_name)
-                        # Write the content to a file with the extracted filename
-                        with open(temp_file_path, "wb") as temp_file:
-                            temp_file.write(pdf_file.content)
-                        logger.info("Wrote %s", temp_file_path)
-                        split_docos, _ = split.load_and_split_documents(
-                            [temp_file_path],
-                            selected_embed_model,
-                            state.chunk_size_input,
-                            chunk_overlap_size,
-                            write_json=False,
-                            output_dir=None,
-                        )
-                else:
-                    split_docos, _ = split.load_and_split_url(
-                        selected_embed_model,
-                        web_url,
-                        state.chunk_size_input,
-                        chunk_overlap_size,
-                    )
-                db_conn = db_utils.connect(state.db_config)
-                # If API Key is needed and not set, it will except here
-                vectorstorage.populate_vs(
-                    db_conn,
-                    store_table,
-                    store_comment,
-                    model,
-                    distance_metric,
-                    documents=split_docos,
-                )
-                placeholder.empty()
-                st_common.reset_rag()
-                st.success("Operation Completed.", icon="✅")
-            except Exception as ex:
-                placeholder.empty()
-                st.error(f"Operation Failed: {ex}.", icon="🚨")
+        store_button_disabled = not (web_url and st_common.is_url_accessible(web_url)[0])
 
     ######################################
     # OCI Source
     ######################################
     if file_source == "OCI":
+        button_help = """
+            This button is disabled if there are no documents from the source bucket split with
+            the current split and embed options.  Please Split and Embed to enable Vector Storage.
+        """
         if "oci_namespace" not in state:
             state.oci_namespace = oci.get_namespace(state.oci_config)
         oci_compartments = get_compartments()
@@ -347,12 +290,7 @@ def main():
                 placeholder="Select bucket compartment...",
             )
             if bucket_compartment:
-                src_bucket_list = oci.get_buckets(
-                    state.oci_config,
-                    state.oci_namespace,
-                    oci_compartments[bucket_compartment],
-                )
-
+                src_bucket_list = get_buckets(oci_compartments[bucket_compartment])
         with col2_2:
             src_bucket = st.selectbox(
                 "Source bucket:",
@@ -366,11 +304,11 @@ def main():
             dst_bucket = src_bucket + "_" + store_table.lower()
             st.text(f"Destination Bucket: {dst_bucket}")
             src_objects = oci.get_bucket_objects(state.oci_config, state.oci_namespace, src_bucket)
-            src_files = filesdataframe(src_objects)
+            src_files = files_data_frame(src_objects)
         else:
             src_files = pd.DataFrame({"File": [], "Process": []})
 
-        src_files_selected = filesdataeditor(src_files, "source")
+        src_files_selected = files_data_editor(src_files, "source")
         if src_files_selected["Process"].sum() == 0:
             oci_load_button_disabled = True
         else:
@@ -385,12 +323,12 @@ def main():
                 progress_stat = int((((index + 1) * progress_ind) / 2))
                 progress_bar.progress(progress_stat, text=progress_text)
                 # Note directory/file is created/deleted on every iteration for space savings
-                with tempfile.TemporaryDirectory() as tmpdirname:
+                with tempfile.TemporaryDirectory() as temp_dir:
                     src_file = oci.get_object(
                         state.oci_config,
                         state.oci_namespace,
                         src_bucket,
-                        tmpdirname,
+                        temp_dir,
                         f.File,
                     )
                     _, split_file = split.load_and_split_documents(
@@ -399,14 +337,14 @@ def main():
                         state.chunk_size_input,
                         chunk_overlap_size,
                         write_json=True,
-                        output_dir=tmpdirname,
+                        output_dir=temp_dir,
                     )
                     oci.put_object(
                         state.oci_config,
                         state.oci_namespace,
                         oci_compartments[bucket_compartment],
                         dst_bucket,
-                        split_file,
+                        split_file[0],
                     )
                 progress_stat = int(((index + 1) * progress_ind))
                 progress_bar.progress(progress_stat, text=progress_text)
@@ -417,64 +355,106 @@ def main():
         if dst_bucket:
             try:
                 dst_objects = oci.get_bucket_objects(state.oci_config, state.oci_namespace, dst_bucket)
-                dst_files = filesdataframe(dst_objects)
+                dst_files = files_data_frame(dst_objects)
             except Exception as ex:
                 logger.exception(ex)
                 dst_files = pd.DataFrame({"File": [], "Process": []})
         else:
             dst_files = pd.DataFrame({"File": [], "Process": []})
 
-        dst_files_selected = filesdataeditor(dst_files, "destination")
-        if dst_files_selected["Process"].sum() == 0:
-            store_button_disabled = True
-        else:
-            store_button_disabled = False
+        dst_files_selected = files_data_editor(dst_files, "destination")
+        store_button_disabled = dst_files_selected["Process"].sum() == 0
 
-        st.text(f"Vector Store: {store_table}")
-        if st.button(
-            "Populate Vector Store",
-            type="primary",
-            disabled=store_button_disabled,
-            help="""
-                This button is disabled if there are no documents from the source bucket split with
-                the current split and embed options.  Please Split and Embed to enable Vector Storage.
-            """,
-        ):
+    ######################################
+    # Populate Vector Store
+    ######################################
+    st.text(f"Vector Store: {store_table}")
+
+    if st.button(
+        "Populate Vector Store",
+        type="primary",
+        key="button_local_load",
+        disabled=store_button_disabled,
+        help=button_help,
+    ):
+        temp_dir = tempfile.TemporaryDirectory()
+        split_docos = []
+        try:
+            db_conn = db_utils.connect(state.db_config)
             placeholder = st.empty()
             with placeholder:
                 st.warning("Populating Vector Store... please be patient.", icon="⚠️")
-            process_list = dst_files_selected[dst_files_selected["Process"]].reset_index(drop=True)
-            logger.info("Processing %i files", len(process_list))
-            progress_text = "Operation in progress. Please wait."
-            progress_bar = st.progress(0, text=progress_text)
-            progress_ind = 100 / len(process_list)
-            db_conn = db_utils.connect(state.db_config)
-            for index, f in process_list.iterrows():
-                progress_stat = int((((index + 1) * progress_ind) / 2))
-                progress_bar.progress(progress_stat, text=progress_text)
-                # Note directory/file is created/deleted on every iteration for space savings
-                with tempfile.TemporaryDirectory() as tmpdirname:
-                    dst_file = oci.get_object(
+
+            if file_source == "Local":
+                src_files = split.write_files(local_files)
+                split_docos, _ = split.load_and_split_documents(
+                    src_files,
+                    selected_embed_model,
+                    state.chunk_size_input,
+                    chunk_overlap_size,
+                    write_json=False,
+                    output_dir=None,
+                )
+
+            if file_source == "Web":
+                if web_url.endswith(".pdf"):
+                    file_name = os.path.basename(web_url)
+                    pdf_file = requests.get(web_url, timeout=60)
+                    print(file_name)
+                    print(temp_dir.name)
+                    temp_file_path = os.path.join(temp_dir.name, file_name)
+                    logger.info("Loading PDF from web to %s", temp_file_path)
+                    # Write the content to a file with the extracted filename
+                    with open(temp_file_path, "wb") as temp_file:
+                        temp_file.write(pdf_file.content)
+                    logger.info("Wrote %s", temp_file_path)
+                    split_docos, _ = split.load_and_split_documents(
+                        [temp_file_path],
+                        selected_embed_model,
+                        state.chunk_size_input,
+                        chunk_overlap_size,
+                        write_json=False,
+                        output_dir=None,
+                    )
+                else:
+                    split_docos, _ = split.load_and_split_url(
+                        selected_embed_model,
+                        web_url,
+                        state.chunk_size_input,
+                        chunk_overlap_size,
+                    )
+
+            if file_source == "OCI":
+                process_list = dst_files_selected[dst_files_selected["Process"]].reset_index(drop=True)
+                for index, f in process_list.iterrows():
+                    object_file = oci.get_object(
                         state.oci_config,
                         state.oci_namespace,
                         dst_bucket,
-                        tmpdirname,
+                        temp_dir.name,
                         f.File,
                     )
-                    vectorstorage.populate_vs(
-                        db_conn,
-                        store_table,
-                        store_comment,
-                        model,
-                        distance_metric,
-                        src_files=[dst_file],
-                    )
-                progress_stat = int(((index + 1) * progress_ind))
-                progress_bar.progress(progress_stat, text=progress_text)
-            progress_bar.empty()
+                    split_docos.append(object_file)
+
+            # Population
+            vectorstorage.populate_vs(
+                db_conn,
+                store_table,
+                store_comment,
+                model,
+                distance_metric,
+                split_docos,
+            )
             placeholder.empty()
             st_common.reset_rag()
             st.success("Vector Store Populated.", icon="✅")
+
+        except Exception as ex:
+            placeholder.empty()
+            logger.exception("Operation Failed: %s", ex)
+            st.error(f"Operation Failed: {ex}.", icon="🚨")
+
+        temp_dir.cleanup()
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:
