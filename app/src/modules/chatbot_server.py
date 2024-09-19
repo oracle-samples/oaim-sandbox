@@ -16,7 +16,6 @@ import modules.chatbot as chatbot
 
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 
-
 logger = logging_config.logging.getLogger("modules.chatbot_server")
 
 
@@ -80,7 +79,6 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
             logger.info("Authorization Header: %s", auth_header)
 
             if expected_api_key == auth_header:
-
                 for header, value in self.headers.items():
                     logger.info("Header: %s = %s", header, value)
 
@@ -165,7 +163,6 @@ def run_server(port, chat_manager, rag_params, lm_instr, context_instr, api_key)
 
 
 def gui_start():
-
     logger.info("GUI start: log for state")
     if "chat_manager" in st.session_state:
         logger.info(state.chat_manager)

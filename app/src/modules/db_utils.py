@@ -36,7 +36,7 @@ def initialise(user=None, password=None, dsn=None, wallet_password=None):
 
 
 def connect(config):
-    """Estabilish a connection to an Oracle Database"""
+    """Establish a connection to an Oracle Database"""
     conn = oracledb.connect(**config)
     logger.debug("Database Connection Established")
     return conn
@@ -47,7 +47,7 @@ def get_vs_tables(conn):
     logger.info("Looking for Vector Storage Tables")
     output = {}
     sql = """
-        SELECT ut.table_name||':'||REPLACE(utc.comments, 'GENAI: ', '') as jdoc
+        SELECT ut.table_name||':'||REPLACE(utc.comments, 'GENAI: ', '')
           FROM user_tab_comments utc, user_tables ut
          WHERE utc.table_name = ut.table_name
            AND utc.comments LIKE 'GENAI:%'"""

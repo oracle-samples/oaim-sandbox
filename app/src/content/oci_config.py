@@ -28,7 +28,7 @@ def initialise_streamlit():
     if "oci_configured" in state:
         return
 
-    logger.info("Initialising OCI Configuration")
+    logger.info("Initializing OCI Configuration")
     if "oci_config" not in state:
         state.oci_config = oci_utils.initialise()
     try:
@@ -108,7 +108,7 @@ def main():
                 st.success("OCI API Authentication Tested Successfully", icon="✅")
                 state.oci_config = test_config
                 st.success("OCI Configuration Saved", icon="✅")
-                state.oci_configred = True
+                state.oci_configured = True
             except oci_utils.OciException as ex:
                 logger.exception(ex, exc_info=False)
                 st.error(ex, icon="🚨")

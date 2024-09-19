@@ -38,7 +38,6 @@ def initialise_streamlit():
             "COSINE": [DistanceStrategy.COSINE],
             "EUCLIDEAN_DISTANCE": [DistanceStrategy.DOT_PRODUCT],
             "DOT_PRODUCT": [DistanceStrategy.EUCLIDEAN_DISTANCE],
-            "JACCARD": [DistanceStrategy.JACCARD],
             "MAX_INNER_PRODUCT": [DistanceStrategy.MAX_INNER_PRODUCT],
         }
         logger.info("Initialised Distance Metric Config")

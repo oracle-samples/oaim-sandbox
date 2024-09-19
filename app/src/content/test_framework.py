@@ -12,7 +12,6 @@ import pandas as pd
 import streamlit as st
 from streamlit import session_state as state
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
-import modules.logging_config as logging_config
 
 # Utilities
 import modules.st_common as st_common
@@ -22,10 +21,7 @@ import modules.test_framework as test_framework
 import modules.chatbot as chatbot
 import modules.report_utils as report_utils
 
-
-# Help
-
-
+# Giskard
 from giskard.rag import QATestset
 from giskard.rag import evaluate
 import plotly.graph_objects as go
@@ -84,7 +80,7 @@ def get_answer_fn(question: str, history=None) -> str:
 
 
 def create_gauge(value):
-    """Create the GUI Guage"""
+    """Create the GUI Gauge"""
     fig = go.Figure(
         go.Indicator(
             mode="gauge+number",
@@ -154,10 +150,7 @@ def main():
     try:
         lm_model = st_common.lm_sidebar()
     except ValueError:
-        st.error(
-            "No models are configured and/or enabled.",
-            icon="🚨",
-        )
+        st.error("No models are configured and/or enabled.", icon="🚨")
         st.stop()
     # Used to clear the uploader files
     if "test_uploader_key" not in state:
@@ -209,7 +202,7 @@ def main():
             tn_file = os.path.join(state["temp_dir"], f"{file_name}_{str(qa_count)}_text_nodes.pkl")
             text_nodes = test_framework.load_and_split(eval_file, tn_file)
 
-            # Build Knowlege Base
+            # Build Knowledge Base
             kb_file = os.path.join(state["temp_dir"], f"{file_name}_{str(qa_count)}_knowledge_base.json")
             kb = test_framework.build_knowledge_base(text_nodes, kb_file)
 
@@ -241,7 +234,7 @@ def main():
                 st.info("Loading Test Sets... please be patient.", icon="⚠️")
             qa_files = split.write_files(test_set_file)
             state.temp_dir = os.path.dirname(qa_files[0])
-            logger.info("Temp dir created with Generate Q&A: " + state.temp_dir)
+            logger.info("Temp dir created with Generate Q&A: %s", state.temp_dir)
             merged_test_file = test_framework.merge_jsonl_files(qa_files, state["temp_dir"])
             state.merged_test_file = merged_test_file
             state.test_set = QATestset.load(merged_test_file)
@@ -320,7 +313,7 @@ def main():
                     st.info("Starting Q&A evaluation... please be patient.", icon="⚠️")
 
                 # Run Evaluation
-                logger.info("state.test_set = QATestset.load(edited_test_file): " + edited_test_file)
+                logger.info("state.test_set = QATestset.load(edited_test_file): %s", edited_test_file)
 
                 clean_test_file = report_utils.clean_hide(edited_test_file)
                 state.test_set = QATestset.load(clean_test_file)
