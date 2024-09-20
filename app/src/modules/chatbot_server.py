@@ -58,7 +58,7 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
         self.api_key = api_key
         super().__init__(*args, **kwargs)
 
-    def do_options(self):
+    def do_OPTIONS(self):
         # Send a 200 OK response for the OPTIONS request
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -66,7 +66,7 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type")
         self.end_headers()
 
-    def do_post(self):
+    def do_POST(self):
         expected_api_key = "Bearer " + self.api_key
         # Parse query parameters
         parsed_path = urlparse(self.path)

@@ -38,3 +38,4 @@ sonar-project.properties
 __pycache__/
 *.py[cod]
 *$py.class
+env.sh
