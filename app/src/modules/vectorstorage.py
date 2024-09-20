@@ -5,7 +5,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 import json
 import re
-from typing import List
+from typing import List, Union
 import math
 import modules.logging_config as logging_config
 
@@ -30,9 +30,6 @@ def init_vs(db_conn, embedding_function, store_table, distance_metric):
 
     logger.info("Vectorstore %s loaded", vectorstore)
     return vectorstore
-
-
-
 
 
 def get_embedding_model(model, embed_model_config=None):
@@ -63,13 +60,16 @@ def get_embedding_model(model, embed_model_config=None):
     return model, api_accessible, err_msg
 
 
-def get_vs_table(model, chunk_size, chunk_overlap, distance_metric):
+def get_vs_table(model, chunk_size, chunk_overlap, distance_metric, embed_alias=None):
     """Get a list of Vector Store Tables"""
     chunk_overlap_ceil = math.ceil(chunk_overlap)
     table_string = f"{model}_{chunk_size}_{chunk_overlap_ceil}_{distance_metric}"
+    if embed_alias:
+        table_string = f"{embed_alias}_{table_string}"
     store_table = re.sub(r"\W", "_", table_string.upper())
     store_comment = (
-        f'{{"model": "{model}",'
+        f'{{"alias": "{embed_alias}",'
+        f'"model": "{model}",'
         f'"chunk_size": {chunk_size},'
         f'"chunk_overlap": {chunk_overlap_ceil},'
         f'"distance_metric": "{distance_metric}"}}'
@@ -84,8 +84,7 @@ def populate_vs(
     store_comment,
     model_name,
     distance_metric,
-    documents: List[LangchainDocument] = None,
-    src_files: List = None,
+    input_data: Union[List["LangchainDocument"], List] = None,
 ):
     """Populate the Vector Storage"""
 
@@ -105,15 +104,20 @@ def populate_vs(
         logger.info("Chunks ingested: %i", len(docs))
         return docs
 
-    if src_files:
+    # Loop through files and create Documents
+    if isinstance(input_data[0], LangchainDocument):
+        logger.info("Processing Documents: %s", input_data)
+        documents = input_data
+    else:
         documents = []
-        for file in src_files:
+        for file in input_data:
+            logger.info("Processing file: %s into a Document.", file)
             documents.extend(json_to_doc(file))
 
     logger.info("Size of Payload: %i bytes", documents.__sizeof__())
     logger.info("Total Chunks: %i", len(documents))
 
-    # Remove duplicates (copywrites, etc)
+    # Remove duplicates (copy-writes, etc)
     unique_texts = {}
     unique_chunks = []
     for chunk in documents:
@@ -123,9 +127,9 @@ def populate_vs(
     logger.info("Total Unique Chunks: %i", len(unique_chunks))
 
     # Need to consider this, it duplicates from_documents
+    logger.info("Dropping table %s", store_table)
     LangchainVS.drop_table_purge(db_conn, store_table)
 
-    logger.debug("Here at last: %s", model_name)
     vectorstore = OracleVS(
         client=db_conn,
         embedding_function=model_name,
@@ -144,6 +148,13 @@ def populate_vs(
             len(unique_chunks),
         )
         OracleVS.add_documents(vectorstore, documents=batch)
+
+    # Build the Index
+    logger.info("Creating index on: %s", store_table)
+    try:
+        LangchainVS.create_index(db_conn, vectorstore)
+    except Exception as ex:
+        logger.error("Unable to create vector index: %s", ex)
 
     # Comment the VS table
     comment = f"COMMENT ON TABLE {store_table} IS 'GENAI: {store_comment}'"

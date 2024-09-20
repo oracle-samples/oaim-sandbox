@@ -73,6 +73,7 @@ def update_rag():
         "fetch_k",
         "lambda_mult",
         "rerank",
+        "alias",
         "model",
         "chunk_size",
         "chunk_overlap",
@@ -102,7 +103,7 @@ def reset_rag():
     logger.debug("Resetting RAG Parameters")
     state.rag_user_idx = {}
     state.rag_filter = {}
-    params = ["model", "chunk_size", "chunk_overlap", "distance_metric"]
+    params = ["alias", "model", "chunk_size", "chunk_overlap", "distance_metric"]
     for param in params:
         state.pop(f"rag_user_{param}", None)
 
@@ -141,13 +142,13 @@ def initialise_rag():
         else:
             state.rag_button_disabled = False
             # Iterate over parameters and set values when possible
-            params = ["model", "chunk_size", "chunk_overlap", "distance_metric"]
+            params = ["alias", "model", "chunk_size", "chunk_overlap", "distance_metric"]
             for param in params:
                 # LOV Filter (stored in rag_filter)
                 try:
                     unique_values = state.rag_filter[param]
                 except KeyError:
-                    unique_values = list({v[param] for v in state.vs_tables.values()})
+                    unique_values = list({v[param] for v in state.vs_tables.values() if param in v})
                     state.rag_filter[param] = unique_values
 
                 logger.debug("Unique Values for %s: %s (length: %i)", param, unique_values, len(unique_values))
@@ -193,6 +194,7 @@ def initialise_chatbot(lm_model):
             state.rag_params["chunk_size"],
             state.rag_params["chunk_overlap"],
             state.rag_params["distance_metric"],
+            state.rag_params["alias"],
         )
         # Initialise Retriever
         vectorstore = vectorstorage.init_vs(
@@ -274,75 +276,94 @@ def lm_sidebar():
 ###################################
 # RAG Sidebar
 ###################################
-
-
 def rag_sidebar():
     """RAG Sidebar"""
 
     def refresh_rag_filtered():
         """Refresh the RAG LOVs"""
         # Get the current selected values
-        user_model, user_chunk_size, user_chunk_overlap, user_distance_metric = (
+        user_alias, user_model, user_chunk_size, user_chunk_overlap, user_distance_metric = (
             state.get(f"rag_user_{param}", None)
-            for param in ["model", "chunk_size", "chunk_overlap", "distance_metric"]
+            for param in ["alias", "model", "chunk_size", "chunk_overlap", "distance_metric"]
         )
         logger.debug(
-            "Filtering on - Model: %s; Chunk Size: %s; Chunk Overlap: %s; Distance Metric: %s",
+            "Filtering on - Alias: %s; Model: %s; Chunk Size: %s; Chunk Overlap: %s; Distance Metric: %s",
+            user_alias,
             user_model,
             user_chunk_size,
             user_chunk_overlap,
             user_distance_metric,
         )
         # Filter the vector storage table based on selected values
+        if user_alias:
+            rag_filt_alias = [user_alias]
+        else:
+            rag_filt_alias = [
+                v.get("alias", None)
+                for v in state.vs_tables.values()
+                if (user_model is None or v["model"] == user_model)
+                and (user_chunk_size is None or v["chunk_size"] == user_chunk_size)
+                and (user_chunk_overlap is None or v["chunk_overlap"] == user_chunk_overlap)
+                and (user_distance_metric is None or v["distance_metric"] == user_distance_metric)
+            ]
+
         if user_model:
             rag_filt_model = [user_model]
         else:
             rag_filt_model = [
                 v["model"]
                 for v in state.vs_tables.values()
-                if (user_chunk_size is None or v["chunk_size"] == user_chunk_size)
+                if (user_alias is None or v.get("alias", None) == user_alias)
+                and (user_chunk_size is None or v["chunk_size"] == user_chunk_size)
                 and (user_chunk_overlap is None or v["chunk_overlap"] == user_chunk_overlap)
                 and (user_distance_metric is None or v["distance_metric"] == user_distance_metric)
             ]
+
         if user_chunk_size:
             rag_filt_chunk_size = [user_chunk_size]
         else:
             rag_filt_chunk_size = [
                 v["chunk_size"]
                 for v in state.vs_tables.values()
-                if (user_model is None or v["model"] == user_model)
+                if (user_alias is None or v.get("alias", None) == user_alias)
+                and (user_model is None or v["model"] == user_model)
                 and (user_chunk_overlap is None or v["chunk_overlap"] == user_chunk_overlap)
                 and (user_distance_metric is None or v["distance_metric"] == user_distance_metric)
             ]
+
         if user_chunk_overlap:
             rag_filt_chunk_overlap = [user_chunk_overlap]
         else:
             rag_filt_chunk_overlap = [
                 v["chunk_overlap"]
                 for v in state.vs_tables.values()
-                if (user_model is None or v["model"] == user_model)
+                if (user_alias is None or v.get("alias", None) == user_alias)
+                and (user_model is None or v["model"] == user_model)
                 and (user_chunk_size is None or v["chunk_size"] == user_chunk_size)
                 and (user_distance_metric is None or v["distance_metric"] == user_distance_metric)
             ]
+
         if user_distance_metric:
             rag_filt_distance_metric = [user_distance_metric]
         else:
             rag_filt_distance_metric = [
                 v["distance_metric"]
                 for v in state.vs_tables.values()
-                if (user_model is None or v["model"] == user_model)
+                if (user_alias is None or v.get("alias", None) == user_alias)
+                and (user_model is None or v["model"] == user_model)
                 and (user_chunk_size is None or v["chunk_size"] == user_chunk_size)
                 and (user_chunk_overlap is None or v["chunk_overlap"] == user_chunk_overlap)
             ]
 
         # Remove duplicates and sort
+        state.rag_filter["alias"] = sorted(set(rag_filt_alias))
         state.rag_filter["model"] = sorted(set(rag_filt_model))
         state.rag_filter["chunk_size"] = sorted(set(rag_filt_chunk_size))
         state.rag_filter["chunk_overlap"] = sorted(set(rag_filt_chunk_overlap))
         state.rag_filter["distance_metric"] = sorted(set(rag_filt_distance_metric))
 
         # (Re)set the index to previously selected option
-        attributes = ["model", "chunk_size", "chunk_overlap", "distance_metric"]
+        attributes = ["alias", "model", "chunk_size", "chunk_overlap", "distance_metric"]
         for attr in attributes:
             filtered_list = state.rag_filter[attr]
             user_value = getattr(state, f"rag_user_{attr}")
@@ -426,6 +447,20 @@ def rag_sidebar():
                 help=custom_help.gui_help["rag_lambda_mult"]["english"],
                 on_change=update_rag,
             )
+        st.sidebar.divider()
+        if any(state.rag_filter["alias"]):
+            st.sidebar.selectbox(
+                "Embedding Alias: ",
+                state.rag_filter["alias"],
+                index=state.rag_user_idx["alias"],
+                key="rag_user_alias",
+                placeholder="Choose and option or leave blank.",
+                help="""
+                If an alias was specified during embedding, you can use it to set the remaining values.
+                It can be left blank.
+                """,
+                on_change=refresh_rag_filtered,
+            )
         st.sidebar.selectbox(
             "Embedding Model: ",
             state.rag_filter["model"],
@@ -456,6 +491,7 @@ def rag_sidebar():
         )
 
         st.sidebar.button("Reset RAG", type="primary", on_click=reset_rag)
+        st.sidebar.divider()
         chatbot_server.sidebar_start_server()
 
 

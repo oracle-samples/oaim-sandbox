@@ -149,8 +149,8 @@ def load_and_split_documents(
     If output_dir, a list of written json files
     """
     split_files = []
+    split_docos = []
     for file in src_files:
-        split_docos = []
         name = os.path.basename(file)
         stat = os.stat(file)
         extension = os.path.splitext(file)[1][1:]
@@ -179,7 +179,7 @@ def load_and_split_documents(
             split_docos += split_doc_with_mdata
 
         if write_json and output_dir:
-            split_files += doc_to_json(split_docos, file, output_dir)
+            split_files.append(doc_to_json(split_docos, file, output_dir))
     logger.info("Total Number of Chunks: %i", len(split_docos))
 
     return split_docos, split_files
@@ -201,7 +201,7 @@ def load_and_split_url(
     """
     split_docos = []
     split_files = []
-    
+
     logger.info("Loading %s", url)
     loader = WebBaseLoader(
         web_paths=(f"{url}",),

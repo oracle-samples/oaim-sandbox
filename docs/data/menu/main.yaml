@@ -3,6 +3,8 @@ main:
     ref: "/"
   - name: Walkthrough
     ref: "/walkthrough"
+  - name: Infrastructure
+    ref: "/infrastructure"
   - name: The Sandbox
     sub:
       - name: "ChatBot 🏠"
