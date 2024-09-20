@@ -240,7 +240,7 @@ def main():
     ######################################
     st.header("Load and Split Documents", divider="rainbow")
     file_source = st.radio("File Source:", file_sources, key="radio_file_source", horizontal=True)
-    store_button_disabled = True
+    populate_button_disabled = True
 
     ######################################
     # Local Source
@@ -251,7 +251,7 @@ def main():
         """
         st.subheader("Local Files", divider=False)
         local_files = st.file_uploader("Choose a file:", key="local_file_uploader", accept_multiple_files=True)
-        store_button_disabled = len(local_files) == 0
+        populate_button_disabled = len(local_files) == 0
 
     ######################################
     # Web Source
@@ -262,7 +262,7 @@ def main():
         """
         st.subheader("Web Pages", divider=False)
         web_url = st.text_input("URL:", key="text_input_web_url")
-        store_button_disabled = not (web_url and st_common.is_url_accessible(web_url)[0])
+        populate_button_disabled = not (web_url and st_common.is_url_accessible(web_url)[0])
 
     ######################################
     # OCI Source
@@ -363,7 +363,7 @@ def main():
             dst_files = pd.DataFrame({"File": [], "Process": []})
 
         dst_files_selected = files_data_editor(dst_files, "destination")
-        store_button_disabled = dst_files_selected["Process"].sum() == 0
+        populate_button_disabled = dst_files_selected["Process"].sum() == 0
 
     ######################################
     # Populate Vector Store
@@ -373,8 +373,8 @@ def main():
     if st.button(
         "Populate Vector Store",
         type="primary",
-        key="button_local_load",
-        disabled=store_button_disabled,
+        key="button_populate",
+        disabled=populate_button_disabled,
         help=button_help,
     ):
         temp_dir = tempfile.TemporaryDirectory()

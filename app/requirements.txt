@@ -11,11 +11,8 @@
 ### pip3 install -r app/requirements.txt
 
 ## Top-Level brings in the required dependencies, if adding modules, try to find the minimum required
-beautifulsoup4==4.12.3
-griffe==0.48.0
 giskard[llm]==2.15.1
 IPython==8.27.0
-langchain==0.3.0
 langchain_community==0.3.0
 langchain_huggingface==0.1.0
 langchain_ollama==0.2.0
@@ -25,9 +22,6 @@ lxml==5.3.0
 oci>=2.0.0
 oracledb>=2.0.0
 plotly==5.24.1
-pypdf>=4.0.1
-pytest>=8.3.2
-setuptools>=75.1.0
 streamlit==1.38.0
 
 ## For Licensing Purposes... this ensures no GPU modules
