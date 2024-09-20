@@ -4,6 +4,11 @@ date = 2024-09-11T14:33:30Z
 draft = false
 +++
 
+<!--
+Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
+-->
+
 This walkthrough will guide you through a basic installation of the **Oracle AI Microservices Sandbox** (the **Sandbox**). It will allow you to experiment with GenAI, using Retrieval-Augmented Generation (**RAG**) with Oracle Database 23ai at the core.
 
 By the end of the walkthrough you will be familiar with:
