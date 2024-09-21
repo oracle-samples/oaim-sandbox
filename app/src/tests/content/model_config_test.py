@@ -44,7 +44,7 @@ def test_main_lm_no_env(unset_api_env):
 
     assert at.session_state.lm_model_config[model_name]["api_key"] == ""
     at.text_input(key=f"lm_{model_name}_api_key").set_value("NEW_TEST_API_KEY").run()
-    at.button[1].click().run()
+    at.button[0].click().run()
     assert at.session_state.lm_model_config[model_name]["api_key"] == "NEW_TEST_API_KEY"
     assert at.success[0].icon == "✅", "Language Model Configuration - Updated"
 
@@ -59,7 +59,7 @@ def test_main_lm_env(set_api_env):
 
     assert at.session_state.lm_model_config[model_name]["api_key"] == "TEST_API_KEY"
     at.text_input(key=f"lm_{model_name}_api_key").set_value("NEW_TEST_API_KEY").run()
-    at.button[1].click().run()
+    at.button[0].click().run()
     assert at.session_state.lm_model_config[model_name]["api_key"] == "NEW_TEST_API_KEY"
     assert at.success[0].icon == "✅", "Language Model Configuration - Updated"
 
@@ -74,7 +74,7 @@ def test_main_embed_no_env(unset_api_env):
 
     assert at.session_state.embed_model_config[model_name]["api_key"] == ""
     at.text_input(key=f"embed_{model_name}_api_key").set_value("NEW_TEST_API_KEY").run()
-    at.button[0].click().run()
+    at.button[1].click().run()
     assert at.session_state.embed_model_config[model_name]["api_key"] == "NEW_TEST_API_KEY"
     assert at.success[0].icon == "✅", "Embedding Model Configuration  - Updated"
 
@@ -89,6 +89,6 @@ def test_main_embed_env(set_api_env):
 
     assert at.session_state.embed_model_config[model_name]["api_key"] == "TEST_API_KEY"
     at.text_input(key=f"embed_{model_name}_api_key").set_value("NEW_TEST_API_KEY").run()
-    at.button[0].click().run()
+    at.button[1].click().run()
     assert at.session_state.embed_model_config[model_name]["api_key"] == "NEW_TEST_API_KEY"
     assert at.success[0].icon == "✅", "Embedding Model Configuration  - Updated"

@@ -35,6 +35,7 @@ def unset_db_env(monkeypatch):
     monkeypatch.delenv("DB_USERNAME", raising=False)
     monkeypatch.delenv("DB_PASSWORD", raising=False)
     monkeypatch.delenv("DB_DSN", raising=False)
+    monkeypatch.delenv("TNS_ADMIN", raising=False)
 
 
 @pytest.fixture
@@ -43,6 +44,7 @@ def set_db_env(monkeypatch):
     monkeypatch.setenv("DB_USERNAME", "TEST_USER")
     monkeypatch.setenv("DB_PASSWORD", "TEST_PASS")
     monkeypatch.setenv("DB_DSN", "TEST_DSN")
+    monkeypatch.delenv("TNS_ADMIN", raising=False)
 
 @pytest.fixture
 def set_db_env_wallet(monkeypatch):
@@ -51,6 +53,7 @@ def set_db_env_wallet(monkeypatch):
     monkeypatch.setenv("DB_PASSWORD", "TEST_PASS")
     monkeypatch.setenv("DB_DSN", "TEST_DSN")
     monkeypatch.setenv("DB_WALLET_PASSWORD", "TEST_WALLET")
+    monkeypatch.delenv("TNS_ADMIN", raising=False)
 
 @pytest.fixture
 def set_oci_env_user(monkeypatch):

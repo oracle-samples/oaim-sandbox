@@ -7,6 +7,12 @@ draft = false
   src = "images/db_config.png"
   title = "Database Configuration"
 +++
+
+<!--
+Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
+-->
+
 {{< hint type=[warning] icon=gdoc_fire title="10-Sept-2024: Documentation In-Progress..." >}}
 Thank you for your patience as we work on updating the documentation. Please check back soon for the latest updates.{{< /hint >}}
 
@@ -38,6 +44,6 @@ For more information on configuring OCI, please read about [OCI Configuration](o
 
 ## Import Settings 💾
 
-Once you have configured the **Oracle AI Microservices Sandbox**, you can export the settings and import them after a restart or new deployment.  
+Once you have configured the **Oracle AI Microservices Sandbox**, you can export the settings and import them after a restart or new deployment.
 
 For more information on importing (and exporting) settings, please read about [Import Settings](import_settings/).

@@ -6,7 +6,6 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # Avoid warnings (and temptation to substitute) about "input"
 # pylint: disable=redefined-builtin
 import modules.logging_config as logging_config
-import modules.st_common as st_common
 
 # Langchain Framework
 from langchain.chains.history_aware_retriever import create_history_aware_retriever

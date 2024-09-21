@@ -1,10 +1,15 @@
----
-title: "Database Configuration"
-date: 2024-09-10T13:57:37Z
-draft: false
----
++++
+title = "Database Configuration"
+date = 2024-09-10T13:57:37Z
+draft = false
++++
 
-To use the Retrieval-Augmented Generation (RAG) functionality of the Sandbox, you will need to setup/enable an [embedding model](model_config) and have access to an **Oracle Database 23ai**. Both the [Always Free Oracle Autonomous Database Serverless (ADB-S)](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/autonomous-always-free.html) and the [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) are supported. They are a great, no-cost, way to get up and running quickly.
+<!--
+Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
+-->
+
+To use the Retrieval-Augmented Generation (RAG) functionality of the Sandbox, you will need to setup/enable an [embedding model](../model_config) and have access to an **Oracle Database 23ai**. Both the [Always Free Oracle Autonomous Database Serverless (ADB-S)](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/autonomous-always-free.html) and the [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) are supported. They are a great, no-cost, way to get up and running quickly.
 
 ## Configuration
 
@@ -45,9 +50,23 @@ export DB_WALLET_PASSWORD=MYCOMPLEXWALLETSECRET
 
 ## Using a Wallet/TNS_ADMIN Directory
 
-For mTLS connectivity, or to specify a TNS Alias instead of a full connect string, you can set the `TNS_ADMIN` environment variable to the location where the SQL\*Net files are staged. Alternatively, you can copy those files to the `app/src/tns_admin` directory.
+For mTLS database connectivity or to specify a TNS alias instead of a full connect string, you can use the contents of a `TNS_ADMIN` directory.
 
-If using and ADB-S wallet, unzip the contents to one of the above (`TNS_ADMIN` or `app/src/tns_admin`) directories.
+{{< hint type=[info] icon=gdoc_info_outline title="Unzip Wallet" >}}
+If using and ADB-S wallet, unzip the contents into the `TNS_ADMIN` directory. The `.zip` file will not be recognized.
+{{< /hint >}}
+
+### Bare-Metal Installation
+
+For bare-metal installations, set the `TNS_ADMIN` environment variable, or copy the contents of your current TNS_ADMIN to `app/src/tns_admin` before starting the **Sandbox**.
+
+### Container Installation
+
+For container installations, there are a couple of ways to include the contents of your `TNS_ADMIN` in the image:
+
+- Before building the image, copy the contents of your `TNS_ADMIN` to `app/src/tns_admin`. This will include your `TNS_ADMIN` as part of the image.
+- Mount your `TNS_ADMIN` directory into the container on startup, for example: `podman run -p 8501:8501 -v $TNS_ADMIN:/app/tns_admin -it --rm oaim-sandbox`
+- Copy the `TNS_ADMIN` directory into an existing running container, for example: `podman cp $TNS_ADMIN /app/tns_admin oaim-sandbox`
 
 ## Database User
 

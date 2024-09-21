@@ -4,6 +4,11 @@ date = 2024-09-11T07:30:34Z
 draft = false
 +++
 
+<!--
+Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
+-->
+
 ## Supported Models
 
 At a minimum, a Large _Language Model_ (LLM) must be configured in **Oracle AI Microservices Sandbox** for basic functionality. For Retrieval-Augmented Generation (**RAG**), an _Embedding Model_ will also need to be configured.
