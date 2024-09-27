@@ -70,8 +70,8 @@ def show_refs(context):
 #############################################################################
 def main():
     """Streamlit GUI"""
-    # Initialise RAG
-    st_common.initialise_rag()
+    # Initialize RAG
+    st_common.initialize_rag()
     # Setup History
     chat_history = StreamlitChatMessageHistory(key="sandbox_chat_history")
 
@@ -101,23 +101,23 @@ def main():
     # Save
     st_common.save_settings_sidebar()
     #########################################################################
-    # Initialise the Client
+    # Initialize the Client
     #########################################################################
     if "initialized" not in state:
         if not state.rag_params["enable"] or all(
             state.rag_params[key] for key in ["model", "chunk_size", "chunk_overlap", "distance_metric"]
         ):
             try:
-                state.chat_manager = st_common.initialise_chatbot(ll_model)
+                state.chat_manager = st_common.initialize_chatbot(ll_model)
                 state.initialized = True
                 st_common.update_rag()
                 logger.debug("Force rerun to save state")
                 st.rerun()
             except Exception as ex:
                 logger.exception(ex, exc_info=False)
-                st.error(f"Failed to initialise the chat client: {ex}")
+                st.error(f"Failed to initialize the chat client: {ex}")
                 st_common.clear_initialized()
-                if st.button("Retry", key="retry_initialise"):
+                if st.button("Retry", key="retry_initialize"):
                     st.rerun()
                 st.stop()
 

@@ -93,8 +93,8 @@ def reset_rag():
     set_prompt()
 
 
-def initialise_rag():
-    """Initialise the RAG LOVs"""
+def initialize_rag():
+    """Initialize the RAG LOVs"""
     try:
         if not state.db_configured:
             logger.debug("RAG Disabled (no DB connection)")
@@ -138,8 +138,8 @@ def initialise_rag():
         st.error("Application has not been initialized, please restart.", icon="⛑️")
 
 
-def initialise_chatbot(ll_model):
-    """Initialise the Chatbot"""
+def initialize_chatbot(ll_model):
+    """Initialize the Chatbot"""
     logger.info("Initializing ChatBot using %s; RAG: %s", ll_model, state.rag_params["enable"])
     vectorstore = None
     ## RAG
@@ -170,7 +170,7 @@ def initialise_chatbot(ll_model):
             state.rag_params["distance_metric"],
             state.rag_params["alias"],
         )
-        # Initialise Retriever
+        # Initialize Retriever
         vectorstore = utilities.init_vs(
             state.db_conn,
             embed_model,
