@@ -17,7 +17,6 @@ import modules.logging_config as logging_config
 import modules.metadata as meta
 import modules.help as custom_help
 import modules.chatbot as chatbot
-import modules.chatbot_server as chatbot_server
 
 logger = logging_config.logging.getLogger("modules.st_common")
 
@@ -210,7 +209,6 @@ def lm_sidebar():
         clear_initialized()
 
     lm_parameters = meta.lm_parameters()
-    st.sidebar.divider()
     try:
         llm_idx = state.enabled_llms.index(state.ll_model)
     except ValueError:
@@ -242,8 +240,8 @@ def lm_sidebar():
                 key=f"user_{ll_model}~{param}",
                 on_change=update_chat_param,
             )
+    st.sidebar.divider()
     return ll_model
-
 
 ###################################
 # RAG Sidebar
@@ -350,7 +348,6 @@ def rag_sidebar():
 
             state.rag_user_idx[attr] = idx
 
-    st.sidebar.divider()
     st.sidebar.subheader("RAG Embeddings")
     rag_enable = st.sidebar.checkbox(
         "RAG?",
@@ -423,7 +420,7 @@ def rag_sidebar():
                 help=custom_help.gui_help["rag_lambda_mult"]["english"],
                 on_change=update_rag,
             )
-        st.sidebar.divider()
+
         if any(state.rag_filter["alias"]):
             st.sidebar.selectbox(
                 "Embedding Alias: ",
@@ -468,8 +465,6 @@ def rag_sidebar():
 
         st.sidebar.button("Reset RAG", type="primary", on_click=reset_rag)
         st.sidebar.divider()
-        chatbot_server.sidebar_start_server()
-
 
 ###################################
 # Save Settings Sidebar
@@ -515,7 +510,6 @@ def save_settings_sidebar():
     state_dict_filt = {key: state_dict[key] for key in include_keys if key in state_dict}
     state_dict_filt = empty_key(state_dict_filt)
     session_state_json = json.dumps(state_dict_filt, indent=4)
-    st.sidebar.divider()
     st.sidebar.download_button(
         label="Download Settings", data=session_state_json, file_name="sandbox_settings.json", use_container_width=True
     )

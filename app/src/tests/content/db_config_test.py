@@ -11,9 +11,9 @@ import modules.db_utils as db_utils
 
 
 ###################################################
-# db_config.initialise_streamlit
+# db_config.initialize_streamlit
 ###################################################
-def test_initialise_streamlit_no_env(unset_db_env):
+def test_initialize_streamlit_no_env(unset_db_env):
     """Test Init with no Environment"""
     at = AppTest.from_file("content/db_config.py", default_timeout=30).run()
     assert at.session_state.db_configured is False
@@ -22,7 +22,7 @@ def test_initialise_streamlit_no_env(unset_db_env):
     assert at.session_state.db_config["dsn"] is None
 
 
-def test_initialise_streamlit_env(set_db_env):
+def test_initialize_streamlit_env(set_db_env):
     """Bad Creds"""
     at = AppTest.from_file("content/db_config.py", default_timeout=30).run()
     assert at.session_state.db_configured is False
@@ -31,7 +31,7 @@ def test_initialise_streamlit_env(set_db_env):
     assert at.session_state.db_config["dsn"] == "TEST_DSN"
 
 
-def test_initialise_streamlit_env_mock(set_db_env, mock_oracledb):
+def test_initialize_streamlit_env_mock(set_db_env, mock_oracledb):
     """Good Creds - Mock the connection object"""
     mock_connection = MagicMock()
     mock_oracledb.connect.return_value = mock_connection

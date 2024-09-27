@@ -2,8 +2,9 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore oracledb, genai, ashburn, pplx, giskard
-# spell-checker:ignore langchain, docstore, vectorstores, vectorstorage, vectorstore, oraclevs, openai, ollama
+# spell-checker:ignore oracledb, genai, ashburn, pplx, giskard, giskarded, pypdf, testset
+# spell-checker:ignore langchain, docstore, vectorstores, vectorstorage, vectorstore
+# spell-checker:ignore oraclevs, openai, ollama
 
 import json
 import os
@@ -11,7 +12,10 @@ import configparser
 import re
 from typing import List, Union
 import math
+import pickle
 import requests
+from pypdf import PdfReader
+import pandas as pd
 
 import modules.logging_config as logging_config
 import modules.metadata as meta
@@ -19,12 +23,17 @@ import oracledb
 
 from openai import OpenAI
 
+import giskard
+
 from langchain.docstore.document import Document as LangchainDocument
 from langchain_community.vectorstores import oraclevs as LangchainVS
 from langchain_community.vectorstores.oraclevs import OracleVS
 from langchain_community.chat_models import ChatPerplexity
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
+
+from llama_index.core import Document
+from llama_index.core.node_parser import SentenceSplitter
 
 from giskard.llm.client.openai import OpenAIClient
 from giskard.llm.embeddings.openai import OpenAIEmbedding
@@ -68,7 +77,7 @@ def is_url_accessible(url):
 ###############################################################################
 # Models
 ###############################################################################
-def get_ll_model(model, ll_models_config=None, giskard=False):
+def get_ll_model(model, ll_models_config=None, giskarded=False):
     """Return a formatted LL model"""
     if ll_models_config is None:
         ll_models_config = meta.ll_models()
@@ -87,7 +96,7 @@ def get_ll_model(model, ll_models_config=None, giskard=False):
     logger.debug("Matching LLM API: %s", llm_api)
 
     ## Start - Add Additional Model Authentication Here
-    if giskard:
+    if giskarded:
         _client = OpenAI(base_url=llm_url + "/v1/", api_key=lm_params.get("api_key") or "giskard")
         client = OpenAIClient(model=model, client=_client)
     elif llm_api == "OpenAI":
@@ -130,7 +139,7 @@ def get_ll_model(model, ll_models_config=None, giskard=False):
     return client, api_accessible, err_msg
 
 
-def get_embedding_model(model, embed_model_config=None, giskard=False):
+def get_embedding_model(model, embed_model_config=None, giskarded=False):
     """Return a formatted embedding model"""
     logger.info("Retrieving Embedding Model for: %s", model)
     if embed_model_config is None:
@@ -141,7 +150,7 @@ def get_embedding_model(model, embed_model_config=None, giskard=False):
     embed_key = embed_model_config[model]["api_key"]
 
     logger.debug("Matching Embedding API: %s", embed_api)
-    if giskard:
+    if giskarded:
         _client = OpenAI(base_url=embed_url + "/v1/", api_key=embed_model_config[model].get("api_key") or "giskard")
         client = OpenAIEmbedding(model=model, client=_client)
     elif embed_api.__name__ == "OpenAIEmbeddings":
@@ -623,3 +632,88 @@ def oci_put_object(config, namespace, compartment, bucket_name, file_path, retri
     logger.info("Uploaded %s to %s", file_name, bucket_name)
 
     os.remove(file_path)
+
+
+###############################################################################
+# Test Framework
+###############################################################################
+def dump_pickle(cucumber):
+    """Dump pickle to file"""
+    with open(cucumber, "wb") as file:
+        pickle.dump(cucumber, file)
+    logger.info("Dumped %s", cucumber)
+
+
+def load_and_split(eval_file, tn_file, chunk_size=2048):
+    """Load and Split Document"""
+    logger.info("Loading %s; Chunk Size: %i", eval_file, chunk_size)
+    loader = PdfReader(eval_file)
+    documents = []
+    for page in loader.pages:
+        document = Document(text=page.extract_text())
+        documents.append(document)
+    splitter = SentenceSplitter(chunk_size=chunk_size)
+    text_nodes = splitter(documents)
+    logger.info("Writing: %s", tn_file)
+    dump_pickle(tn_file)
+
+    return text_nodes
+
+
+def build_knowledge_base(text_nodes, kb_file, llm_client, embed_client):
+    """Establish a temporary Knowledge Base"""
+    logger.info("KnowledgeBase creation starting..")
+    knowledge_base_df = pd.DataFrame([node.text for node in text_nodes], columns=["text"])
+    knowledge_base_df.to_json(
+        kb_file,
+        orient="records",
+    )
+    giskard.llm.embeddings.set_default_embedding(embed_client)
+    knowledge_base = giskard.rag.KnowledgeBase(knowledge_base_df, llm_client=llm_client)
+    logger.info("KnowledgeBase created and saved: %s", kb_file)
+
+    return knowledge_base
+
+
+def generate_qa(qa_file, kb, qa_count, api="openai", model="gpt-4o-mini"):
+    """Generate an example QA"""
+    logger.info("QA Generation starting..")
+    giskard.llm.set_llm_api(api)
+    giskard.llm.set_default_client(OpenAIClient(model=model))
+
+    test_set = giskard.rag.generate_testset(
+        kb,
+        question_generators=[
+            giskard.rag.question_generators.simple_questions,
+            giskard.rag.question_generators.complex_questions,
+        ],
+        num_questions=qa_count,
+        agent_description="A chatbot answering questions on a knowledge base",
+    )
+    test_set.save(qa_file)
+    logger.info("QA created and saved: %s", qa_file)
+
+    return test_set
+
+
+def merge_jsonl_files(file_list, temp_dir):
+    """Take Uploaded QA files and merge into a single one"""
+    output_file = os.path.join(temp_dir, "merged_dataset.jsonl")
+    logger.info("Writing test set file: %s", output_file)
+    with open(output_file, "w", encoding="utf-8") as outfile:
+        for input_file in file_list:
+            logger.info("Processing: %s", input_file)
+            with open(input_file, "r", encoding="utf-8") as in_file:
+                for line in in_file:
+                    outfile.write(line)
+
+    logger.info("De-duplicating: %s", output_file)
+    df = pd.read_json(output_file, lines=True)
+    duplicate_ids = df[df.duplicated("id", keep=False)] # pylint: disable=no-member
+    if not duplicate_ids.empty:
+        # Remove duplicates, keeping the first occurrence
+        df = df.drop_duplicates(subset="id", keep="first") # pylint: disable=no-member
+    df.to_json(output_file, orient="records", lines=True)
+    logger.info("Wrote test set file: %s", output_file)
+
+    return output_file

@@ -2,6 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
+# spell-checker: disable
 
 # Setup Modules
 import sys
@@ -104,14 +105,14 @@ def mock_is_url_accessible():
 @pytest.fixture
 def mock_oracledb():
     """Mock Oracle DB Connection"""
-    with patch("modules.db_utils.oracledb") as mock_oracledb_patch:
+    with patch("modules.utilities.oracledb") as mock_oracledb_patch:
         yield mock_oracledb_patch
 
 
 @pytest.fixture
-def mock_db_utils_connect():
-    """Mock the connect method in db_utils"""
-    with patch("modules.db_utils.connect") as mock_connect:
+def mock_utilities_db_connect():
+    """Mock the connect method in utilities"""
+    with patch("modules.utilities.db_connect") as mock_connect:
         yield mock_connect
 
 @pytest.fixture

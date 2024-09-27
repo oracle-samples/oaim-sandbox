@@ -28,24 +28,15 @@ def generate_response(
     rag_params,
     chat_instr,
     context_instr=None,
-    stream=False,
+    stream=False
 ):
     """Determine Chain to establish"""
     # chat_mgr is the init'd ChatCmd class and we're calling the chat function
     # return will be: answer, chat options, RAG content
-    logger.info(
-        "Sending user input... RAG: %r",
-        rag_params["enable"],
-    )
+    logger.info("Sending user input... RAG: %r", rag_params["enable"])
     if rag_params["enable"]:
         return chat_mgr.langchain_rag(
-            rag_params,
-            chat_instr,
-            context_instr,
-            input,
-            chat_history,
-            enable_history,
-            stream,
+            rag_params, chat_instr, context_instr, input, chat_history, enable_history, stream
         )
     else:
         return chat_mgr.langchain(chat_instr, input, chat_history, enable_history, stream)

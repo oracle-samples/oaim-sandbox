@@ -23,7 +23,8 @@ from content.oci_config import initialize_streamlit as oci_initialize
 logger = logging_config.logging.getLogger("sandbox")
 
 os.environ["USER_AGENT"] = "OAIM-SANDBOX"
-
+os.environ["GSK_DISABLE_SENTRY"] = "true"
+os.environ["GSK_DISABLE_ANALYTICS"] = "true"
 
 #############################################################################
 # MAIN
