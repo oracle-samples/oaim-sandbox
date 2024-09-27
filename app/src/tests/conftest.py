@@ -110,7 +110,7 @@ def mock_oracledb():
 
 
 @pytest.fixture
-def mock_utilities_db_connect():
+def mock_db_connect():
     """Mock the connect method in utilities"""
     with patch("modules.utilities.db_connect") as mock_connect:
         yield mock_connect
