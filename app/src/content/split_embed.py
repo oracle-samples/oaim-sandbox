@@ -2,6 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
+# spell-checker:ignore streamlit, vectorstorage, selectbox, docos, iterrows
 
 import math
 import tempfile
@@ -17,22 +18,17 @@ from streamlit import session_state as state
 import pandas as pd
 
 # Configuration
-from content.oci_config import initialise_streamlit as oci_initialise_streamlit
-from content.db_config import initialise_streamlit as db_initialise_streamlit
-from content.model_config import initialise_streamlit as model_initialise
+from content.oci_config import initialize_streamlit as oci_initialize_streamlit
+from content.db_config import initialize_streamlit as db_initialize_streamlit
+from content.model_config import initialize_streamlit as model_initialize
 
 # Modules
 import modules.logging_config as logging_config
 import modules.split as split
-import modules.oci_utils as oci
-import modules.vectorstorage as vectorstorage
-import modules.db_utils as db_utils
+import modules.utilities as utilities
 import modules.st_common as st_common
 
 logger = logging_config.logging.getLogger("chunk_embed")
-
-### Currently the only supported Framework is Langchain
-FRAMEWORK = "langchain"
 
 
 #####################################################
@@ -41,12 +37,12 @@ FRAMEWORK = "langchain"
 @st.cache_data
 def get_compartments():
     """Get OCI Compartments; function for Streamlit caching"""
-    return oci.get_compartments(state.oci_config)
+    return utilities.oci_get_compartments(state.oci_config)
 
 
 @st.cache_data
 def get_buckets(compartment):
-    return oci.get_buckets(
+    return utilities.oci_get_buckets(
         state.oci_config,
         state.oci_namespace,
         compartment,
@@ -110,15 +106,15 @@ def update_chunk_size_input():
 #############################################################################
 def main():
     """Streamlit GUI"""
-    db_initialise_streamlit()
+    db_initialize_streamlit()
     if not state.db_configured:
         st.error("Database is not configured, all functionality is disabled", icon="🚨")
         st.stop()
 
-    model_initialise()
+    model_initialize()
 
     file_sources = ["OCI", "Local", "Web"]
-    oci_initialise_streamlit()
+    oci_initialize_streamlit()
     if not state.oci_configured:
         st.warning("OCI is not configured, some functionality is disabled", icon="⚠️")
         file_sources.remove("OCI")
@@ -128,14 +124,12 @@ def main():
     st.header("Embedding Configuration", divider="rainbow")
     selected_embed_model = st.selectbox(
         "Embedding models available: ",
-        options=list(key for key, value in state.embed_model_config.items() if value.get("enabled")),
+        options=state.enabled_embed,
         index=0,
         key="select_box_embed_model",
     )
     try:
-        model, api_accessible, err_msg = vectorstorage.get_embedding_model(
-            selected_embed_model, state.embed_model_config
-        )
+        model, api_accessible, err_msg = utilities.get_embedding_model(selected_embed_model, state.embed_model_config)
         embed_url = state.embed_model_config[selected_embed_model]["url"]
         st.write(f"Embedding Server: {embed_url}")
     except KeyError:
@@ -231,7 +225,7 @@ def main():
         )
 
     chunk_overlap_size = math.ceil((state.chunk_overlap_input / 100) * state.chunk_size_input)
-    store_table, store_comment = vectorstorage.get_vs_table(
+    store_table, store_comment = utilities.get_vs_table(
         selected_embed_model, state.chunk_size_input, chunk_overlap_size, distance_metric, embed_alias
     )
 
@@ -262,7 +256,7 @@ def main():
         """
         st.subheader("Web Pages", divider=False)
         web_url = st.text_input("URL:", key="text_input_web_url")
-        populate_button_disabled = not (web_url and st_common.is_url_accessible(web_url)[0])
+        populate_button_disabled = not (web_url and utilities.is_url_accessible(web_url)[0])
 
     ######################################
     # OCI Source
@@ -273,7 +267,7 @@ def main():
             the current split and embed options.  Please Split and Embed to enable Vector Storage.
         """
         if "oci_namespace" not in state:
-            state.oci_namespace = oci.get_namespace(state.oci_config)
+            state.oci_namespace = utilities.oci_get_namespace(state.oci_config)
         oci_compartments = get_compartments()
 
         st.subheader("OCI Buckets", divider=False)
@@ -303,7 +297,7 @@ def main():
         if src_bucket:
             dst_bucket = src_bucket + "_" + store_table.lower()
             st.text(f"Destination Bucket: {dst_bucket}")
-            src_objects = oci.get_bucket_objects(state.oci_config, state.oci_namespace, src_bucket)
+            src_objects = utilities.oci_get_bucket_objects(state.oci_config, state.oci_namespace, src_bucket)
             src_files = files_data_frame(src_objects)
         else:
             src_files = pd.DataFrame({"File": [], "Process": []})
@@ -324,7 +318,7 @@ def main():
                 progress_bar.progress(progress_stat, text=progress_text)
                 # Note directory/file is created/deleted on every iteration for space savings
                 with tempfile.TemporaryDirectory() as temp_dir:
-                    src_file = oci.get_object(
+                    src_file = utilities.oci_get_object(
                         state.oci_config,
                         state.oci_namespace,
                         src_bucket,
@@ -339,7 +333,7 @@ def main():
                         write_json=True,
                         output_dir=temp_dir,
                     )
-                    oci.put_object(
+                    utilities.oci_put_object(
                         state.oci_config,
                         state.oci_namespace,
                         oci_compartments[bucket_compartment],
@@ -354,7 +348,7 @@ def main():
 
         if dst_bucket:
             try:
-                dst_objects = oci.get_bucket_objects(state.oci_config, state.oci_namespace, dst_bucket)
+                dst_objects = utilities.oci_get_bucket_objects(state.oci_config, state.oci_namespace, dst_bucket)
                 dst_files = files_data_frame(dst_objects)
             except Exception as ex:
                 logger.exception(ex)
@@ -380,7 +374,7 @@ def main():
         temp_dir = tempfile.TemporaryDirectory()
         split_docos = []
         try:
-            db_conn = db_utils.connect(state.db_config)
+            db_conn = utilities.db_connect(state.db_config)
             placeholder = st.empty()
             with placeholder:
                 st.warning("Populating Vector Store... please be patient.", icon="⚠️")
@@ -427,7 +421,7 @@ def main():
             if file_source == "OCI":
                 process_list = dst_files_selected[dst_files_selected["Process"]].reset_index(drop=True)
                 for index, f in process_list.iterrows():
-                    object_file = oci.get_object(
+                    object_file = utilities.oci_get_object(
                         state.oci_config,
                         state.oci_namespace,
                         dst_bucket,
@@ -437,7 +431,7 @@ def main():
                     split_docos.append(object_file)
 
             # Population
-            vectorstorage.populate_vs(
+            utilities.populate_vs(
                 db_conn,
                 store_table,
                 store_comment,

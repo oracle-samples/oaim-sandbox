@@ -2,6 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
+# spell-checker:ignore streamlit, langchain, llms
 
 import inspect
 
@@ -77,7 +78,7 @@ def main():
     #########################################################################
     # Sidebar Settings
     #########################################################################
-    enabled_llms = sum(model_info["enabled"] for model_info in state.lm_model_config.values())
+    enabled_llms = sum(model_info["enabled"] for model_info in state.ll_model_config.values())
     if enabled_llms > 0:
         with st.chat_message("ai"):
             # Do not put this in the history as messages must alternate human/ai
@@ -89,7 +90,7 @@ def main():
         )
         if st.sidebar.button("Clear History", disabled=not enable_history):
             chat_history.clear()
-        lm_model = st_common.lm_sidebar()
+        ll_model = st_common.lm_sidebar()
     else:
         st.error("No chat models are configured and/or enabled.", icon="🚨")
         st.stop()
@@ -102,20 +103,20 @@ def main():
     #########################################################################
     # Initialise the Client
     #########################################################################
-    if "initialised" not in state:
+    if "initialized" not in state:
         if not state.rag_params["enable"] or all(
             state.rag_params[key] for key in ["model", "chunk_size", "chunk_overlap", "distance_metric"]
         ):
             try:
-                state.chat_manager = st_common.initialise_chatbot(lm_model)
-                state.initialised = True
+                state.chat_manager = st_common.initialise_chatbot(ll_model)
+                state.initialized = True
                 st_common.update_rag()
                 logger.debug("Force rerun to save state")
                 st.rerun()
             except Exception as ex:
                 logger.exception(ex, exc_info=False)
                 st.error(f"Failed to initialise the chat client: {ex}")
-                st_common.clear_initialised()
+                st_common.clear_initialized()
                 if st.button("Retry", key="retry_initialise"):
                     st.rerun()
                 st.stop()
