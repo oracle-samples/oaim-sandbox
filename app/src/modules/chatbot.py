@@ -21,14 +21,7 @@ logger = logging_config.logging.getLogger("modules.chatbot")
 
 
 def generate_response(
-    chat_mgr,
-    input,
-    chat_history,
-    enable_history,
-    rag_params,
-    chat_instr,
-    context_instr=None,
-    stream=False
+    chat_mgr, input, chat_history, enable_history, rag_params, chat_instr, context_instr=None, stream=False
 ):
     """Determine Chain to establish"""
     # chat_mgr is the init'd ChatCmd class and we're calling the chat function
@@ -75,16 +68,7 @@ class ChatCmd:
 
     #####################################################
     # Langchain - RAG
-    def langchain_rag(
-        self,
-        rag_params,
-        chat_instr,
-        context_instr,
-        input,
-        chat_history,
-        enable_history,
-        stream,
-    ):
+    def langchain_rag(self, rag_params, chat_instr, context_instr, input, chat_history, enable_history, stream):
         """Chain implementing RAG"""
         logger.info("Setting up Retriever")
 

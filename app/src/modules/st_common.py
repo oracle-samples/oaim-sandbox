@@ -99,12 +99,16 @@ def initialize_rag():
             logger.debug("RAG Disabled (no DB connection)")
             st.warning("Database is not configured, RAG functionality is disabled.", icon="⚠️")
 
+        if len(state.enabled_embed) == 0:
+            logger.debug("RAG Disabled (no Embedding Models)")
+            st.warning("Embedding Model not configured, RAG functionality is disabled.", icon="⚠️")
+
         # Look-up Embedding Tables to generate RAG LOVs (don't use function)
-        if state.db_configured:
+        if state.db_configured and len(state.enabled_embed) > 0:
             logger.debug("Initializing RAG")
             if "db_conn" not in state or "vs_tables" not in state:
                 state.db_conn = utilities.db_connect(state.db_config)
-                state.vs_tables = json.loads(utilities.get_vs_tables(state.db_conn))
+                state.vs_tables = json.loads(utilities.get_vs_tables(state.db_conn, state.enabled_embed))
         else:
             state.vs_tables = {}
 
@@ -243,6 +247,7 @@ def lm_sidebar():
     st.sidebar.divider()
     return ll_model
 
+
 ###################################
 # RAG Sidebar
 ###################################
@@ -348,7 +353,6 @@ def rag_sidebar():
 
             state.rag_user_idx[attr] = idx
 
-    st.sidebar.subheader("RAG Embeddings")
     rag_enable = st.sidebar.checkbox(
         "RAG?",
         value=state.rag_params["enable"],
@@ -464,7 +468,8 @@ def rag_sidebar():
         )
 
         st.sidebar.button("Reset RAG", type="primary", on_click=reset_rag)
-        st.sidebar.divider()
+    st.sidebar.divider()
+
 
 ###################################
 # Save Settings Sidebar

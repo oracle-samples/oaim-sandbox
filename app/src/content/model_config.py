@@ -10,6 +10,7 @@ import inspect
 
 import modules.logging_config as logging_config
 import modules.metadata as metadata
+from modules.st_common import reset_rag
 
 import streamlit as st
 from streamlit import session_state as state
@@ -27,6 +28,7 @@ def state_enabled_models():
         logger.debug("Enabled LLMs: %s", state.enabled_llms)
         state.enabled_embed = list(key for key, value in state.embed_model_config.items() if value.get("enabled"))
         logger.debug("Enabled Embedding Models: %s", state.enabled_embed)
+
 
 def initialize_streamlit():
     """initialize Streamlit Session State"""
@@ -67,6 +69,8 @@ def update_embed_model_config():
         state.embed_model_config[model_name]["enabled"] = state[f"embed_{model_name}_enabled"]
         state.embed_model_config[model_name]["url"] = state[f"embed_{model_name}_api_server"]
         state.embed_model_config[model_name]["api_key"] = state[f"embed_{model_name}_api_key"]
+    # Reset RAG
+    reset_rag()
     st.success("Embedding Model Configuration - Updated", icon="✅")
 
     # Set Enabled State

@@ -23,8 +23,6 @@ import oracledb
 
 from openai import OpenAI
 
-import giskard
-
 from langchain.docstore.document import Document as LangchainDocument
 from langchain_community.vectorstores import oraclevs as LangchainVS
 from langchain_community.vectorstores.oraclevs import OracleVS
@@ -35,9 +33,12 @@ from langchain_openai import ChatOpenAI
 from llama_index.core import Document
 from llama_index.core.node_parser import SentenceSplitter
 
+from giskard.llm import set_llm_api, set_default_client
 from giskard.llm.client.openai import OpenAIClient
+from giskard.llm.embeddings import set_default_embedding
 from giskard.llm.embeddings.openai import OpenAIEmbedding
-
+from giskard.rag import KnowledgeBase, generate_testset
+from giskard.rag.question_generators import simple_questions, complex_questions
 
 logger = logging_config.logging.getLogger("modules.utilities")
 
@@ -97,7 +98,9 @@ def get_ll_model(model, ll_models_config=None, giskarded=False):
 
     ## Start - Add Additional Model Authentication Here
     if giskarded:
-        _client = OpenAI(base_url=llm_url + "/v1/", api_key=lm_params.get("api_key") or "giskard")
+        # This looks stupid (and it is) but giskard doesn't respect _client api_key
+        os.environ["OPENAI_API_KEY"] = lm_params.get("api_key") or "giskard"
+        _client = OpenAI(api_key=os.environ["OPENAI_API_KEY"], base_url=llm_url + "/v1/")
         client = OpenAIClient(model=model, client=_client)
     elif llm_api == "OpenAI":
         client = ChatOpenAI(
@@ -151,7 +154,9 @@ def get_embedding_model(model, embed_model_config=None, giskarded=False):
 
     logger.debug("Matching Embedding API: %s", embed_api)
     if giskarded:
-        _client = OpenAI(base_url=embed_url + "/v1/", api_key=embed_model_config[model].get("api_key") or "giskard")
+        # This looks stupid (and it is) but giskard doesn't respect _client api_key
+        os.environ["OPENAI_API_KEY"] = embed_key or "giskard"
+        _client = OpenAI(api_key=os.environ["OPENAI_API_KEY"], base_url=embed_url + "/v1/")
         client = OpenAIEmbedding(model=model, client=_client)
     elif embed_api.__name__ == "OpenAIEmbeddings":
         try:
@@ -348,7 +353,7 @@ def populate_vs(
     db_conn.close()
 
 
-def get_vs_tables(conn):
+def get_vs_tables(conn, enabled_embed):
     """Retrieve Vector Storage Tables"""
     logger.info("Looking for Vector Storage Tables")
     output = {}
@@ -365,7 +370,10 @@ def get_vs_tables(conn):
             key, value = row_str.split(":", 1)
             value = json.loads(value)
             logger.info("--> Found Table: %s", key)
-            output[key] = value
+            if any(model_item == value["model"] for model_item in enabled_embed):
+                output[key] = value
+            else:
+                logger.info("No enabled embedding model found to support table %s", key)
     except oracledb.DatabaseError as ex:
         logger.exception(ex, exc_info=False)
     finally:
@@ -668,8 +676,8 @@ def build_knowledge_base(text_nodes, kb_file, llm_client, embed_client):
         kb_file,
         orient="records",
     )
-    giskard.llm.embeddings.set_default_embedding(embed_client)
-    knowledge_base = giskard.rag.KnowledgeBase(knowledge_base_df, llm_client=llm_client)
+    set_default_embedding(embed_client)
+    knowledge_base = KnowledgeBase(knowledge_base_df, llm_client=llm_client)
     logger.info("KnowledgeBase created and saved: %s", kb_file)
 
     return knowledge_base
@@ -678,14 +686,14 @@ def build_knowledge_base(text_nodes, kb_file, llm_client, embed_client):
 def generate_qa(qa_file, kb, qa_count, api="openai", model="gpt-4o-mini"):
     """Generate an example QA"""
     logger.info("QA Generation starting..")
-    giskard.llm.set_llm_api(api)
-    giskard.llm.set_default_client(OpenAIClient(model=model))
+    set_llm_api(api)
+    set_default_client(OpenAIClient(model=model))
 
-    test_set = giskard.rag.generate_testset(
+    test_set = generate_testset(
         kb,
         question_generators=[
-            giskard.rag.question_generators.simple_questions,
-            giskard.rag.question_generators.complex_questions,
+            simple_questions,
+            complex_questions,
         ],
         num_questions=qa_count,
         agent_description="A chatbot answering questions on a knowledge base",
@@ -709,10 +717,10 @@ def merge_jsonl_files(file_list, temp_dir):
 
     logger.info("De-duplicating: %s", output_file)
     df = pd.read_json(output_file, lines=True)
-    duplicate_ids = df[df.duplicated("id", keep=False)] # pylint: disable=no-member
+    duplicate_ids = df[df.duplicated("id", keep=False)]  # pylint: disable=no-member
     if not duplicate_ids.empty:
         # Remove duplicates, keeping the first occurrence
-        df = df.drop_duplicates(subset="id", keep="first") # pylint: disable=no-member
+        df = df.drop_duplicates(subset="id", keep="first")  # pylint: disable=no-member
     df.to_json(output_file, orient="records", lines=True)
     logger.info("Wrote test set file: %s", output_file)
 
