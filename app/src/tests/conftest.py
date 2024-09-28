@@ -97,7 +97,7 @@ def unset_oci_env(monkeypatch):
 @pytest.fixture
 def mock_is_url_accessible():
     """Mock API Accessible"""
-    with patch("modules.st_common.is_url_accessible") as mock:
+    with patch("modules.utilities.is_url_accessible") as mock:
         mock.return_value = (True, None)
         yield mock
 
@@ -118,14 +118,14 @@ def mock_db_connect():
 @pytest.fixture
 def mock_oci():
     """Mock OCI Connection"""
-    with patch("modules.oci_utils") as mock_oci_patch:
+    with patch("modules.utilities") as mock_oci_patch:
         yield mock_oci_patch
 
 
 @pytest.fixture
 def mock_oci_init_client():
     """Mock OCI Client"""
-    with patch("modules.oci_utils.init_client") as mock_oci_init_client_patch:
+    with patch("modules.utilities.oci_init_client") as mock_oci_init_client_patch:
         yield mock_oci_init_client_patch
 
 
@@ -133,7 +133,7 @@ def mock_oci_init_client():
 def mock_oci_object_storage_client():
     """Mock OCI ObjectStore Client"""
     with patch(
-        "modules.oci_utils.oci.object_storage.ObjectStorageClient"
+        "modules.utilities.oci.object_storage.ObjectStorageClient"
     ) as mock_oci_object_storage_client_patch:
         yield mock_oci_object_storage_client_patch
 
@@ -141,5 +141,5 @@ def mock_oci_object_storage_client():
 @pytest.fixture
 def mock_oci_get_namespace():
     """Mock OCI Get Namespace"""
-    with patch("modules.oci_utils.get_namespace") as mock_oci_get_namespace_patch:
+    with patch("modules.utilities.oci_get_namespace") as mock_oci_get_namespace_patch:
         yield mock_oci_get_namespace_patch

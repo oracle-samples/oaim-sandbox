@@ -60,12 +60,12 @@ def update_rag():
 
 def set_prompt():
     """Switch Prompt Engineering"""
-    if state.rag_params["enable"]:
+    if "rag_params" in state and state.rag_params["enable"]:
         state.lm_instr_prompt = "RAG Example"
     else:
         state.lm_instr_prompt = "Basic Example"
 
-    if state.lm_instr != state.lm_instr_config[state.lm_instr_prompt]["prompt"]:
+    if "lm_instr" in state and state.lm_instr != state.lm_instr_config[state.lm_instr_prompt]["prompt"]:
         state.lm_instr = state.lm_instr_config[state.lm_instr_prompt]["prompt"]
         st.info(f"Prompt Engineering - {state.lm_instr_prompt} Prompt has been set.")
 
