@@ -3,6 +3,7 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
 
+# spell-checker:ignore streamlit, oaim, testid
 import os
 
 # Streamlit
@@ -64,7 +65,7 @@ def main():
     state.disable_admin = os.environ.get("DISABLE_ADMIN", "false").lower() == "true" and not state.disable_tools
     state.disable_oci = os.environ.get("DISABLE_OCI", "false").lower() == "true" and not state.disable_admin
 
-    chatbot = st.Page("content/chatbot.py", title="ChatBot", icon="🏠", default=True)
+    chatbot = st.Page("content/chatbot.py", title="ChatBot", icon="💬", default=True)
     navigation = {
         "": [chatbot],
     }
