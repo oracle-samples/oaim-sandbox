@@ -265,7 +265,7 @@ def main():
             "Select a local, existing Q&A pair testing dataset:",
             key=f"uploader_{state.test_uploader_key}",
             accept_multiple_files=True,
-            type=["jsonl"],
+            type=["jsonl","json"],
         )
         test_set_button_disabled = True
         if len(test_set_file) > 0:
@@ -276,15 +276,20 @@ def main():
             placeholder = st.empty()
             with placeholder:
                 st.info("Loading Test Sets... please be patient.", icon="⚠️")
-            qa_files = split.write_files(test_set_file)
-            state.temp_dir = os.path.dirname(qa_files[0])
-            logger.info("Temp dir created with Generate Q&A: %s", state.temp_dir)
-            merged_test_file = utilities.merge_jsonl_files(qa_files, state["temp_dir"])
-            state.merged_test_file = merged_test_file
-            state.test_set = QATestset.load(merged_test_file)
+            try:
+                qa_files = split.write_files(test_set_file)
+                state.temp_dir = os.path.dirname(qa_files[0])
+                logger.info("Temp dir created with Generate Q&A: %s", state.temp_dir)
+                merged_test_file = utilities.merge_jsonl_files(qa_files, state["temp_dir"])
+                state.merged_test_file = merged_test_file
+                state.test_set = QATestset.load(merged_test_file)
 
-            with placeholder:
-                st.success("Test Sets Loaded.", icon="✅")
+                with placeholder:
+                    st.success("Test Sets Loaded.", icon="✅")
+            except:
+                icon="🚨"
+                st.error("Test Sets not compatible.", icon="🚨")
+
             placeholder.empty()
         right.button("Reset", key="reset_test_framework", type="primary", on_click=reset_test_set)
 
