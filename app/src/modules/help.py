@@ -2,6 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
+# spell-checker:ignore rerank, mult
 
 gui_help = {
     "rag": {"english": "Enable Retrieval-Augmented Generation."},
@@ -23,7 +24,7 @@ gui_help = {
     "rag_fetch_k": {
         "english": """
             The number of documents initially fetched from the knowledge base before any
-            further filtering (e.g., Top K) or reranking is done. Fetching more documents
+            further filtering (e.g., Top K) or re-ranking is done. Fetching more documents
             (higher Fetch K) increases the initial computational load but provides more
             material to ensure the most relevant information is considered in the final step.
             """

@@ -2,6 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
+# spell-checker:ignore streamlit, langchain
 
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
@@ -58,7 +59,7 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
         self.api_key = api_key
         super().__init__(*args, **kwargs)
 
-    def do_OPTIONS(self): # pylint: disable=invalid-name
+    def do_OPTIONS(self):  # pylint: disable=invalid-name
         # Send a 200 OK response for the OPTIONS request
         self.send_response(200)
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -66,7 +67,7 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "Authorization, Content-Type")
         self.end_headers()
 
-    def do_POST(self): # pylint: disable=invalid-name
+    def do_POST(self):  # pylint: disable=invalid-name
         expected_api_key = "Bearer " + self.api_key
         # Parse query parameters
         parsed_path = urlparse(self.path)
@@ -175,8 +176,8 @@ def gui_start():
     if "api_key" in st.session_state:
         logger.info(state.api_key)
 
-    if "initialised" in st.session_state:
-        if st.session_state.initialised:
+    if "initialized" in st.session_state:
+        if st.session_state.initialized:
             if "server_thread" not in st.session_state:
                 st.session_state.server_thread = threading.Thread(
                     target=run_server,
@@ -199,9 +200,13 @@ def gui_start():
         st.warning("Chatbot not yet configured.")
 
 
-def sidebar_start_server():
+###################################
+# ChatBot Sidebar
+###################################
+def chatbot_sidebar():
     st.session_state["port"] = st.sidebar.number_input(
         "Enter the port number for the chatbot server:", value=8000, min_value=1, max_value=65535
     )
     st.session_state["api_key"] = st.sidebar.text_input("API_KEY", type="password", value="abc")
     st.sidebar.button("Start server", type="primary", on_click=gui_start)
+    st.sidebar.divider()

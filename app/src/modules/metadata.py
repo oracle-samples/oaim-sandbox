@@ -5,6 +5,8 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 Models listed here are for configuration demonstration purposes only.  They are not useable by default.
 Developers should configure, enable and/or provide their own model configurations as required.
 """
+# spell-checker:ignore huggingface, PPLX, thenlper, mxbai, nomic, minilm
+# spell-checker:ignore langchain, openai, ollama, testset, pypdf, giskard
 
 import os
 import re
@@ -77,17 +79,18 @@ def lm_parameters():
 
 
 ##########################################
-# Language Models
+# Large Language Models
 ##########################################
-def lm_models():
+def ll_models():
     """Define example Language Model Support"""
     # Lists are in [user, default, min, max] format
-    lm_models_dict = {
+    ll_models_dict = {
         "gpt-3.5-turbo": {
             "enabled": os.getenv("OPENAI_API_KEY") is not None,
             "api": "OpenAI",
-            "url": "http://api.openai.com",
+            "url": "https://api.openai.com",
             "api_key": os.environ.get("OPENAI_API_KEY", default=""),
+            "openai_compat": True,
             "context_length": 4191,
             "temperature": [1.0, 1.0, 0.0, 2.0],
             "top_p": [0.9, 0.9, 0.0, 1.0],
@@ -98,8 +101,9 @@ def lm_models():
         "gpt-4o-mini": {
             "enabled": os.getenv("OPENAI_API_KEY") is not None,
             "api": "OpenAI",
-            "url": "http://api.openai.com",
+            "url": "https://api.openai.com",
             "api_key": os.environ.get("OPENAI_API_KEY", default=""),
+            "openai_compat": True,
             "context_length": 127072,
             "temperature": [1.0, 1.0, 0.0, 2.0],
             "top_p": [0.9, 0.9, 0.0, 1.0],
@@ -110,8 +114,9 @@ def lm_models():
         "gpt-4": {
             "enabled": os.getenv("OPENAI_API_KEY") is not None,
             "api": "OpenAI",
-            "url": "http://api.openai.com",
+            "url": "https://api.openai.com",
             "api_key": os.environ.get("OPENAI_API_KEY", default=""),
+            "openai_compat": True,
             "context_length": 127072,
             "temperature": [1.0, 1.0, 0.0, 2.0],
             "top_p": [0.9, 0.9, 0.0, 1.0],
@@ -122,8 +127,9 @@ def lm_models():
         "gpt-4o": {
             "enabled": os.getenv("OPENAI_API_KEY") is not None,
             "api": "OpenAI",
-            "url": "http://api.openai.com",
+            "url": "https://api.openai.com",
             "api_key": os.environ.get("OPENAI_API_KEY", default=""),
+            "openai_compat": True,
             "context_length": 127072,
             "temperature": [1.0, 1.0, 0.0, 2.0],
             "top_p": [0.9, 0.9, 0.0, 1.0],
@@ -136,6 +142,7 @@ def lm_models():
             "api": "ChatPerplexity",
             "url": "https://api.perplexity.ai",
             "api_key": os.environ.get("PPLX_API_KEY", default=""),
+            "openai_compat": False,
             "context_length": 127072,
             "temperature": [0.2, 0.2, 0.0, 2.0],
             "top_p": [0.9, 0.9, 0.0, 1.0],
@@ -148,6 +155,7 @@ def lm_models():
             "api": "ChatPerplexity",
             "url": "https://api.perplexity.ai",
             "api_key": os.environ.get("PPLX_API_KEY", default=""),
+            "openai_compat": False,
             "context_length": 127072,
             "temperature": [0.2, 0.2, 0.0, 2.0],
             "top_p": [0.9, 0.9, 0.0, 1.0],
@@ -161,6 +169,7 @@ def lm_models():
             "api": "ChatOllama",
             "url": os.environ.get("ON_PREM_OLLAMA_URL", default="http://127.0.0.1:11434"),
             "api_key": "",
+            "openai_compat": True,
             "context_length": 131072,
             "temperature": [1.0, 1.0, 0.0, 2.0],
             "top_p": [1.0, 1.0, 0.0, 1.0],
@@ -169,7 +178,7 @@ def lm_models():
             "presence_penalty": [0.0, 0.0, -2.0, 2.0],
         },
     }
-    return lm_models_dict
+    return ll_models_dict
 
 
 ##########################################
@@ -185,20 +194,31 @@ def embedding_models():
             "api": HuggingFaceEndpointEmbeddings,
             "url": os.environ.get("ON_PREM_HF_URL", default="http://127.0.0.1:8080"),
             "api_key": "",
+            "openai_compat": True,
             "chunk_max": 512,
         },
         "text-embedding-3-small": {
             "enabled": os.getenv("OPENAI_API_KEY") is not None,
             "api": OpenAIEmbeddings,
-            "url": "http://api.openai.com",
+            "url": "https://api.openai.com",
             "api_key": os.environ.get("OPENAI_API_KEY", default=""),
+            "openai_compat": True,
             "chunk_max": 8191,
         },
         "text-embedding-3-large": {
             "enabled": os.getenv("OPENAI_API_KEY") is not None,
             "api": OpenAIEmbeddings,
-            "url": "http://api.openai.com",
+            "url": "https://api.openai.com",
             "api_key": os.environ.get("OPENAI_API_KEY", default=""),
+            "openai_compat": True,
+            "chunk_max": 8191,
+        },
+        "text-embedding-ada-002": {
+            "enabled": os.getenv("OPENAI_API_KEY") is not None,
+            "api": OpenAIEmbeddings,
+            "url": "https://api.openai.com",
+            "api_key": os.environ.get("OPENAI_API_KEY", default=""),
+            "openai_compat": True,
             "chunk_max": 8191,
         },
         "mxbai-embed-large": {
@@ -206,6 +226,7 @@ def embedding_models():
             "api": OllamaEmbeddings,
             "url": os.environ.get("ON_PREM_OLLAMA_URL", default="http://127.0.0.1:11434"),
             "api_key": "",
+            "openai_compat": True,
             "chunk_max": 512,
         },
         "nomic-embed-text": {
@@ -213,6 +234,7 @@ def embedding_models():
             "api": OllamaEmbeddings,
             "url": os.environ.get("ON_PREM_OLLAMA_URL", default="http://127.0.0.1:11434"),
             "api_key": "",
+            "openai_compat": True,
             "chunk_max": 8192,
         },
         "all-minilm": {
@@ -220,6 +242,7 @@ def embedding_models():
             "api": OllamaEmbeddings,
             "url": os.environ.get("ON_PREM_OLLAMA_URL", default="http://127.0.0.1:11434"),
             "api_key": "",
+            "openai_compat": True,
             "chunk_max": 256,
         },
     }

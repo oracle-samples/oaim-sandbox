@@ -2,6 +2,8 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
+# spell-checker:ignore streamlit, selectbox, langchain, giskard, giskarded testid, testset, dataframe
+# spell-checker:ignore ollama, openai, llms
 
 import os
 import json
@@ -17,9 +19,9 @@ from langchain_community.chat_message_histories import StreamlitChatMessageHisto
 import modules.st_common as st_common
 import modules.logging_config as logging_config
 import modules.split as split
-import modules.test_framework as test_framework
 import modules.chatbot as chatbot
 import modules.report_utils as report_utils
+import modules.utilities as utilities
 
 # Giskard
 from giskard.rag import QATestset
@@ -76,7 +78,11 @@ def get_answer_fn(question: str, history=None) -> str:
         state.lm_instr,
         state.context_instr,
     )
-    return answer["answer"]
+
+    if state.rag_params["enable"]:
+        return answer["answer"]
+    else:
+        return answer.content
 
 
 def create_gauge(value):
@@ -147,18 +153,32 @@ def main():
     """
     st.markdown(css, unsafe_allow_html=True)
     st.title("Test Framework")
-    try:
-        lm_model = st_common.lm_sidebar()
-    except ValueError:
-        st.error("No models are configured and/or enabled.", icon="🚨")
-        st.stop()
     # Used to clear the uploader files
     if "test_uploader_key" not in state:
         state.test_uploader_key = 0
 
-    st.header("Q&A Test Set")
-    st.write("You can upload an existing Test Set (default), or Generate a new Test Set.")
-    st.toggle("Generate a New Test Dataset", key="toggle_generate_test", value=False, on_change=reset_test_set)
+    # If there is no eligible (OpenAI Compat.) LL Models; then disable ALL functionality
+    qa_ll_models = [model for model in state.enabled_llms if state.ll_model_config[model]["openai_compat"]]
+    if len(qa_ll_models) == 0:
+        st.error("No compatible LLMs found for utilizing the Testing Framework", icon="⚠️")
+        st.stop()
+
+    # If there is no eligible (OpenAI Compat.) Embedding Model; disable Generate Test Set
+    qa_embed_models = [model for model in state.enabled_embed if state.embed_model_config[model]["openai_compat"]]
+    toggle_disabled = False
+    if len(qa_embed_models) == 0:
+        st.info("No compatible embeddings models found for generating a new test set.")
+        toggle_disabled = True
+
+    # Available/Compatible Model(s) found; continue
+    st.toggle(
+        "Generate new Test Dataset",
+        key="toggle_generate_test",
+        value=False,
+        disabled=toggle_disabled,
+        on_change=reset_test_set,
+        help="Create a new test dataset to be used for evaluation.",
+    )
 
     ###################################
     # Create or Load Tests
@@ -173,6 +193,7 @@ def main():
     #    os.remove(file_path)
 
     if state.toggle_generate_test:
+        st.header("Q&A Test Dataset Generation")
         ###### TEST DATASET GENERATION ######
         qa_gen_file = st.file_uploader(
             (
@@ -183,10 +204,30 @@ def main():
             accept_multiple_files=False,
             type="pdf",
         )
+        gen_left, gen_center, gen_right = st.columns([0.3, 0.3, 0.3])
+        qa_count = gen_left.number_input(
+            "Number of Q&A to Generate:", key="qa_count", min_value=0, max_value=100, value=2
+        )
+
+        qa_embed = gen_center.selectbox(
+            "Q&A Generation Embedding Model:",
+            options=qa_embed_models,
+            index=0,
+            key="selectbox_qa_embed",
+        )
+        topics_llm = os.getenv("TOPICS_LLM")
+        topics_idx = 0
+        if topics_llm and topics_llm in qa_ll_models:
+            topics_idx = qa_ll_models.index(topics_llm)
+        qa_llm = gen_right.selectbox(
+            "Q&A Generation Language Model:",
+            options=qa_ll_models,
+            index=topics_idx,
+            key="selectbox_qa_llm",
+        )
         qa_gen_button_disabled = True
         if qa_gen_file:
             qa_gen_button_disabled = False
-        qa_count = st.number_input("Number of Q&A to Generate:", key="qa_count", min_value=0, max_value=100, value=2)
 
         left, right = st.columns(2, vertical_alignment="bottom")
         if left.button("Generate Q&A", type="primary", key="qa_generation", disabled=qa_gen_button_disabled):
@@ -200,28 +241,31 @@ def main():
 
             # Load and Split
             tn_file = os.path.join(state["temp_dir"], f"{file_name}_{str(qa_count)}_text_nodes.pkl")
-            text_nodes = test_framework.load_and_split(eval_file, tn_file)
+            text_nodes = utilities.load_and_split(eval_file, tn_file)
 
             # Build Knowledge Base
+            llm_client, _, _ = utilities.get_ll_model(qa_llm, state.ll_model_config, giskarded=True)
+            embed_client, _, _ = utilities.get_embedding_model(qa_embed, state.embed_model_config, giskarded=True)
             kb_file = os.path.join(state["temp_dir"], f"{file_name}_{str(qa_count)}_knowledge_base.json")
-            kb = test_framework.build_knowledge_base(text_nodes, kb_file)
+            kb = utilities.build_knowledge_base(text_nodes, kb_file, llm_client, embed_client)
 
             # Generate Q&A
             qa_file = os.path.join(state["temp_dir"], f"{file_name}_{str(qa_count)}_test_set.json")
             state.qa_file = qa_file
-            state.test_set = test_framework.generate_qa(qa_file, kb, qa_count)
+            state.test_set = utilities.generate_qa(qa_file, kb, qa_count)
             placeholder.empty()
             st.success("Q&A Generation Succeeded.", icon="✅")
         right.button("Reset", key="reset_test_framework", type="primary", on_click=reset_test_set)
 
     if not state.toggle_generate_test:
+        st.header("Run Existing Q&A Test Dataset")
         ###### TEST LOAD EXISTING ######
 
         test_set_file = st.file_uploader(
             "Select a local, existing Q&A pair testing dataset:",
             key=f"uploader_{state.test_uploader_key}",
             accept_multiple_files=True,
-            type=["json", "jsonl"],
+            type=["jsonl","json"],
         )
         test_set_button_disabled = True
         if len(test_set_file) > 0:
@@ -232,24 +276,31 @@ def main():
             placeholder = st.empty()
             with placeholder:
                 st.info("Loading Test Sets... please be patient.", icon="⚠️")
-            qa_files = split.write_files(test_set_file)
-            state.temp_dir = os.path.dirname(qa_files[0])
-            logger.info("Temp dir created with Generate Q&A: %s", state.temp_dir)
-            merged_test_file = test_framework.merge_jsonl_files(qa_files, state["temp_dir"])
-            state.merged_test_file = merged_test_file
-            state.test_set = QATestset.load(merged_test_file)
+            try:
+                qa_files = split.write_files(test_set_file)
+                state.temp_dir = os.path.dirname(qa_files[0])
+                logger.info("Temp dir created with Generate Q&A: %s", state.temp_dir)
+                merged_test_file = utilities.merge_jsonl_files(qa_files, state["temp_dir"])
+                state.merged_test_file = merged_test_file
+                state.test_set = QATestset.load(merged_test_file)
 
-            with placeholder:
-                st.success("Test Sets Loaded.", icon="✅")
+                with placeholder:
+                    st.success("Test Sets Loaded.", icon="✅")
+            except:
+                icon="🚨"
+                st.error("Test Sets not compatible.", icon="🚨")
+
             placeholder.empty()
         right.button("Reset", key="reset_test_framework", type="primary", on_click=reset_test_set)
 
     ###################################
     # Run Tests
     ###################################
-    if state["test_set"] and state["temp_dir"]:
-        # Initialise RAG
-        st_common.initialise_rag()
+    if state.test_set is not None and state.temp_dir is not None:
+        ll_model = st_common.lm_sidebar()
+
+        # Initialize RAG
+        st_common.initialize_rag()
 
         # RAG
         st_common.rag_sidebar()
@@ -259,12 +310,12 @@ def main():
 
         # Load Test data in Panda Dataframe
 
-        if not state.toggle_generate_test:
+        if not state.toggle_generate_test and "merged_test_file" in state:
             logger.info("LOAD MERGED FILE")
-            st.session_state.test_set_edited = pd.read_json(state["merged_test_file"], orient="records", lines=True)
+            st.session_state.test_set_edited = pd.read_json(state.merged_test_file, orient="records", lines=True)
         else:
             logger.info("LOAD FILE GENERATED")
-            st.session_state.test_set_edited = pd.read_json(state["qa_file"], orient="records", lines=True)
+            st.session_state.test_set_edited = pd.read_json(state.qa_file, orient="records", lines=True)
 
         # state["test_set_report"] = state["test_set"].to_pandas()
 
@@ -290,19 +341,20 @@ def main():
         # Evaluator
         #################
         st.header("Q&A Evaluation")
+        st.info("Use the sidebar settings for evaluation parameters", icon="⬅️")
         if not state.rag_params["enable"] or all(
             state.rag_params[key] for key in ["model", "chunk_size", "chunk_overlap", "distance_metric"]
         ):
             try:
-                chat_cmd = st_common.initialise_chatbot(lm_model)
+                chat_cmd = st_common.initialize_chatbot(ll_model)
                 state.chat_manager = chat_cmd
-                state.initialised = True
+                state.initialized = True
                 st_common.update_rag()
             except Exception as ex:
                 logger.exception(ex, exc_info=False)
-                st.error(f"Failed to initialise the chat client: {ex}")
-                st_common.clear_initialised()
-                if st.button("Retry", key="retry_initialise"):
+                st.error(f"Failed to initialize the chat client: {ex}")
+                st_common.clear_initialized()
+                if st.button("Retry", key="retry_initialize"):
                     st.rerun()
                 st.stop()
 
@@ -322,12 +374,12 @@ def main():
                 report_df = report.to_pandas()
 
                 report_df.to_json(os.path.join(state["temp_dir"], "eval_report.json"))
-                logger.info("Metrics %s", report._metrics_results)
+                logger.info("Metrics %s", report._metrics_results)  # pylint: disable=protected-access
                 by_topic = report.correctness_by_topic()
 
                 # report.failures
                 report_file = os.path.join(state["temp_dir"], "eval_report.pkl")
-                test_framework.dump_pickle(report_file)
+                utilities.dump_pickle(report_file)
                 logger.info("Report generated and saved")
                 placeholder.empty()
                 with placeholder:
@@ -345,6 +397,8 @@ def main():
                 by_topic = report.correctness_by_topic()
                 logger.info("by_topic: %s", type(by_topic))
                 st.subheader("By topic")
+                by_topic['correctness'] = by_topic['correctness'] * 100
+                by_topic.rename(columns={'correctness': 'correctness %'}, inplace=True)
                 st.dataframe(by_topic)
 
                 # Correctness on each type of question
