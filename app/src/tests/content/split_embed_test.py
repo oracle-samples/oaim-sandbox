@@ -2,7 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-
+# spell-checker: disable
 # pylint: disable=unused-argument, invalid-name
 
 from streamlit.testing.v1 import AppTest
@@ -114,7 +114,7 @@ def test_split_embed_web_OpenAIEmbeddings_manual_key(unset_api_env, set_db_env, 
     at.run()
     assert at.session_state.db_configured is True
     assert at.session_state.embed_model_config[model_name]["enabled"] is True
-    assert at.session_state.embed_model_config[model_name]["url"] == ("http://api.openai.com")
+    assert at.session_state.embed_model_config[model_name]["url"] == ("https://api.openai.com")
     assert at.session_state.embed_model_config[model_name]["api_key"] == ("testing")
     at.selectbox(key="select_box_embed_model").set_value(model_name).run()
     # There should be no errors

@@ -2,12 +2,12 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-
+# spell-checker: disable
 # pylint: disable=unused-argument
 
 from unittest.mock import MagicMock
 from streamlit.testing.v1 import AppTest
-import modules.db_utils as db_utils
+import modules.utilities as utilities
 
 
 ###################################################
@@ -45,10 +45,10 @@ def test_initialize_streamlit_env_mock(set_db_env, mock_oracledb):
 ###################################################
 # db_config.main
 ###################################################
-def test_main_no_env_no_db(unset_db_env, mock_db_utils_connect):
+def test_main_no_env_no_db(unset_db_env, mock_db_connect):
     """Main with no DB access"""
-    mock_db_utils_connect.side_effect = db_utils.oracledb.DatabaseError("Connection failed")
-    print(f"Mock side effect: {mock_db_utils_connect.side_effect}")
+    mock_db_connect.side_effect = utilities.oracledb.DatabaseError("Connection failed")
+    print(f"Mock side effect: {mock_db_connect.side_effect}")
 
     at = AppTest.from_file("content/db_config.py", default_timeout=30).run()
     assert at.session_state.db_config["user"] is None
@@ -70,7 +70,7 @@ def test_main_no_env_no_db(unset_db_env, mock_db_utils_connect):
     assert at.error[0].icon == "🚨", "Connection failed"
 
     # Establish the mock connection
-    mock_db_utils_connect.side_effect = None
+    mock_db_connect.side_effect = None
     at.button[0].click().run()
     assert at.success[0].icon == "✅", "Database Connectivity Tested Successfully"
     assert at.session_state.db_config["user"] == "TEST_USER"

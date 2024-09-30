@@ -2,7 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-
+# spell-checker: disable
 # pylint: disable=unused-argument
 
 from streamlit.testing.v1 import AppTest
