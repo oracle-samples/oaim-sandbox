@@ -265,7 +265,7 @@ def main():
             "Select a local, existing Q&A pair testing dataset:",
             key=f"uploader_{state.test_uploader_key}",
             accept_multiple_files=True,
-            type=["json", "jsonl"],
+            type=["jsonl"],
         )
         test_set_button_disabled = True
         if len(test_set_file) > 0:
@@ -392,6 +392,8 @@ def main():
                 by_topic = report.correctness_by_topic()
                 logger.info("by_topic: %s", type(by_topic))
                 st.subheader("By topic")
+                by_topic['correctness'] = by_topic['correctness'] * 100
+                by_topic.rename(columns={'correctness': 'correctness %'}, inplace=True)
                 st.dataframe(by_topic)
 
                 # Correctness on each type of question

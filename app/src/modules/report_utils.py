@@ -44,7 +44,7 @@ def clean_hide(file_path):
     df = df[df["hide"] == False]
     df = df.drop(columns=["hide"])
 
-    cleaned_file_path = os.path.join(state["temp_dir"], "cleaned_edited_test_set.json")
+    cleaned_file_path = os.path.join(state["temp_dir"], "cleaned_edited_test_set.jsonl")
     df.to_json(cleaned_file_path, orient="records", lines=True)
 
     return cleaned_file_path
