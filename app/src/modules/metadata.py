@@ -213,6 +213,14 @@ def embedding_models():
             "openai_compat": True,
             "chunk_max": 8191,
         },
+        "text-embedding-ada-002": {
+            "enabled": os.getenv("OPENAI_API_KEY") is not None,
+            "api": OpenAIEmbeddings,
+            "url": "https://api.openai.com",
+            "api_key": os.environ.get("OPENAI_API_KEY", default=""),
+            "openai_compat": True,
+            "chunk_max": 8191,
+        },
         "mxbai-embed-large": {
             "enabled": os.getenv("ON_PREM_OLLAMA_URL") is not None,
             "api": OllamaEmbeddings,
