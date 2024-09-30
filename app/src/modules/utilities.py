@@ -98,10 +98,13 @@ def get_ll_model(model, ll_models_config=None, giskarded=False):
 
     ## Start - Add Additional Model Authentication Here
     if giskarded:
-        # This looks stupid (and it is) but giskard doesn't respect _client api_key
-        os.environ["OPENAI_API_KEY"] = lm_params.get("api_key") or "giskard"
-        _client = OpenAI(api_key=os.environ["OPENAI_API_KEY"], base_url=llm_url + "/v1/")
-        client = OpenAIClient(model=model, client=_client)
+        if llm_api == "OpenAI":
+            # This looks stupid (and it is) but giskard doesn't respect _client api_key for OpenAI
+            os.environ["OPENAI_API_KEY"] = lm_params["api_key"]
+            client = OpenAIClient(model=model)
+        elif llm_api == "ChatOllama":
+            _client = OpenAI(api_key="ollama", base_url=f"{llm_url}/v1/")
+            client = OpenAIClient(model=model, client=_client)
     elif llm_api == "OpenAI":
         client = ChatOpenAI(
             api_key=lm_params["api_key"],
