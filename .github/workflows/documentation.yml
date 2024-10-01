@@ -50,7 +50,7 @@ jobs:
       - name: Download Geekdocs Theme
         run: |
           mkdir -p docs/themes/hugo-geekdoc \
-          && wget -qO- $(curl -s https://api.github.com/repos/McShelby/hugo-theme-relearn/releases/latest | grep "tarball_url" | awk -F'"' '{print $4}') | tar --exclude='*/exampleSite' -xz -C themes/relearn --strip-components=1
+          && curl -L https://github.com/thegeeklab/hugo-geekdoc/releases/latest/download/hugo-geekdoc.tar.gz | tar -xz -C docs/themes/hugo-geekdoc/ --strip-components=1
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
