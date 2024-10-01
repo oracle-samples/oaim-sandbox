@@ -1,5 +1,7 @@
 # Oracle AI Microservices Sandbox
 
+<!-- spell-checker:ignore streamlit, venv, oaim -->
+
 🚧 Developer Preview
 
 ## Description
@@ -17,7 +19,7 @@ The **Oracle AI Microservices Sandbox** provides a streamlined environment where
 
 ## Getting Started
 
-The **Oracle AI Microservices Sandbox** is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on a bare-metal, within a container, or in a Kubernetes Cluster.
+The **Oracle AI Microservices Sandbox** is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on bare-metal, within a container, or in a Kubernetes Cluster.
 
 For more information, including more details on **Setup and Configuration** please visit the [documentation](https://oracle-samples.github.io/oaim-sandbox).
 
