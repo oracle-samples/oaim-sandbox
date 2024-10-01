@@ -213,8 +213,10 @@ def main():
             "Q&A Generation Embedding Model:",
             options=qa_embed_models,
             index=0,
+            help="Don't see your model? Unfortunately it is not currently supported by the testing framework.",
             key="selectbox_qa_embed",
         )
+
         topics_llm = os.getenv("TOPICS_LLM")
         topics_idx = 0
         if topics_llm and topics_llm in qa_ll_models:
@@ -224,6 +226,7 @@ def main():
             options=qa_ll_models,
             index=topics_idx,
             key="selectbox_qa_llm",
+            help="Don't see your model? Unfortunately it is not currently supported by the testing framework.",
         )
         qa_gen_button_disabled = True
         if qa_gen_file:
@@ -265,7 +268,7 @@ def main():
             "Select a local, existing Q&A pair testing dataset:",
             key=f"uploader_{state.test_uploader_key}",
             accept_multiple_files=True,
-            type=["jsonl","json"],
+            type=["jsonl", "json"],
         )
         test_set_button_disabled = True
         if len(test_set_file) > 0:
@@ -286,8 +289,8 @@ def main():
 
                 with placeholder:
                     st.success("Test Sets Loaded.", icon="✅")
-            except:
-                icon="🚨"
+            except Exception as ex:
+                logger.error("Exception: %s", ex)
                 st.error("Test Sets not compatible.", icon="🚨")
 
             placeholder.empty()
@@ -397,8 +400,8 @@ def main():
                 by_topic = report.correctness_by_topic()
                 logger.info("by_topic: %s", type(by_topic))
                 st.subheader("By topic")
-                by_topic['correctness'] = by_topic['correctness'] * 100
-                by_topic.rename(columns={'correctness': 'correctness %'}, inplace=True)
+                by_topic["correctness"] = by_topic["correctness"] * 100
+                by_topic.rename(columns={"correctness": "correctness %"}, inplace=True)
                 st.dataframe(by_topic)
 
                 # Correctness on each type of question

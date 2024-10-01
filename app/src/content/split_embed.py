@@ -199,13 +199,15 @@ def main():
             on_change=update_chunk_overlap_slider,
         )
 
-    distance_metric = st.selectbox(
+    distance_metric_size, _ = st.columns([0.5, 0.5])
+    distance_metric = distance_metric_size.selectbox(
         "Distance Metric:",
         list(state.distance_metric_config.keys()),
         key="select_box_distance_metric",
     )
     # Create a text input widget
-    embed_alias = st.text_input(
+    embed_alias_size, _ = st.columns([0.5, 0.5])
+    embed_alias = embed_alias_size.text_input(
         "Embedding Alias:",
         max_chars=20,
         help="""
@@ -363,6 +365,15 @@ def main():
     # Populate Vector Store
     ######################################
     st.text(f"Vector Store: {store_table}")
+    rate_size, _ = st.columns([0.18, 0.82])
+    rate_limit = rate_size.number_input(
+        "Rate Limit (RPM):",
+        value=None,
+        help="Leave blank for no rate-limiting - Requests Per Minute",
+        step=1,
+        max_value=60,
+        key="number_input_rate_limit",
+    )
 
     if st.button(
         "Populate Vector Store",
@@ -438,6 +449,7 @@ def main():
                 model,
                 distance_metric,
                 split_docos,
+                rate_limit,
             )
             placeholder.empty()
             st_common.reset_rag()

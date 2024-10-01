@@ -7,6 +7,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # spell-checker:ignore oraclevs, openai, ollama
 
 import json
+import time
 import os
 import configparser
 import re
@@ -27,6 +28,7 @@ from langchain.docstore.document import Document as LangchainDocument
 from langchain_community.vectorstores import oraclevs as LangchainVS
 from langchain_community.vectorstores.oraclevs import OracleVS
 from langchain_community.chat_models import ChatPerplexity
+from langchain_cohere import ChatCohere
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 
@@ -35,7 +37,6 @@ from llama_index.core.node_parser import SentenceSplitter
 
 from giskard.llm import set_llm_api, set_default_client
 from giskard.llm.client.openai import OpenAIClient
-from giskard.llm.embeddings import set_default_embedding
 from giskard.llm.embeddings.openai import OpenAIEmbedding
 from giskard.rag import KnowledgeBase, generate_testset
 from giskard.rag.question_generators import simple_questions, complex_questions
@@ -55,8 +56,8 @@ def is_url_accessible(url):
     try:
         response = requests.get(url, timeout=2)
         logger.info("Checking %s resulted in %s", url, response.status_code)
-        # Check if the response status code is 200 (OK) 403 (Forbidden) 421 (Misdirected)
-        if response.status_code in [200, 403, 421]:
+        # Check if the response status code is 200 (OK) 403 (Forbidden) 404 (Not Found) 421 (Misdirected)
+        if response.status_code in [200, 403, 404, 421]:
             return True, None
         else:
             err_msg = f"{url} is not accessible. (Status: {response.status_code})"
@@ -98,17 +99,23 @@ def get_ll_model(model, ll_models_config=None, giskarded=False):
 
     ## Start - Add Additional Model Authentication Here
     if giskarded:
-        if llm_api == "OpenAI":
-            # This looks stupid (and it is) but giskard doesn't respect _client api_key for OpenAI
-            os.environ["OPENAI_API_KEY"] = lm_params["api_key"]
-            client = OpenAIClient(model=model)
-        elif llm_api == "ChatOllama":
-            _client = OpenAI(api_key="ollama", base_url=f"{llm_url}/v1/")
-            client = OpenAIClient(model=model, client=_client)
+        giskard_key = lm_params.get("api_key") or "giskard"
+        _client = OpenAI(api_key=giskard_key, base_url=f"{llm_url}/v1/")
+        client = OpenAIClient(model=model, client=_client)
     elif llm_api == "OpenAI":
         client = ChatOpenAI(
             api_key=lm_params["api_key"],
             model_name=model,
+            temperature=lm_params["temperature"][0],
+            max_tokens=lm_params["max_tokens"][0],
+            top_p=lm_params["top_p"][0],
+            frequency_penalty=lm_params["frequency_penalty"][0],
+            presence_penalty=lm_params["presence_penalty"][0],
+        )
+    elif llm_api == "Cohere":
+        client = ChatCohere(
+            cohere_api_key=lm_params["api_key"],
+            model=model,
             temperature=lm_params["temperature"][0],
             max_tokens=lm_params["max_tokens"][0],
             top_p=lm_params["top_p"][0],
@@ -157,9 +164,8 @@ def get_embedding_model(model, embed_model_config=None, giskarded=False):
 
     logger.debug("Matching Embedding API: %s", embed_api)
     if giskarded:
-        # This looks stupid (and it is) but giskard doesn't respect _client api_key
-        os.environ["OPENAI_API_KEY"] = embed_key or "giskard"
-        _client = OpenAI(api_key=os.environ["OPENAI_API_KEY"], base_url=embed_url + "/v1/")
+        giskard_key = embed_key or "giskard"
+        _client = OpenAI(api_key=giskard_key, base_url=f"{embed_url}/v1/")
         client = OpenAIEmbedding(model=model, client=_client)
     elif embed_api.__name__ == "OpenAIEmbeddings":
         try:
@@ -169,6 +175,8 @@ def get_embedding_model(model, embed_model_config=None, giskarded=False):
             raise ValueError from ex
     elif embed_api.__name__ == "OllamaEmbeddings":
         client = embed_api(model=model, base_url=embed_url)
+    elif embed_api.__name__ == "CohereEmbeddings":
+        client = embed_api(model=model, cohere_api_key=embed_key)
     else:
         client = embed_api(model=embed_url)
 
@@ -279,6 +287,7 @@ def populate_vs(
     model_name,
     distance_metric,
     input_data: Union[List["LangchainDocument"], List] = None,
+    rate_limit = 0
 ):
     """Populate the Vector Storage"""
 
@@ -300,7 +309,7 @@ def populate_vs(
 
     # Loop through files and create Documents
     if isinstance(input_data[0], LangchainDocument):
-        logger.info("Processing Documents: %s", input_data)
+        logger.debug("Processing Documents: %s", input_data)
         documents = input_data
     else:
         documents = []
@@ -333,15 +342,21 @@ def populate_vs(
 
     # Batch Size does not have a measurable impact on performance
     # but does eliminate issues with timeouts
-    batch_size = 1000
+    # Careful increasing as may break token rate limits
+    batch_size = 500
     for i in range(0, len(unique_chunks), batch_size):
         batch = unique_chunks[i : i + batch_size]
         logger.info(
-            "Processing: %i Chunks of %i",
+            "Processing: %i Chunks of %i (Rate Limit: %i)",
             len(unique_chunks) if len(unique_chunks) < i + batch_size else i + batch_size,
             len(unique_chunks),
+            rate_limit
         )
         OracleVS.add_documents(vectorstore, documents=batch)
+        if rate_limit > 0:
+            interval = 60 / rate_limit
+            logger.info("Rate Limiting: sleeping for %i seconds", interval)
+            time.sleep(interval)
 
     # Build the Index
     logger.info("Creating index on: %s", store_table)
@@ -679,8 +694,7 @@ def build_knowledge_base(text_nodes, kb_file, llm_client, embed_client):
         kb_file,
         orient="records",
     )
-    set_default_embedding(embed_client)
-    knowledge_base = KnowledgeBase(knowledge_base_df, llm_client=llm_client)
+    knowledge_base = KnowledgeBase(knowledge_base_df, llm_client=llm_client, embedding_model=embed_client)
     logger.info("KnowledgeBase created and saved: %s", kb_file)
 
     return knowledge_base

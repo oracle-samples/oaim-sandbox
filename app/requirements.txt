@@ -16,6 +16,7 @@ bokeh==3.6.0
 evaluate==0.4.3
 faiss-cpu==1.8.0.post1
 IPython==8.27.0
+langchain-cohere==0.3.0
 langchain-community==0.3.1
 langchain-huggingface==0.1.0
 langchain-ollama==0.2.0

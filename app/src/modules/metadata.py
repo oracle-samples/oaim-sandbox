@@ -5,7 +5,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 Models listed here are for configuration demonstration purposes only.  They are not useable by default.
 Developers should configure, enable and/or provide their own model configurations as required.
 """
-# spell-checker:ignore huggingface, PPLX, thenlper, mxbai, nomic, minilm
+# spell-checker:ignore huggingface, PPLX, thenlper, mxbai, nomic, minilm, rerank
 # spell-checker:ignore langchain, openai, ollama, testset, pypdf, giskard
 
 import os
@@ -16,6 +16,8 @@ import modules.logging_config as logging_config
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_openai import OpenAIEmbeddings
 from langchain_ollama import OllamaEmbeddings
+from langchain_cohere import CohereEmbeddings
+from langchain.retrievers.document_compressors import CohereRerank
 
 logger = logging_config.logging.getLogger("modules.metadata")
 
@@ -85,6 +87,19 @@ def ll_models():
     """Define example Language Model Support"""
     # Lists are in [user, default, min, max] format
     ll_models_dict = {
+        "command-r": {
+            "enabled": os.getenv("COHERE_API_KEY") is not None,
+            "api": "Cohere",
+            "url": "https://api.cohere.ai",
+            "api_key": os.environ.get("COHERE_API_KEY", default=""),
+            "openai_compat": False,
+            "context_length": 127072,
+            "temperature": [0.3, 0.3, 0.0, 2.0],
+            "top_p": [0.75, 0.75, 0.0, 1.0],
+            "max_tokens": [100, 100, 1, 4096],
+            "frequency_penalty": [0.0, 0.0, -1.0, 1.0],
+            "presence_penalty": [0.0, 0.0, -2.0, 2.0],
+        },
         "gpt-3.5-turbo": {
             "enabled": os.getenv("OPENAI_API_KEY") is not None,
             "api": "OpenAI",
@@ -188,7 +203,6 @@ def embedding_models():
     """Define packaged Embedding Model Support"""
     logger.debug("Loading state with Embedding Models")
     embedding_models_dict = {
-        # Model: [API, Chunk Size, API Server, API Key]
         "thenlper/gte-base": {
             "enabled": os.getenv("ON_PREM_HF_URL") is not None,
             "api": HuggingFaceEndpointEmbeddings,
@@ -221,6 +235,22 @@ def embedding_models():
             "openai_compat": True,
             "chunk_max": 8191,
         },
+        "embed-english-v3.0": {
+            "enabled": os.getenv("COHERE_API_KEY") is not None,
+            "api": CohereEmbeddings,
+            "url": "https://api.cohere.ai",
+            "api_key": os.environ.get("COHERE_API_KEY", default=""),
+            "openai_compat": False,
+            "chunk_max": 512,
+        },
+        "embed-english-light-v3.0": {
+            "enabled": os.getenv("COHERE_API_KEY") is not None,
+            "api": CohereEmbeddings,
+            "url": "https://api.cohere.ai",
+            "api_key": os.environ.get("COHERE_API_KEY", default=""),
+            "openai_compat": False,
+            "chunk_max": 512,
+        },
         "mxbai-embed-large": {
             "enabled": os.getenv("ON_PREM_OLLAMA_URL") is not None,
             "api": OllamaEmbeddings,
@@ -247,6 +277,25 @@ def embedding_models():
         },
     }
     return embedding_models_dict
+
+
+##########################################
+# Rerank Model
+##########################################
+def rerank_models():
+    """Define packaged Re-rank Model Support"""
+    logger.debug("Loading state with Rerank Models")
+    rerank_models_dict = {
+        "rerank-english": {
+            "enabled": os.getenv("COHERE_API_KEY") is not None,
+            "api": CohereRerank,
+            "url": "https://api.cohere.ai",
+            "api_key": os.environ.get("COHERE_API_KEY", default=""),
+            "openai_compat": True,
+            "context_length": 4096,
+        },
+    }
+    return rerank_models_dict
 
 
 ##########################################

@@ -136,7 +136,7 @@ def main():
             st.chat_message(msg.type).write(msg.content)
 
     if "chat_manager" in state:
-        if prompt := st.chat_input("Ask your question here..."):
+        if prompt := st.chat_input(f"Ask your question here... (current prompt: {state.lm_instr_prompt})"):
             st.chat_message("human").write(prompt)
             try:
                 response = chatbot.generate_response(

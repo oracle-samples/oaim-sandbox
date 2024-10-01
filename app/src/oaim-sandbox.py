@@ -5,7 +5,6 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # pylint: disable=invalid-name
 # spell-checker:ignore streamlit, oaim, testid
 
-# spell-checker:ignore streamlit, oaim, testid
 import os
 
 # Streamlit
@@ -54,8 +53,8 @@ def main():
             width: 100%;
         }
         img[data-testid="stLogo"] {
-            width: 10.5rem;
-            height: 100%;
+            width: 100%;
+            height: auto;
         }
     </style>
     """

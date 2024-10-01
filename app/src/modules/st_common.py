@@ -16,7 +16,7 @@ import modules.utilities as utilities
 import modules.logging_config as logging_config
 import modules.metadata as meta
 import modules.help as custom_help
-import modules.chatbot as chatbot
+from modules.chatbot import ChatCmd
 
 logger = logging_config.logging.getLogger("modules.st_common")
 
@@ -191,7 +191,7 @@ def initialize_chatbot(ll_model):
         if st.button("Retry", key="retry_chatbot_api_accessible"):
             st.rerun()
         st.stop()
-    cmd = chatbot.ChatCmd(llm_client, vectorstore)
+    cmd = ChatCmd(llm_client, vectorstore)
 
     logger.info("initialized ChatBot!")
     return cmd
