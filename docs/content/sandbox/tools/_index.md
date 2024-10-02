@@ -10,5 +10,5 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 -->
 
 {{% notice style="default" title="10-Sept-2024: Documentation In-Progress..." icon="pen" %}}
-If there is a specific model that you would like to use with the **Oracle AI Microservices Sandbox**, please [open an issue in GitHub](https://github.com/oracle-samples/oaim-sandbox/issues/new).
+Thank you for your patience as we work on updating the documentation. Please check back soon for the latest updates.
 {{% /notice %}}
