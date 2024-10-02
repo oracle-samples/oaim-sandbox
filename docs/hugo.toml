@@ -25,10 +25,10 @@ enableRobotsTXT = true
     name = "<i class='fa-fw fab fa-github'></i> GitHub Repository"
     url = 'https://github.com/oracle-samples/oaim-sandbox'
     weight = 10
-#   [[menu.shortcuts]]
-#     name = "<i class='fa-fw fas fa-camera'></i> Showcases"
-#     url = 'showcase/'
-#     weight = 11
+  [[menu.shortcuts]]
+    name = "<i class='fa-fw fab fa-youtube'></i>Building a Chatbot"
+    url = 'https://www.youtube.com/watch?v=oG9MPCpwUlU'
+    weight = 11
 #   [[menu.shortcuts]]
 #     name = "<i class='fa-fw fas fa-bullhorn'></i> Credits"
 #     url = 'more/credits/'
