@@ -1,8 +1,7 @@
 +++
-title = 'Infrastructure'
-weight = 20
+title = '🧪 Test Framework'
+weight = 30
 +++
-
 <!--
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.

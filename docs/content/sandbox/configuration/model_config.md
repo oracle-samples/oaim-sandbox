@@ -1,20 +1,20 @@
 +++
-title = 'Model Configuration'
-date = 2024-09-11T07:30:34Z
-draft = false
+title = '🤖 Model Configuration'
+weight = 10
 +++
-
 <!--
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
+<!-- spell-checker:ignore ollama, mxbai, nomic, thenlper, minilm, uniqueid, huggingface, hftei, openai, pplx -->
 
 ## Supported Models
 
 At a minimum, a Large _Language Model_ (LLM) must be configured in **Oracle AI Microservices Sandbox** for basic functionality. For Retrieval-Augmented Generation (**RAG**), an _Embedding Model_ will also need to be configured.
 
-{{< hint type=[note] icon=gdoc_info_outline title="Additional Model Support" >}}
-If there is a specific model that you would like to use with the **Oracle AI Microservices Sandbox**, please [open an issue in GitHub](https://github.com/oracle-samples/oaim-sandbox/issues/new).{{< /hint >}}
+{{% notice style="default" title="10-Sept-2024: Documentation In-Progress..." icon="pen" %}}
+If there is a specific model that you would like to use with the **Oracle AI Microservices Sandbox**, please [open an issue in GitHub](https://github.com/oracle-samples/oaim-sandbox/issues/new).
+{{% /notice %}}
 
 | Model                          | Type  | API                                                      | On-Premises |
 | ------------------------------ | ----- | -------------------------------------------------------- | ----------- |
@@ -61,24 +61,20 @@ When using an on-premises model, for performance purposes, they should be runnin
 ## Additional Information
 
 {{< tabs "uniqueid" >}}
-{{< tab "Ollama" >}}
-
+{{% tab title="Ollama" %}}
 # Ollama
 
 [Ollama](https://ollama.com/) is an open-source project that simplifies the running of LLMs and Embedding Models On-Premises.
 
-When configuring an Ollama model in the **Sandbox**, set the `API Server` URL (e.g `http://127.0.0.1:11434`) and leave the API Key blank. Substitute the IP Address with IP of where Ollama is running.
+When configuring an Ollama model in the **Sandbox**, set the `API Server` URL (e.g `http://127.0.0.1:11434`) and leave the API Key blank. Substitute the IP Address with the IP of where Ollama is running.
 
-{{< hint type=[tip] icon=gdoc_star title="Auto Setup/Enable" >}}
-You can set the following environment variable to automatically set the `API Server` URL and enable Ollama models (change the IP address and Port, as applicable to your environment):
+>[!code]Skip the GUI!
+>You can set the following environment variable to automatically set the `API Server` URL and enable Ollama models (change the IP address and Port, as applicable to your environment):
+>```shell
+>export ON_PREM_OLLAMA_URL=http://127.0.0.1:11434
+>```
 
-```shell
-export ON_PREM_OLLAMA_URL=http://127.0.0.1:11434
-```
-
-{{< /hint >}}
-
-## Quickstart
+## Quick-start
 
 Example of running llama3.1 on a Linux host:
 
@@ -102,23 +98,20 @@ ollama serve
 
 For more information and instructions on running Ollama on other platforms, please visit the [Ollama GitHub Repository](https://github.com/ollama/ollama/blob/main/README.md#quickstart).
 
-{{< /tab >}}
-{{< tab "HuggingFace" >}}
-
+{{% /tab %}}
+{{% tab title="HuggingFace" %}}
 # HuggingFace
 
 [HuggingFace](https://huggingface.co/) is a platform where the machine learning community collaborates on models, datasets, and applications. It provides a large selection of models that can be run both in the cloud and On-Premises.
 
-{{< hint type=[tip] icon=gdoc_star title="Auto Setup/Enable" >}}
-You can set the following environment variable to automatically set the `API Server` URL and enable HuggingFace models (change the IP address and Port, as applicable to your environment):
+>[!code]Skip the GUI!
+>You can set the following environment variable to automatically set the `API Server` URL and enable HuggingFace models (change the IP address and Port, as applicable to your environment):
+:
+>```shell
+>export ON_PREM_HF_URL=http://127.0.0.1:8080
+>```
 
-```shell
-export ON_PREM_HF_URL=http://127.0.0.1:8080
-```
-
-{{< /hint >}}
-
-## Quickstart
+## Quick-start
 
 Example of running thenlper/gte-base in a container:
 
@@ -154,39 +147,34 @@ Example of running thenlper/gte-base in a container:
    ```
 
    **NOTE:** if there is no IP, use 127.0.0.1
-   {{< /tab >}}
-   {{< tab "OpenAI" >}}
-
+{{% /tab %}}
+{{% tab title="OpenAI" %}}
 # OpenAI
 
 [OpenAI](https://openai.com/api/) is an AI research organization behind the popular, online ChatGPT chatbot. To use OpenAI models, you will need to sign-up, purchase credits, and provide the **Sandbox** an API Key.
 
 **WARNING:** OpenAI is a cloud model and you should familiarize yourself with their Privacy Policies if using it to experiment with private, sensitive data in the **Sandbox**.
 
-{{< hint type=[tip] icon=gdoc_star title="Auto Setup/Enable" >}}
-You can set the following environment variable to automatically set the `API Key` and enable OpenAI models:
+>[!code]Skip the GUI!
+>You can set the following environment variable to automatically set the `API Key` and enable OpenAI models:
+:
+>```shell
+>export OPENAI_API_KEY=<super-secret API Key>
+>```
 
-```shell
-export OPENAI_API_KEY=<super-secret API Key>
-```
-
-{{< /hint >}}
-{{< /tab >}}
-{{< tab "Perplexity AI" >}}
-
+{{% /tab %}}
+{{% tab title="Perplexity AI" %}}
 # Perplexity AI
 
 [Perplexity AI](https://docs.perplexity.ai/getting-started) is an AI-powered answer engine. To use Perplexity AI models, you will need to sign-up, purchase credits, and provide the **Sandbox** an API Key.
 
 **WARNING:** Perplexity AI is a cloud model and you should familiarize yourself with their Privacy Policies if using it to experiment with private, sensitive data in the **Sandbox**.
 
-{{< hint type=[tip] icon=gdoc_star title="Auto Setup/Enable" >}}
-You can set the following environment variable to automatically set the `API Key` and enable Perplexity models:
-
-```shell
-export PPLX_API_KEY=<super-secret API Key>
-```
-
-{{< /hint >}}
-{{< /tab >}}
+>[!code]Skip the GUI!
+>You can set the following environment variable to automatically set the `API Key` and enable Perplexity models:
+:
+>```shell
+>export PPLX_API_KEY=<super-secret API Key>
+>```
+{{% /tab %}}
 {{< /tabs >}}

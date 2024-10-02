@@ -71,7 +71,6 @@ def update_embed_model_config():
         state.embed_model_config[model_name]["api_key"] = state[f"embed_{model_name}_api_key"]
     # Reset RAG
     reset_rag()
-    st.success("Embedding Model Configuration - Updated", icon="✅")
 
     # Set Enabled State
     state_enabled_models()
@@ -85,7 +84,6 @@ def update_ll_model_config():
         state.ll_model_config[model_name]["api_key"] = state[f"lm_{model_name}_api_key"]
     # Re-init the chatbot
     state.pop("initialized", None)
-    st.success("Language Model Configuration - Updated", icon="✅")
 
     # Set Enabled State
     state_enabled_models()
@@ -155,7 +153,10 @@ def main():
                 type="password",
                 label_visibility="collapsed",
             )
-        st.form_submit_button(label="Save", on_click=update_ll_model_config)
+        update_ll_model = st.form_submit_button(label="Save", on_click=update_ll_model_config)
+        if update_ll_model:
+            st.success("Language Model Configuration - Updated", icon="✅")
+
 
     st.header("Embedding Models")
     with st.form("update_embed_model_config"):
@@ -205,8 +206,9 @@ def main():
                 type="password",
                 label_visibility="collapsed",
             )
-        st.form_submit_button(label="Save", on_click=update_embed_model_config)
-
+        update_embed_model = st.form_submit_button(label="Save", on_click=update_embed_model_config)
+        if update_embed_model:
+            st.success("Embedding Model Configuration - Updated", icon="✅")
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:
     main()

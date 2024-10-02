@@ -1,10 +1,9 @@
 +++
-title = 'Getting Started'
-date = 2024-09-10T10:48:24Z
+title = " "
+menus = 'main'
+archetype = "home"
 description = 'AI Microservices Sandbox'
 keywords = 'oracle microservices development genai rag'
-draft = false
-geekdocBreadcrumb = false
 +++
 
 <!--
@@ -12,8 +11,9 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
 
-{{< hint type=[warning] icon=gdoc_fire title="10-Sept-2024: Documentation In-Progress..." >}}
-Thank you for your patience as we work on updating the documentation. Please check back soon for the latest updates.{{< /hint >}}
+{{% notice style="code" title="10-Sept-2024: Documentation In-Progress..." icon="pen" %}}
+Thank you for your patience as we work on updating the documentation. Please check back soon for the latest updates.
+{{% /notice %}}
 
 The **Oracle AI Microservices Sandbox** (the **Sandbox**) provides a streamlined environment where developers and data scientists can explore the potential of Generative Artificial Intelligence (**GenAI**) combined with Retrieval-Augmented Generation (**RAG**) capabilities. By integrating the Oracle Database AI Vector Search, the **Sandbox** enables users to enhance existing Large Language Models (**LLM**s) through **RAG**. This method significantly improves the performance and accuracy of AI models, helping to avoid common issues such as knowledge cutoff and hallucinations.
 
@@ -36,9 +36,9 @@ The **Sandbox** streamlines the entire workflow from prototyping to production, 
 
 The **Sandbox** is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on a bare-metal, within a container, or in a Kubernetes Cluster.
 
-{{< hint type=[info] icon=gdoc_info_outline title="Prefer a Step-by-Step?" >}}
-The [Walkthrough](walkthrough/) is a great way to familiarize yourself with the **Sandbox** and its features.
-{{< /hint >}}
+{{% notice style="code" title="Prefer a Step-by-Step?" icon="circle-info" %}}
+The [Walkthrough](walkthrough) is a great way to familiarize yourself with the Sandbox and its features.
+{{% /notice %}}
 
 ## Prerequisites
 
@@ -82,9 +82,9 @@ To run the application on bare-metal; download the [source](https://github.com/o
 
 ### Container Installation
 
-{{< hint type=[info] icon=gdoc_info_outline title="Same... but Different" >}}
+{{% notice style="code" title="Same... but Different" icon="circle-info" %}}
 Reference to `podman` commands, if applicable to your environment, can be substituted with `docker`.
-{{< /hint >}}
+{{% /notice %}}
 
 To run the application in a container; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the top-level directory:
 

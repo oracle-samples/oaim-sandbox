@@ -4,38 +4,36 @@
 baseURL = 'https://oracle-samples.github.io/oaim-sandbox'
 languageCode = 'en-us'
 title = 'AI Microservices Sandbox'
-theme = "hugo-geekdoc"
+theme = "relearn"
 sectionPagesMenu = 'main'
 tableOfContents = true
-pluralizeListTitles = false
-
-# Geekdoc required configuration
-pygmentsUseClasses = true
-pygmentsCodeFences = true
-disablePathToLower = true
 
 # Required if you want to render robots.txt template
 enableRobotsTXT = true
 
-# menu configuration
+# Parameters
 [params]
-  # Render menu from data file in 'data/menu/main.yaml'
-  geekdocMenuBundle = true
-  geekdocCollapseAllSections = true
-  geekdocRepo = "https://oracle-samples.github.io/oaim-sandbox"
-  geekdocLogo = "o_tag.png"
-  [params.geekdocContentLicense]
-    name = "© 2024 Oracle and/or its affiliates"
-    link = "https://oss.oracle.com/licenses/upl"
+  collapsibleMenu = true
+  showVisitedLinks = true
+  themeVariant = ['auto', 'sandbox-light', 'sandbox-dark']
+  disableInlineCopyToClipBoard = true
 
-# Needed for mermaid shortcodes
-[markup]
-  [markup.goldmark.renderer]
-    # Needed for mermaid shortcode
-    unsafe = true
-  [markup.tableOfContents]
-    startLevel = 1
-    endLevel = 9
 
-[taxonomies]
-   tag = "tags"
+[menu]
+  [[menu.shortcuts]]
+    identifier = 'ds'
+    name = "<i class='fa-fw fab fa-github'></i> GitHub Repository"
+    url = 'https://github.com/oracle-samples/oaim-sandbox'
+    weight = 10
+  [[menu.shortcuts]]
+    name = "<i class='fa-fw fab fa-youtube'></i>Building a Chatbot"
+    url = 'https://www.youtube.com/watch?v=oG9MPCpwUlU'
+    weight = 11
+#   [[menu.shortcuts]]
+#     name = "<i class='fa-fw fas fa-bullhorn'></i> Credits"
+#     url = 'more/credits/'
+#     weight = 30
+#   [[menu.shortcuts]]
+#     name = "<i class='fa-fw fas fa-tags'></i> Tags"
+#     url = 'tags/'
+#     weight = 40
