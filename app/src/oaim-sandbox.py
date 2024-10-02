@@ -2,6 +2,8 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
+# pylint: disable=invalid-name
+# spell-checker:ignore streamlit, oaim, testid
 
 import os
 
@@ -13,26 +15,27 @@ from streamlit import session_state as state
 import modules.logging_config as logging_config
 
 # Configuration
-from content.model_config import initialise_streamlit as model_initialise
-from content.db_config import initialise_streamlit as db_initialise
-from content.prompt_eng import initialise_streamlit as prompt_initialise
-from content.oci_config import initialise_streamlit as oci_initialise
+from content.model_config import initialize_streamlit as model_initialize
+from content.db_config import initialize_streamlit as db_initialize
+from content.prompt_eng import initialize_streamlit as prompt_initialize
+from content.oci_config import initialize_streamlit as oci_initialize
 
 logger = logging_config.logging.getLogger("sandbox")
 
 os.environ["USER_AGENT"] = "OAIM-SANDBOX"
-
+os.environ["GSK_DISABLE_SENTRY"] = "true"
+os.environ["GSK_DISABLE_ANALYTICS"] = "true"
 
 #############################################################################
 # MAIN
 #############################################################################
 def main():
     """Streamlit GUI"""
-    # Initialise Components
-    db_initialise()
-    model_initialise()
-    prompt_initialise()
-    oci_initialise()
+    # initialize Components
+    db_initialize()
+    model_initialize()
+    prompt_initialize()
+    oci_initialize()
 
     # Setup rag_params into state enable as default
     if "rag_params" not in state:
@@ -50,8 +53,8 @@ def main():
             width: 100%;
         }
         img[data-testid="stLogo"] {
-            width: 10.5rem;
-            height: 100%;
+            width: 100%;
+            height: auto;
         }
     </style>
     """
@@ -64,7 +67,7 @@ def main():
     state.disable_admin = os.environ.get("DISABLE_ADMIN", "false").lower() == "true" and not state.disable_tools
     state.disable_oci = os.environ.get("DISABLE_OCI", "false").lower() == "true" and not state.disable_admin
 
-    chatbot = st.Page("content/chatbot.py", title="ChatBot", icon="🏠", default=True)
+    chatbot = st.Page("content/chatbot.py", title="ChatBot", icon="💬", default=True)
     navigation = {
         "": [chatbot],
     }

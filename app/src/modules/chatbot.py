@@ -2,6 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
+# spell-checker:ignore langchain, flashrank, rerank, openai, ollama, vectorstore, pplx, mult, giskard
 
 # Avoid warnings (and temptation to substitute) about "input"
 # pylint: disable=redefined-builtin
@@ -13,41 +14,21 @@ from langchain.chains.retrieval import create_retrieval_chain
 from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain.retrievers import ContextualCompressionRetriever
 from langchain_community.document_compressors.flashrank_rerank import FlashrankRerank
-from langchain_community.chat_models import ChatPerplexity
-from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.runnables.history import RunnableWithMessageHistory
-from langchain_ollama import ChatOllama
 
 logger = logging_config.logging.getLogger("modules.chatbot")
 
-
 def generate_response(
-    chat_mgr,
-    input,
-    chat_history,
-    enable_history,
-    rag_params,
-    chat_instr,
-    context_instr=None,
-    stream=False,
+    chat_mgr, input, chat_history, enable_history, rag_params, chat_instr, context_instr=None, stream=False
 ):
     """Determine Chain to establish"""
     # chat_mgr is the init'd ChatCmd class and we're calling the chat function
     # return will be: answer, chat options, RAG content
-    logger.info(
-        "Sending user input... RAG: %r",
-        rag_params["enable"],
-    )
+    logger.info("Sending user input... RAG: %r", rag_params["enable"])
     if rag_params["enable"]:
         return chat_mgr.langchain_rag(
-            rag_params,
-            chat_instr,
-            context_instr,
-            input,
-            chat_history,
-            enable_history,
-            stream,
+            rag_params, chat_instr, context_instr, input, chat_history, enable_history, stream
         )
     else:
         return chat_mgr.langchain(chat_instr, input, chat_history, enable_history, stream)
@@ -56,56 +37,10 @@ def generate_response(
 class ChatCmd:
     """Main Chat Class"""
 
-    def __init__(self, lm_model, lm_params, vectorstore):
-        self.lm_model = lm_model
+    def __init__(self, llm_client, vectorstore):
+        self.llm_client = llm_client
         self.vectorstore = vectorstore
         self.history_config = {"configurable": {"session_id": "any"}}
-
-        # Initialize the Chat Model Client (framework independent)
-        logger.info("Establishing connection: %s (%s)", lm_model, lm_params["api"])
-        logger.info(
-            "Configuring LLM - URL: %s; Temp - %s; Max Tokens - %s",
-            lm_params["url"],
-            lm_params["temperature"][0],
-            lm_params["max_tokens"][0],
-        )
-
-        ## Start - Add Additional Model Authentication Here
-        if lm_params["api"] == "OpenAI":
-            self.llm = ChatOpenAI(
-                api_key=lm_params["api_key"],
-                model_name=lm_model,
-                temperature=lm_params["temperature"][0],
-                max_tokens=lm_params["max_tokens"][0],
-                top_p=lm_params["top_p"][0],
-                frequency_penalty=lm_params["frequency_penalty"][0],
-                presence_penalty=lm_params["presence_penalty"][0],
-            )
-        elif lm_params["api"] == "ChatPerplexity":
-            self.llm = ChatPerplexity(
-                pplx_api_key=lm_params["api_key"],
-                model=lm_model,
-                temperature=lm_params["temperature"][0],
-                max_tokens=lm_params["max_tokens"][0],
-                model_kwargs={
-                    "top_p": lm_params["top_p"][0],
-                    "frequency_penalty": lm_params["frequency_penalty"][0],
-                    "presence_penalty": lm_params["presence_penalty"][0],
-                },
-            )
-        elif lm_params["api"] == "ChatOllama":
-            self.llm = ChatOllama(
-                model=lm_model,
-                base_url=lm_params["url"],
-                temperature=lm_params["temperature"][0],
-                max_tokens=lm_params["max_tokens"][0],
-                model_kwargs={
-                    "top_p": lm_params["top_p"][0],
-                    "frequency_penalty": lm_params["frequency_penalty"][0],
-                    "presence_penalty": lm_params["presence_penalty"][0],
-                },
-            )
-        ## End - Add Additional Model Authentication Here
 
     #####################################################
     # Langchain - Non-RAG
@@ -118,7 +53,7 @@ class ChatCmd:
         prompt_messages.append(("human", "{input}"))
         qa_prompt = ChatPromptTemplate.from_messages(prompt_messages)
 
-        chain = qa_prompt | self.llm
+        chain = qa_prompt | self.llm_client
         chain_with_history = RunnableWithMessageHistory(
             chain,
             lambda session_id: chat_history,
@@ -132,16 +67,7 @@ class ChatCmd:
 
     #####################################################
     # Langchain - RAG
-    def langchain_rag(
-        self,
-        rag_params,
-        chat_instr,
-        context_instr,
-        input,
-        chat_history,
-        enable_history,
-        stream,
-    ):
+    def langchain_rag(self, rag_params, chat_instr, context_instr, input, chat_history, enable_history, stream):
         """Chain implementing RAG"""
         logger.info("Setting up Retriever")
 
@@ -188,7 +114,7 @@ class ChatCmd:
         prompt_messages.append(("human", "{input}"))
         qa_prompt = ChatPromptTemplate.from_messages(prompt_messages)
 
-        question_answer_chain = create_stuff_documents_chain(self.llm, qa_prompt)
+        question_answer_chain = create_stuff_documents_chain(self.llm_client, qa_prompt)
 
         # Re-Ranking
         logger.info("Use Re-Rank: %r", rag_params["rerank"])
@@ -201,10 +127,12 @@ class ChatCmd:
                 base_compressor=compressor, base_retriever=retriever
             )
             history_aware_retriever = create_history_aware_retriever(
-                self.llm, compression_retriever, contextualize_q_prompt
+                self.llm_client, compression_retriever, contextualize_q_prompt
             )
         else:
-            history_aware_retriever = create_history_aware_retriever(self.llm, retriever, contextualize_q_prompt)
+            history_aware_retriever = create_history_aware_retriever(
+                self.llm_client, retriever, contextualize_q_prompt
+            )
 
         # History Aware Chain
         rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)

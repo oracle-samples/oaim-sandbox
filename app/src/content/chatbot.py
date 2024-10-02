@@ -2,6 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
+# spell-checker:ignore streamlit, langchain, llms
 
 import inspect
 
@@ -13,6 +14,7 @@ from streamlit import session_state as state
 import modules.st_common as st_common
 import modules.logging_config as logging_config
 import modules.chatbot as chatbot
+import modules.chatbot_server as chatbot_server
 
 # History
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
@@ -69,15 +71,15 @@ def show_refs(context):
 #############################################################################
 def main():
     """Streamlit GUI"""
-    # Initialise RAG
-    st_common.initialise_rag()
+    # Initialize RAG
+    st_common.initialize_rag()
     # Setup History
     chat_history = StreamlitChatMessageHistory(key="sandbox_chat_history")
 
     #########################################################################
     # Sidebar Settings
     #########################################################################
-    enabled_llms = sum(model_info["enabled"] for model_info in state.lm_model_config.values())
+    enabled_llms = sum(model_info["enabled"] for model_info in state.ll_model_config.values())
     if enabled_llms > 0:
         with st.chat_message("ai"):
             # Do not put this in the history as messages must alternate human/ai
@@ -89,7 +91,8 @@ def main():
         )
         if st.sidebar.button("Clear History", disabled=not enable_history):
             chat_history.clear()
-        lm_model = st_common.lm_sidebar()
+        st.sidebar.divider()
+        ll_model = st_common.lm_sidebar()
     else:
         st.error("No chat models are configured and/or enabled.", icon="🚨")
         st.stop()
@@ -97,26 +100,29 @@ def main():
     # RAG
     st_common.rag_sidebar()
 
+    # Chatbot
+    chatbot_server.chatbot_sidebar()
+
     # Save
     st_common.save_settings_sidebar()
     #########################################################################
-    # Initialise the Client
+    # Initialize the Client
     #########################################################################
-    if "initialised" not in state:
+    if "initialized" not in state:
         if not state.rag_params["enable"] or all(
             state.rag_params[key] for key in ["model", "chunk_size", "chunk_overlap", "distance_metric"]
         ):
             try:
-                state.chat_manager = st_common.initialise_chatbot(lm_model)
-                state.initialised = True
+                state.chat_manager = st_common.initialize_chatbot(ll_model)
+                state.initialized = True
                 st_common.update_rag()
                 logger.debug("Force rerun to save state")
                 st.rerun()
             except Exception as ex:
                 logger.exception(ex, exc_info=False)
-                st.error(f"Failed to initialise the chat client: {ex}")
-                st_common.clear_initialised()
-                if st.button("Retry", key="retry_initialise"):
+                st.error(f"Failed to initialize the chat client: {ex}")
+                st_common.clear_initialized()
+                if st.button("Retry", key="retry_initialize"):
                     st.rerun()
                 st.stop()
 
@@ -130,7 +136,7 @@ def main():
             st.chat_message(msg.type).write(msg.content)
 
     if "chat_manager" in state:
-        if prompt := st.chat_input("Ask your question here..."):
+        if prompt := st.chat_input(f"Ask your question here... (current prompt: {state.lm_instr_prompt})"):
             st.chat_message("human").write(prompt)
             try:
                 response = chatbot.generate_response(

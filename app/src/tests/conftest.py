@@ -2,6 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
+# spell-checker: disable
 
 # Setup Modules
 import sys
@@ -96,7 +97,7 @@ def unset_oci_env(monkeypatch):
 @pytest.fixture
 def mock_is_url_accessible():
     """Mock API Accessible"""
-    with patch("modules.st_common.is_url_accessible") as mock:
+    with patch("modules.utilities.is_url_accessible") as mock:
         mock.return_value = (True, None)
         yield mock
 
@@ -104,27 +105,27 @@ def mock_is_url_accessible():
 @pytest.fixture
 def mock_oracledb():
     """Mock Oracle DB Connection"""
-    with patch("modules.db_utils.oracledb") as mock_oracledb_patch:
+    with patch("modules.utilities.oracledb") as mock_oracledb_patch:
         yield mock_oracledb_patch
 
 
 @pytest.fixture
-def mock_db_utils_connect():
-    """Mock the connect method in db_utils"""
-    with patch("modules.db_utils.connect") as mock_connect:
+def mock_db_connect():
+    """Mock the connect method in utilities"""
+    with patch("modules.utilities.db_connect") as mock_connect:
         yield mock_connect
 
 @pytest.fixture
 def mock_oci():
     """Mock OCI Connection"""
-    with patch("modules.oci_utils") as mock_oci_patch:
+    with patch("modules.utilities") as mock_oci_patch:
         yield mock_oci_patch
 
 
 @pytest.fixture
 def mock_oci_init_client():
     """Mock OCI Client"""
-    with patch("modules.oci_utils.init_client") as mock_oci_init_client_patch:
+    with patch("modules.utilities.oci_init_client") as mock_oci_init_client_patch:
         yield mock_oci_init_client_patch
 
 
@@ -132,7 +133,7 @@ def mock_oci_init_client():
 def mock_oci_object_storage_client():
     """Mock OCI ObjectStore Client"""
     with patch(
-        "modules.oci_utils.oci.object_storage.ObjectStorageClient"
+        "modules.utilities.oci.object_storage.ObjectStorageClient"
     ) as mock_oci_object_storage_client_patch:
         yield mock_oci_object_storage_client_patch
 
@@ -140,5 +141,5 @@ def mock_oci_object_storage_client():
 @pytest.fixture
 def mock_oci_get_namespace():
     """Mock OCI Get Namespace"""
-    with patch("modules.oci_utils.get_namespace") as mock_oci_get_namespace_patch:
+    with patch("modules.utilities.oci_get_namespace") as mock_oci_get_namespace_patch:
         yield mock_oci_get_namespace_patch

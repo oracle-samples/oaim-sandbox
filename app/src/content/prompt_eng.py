@@ -5,6 +5,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 This script initializes a web interface for setting the chatbot instr using Streamlit (`st`).
 It includes a form to input the instr used for chatbot prompt engineering.
 """
+# spell-checker:ignore streamlit, selectbox
 
 import re
 import inspect
@@ -21,7 +22,7 @@ logger = logging_config.logging.getLogger("prompt_eng")
 #####################################################
 # Functions
 #####################################################
-def initialise_streamlit():
+def initialize_streamlit():
     """Initialize chatbot instructions in the application state."""
 
     ## Language Model Prompt
@@ -29,7 +30,7 @@ def initialise_streamlit():
         state.lm_instr_config = metadata.prompt_engineering()
         state.lm_instr_prompt = list(state.lm_instr_config.keys())[0]
         state.lm_instr = state.lm_instr_config[state.lm_instr_prompt]["prompt"]
-        logger.info("Initialised Language Model Prompt")
+        logger.info("Initialized Language Model Prompt")
 
     if "context_instr" not in state:
         state.context_instr = """
@@ -39,7 +40,7 @@ def initialise_streamlit():
             just reformulate it if needed and otherwise return it as is.""".strip()
 
         state.context_instr = " ".join(re.split(r"\s+", state.context_instr, flags=re.UNICODE))
-        logger.info("Initialised Context Prompt")
+        logger.info("Initialized Context Prompt")
 
 
 def update_lm_instr():
@@ -53,7 +54,7 @@ def update_lm_instr():
 #############################################################################
 def main():
     """Streamlit GUI"""
-    initialise_streamlit()
+    initialize_streamlit()
     st.header("Prompt Engineering")
 
     with st.container(border=True):
