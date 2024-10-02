@@ -48,7 +48,7 @@ def main():
     # GUI Defaults
     css = """
     <style>
-        section.main > div {max-width:65rem}
+        section.main > div {max-width:65rem; padding-top: 3.85rem;}
         section[data-testid="stSidebar"] div.stButton button {
             width: 100%;
         }
