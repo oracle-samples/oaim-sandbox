@@ -1,13 +1,14 @@
 +++
 title = 'Walkthrough'
-date = 2024-09-11T14:33:30Z
-draft = false
+menus = 'main'
+weight = 10
 +++
 
 <!--
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
+<!--spell-checker: ignore mxbai, ollama, oaim, sqlplus, sysdba, spfile, freepdb, tablespace, firewalld -->
 
 This walkthrough will guide you through a basic installation of the **Oracle AI Microservices Sandbox** (the **Sandbox**). It will allow you to experiment with GenAI, using Retrieval-Augmented Generation (**RAG**) with Oracle Database 23ai at the core.
 
@@ -26,23 +27,21 @@ What you'll need for the walkthrough:
 - 100G of free disk space.
 - Sufficient GPU/CPU resources to run the **LLM**, embedding model, and database (see below).
 
-{{< hint type=[warning] icon=gdoc_fire title="Performance: A Word of Caution" >}}
+{{% notice style="code" title="Performance: A Word of Caution" icon="fire" %}}
 The performance of the **Sandbox** will vary depending on the infrastructure.
 
 **LLM**s and Embedding Models are designed to use GPUs, but this walkthrough _can work_ on machines with just CPUs; albeit _much_ slower!
 When testing the **LLM**, if you don't get a response in a couple of minutes; your hardware is not sufficient to continue with the walkthrough.
-{{< /hint >}}
-
-{{< toc >}}
+{{% /notice %}}
 
 ## Installation
 
-{{< hint type=[info] icon=gdoc_info_outline title="Same... but Different" >}}
+{{% notice style="code" title="Same... but Different" icon="circle-info" %}}
 The walkthrough will reference `podman` commands. If applicable to your environment, `podman` can be substituted with `docker`.
 If you are using `docker`, make the walkthrough easier by aliasing the `podman` command:
 
 `alias podman=docker`.
-{{< /hint >}}
+{{% /notice %}}
 
 You will run four container images to establish the "Infrastructure":
 
@@ -69,10 +68,10 @@ To enable the _ChatBot_ functionality, access to a **LLM** is required. The walk
 
 1. Test the **LLM**:
 
-   {{< hint type=[warning] icon=gdoc_fire title="Performance: Fail Fast..." >}}
-   Unfortunately, if the below `curl` does not respond within five minutes, the rest of the walkthrough will be unbearable.
+   {{% notice style="code" title="Performance: Fail Fast..." icon="circle-info" %}}
+   Unfortunately, if the below `curl` does not respond within 5-10 minutes, the rest of the walkthrough will be unbearable.
    If this is the case, please consider using different hardware.
-   {{< /hint >}}
+   {{% /notice %}}
 
    ```bash
    curl http://127.0.0.1:11434/api/generate -d '{
@@ -182,7 +181,7 @@ To configure the On-Premises **LLM**, navigate to the _Configuration -> Models_ 
 
 ![Configure LLM](images/llm-config.png)
 
-{{< icon "gdoc_star" >}} More information about configuring **LLM**s in the **Sandbox** can be found in the [Model Configuration](../configuration/model_config) documentation.
+{{% icon star %}} More information about configuring **LLM**s in the **Sandbox** can be found in the [Model Configuration](../configuration/model_config) documentation.
 
 #### Say "Hello?"
 
@@ -209,7 +208,7 @@ To configure the On-Premises Embedding Model, navigate back to the _Configuratio
 
 ![Configure Embedding Model](images/embed-config.png)
 
-{{< icon "gdoc_star" >}} More information about configuring embedding models in the **Sandbox** can be found in the [Model Configuration](../configuration/model_config) documentation.
+{{% icon star %}}  More information about configuring embedding models in the **Sandbox** can be found in the [Model Configuration](../configuration/model_config) documentation.
 
 ### Configure the Database
 
@@ -222,7 +221,7 @@ To configure Oracle Database 23ai Free, navigate to the _Configuration -> Databa
 
 ![Configure Database](images/db-config.png)
 
-{{< icon "gdoc_star" >}} More information about configuring the database in the **Sandbox** can be found in the [Database Configuration](../configuration/db_config) documentation.
+{{% icon star %}} More information about configuring the database in the **Sandbox** can be found in the [Database Configuration](../configuration/db_config) documentation.
 
 ## Split and Embed
 
@@ -236,17 +235,17 @@ Navigate to the _Split/Embed_ Screen:
 1. Click _Load, Split, and Populate Vector Store_
 1. Please be patient...
 
-{{< hint type=[tip] icon=gdoc_fire title="Performance: Grab a beverage of your choosing..." >}}
+{{% notice style="code" title="Performance: Grab a beverage of your choosing..." icon="circle-info" %}}
 Depending on the infrastructure, the embedding process can take a few minutes. As long as the "RUNNING" dialog in the top-right corner is moving... it's working.
-{{< /hint >}}
+{{% /notice %}}
 
 ![Split and Embed](images/split-embed.png)
 
-{{< hint type=[info] icon=gdoc_info_outline title="Thumb Twiddling" >}}
+{{% notice style="code" title="Thumb Twiddling" icon="circle-info" %}}
 You can watch the progress of the embedding by streaming the **Sandbox** logs: `podman logs -f oaim-sandbox`
 
-Chunks are processed in batches of 1,000. Wait until the **Sandbox** logs output: `(modules.db_utils): SQL Executed` before continuing.
-{{< /hint >}}
+Chunks are processed in batches of 1,000. Wait until the **Sandbox** logs output: `SQL Executed` before continuing.
+{{% /notice %}}
 
 ### Query the Vector Store
 
@@ -292,7 +291,7 @@ Now enable _RAG?_ and simply ask: `Are you sure?`
 
 ![Enable RAG](images/enable_rag.png)
 
-{{< hint type=[tip] icon=gdoc_fire title="Performance: Host Overload..." >}}
+{{% notice style="code" title="Performance: Host Overload..." icon="circle-info" %}}
 With **RAG** enabled, all the services (**LLM**/Embedding Models and Database) are being utilized simultaneously:
 
 - The embedding model is being used to convert your query into vectors for a similarity search
@@ -300,7 +299,7 @@ With **RAG** enabled, all the services (**LLM**/Embedding Models and Database) a
 - The **LLM** is processing the results from the database for its response
 
 Depending on your hardware, this may cause the response to be significantly delayed.
-{{< /hint >}}
+{{% /notice %}}
 
 By asking `Are you sure?`, you are taking advantage of the **Sandbox**'s history and context functionality.  
 The response should be significantly different and include references to `DBMS_VECTOR` and links to the embedded documentation where this information can be found. It might even include an apology!

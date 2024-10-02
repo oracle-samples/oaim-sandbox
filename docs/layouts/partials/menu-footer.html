@@ -1,0 +1,41 @@
+<!-- spell-checker: ignore Luma, assetbusting, SMPTE, octicon -->
+{{- $assetBusting := partialCached "assetbusting.hugo" . }}
+            <span class="github-buttons"></span>
+            <p>Built with <a href="https://github.com/oracle-samples/oaim-sandbox" title="love"><i class="fas fa-heart"></i></a> by <a href="https://https://www.oracle.com/"><span style="color:#C74634;">ORACLE</span></a></p>
+            <script>
+              function githubButtonsScheme(){
+                var scheme = 'light';
+                var colorPropertyValue = window.getComputedStyle( document.querySelector( '#R-sidebar' ) ).getPropertyValue( 'background-color' );
+                var colorValues = colorPropertyValue.match( /\d+/g ).map( function( e ){ return parseInt(e,10); });
+                if( colorValues.length === 3 && ((0.2126 * colorValues[0]) + (0.7152 * colorValues[1]) + (0.0722 * colorValues[2]) < 165) ){
+                  scheme = 'dark';
+                }
+                return scheme;
+              }
+              function githubButtonsInit(){
+                if( !window.githubButtons ){
+                  setTimeout( githubButtonsInit, 50 );
+                  return;
+                }
+                var scheme = githubButtonsScheme();
+                var githubButtonsHTML = `
+                  <a class="github-button" href="https://github.com/oracle-samples/oaim-sandbox/archive/main.zip" data-color-scheme="${scheme}" data-icon="octicon-cloud-download"  aria-label="Download the Sandbox on GitHub">Download</a>
+                  <a class="github-button" href="https://github.com/oracle-samples/oaim-sandbox" data-color-scheme="${scheme}" data-icon="octicon-star" data-show-count="true"  aria-label="Star the Sandbox on GitHub">Star</a>
+                  <a class="github-button" href="https://github.com/oracle-samples/oaim-sandbox/fork" data-color-scheme="${scheme}" data-icon="octicon-repo-forked"   data-show-count="true" aria-label="Fork the Sandbox on GitHub">Fork</a>
+                 `;
+                document.querySelector( '.github-buttons' ).innerHTML = githubButtonsHTML;
+                document.querySelectorAll( '.github-button' ).forEach( function( anchor ){
+                  anchor.dataset.colorScheme = scheme;
+                  window.githubButtons.render( anchor, function( el ){
+                    anchor.parentNode.replaceChild( el, anchor );
+                  });
+                });
+              }
+              document.addEventListener( 'themeVariantLoaded', function( e ){
+                setTimeout( githubButtonsInit, 400 );
+              });
+              window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+                setTimeout( githubButtonsInit, 400 );
+              });
+            </script>
+            <script async src="{{"js/github-buttons.js" | relURL}}{{ $assetBusting }}"></script>

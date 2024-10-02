@@ -1,7 +1,6 @@
 +++
-title = "Database Configuration"
-date = 2024-09-10T13:57:37Z
-draft = false
+title = "🗄️ Database Configuration"
+weight = 20
 +++
 
 <!--
@@ -52,9 +51,10 @@ export DB_WALLET_PASSWORD=MYCOMPLEXWALLETSECRET
 
 For mTLS database connectivity or to specify a TNS alias instead of a full connect string, you can use the contents of a `TNS_ADMIN` directory.
 
-{{< hint type=[info] icon=gdoc_info_outline title="Unzip Wallet" >}}
+{{% notice style="default" title="10-Sept-2024: Documentation In-Progress..." icon="pen" %}}
 If using and ADB-S wallet, unzip the contents into the `TNS_ADMIN` directory. The `.zip` file will not be recognized.
-{{< /hint >}}
+{{% /notice %}}
+
 
 ### Bare-Metal Installation
 
@@ -83,6 +83,6 @@ ALTER USER "DEMO" QUOTA UNLIMITED ON DATA;
 
 Replace "DEMO" as required.
 
-{{< hint type=[tip] icon=gdoc_info_outline title="Multiple Users" >}}
+{{% notice style="default" title="10-Sept-2024: Documentation In-Progress..." icon="pen" %}}
 Creating multiple users in the same database allows developers to separate their experiments simply by changing the "Database User:"
-{{< /hint >}}
+{{% /notice %}}
