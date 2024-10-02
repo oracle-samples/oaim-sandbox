@@ -449,7 +449,7 @@ def main():
                 model,
                 distance_metric,
                 split_docos,
-                rate_limit,
+                0 if rate_limit is None else rate_limit
             )
             placeholder.empty()
             st_common.reset_rag()
