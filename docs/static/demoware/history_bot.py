@@ -2,6 +2,7 @@
 # Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
 """This is a 30-minute history-bot"""
+# spell-checker:ignore langchain, openai
 
 import os
 from colorama import Fore
@@ -21,10 +22,9 @@ chat_history = InMemoryChatMessageHistory()
 
 def get_openai_response(input_txt):
     """Interact with LLM"""
-    system_prompt = (
-        "You are a helpful assistant. If you know the user's name, use it in your response."
-    )
+    system_prompt = "You are a helpful assistant. If you know the user's name, use it in your response."
 
+    # Context Window
     qa_prompt = ChatPromptTemplate.from_messages(
         [
             ("system", system_prompt),

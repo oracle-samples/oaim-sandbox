@@ -2,6 +2,7 @@
 # Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
 """This is a 5-minute quick-bot"""
+#spell-checker: ignore openai
 
 import os
 from colorama import Fore
@@ -19,10 +20,9 @@ def get_openai_response(input_txt):
     response = client.chat.completions.create(
         # LLM Model
         model="gpt-3.5-turbo",
+        # Context Window
         messages=[
-            # Prompting
             {"role": "system", "content": system_prompt},
-            # User Input
             {"role": "user", "content": input_txt},
         ],
     )
