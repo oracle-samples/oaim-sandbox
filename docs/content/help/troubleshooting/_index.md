@@ -24,3 +24,12 @@ During embedding, especially when using trial keys, you may experience a failure
 
 **_Solution_**:
 Set a rate limit based on the API Key restrictions.
+
+
+## Test Framework Evaluation
+
+**_Problem_**:
+During the Evaluation in the test framework, a database error occurs: `DPY-4011: the database or network closed the connection`
+
+**_Solution_**:
+Increase the memory of the vector_memory_size.  If this is an Oracle Autonomous Database, scale up the CPU.

@@ -3,7 +3,7 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
 # spell-checker:ignore streamlit, selectbox, langchain, giskard, giskarded testid, testset, dataframe
-# spell-checker:ignore ollama, openai, llms
+# spell-checker:ignore ollama, openai, llms, oracledb
 
 import os
 import json
@@ -373,7 +373,11 @@ def main():
                 clean_test_file = report_utils.clean_hide(edited_test_file)
                 state.test_set = QATestset.load(clean_test_file)
 
-                report = evaluate(get_answer_fn, testset=state.test_set)
+                try:
+                    report = evaluate(get_answer_fn, testset=state.test_set)
+                except utilities.oracledb.DatabaseError as ex:
+                    st.error("A database error occurred, please consult the troubleshooting documentation: {ex}")
+
                 report_df = report.to_pandas()
 
                 report_df.to_json(os.path.join(state["temp_dir"], "eval_report.json"))

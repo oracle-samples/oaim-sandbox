@@ -18,7 +18,7 @@ from langchain_core.chat_history import InMemoryChatMessageHistory
 
 # Establish client connection; could provide additional parameters (Temp, Penalties, etc)
 MODEL = "gpt-4o-mini"
-client = ChatOpenAI(api_key=os.environ.get("OPENAI_API_KEY", default=None), temperature=2.0, model=MODEL)
+client = ChatOpenAI(api_key=os.environ.get("OPENAI_API_KEY", default=None), temperature=0.5, model=MODEL)
 # Store Chat History
 if "chat_history" not in state:
     state.chat_history = InMemoryChatMessageHistory()

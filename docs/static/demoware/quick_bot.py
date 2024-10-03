@@ -16,11 +16,15 @@ client = openai.OpenAI()
 
 def get_openai_response(input_txt):
     """Interact with LLM"""
+
+    # Set the System Prompt
     system_prompt = "You are a helpful assistant. If you know the user's name, use it in your response."
+
+    # Invoke the Model
     response = client.chat.completions.create(
         # LLM Model
         model="gpt-3.5-turbo",
-        # Context Window
+        # Context Window containing prompts
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": input_txt},
