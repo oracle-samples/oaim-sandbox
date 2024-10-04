@@ -20,7 +20,10 @@ This is normally the result of a configured database that is inaccessible. Depen
 **_Problem_**:
 During embedding, especially when using trial keys, you may experience a failure due to rate limits. For example:
 
-`Operation Failed: Unexpected error: status_code: 429, body: data=None message='trial token rate limit exceeded, limit is 100000 tokens per minute'.`
+```
+Operation Failed: Unexpected error: status_code: 429, body:  
+data=None message='trial token rate limit exceeded, limit is 100000 tokens per minute'.
+```
 
 **_Solution_**:
 Set a rate limit based on the API Key restrictions.
