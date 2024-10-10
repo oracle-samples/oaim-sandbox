@@ -152,7 +152,7 @@ def ll_models():
             "frequency_penalty": [0.0, 0.0, -1.0, 1.0],
             "presence_penalty": [0.0, 0.0, -2.0, 2.0],
         },
-        "llama-3-sonar-small-32k-chat": {
+        "llama-3.1-sonar-small-128k-chat": {
             "enabled": os.getenv("PPLX_API_KEY") is not None,
             "api": "ChatPerplexity",
             "url": "https://api.perplexity.ai",
@@ -165,7 +165,7 @@ def ll_models():
             "frequency_penalty": [0.0, 0.0, -1.0, 1.0],
             "presence_penalty": [0.0, 0.0, -2.0, 2.0],
         },
-        "llama-3-sonar-small-32k-online": {
+        "llama-3.1-sonar-small-128k-online": {
             "enabled": os.getenv("PPLX_API_KEY") is not None,
             "api": "ChatPerplexity",
             "url": "https://api.perplexity.ai",
@@ -210,6 +210,7 @@ def embedding_models():
             "api_key": "",
             "openai_compat": True,
             "chunk_max": 512,
+            "dimensions": 768
         },
         "text-embedding-3-small": {
             "enabled": os.getenv("OPENAI_API_KEY") is not None,
@@ -218,6 +219,8 @@ def embedding_models():
             "api_key": os.environ.get("OPENAI_API_KEY", default=""),
             "openai_compat": True,
             "chunk_max": 8191,
+            "dimensions": 1536
+
         },
         "text-embedding-3-large": {
             "enabled": os.getenv("OPENAI_API_KEY") is not None,
@@ -226,6 +229,7 @@ def embedding_models():
             "api_key": os.environ.get("OPENAI_API_KEY", default=""),
             "openai_compat": True,
             "chunk_max": 8191,
+            "dimensions": 3072
         },
         "text-embedding-ada-002": {
             "enabled": os.getenv("OPENAI_API_KEY") is not None,
@@ -234,6 +238,7 @@ def embedding_models():
             "api_key": os.environ.get("OPENAI_API_KEY", default=""),
             "openai_compat": True,
             "chunk_max": 8191,
+            "dimensions": 1536
         },
         "embed-english-v3.0": {
             "enabled": os.getenv("COHERE_API_KEY") is not None,
@@ -242,6 +247,7 @@ def embedding_models():
             "api_key": os.environ.get("COHERE_API_KEY", default=""),
             "openai_compat": False,
             "chunk_max": 512,
+            "dimensions": 1024
         },
         "embed-english-light-v3.0": {
             "enabled": os.getenv("COHERE_API_KEY") is not None,
@@ -250,6 +256,7 @@ def embedding_models():
             "api_key": os.environ.get("COHERE_API_KEY", default=""),
             "openai_compat": False,
             "chunk_max": 512,
+            "dimensions": 384
         },
         "mxbai-embed-large": {
             "enabled": os.getenv("ON_PREM_OLLAMA_URL") is not None,
@@ -258,6 +265,7 @@ def embedding_models():
             "api_key": "",
             "openai_compat": True,
             "chunk_max": 512,
+            "dimensions": 1024
         },
         "nomic-embed-text": {
             "enabled": os.getenv("ON_PREM_OLLAMA_URL") is not None,
@@ -266,6 +274,7 @@ def embedding_models():
             "api_key": "",
             "openai_compat": True,
             "chunk_max": 8192,
+            "dimensions": 768
         },
         "all-minilm": {
             "enabled": os.getenv("ON_PREM_OLLAMA_URL") is not None,
@@ -274,6 +283,7 @@ def embedding_models():
             "api_key": "",
             "openai_compat": True,
             "chunk_max": 256,
+            "dimensions": 384
         },
     }
     return embedding_models_dict
