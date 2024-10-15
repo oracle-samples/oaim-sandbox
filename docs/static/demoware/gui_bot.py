@@ -2,6 +2,7 @@
 # Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
 """This is a 1-day GUI Bot"""
+# spell-checker:ignore langchain, openai, streamlit
 
 import os
 
@@ -17,9 +18,7 @@ from langchain_core.chat_history import InMemoryChatMessageHistory
 
 # Establish client connection; could provide additional parameters (Temp, Penalties, etc)
 MODEL = "gpt-4o-mini"
-client = ChatOpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY", default=None), temperature=0.5, model=MODEL
-)
+client = ChatOpenAI(api_key=os.environ.get("OPENAI_API_KEY", default=None), temperature=0.5, model=MODEL)
 # Store Chat History
 if "chat_history" not in state:
     state.chat_history = InMemoryChatMessageHistory()
@@ -27,9 +26,7 @@ if "chat_history" not in state:
 
 def get_openai_response(input_txt):
     """Interact with LLM"""
-    system_prompt = (
-        "You are a helpful assistant. If you know the user's name, use it in your response."
-    )
+    system_prompt = "You are a helpful assistant. If you know the user's name, use it in your response."
 
     qa_prompt = ChatPromptTemplate.from_messages(
         [

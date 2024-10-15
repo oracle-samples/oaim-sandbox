@@ -1,26 +1,20 @@
+## Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 ##############################################################################
 # Developer Custom
 ##############################################################################
-start.sh
-demo.sh
-start_template.sh
-app/src/rag_eval_report.html
 assets/docos/samples/oracle-ai-vector-search-users-guide-qa.jsonl
 assets/docos/oracle-ai-vector-search-users-guide.pdf
-app/src/reports/agent_answer.json
-/app/src/reports
-/app/reports
-/app/src/reports-bak
 
 ##############################################################################
 # Project/User Specific
 ##############################################################################
 **/requirements.txt
 !app/requirements.txt
-**/src/tns_admin
 app/THIRD_PARTY_LICENSES.txt
 rag/**
 sbin/**
+helm/values.yaml
 
 ##############################################################################
 # Enviroment (PyVen, IDE, etc.)

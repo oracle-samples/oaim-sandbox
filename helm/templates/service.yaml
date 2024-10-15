@@ -1,0 +1,18 @@
+## Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "oaim-sandbox.fullname" . }}
+  labels: 
+    {{- include "oaim-sandbox.labels" . | nindent 4 }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector: 
+    {{- include "oaim-sandbox.selectorLabels" . | nindent 4 }}

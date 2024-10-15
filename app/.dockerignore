@@ -5,9 +5,6 @@
 **/__init__.py
 **/tests
 **/etc
-# **/.streamlit/config.toml
-# **/tns_admin
 **/.pytest_cache
-# No shell scripts included except the entrypoint
 **/*.sh
 !entrypoint.sh
