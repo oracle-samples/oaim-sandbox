@@ -23,12 +23,12 @@ The **Oracle AI Microservices Sandbox** (the **Sandbox**) provides a streamlined
 
 ## Sandbox Features
 
-- [Configuring Embedding and Chat Models](configuration/model_config)
-- [Splitting and Embedding Documentation](tools/split_embed)
-- [Storing Embedded Documents into the Oracle Database](tools/split_embed)
-- [Modifying System Prompts (Prompt Engineering)](tools/prompt_eng)
-- [Experimenting with **LLM** Parameters](chatbot)
-- [Testing Framework on auto-generated or existing Q&A datasets](test_framework)
+- [Configuring Embedding and Chat Models](sandbox/configuration/model_config)
+- [Splitting and Embedding Documentation](sandbox/tools/split_embed)
+- [Storing Embedded Documents into the Oracle Database](sandbox/tools/split_embed)
+- [Modifying System Prompts (Prompt Engineering)](sandbox/tools/prompt_eng)
+- [Experimenting with **LLM** Parameters](sandbox/chatbot)
+- [Testing Framework on auto-generated or existing Q&A datasets](sandbox/test_framework)
 
 The **Sandbox** streamlines the entire workflow from prototyping to production, making it easier to create and deploy RAG-powered GenAI solutions using the **Oracle Database**.
 
