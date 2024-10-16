@@ -10,12 +10,12 @@ The **Oracle AI Microservices Sandbox** provides a streamlined environment where
 
 ## Sandbox Features
 
-- [Configuring Embedding and Chat Models](configuration/model_config)
-- [Splitting and Embedding Documentation](tools/split_embed)
-- [Storing Embedded Documents into the Oracle Database](tools/split_embed)
-- [Modifying System Prompts (Prompt Engineering)](tools/prompt_eng)
-- [Experimenting with **LLM** Parameters](chatbot)
-- [Testing Framework on auto-generated or existing Q&A datasets](test_framework)
+- [Configuring Embedding and Chat Models](https://oracle-samples.github.io/oaim-sandbox/sandbox/configuration/model_config)
+- [Splitting and Embedding Documentation](https://oracle-samples.github.io/oaim-sandbox/sandbox/tools/split_embed)
+- [Storing Embedded Documents into the Oracle Database](https://oracle-samples.github.io/oaim-sandbox/sandbox/tools/split_embed)
+- [Modifying System Prompts (Prompt Engineering)](https://oracle-samples.github.io/oaim-sandbox/sandbox/tools/prompt_eng)
+- [Experimenting with **LLM** Parameters](https://oracle-samples.github.io/oaim-sandbox/sandbox/chatbot)
+- [Testing Framework on auto-generated or existing Q&A datasets](https://oracle-samples.github.io/oaim-sandbox/sandbox/test_framework)
 
 ## Getting Started
 
@@ -32,7 +32,7 @@ For more information, including more details on **Setup and Configuration** plea
   - API Keys for Third-Party Models
   - On-Premises Models<sub>\*</sub>
 
-<sub>\*Oracle recommends running On-Premises Models on hardware with GPUs. For more information, please review the [Infrastructure](infrastructure/) documentation.</sub>
+<sub>\*Oracle recommends running On-Premises Models on hardware with GPUs. For more information, please review the [Infrastructure](https://oracle-samples.github.io/oaim-sandbox/infrastructure) documentation.</sub>
 
 #### Bare-Metal Installation
 
@@ -61,7 +61,7 @@ To run the application on bare-metal; download the [source](https://github.com/o
 
 1. Navigate to `http://localhost:8501`.
 
-1. [Configure](configuration) the Sandbox.
+1. [Configure](https://oracle-samples.github.io/oaim-sandbox/sandbox/configuration) the Sandbox.
 
 #### Container Installation
 
@@ -83,7 +83,7 @@ To run the application in a container; download the [source](https://github.com/
 
 1. Navigate to `http://localhost:8501`.
 
-1. [Configure](configuration) the Sandbox.
+1. [Configure](https://oracle-samples.github.io/oaim-sandbox/sandbox/configuration/index.html) the Sandbox.
 
 ## Contributing
 
