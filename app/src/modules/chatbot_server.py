@@ -204,9 +204,10 @@ def gui_start():
 # ChatBot Sidebar
 ###################################
 def chatbot_sidebar():
-    st.session_state["port"] = st.sidebar.number_input(
-        "Enter the port number for the chatbot server:", value=8000, min_value=1, max_value=65535
-    )
-    st.session_state["api_key"] = st.sidebar.text_input("API_KEY", type="password", value="abc")
-    st.sidebar.button("Start server", type="primary", on_click=gui_start)
-    st.sidebar.divider()
+    if not state.disable_api:
+        st.session_state["port"] = st.sidebar.number_input(
+            "Enter the port number for the chatbot server:", value=8000, min_value=1, max_value=65535
+        )
+        st.session_state["api_key"] = st.sidebar.text_input("API_KEY", type="password", value="abc")
+        st.sidebar.button("Start server", type="primary", on_click=gui_start)
+        st.sidebar.divider()

@@ -16,21 +16,25 @@ At a minimum, a Large _Language Model_ (LLM) must be configured in **Oracle AI M
 If there is a specific model that you would like to use with the **Oracle AI Microservices Sandbox**, please [open an issue in GitHub](https://github.com/oracle-samples/oaim-sandbox/issues/new).
 {{% /notice %}}
 
-| Model                          | Type  | API                                                      | On-Premises |
-| ------------------------------ | ----- | -------------------------------------------------------- | ----------- |
-| llama3.1                       | LLM   | [ChatOllama](#additional-information)                    | X           |
-| gpt-3.5-turbo                  | LLM   | [OpenAI](#additional-information)                        |             |
-| gpt-4o-mini                    | LLM   | [OpenAI](#additional-information)                        |             |
-| gpt-4                          | LLM   | [OpenAI](#additional-information)                        |             |
-| gpt-4o                         | LLM   | [OpenAI](#additional-information)                        |             |
-| llama-3-sonar-small-32k-chat   | LLM   | [ChatPerplexity](#additional-information)                |             |
-| llama-3-sonar-small-32k-online | LLM   | [ChatPerplexity](#additional-information)                |             |
-| mxbai-embed-large              | Embed | [OllamaEmbeddings](#additional-information)              | X           |
-| nomic-embed-text               | Embed | [OllamaEmbeddings](#additional-information)              | X           |
-| all-minilm                     | Embed | [OllamaEmbeddings](#additional-information)              | X           |
-| thenlper/gte-base              | Embed | [HuggingFaceEndpointEmbeddings](#additional-information) | X           |
-| text-embedding-3-small         | Embed | [OpenAIEmbeddings](#additional-information)              |             |
-| text-embedding-3-large         | Embed | [OpenAIEmbeddings](#additional-information)              |             |
+| Model                           | Type  | API                                                      | On-Premises |
+| ------------------------------- | ----- | -------------------------------------------------------- | ----------- |
+| llama3.1                        | LLM   | [ChatOllama](#additional-information)                    | X           |
+| gpt-3.5-turbo                   | LLM   | [OpenAI](#additional-information)                        |             |
+| gpt-4o-mini                     | LLM   | [OpenAI](#additional-information)                        |             |
+| gpt-4                           | LLM   | [OpenAI](#additional-information)                        |             |
+| gpt-4o                          | LLM   | [OpenAI](#additional-information)                        |             |
+| llama-3-sonar-small-128k-chat   | LLM   | [ChatPerplexity](#additional-information)                |             |
+| llama-3-sonar-small-128k-online | LLM   | [ChatPerplexity](#additional-information)                |             |
+| command-r                       | LLM   | [Cohere](#additional-information)                        |             |
+| mxbai-embed-large               | Embed | [OllamaEmbeddings](#additional-information)              |             |
+| nomic-embed-text                | Embed | [OllamaEmbeddings](#additional-information)              | X           |
+| all-minilm                      | Embed | [OllamaEmbeddings](#additional-information)              | X           |
+| thenlper/gte-base               | Embed | [HuggingFaceEndpointEmbeddings](#additional-information) | X           |
+| text-embedding-3-small          | Embed | [OpenAIEmbeddings](#additional-information)              |             |
+| text-embedding-3-large          | Embed | [OpenAIEmbeddings](#additional-information)              |             |
+| embed-english-v3.0              | Embed | [CohereEmbeddings](#additional-information)              |             |
+| embed-english-light-v3.0        | Embed | [CohereEmbeddings](#additional-information)              |             |
+
 
 ## Configuration
 
@@ -147,6 +151,20 @@ Example of running thenlper/gte-base in a container:
    ```
 
    **NOTE:** if there is no IP, use 127.0.0.1
+{{% /tab %}}
+{{% tab title="Cohere" %}}
+# Cohere
+
+[Cohere](https://cohere.com/) is an AI-powered answer engine. To use Cohere, you will need to sign-up and provide the **Sandbox** an API Key.  Cohere offers a free-trial, rate-limited API Key.
+
+**WARNING:** Cohere is a cloud model and you should familiarize yourself with their Privacy Policies if using it to experiment with private, sensitive data in the **Sandbox**.
+
+>[!code]Skip the GUI!
+>You can set the following environment variable to automatically set the `API Key` and enable Perplexity models:
+:
+>```shell
+>export COHERE_API_KEY=<super-secret API Key>
+>```
 {{% /tab %}}
 {{% tab title="OpenAI" %}}
 # OpenAI

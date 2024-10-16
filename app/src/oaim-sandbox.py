@@ -26,11 +26,13 @@ os.environ["USER_AGENT"] = "OAIM-SANDBOX"
 os.environ["GSK_DISABLE_SENTRY"] = "true"
 os.environ["GSK_DISABLE_ANALYTICS"] = "true"
 
+
 #############################################################################
 # MAIN
 #############################################################################
 def main():
     """Streamlit GUI"""
+    st.set_page_config(layout="wide")
     # initialize Components
     db_initialize()
     model_initialize()
@@ -48,7 +50,6 @@ def main():
     # GUI Defaults
     css = """
     <style>
-        section.main > div {max-width:65rem; padding-top: 3.85rem;}
         section[data-testid="stSidebar"] div.stButton button {
             width: 100%;
         }
@@ -61,12 +62,14 @@ def main():
     st.markdown(css, unsafe_allow_html=True)
     st.logo("images/logo_light.png")
 
-    # Page Definition
+    # Enable/Disable Functionality
+    state.disable_api = os.environ.get("DISABLE_API", "false").lower() == "true"
     state.disable_tools = os.environ.get("DISABLE_TOOLS", "false").lower() == "true"
     state.disable_tests = os.environ.get("DISABLE_TESTS", "false").lower() == "true" and not state.disable_tools
     state.disable_admin = os.environ.get("DISABLE_ADMIN", "false").lower() == "true" and not state.disable_tools
     state.disable_oci = os.environ.get("DISABLE_OCI", "false").lower() == "true" and not state.disable_admin
 
+    # Left Hand Side - Navigation
     chatbot = st.Page("content/chatbot.py", title="ChatBot", icon="💬", default=True)
     navigation = {
         "": [chatbot],
@@ -81,22 +84,22 @@ def main():
         navigation["Tools"] = [prompt_eng]
 
     # Administration
-    import_settings = st.Page("content/import_settings.py", title="Import Settings", icon="💾")
-    navigation["Configuration"] = [import_settings]
     if not state.disable_tools and not state.disable_admin:
         # Define Additional Pages
+        import_settings = st.Page("content/import_settings.py", title="Import Settings", icon="💾")
         split_embed = st.Page("content/split_embed.py", title="Split/Embed", icon="📚")
         model_config = st.Page("content/model_config.py", title="Models", icon="🤖")
         db_config = st.Page("content/db_config.py", title="Database", icon="🗄️")
         # Update Navigation
         navigation["Tools"].insert(0, split_embed)
-        navigation["Configuration"].insert(0, model_config)
+        navigation["Configuration"] = [model_config]
         navigation["Configuration"].insert(1, db_config)
+        navigation["Configuration"].insert(2, import_settings)
         if not state.disable_oci:
             oci_config = st.Page("content/oci_config.py", title="OCI", icon="☁️")
             navigation["Configuration"].insert(2, oci_config)
 
-    pg = st.navigation(navigation)
+    pg = st.navigation(navigation, position="sidebar", expanded=False)
     pg.run()
 
 

@@ -515,6 +515,11 @@ def save_settings_sidebar():
     state_dict_filt = {key: state_dict[key] for key in include_keys if key in state_dict}
     state_dict_filt = empty_key(state_dict_filt)
     session_state_json = json.dumps(state_dict_filt, indent=4)
-    st.sidebar.download_button(
-        label="Download Settings", data=session_state_json, file_name="sandbox_settings.json", use_container_width=True
-    )
+    # Only allow exporting settings if tools/admin is enabled
+    if not state.disable_tools and not state.disable_admin:
+        st.sidebar.download_button(
+            label="Download Settings",
+            data=session_state_json,
+            file_name="sandbox_settings.json",
+            use_container_width=True,
+        )

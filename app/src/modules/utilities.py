@@ -287,7 +287,7 @@ def populate_vs(
     model_name,
     distance_metric,
     input_data: Union[List["LangchainDocument"], List] = None,
-    rate_limit = 0
+    rate_limit=0,
 ):
     """Populate the Vector Storage"""
 
@@ -350,7 +350,7 @@ def populate_vs(
             "Processing: %i Chunks of %i (Rate Limit: %i)",
             len(unique_chunks) if len(unique_chunks) < i + batch_size else i + batch_size,
             len(unique_chunks),
-            rate_limit
+            rate_limit,
         )
         OracleVS.add_documents(vectorstore, documents=batch)
         if rate_limit > 0:
@@ -700,11 +700,11 @@ def build_knowledge_base(text_nodes, kb_file, llm_client, embed_client):
     return knowledge_base
 
 
-def generate_qa(qa_file, kb, qa_count, api="openai", model="gpt-4o-mini"):
+def generate_qa(qa_file, kb, qa_count, api="openai", model="gpt-4o-mini", client=None):
     """Generate an example QA"""
-    logger.info("QA Generation starting..")
+    logger.info("QA Generation starting.. (model=%s, client=%s)", model, client)
     set_llm_api(api)
-    set_default_client(OpenAIClient(model=model))
+    set_default_client(OpenAIClient(model=model, client=client))
 
     test_set = generate_testset(
         kb,
