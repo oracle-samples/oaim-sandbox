@@ -114,6 +114,10 @@ spec:
             - name: DISABLE_ADMIN
               value: "true"
             {{- end }}
+            {{- if eq .disableAAPI "true" }}
+            - name: DISABLE_API
+              value: "true"
+            {{- end }}
             {{- if .models }}
             {{- if .models.openAI.secretName }}
             - name: OPENAI_API_KEY
@@ -128,6 +132,13 @@ spec:
                 secretKeyRef:
                   name: {{ .models.perplexity.secretName }}
                   key: {{ .models.perplexity.secretKey }}
+            {{- end }}
+            {{- if .models.cohere.secretName }}
+            - name: COHERE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .models.cohere.secretName }}
+                  key: {{ .models.cohere.secretKey }}
             {{- end }}
             {{- end }}
             {{- end }}
