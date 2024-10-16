@@ -5,7 +5,6 @@
 apiVersion: database.oracle.com/v1alpha1
 kind: AutonomousDatabase
 metadata:
-metadata:
   name: {{ .Values.oaimSandbox.database.name | lower }}-adb
   labels:
     app.kubernetes.io/name: {{ .Chart.Name }}

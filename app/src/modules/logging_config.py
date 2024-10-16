@@ -25,7 +25,8 @@ def setup_logging():
     logging.getLogger("PIL").setLevel(logging.INFO)
     logging.getLogger("openai").setLevel(logging_level)
     logging.getLogger("httpcore").setLevel(logging_level)
-
+    # Sagemaker continuously complains about config, suppress
+    logging.getLogger("sagemaker.config").setLevel(logging.WARNING)
 
 # Call setup_logging when this module is imported
 setup_logging()

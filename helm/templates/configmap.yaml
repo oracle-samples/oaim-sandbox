@@ -21,7 +21,10 @@ data:
     cookieSecret = "{{ .Chart.Name }}-cookie"
     headless = true
     fileWatcherType = "none"
+    {{- $path := include "getPath" . }}
+    {{- if ne $path "/" }}
     baseUrlPath = {{ include "getPath" . | quote }}
+    {{- end }}
 
     [client]
     toolbarMode = "minimal"

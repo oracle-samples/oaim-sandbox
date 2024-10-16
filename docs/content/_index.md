@@ -9,6 +9,8 @@ keywords = 'oracle microservices development genai rag'
 <!--
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
+
+spell-checker:ignore streamlit, genai, venv, oaim
 -->
 
 {{% notice style="code" title="10-Sept-2024: Documentation In-Progress..." icon="pen" %}}

@@ -86,12 +86,13 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.oaimSandbox.database.authN.secretName | quote }}
                   key: {{ .Values.oaimSandbox.database.authN.serviceKey | quote }}
-            {{- if .Values.oaimSandbox.database.mtlsWallet.secretName }}
+            {{- $mtlsWallet := include "getMtlsWallet" . | fromJson }}
+            {{- if $mtlsWallet.secretName }}
             - name: DB_WALLET_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.oaimSandbox.database.mtlsWallet.secretName | quote }}
-                  key: {{ .Values.oaimSandbox.database.mtlsWallet.secretKey | quote }}
+                  name: {{ $mtlsWallet.secretName | quote }}
+                  key: {{ $mtlsWallet.secretKey | quote }}
             {{ else }}
             - name: DB_WALLET_PASSWORD
               valueFrom:
@@ -156,8 +157,9 @@ spec:
         {{- if .Values.oaimSandbox.database.enabled }}
         - name: tns-admin
           secret:
-            {{- if .Values.oaimSandbox.database.tnsAdmin.secretName }}
-            secretName: {{ .Values.oaimSandbox.database.tnsAdmin.secretName | quote }}
+            {{- $tnsAdmin := include "getTnsAdmin" . | fromJson }}
+            {{- if $tnsAdmin.secretName }}
+            secretName: {{ $tnsAdmin.secretName | quote }}
             {{ else }}
             secretName: {{ .Values.oaimSandbox.database.name | lower }}-tns-admin-{{ .Release.Revision }}
             {{- end }}
