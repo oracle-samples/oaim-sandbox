@@ -151,6 +151,7 @@ def main():
         }
     </style>
     """
+
     st.markdown(css, unsafe_allow_html=True)
     st.title("Test Framework")
     # Used to clear the uploader files
@@ -232,7 +233,7 @@ def main():
         if qa_gen_file:
             qa_gen_button_disabled = False
 
-        left, right = st.columns(2, vertical_alignment="bottom")
+        left, right = st.columns([0.15, 0.85])
         if left.button("Generate Q&A", type="primary", key="qa_generation", disabled=qa_gen_button_disabled):
             placeholder = st.empty()
             with placeholder:
@@ -255,7 +256,7 @@ def main():
             # Generate Q&A
             qa_file = os.path.join(state["temp_dir"], f"{file_name}_{str(qa_count)}_test_set.json")
             state.qa_file = qa_file
-            state.test_set = utilities.generate_qa(qa_file, kb, qa_count)
+            state.test_set = utilities.generate_qa(qa_file, kb, qa_count, model=qa_llm, client=llm_client)
             placeholder.empty()
             st.success("Q&A Generation Succeeded.", icon="✅")
         right.button("Reset", key="reset_test_framework", type="primary", on_click=reset_test_set)
@@ -274,7 +275,7 @@ def main():
         if len(test_set_file) > 0:
             test_set_button_disabled = False
 
-        left, right = st.columns(2, vertical_alignment="bottom")
+        left, right = st.columns([0.15, 0.85], vertical_alignment="bottom")
         if left.button("Load Tests", key="load_tests", disabled=test_set_button_disabled):
             placeholder = st.empty()
             with placeholder:

@@ -26,11 +26,13 @@ os.environ["USER_AGENT"] = "OAIM-SANDBOX"
 os.environ["GSK_DISABLE_SENTRY"] = "true"
 os.environ["GSK_DISABLE_ANALYTICS"] = "true"
 
+
 #############################################################################
 # MAIN
 #############################################################################
 def main():
     """Streamlit GUI"""
+    st.set_page_config(layout="wide")
     # initialize Components
     db_initialize()
     model_initialize()
@@ -48,7 +50,6 @@ def main():
     # GUI Defaults
     css = """
     <style>
-        section.main > div {max-width:65rem; padding-top: 3.85rem;}
         section[data-testid="stSidebar"] div.stButton button {
             width: 100%;
         }
@@ -91,14 +92,14 @@ def main():
         db_config = st.Page("content/db_config.py", title="Database", icon="🗄️")
         # Update Navigation
         navigation["Tools"].insert(0, split_embed)
-        navigation["Configuration"].insert(0, model_config)
+        navigation["Configuration"] = [model_config]
         navigation["Configuration"].insert(1, db_config)
-        navigation["Configuration"].insert(2,import_settings)
+        navigation["Configuration"].insert(2, import_settings)
         if not state.disable_oci:
             oci_config = st.Page("content/oci_config.py", title="OCI", icon="☁️")
             navigation["Configuration"].insert(2, oci_config)
 
-    pg = st.navigation(navigation)
+    pg = st.navigation(navigation, position="sidebar", expanded=False)
     pg.run()
 
 
