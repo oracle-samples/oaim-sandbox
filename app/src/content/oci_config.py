@@ -5,11 +5,12 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 Script initializes a web interface for Oracle Cloud Infrastructure (OCI)
 It includes a form to input and test OCI API Access.
 """
+# spell-checker:ignore streamlit, ocid
 
 import inspect
 
 import modules.logging_config as logging_config
-import modules.oci_utils as oci_utils
+import modules.utilities as utilities
 
 import streamlit as st
 from streamlit import session_state as state
@@ -20,7 +21,7 @@ logger = logging_config.logging.getLogger("oci_config")
 #####################################################
 # Functions
 #####################################################
-def initialise_streamlit():
+def initialize_streamlit():
     """
     Initialize Oracle Cloud Infrastructure (OCI) configuration settings
     This should only be run when state.oci_configured is not defined
@@ -30,11 +31,11 @@ def initialise_streamlit():
 
     logger.info("Initializing OCI Configuration")
     if "oci_config" not in state:
-        state.oci_config = oci_utils.initialise()
+        state.oci_config = utilities.oci_initialize()
     try:
-        oci_utils.get_namespace(state.oci_config, retries=False)
+        utilities.oci_get_namespace(state.oci_config, retries=False)
         state.oci_configured = True
-    except oci_utils.OciException as ex:
+    except utilities.OciException as ex:
         logger.exception(ex, exc_info=False)
         state.oci_configured = False
 
@@ -44,7 +45,7 @@ def initialise_streamlit():
 #####################################################
 def main():
     """Streamlit GUI"""
-    initialise_streamlit()
+    initialize_streamlit()
     # TODO(gotsysdba) Add input for File and Profile
 
     auth_sources = ["User", "Token"]
@@ -102,14 +103,16 @@ def main():
                 st.stop()
 
             try:
-                test_config = oci_utils.initialise(user, fingerprint, tenancy, region, key_file, security_token_file)
+                test_config = utilities.oci_initialize(
+                    user, fingerprint, tenancy, region, key_file, security_token_file
+                )
                 logger.debug("Testing OCI config: %s", test_config)
-                oci_utils.get_namespace(test_config, retries=False)
+                utilities.oci_get_namespace(test_config, retries=False)
                 st.success("OCI API Authentication Tested Successfully", icon="✅")
                 state.oci_config = test_config
                 st.success("OCI Configuration Saved", icon="✅")
                 state.oci_configured = True
-            except oci_utils.OciException as ex:
+            except utilities.OciException as ex:
                 logger.exception(ex, exc_info=False)
                 st.error(ex, icon="🚨")
                 state.oci_configured = False

@@ -1,0 +1,39 @@
+<!-- Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl. -->
+{{- $LastModifierDisplayName := "" }}
+{{- $LastModifierEmail := "" }}
+{{- $Date := "" }}
+{{- with .GitInfo }}
+  {{- with .AuthorName }}
+    {{- $LastModifierDisplayName = . }}
+  {{- end }}
+  {{- with .AuthorEmail  }}
+    {{- $LastModifierEmail = . }}
+  {{- end }}
+  {{- with .AuthorDate  }}
+    {{- $Date = . | time.Format ":date_medium" }}
+  {{- end }}
+{{- else }}
+  {{- with .Params.LastModifierDisplayName }}
+    {{- $LastModifierDisplayName = . }}
+  {{- end }}
+  {{- with .Params.LastModifierEmail }}
+    {{- $LastModifierEmail = . }}
+  {{- end }}
+  {{- with .Date }}
+    {{- $Date = . | time.Format ":date_medium" }}
+  {{- end }}
+{{- end }}
+{{- if $LastModifierDisplayName }}
+              <i class='fa-fw fas fa-user'></i> {{ with $LastModifierEmail }}<a href="mailto:{{ . }}">{{ end }}{{ $LastModifierDisplayName }}{{ with $LastModifierEmail }}</a>{{ end }}
+  {{- with $Date }}
+              <i class='fa-fw fas fa-calendar'></i> {{ . }}
+  {{- end }}
+{{- end }}
+{{- partial "term-list.html" (dict
+  "page" .
+  "taxonomy" "categories"
+  "icon" "layer-group"
+) }}
+<hr>
+<span>Content licensed under Universal Permissive License<a href="https://oss.oracle.com/licenses/upl">© 2024 Oracle and/or its affiliates</a></span>

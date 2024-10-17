@@ -2,6 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
+# spell-checker:ignore levelname, inotify, openai, httpcore
 
 import logging
 import os
@@ -24,7 +25,8 @@ def setup_logging():
     logging.getLogger("PIL").setLevel(logging.INFO)
     logging.getLogger("openai").setLevel(logging_level)
     logging.getLogger("httpcore").setLevel(logging_level)
-
+    # Sagemaker continuously complains about config, suppress
+    logging.getLogger("sagemaker.config").setLevel(logging.WARNING)
 
 # Call setup_logging when this module is imported
 setup_logging()

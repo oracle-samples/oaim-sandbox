@@ -2,32 +2,30 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
+# spell-checker:ignore streamlit, vectorstore, vectorstorage, llms, filt, mult, rerank, selectbox
 
 import json
 import copy
-import requests
 
 # Streamlit
 import streamlit as st
 from streamlit import session_state as state
 
 # Utilities
-import modules.db_utils as db
+import modules.utilities as utilities
 import modules.logging_config as logging_config
 import modules.metadata as meta
 import modules.help as custom_help
-import modules.vectorstorage as vectorstorage
-import modules.chatbot as chatbot
-import modules.chatbot_server as chatbot_server
+from modules.chatbot import ChatCmd
 
 logger = logging_config.logging.getLogger("modules.st_common")
 
 
-def clear_initialised():
+def clear_initialized():
     """Reset the initialization of the ChatBot"""
-    if "user_lm_model" in state:
-        state.lm_model = state.user_lm_model
-    state.pop("initialised", None)
+    if "user_ll_model" in state:
+        state.ll_model = state.user_ll_model
+    state.pop("initialized", None)
 
 
 def set_default_state(key, value):
@@ -35,32 +33,6 @@ def set_default_state(key, value):
     if key not in state:
         logger.debug("Setting %s in Session State", key)
         state[key] = value
-
-
-def is_url_accessible(url):
-    """Check that URL is Available"""
-    logger.debug("Checking %s is accessible", url)
-    try:
-        response = requests.get(url, timeout=2)
-        logger.info("Checking %s resulted in %s", url, response.status_code)
-        # Check if the response status code is 200 (OK) 403 (Forbidden)
-        if response.status_code in [200, 403]:
-            return True, None
-        else:
-            err_msg = f"{url} is not accessible. (Status: {response.status_code})"
-            logger.warning(err_msg)
-            return False, err_msg
-    except requests.exceptions.ConnectionError:
-        err_msg = f"{url} is not accessible. (Connection Error)"
-        logger.warning(err_msg)
-        return False, err_msg
-    except requests.exceptions.Timeout:
-        err_msg = f"{url} is not accessible. (Request Timeout)"
-        logger.warning(err_msg)
-        return False, err_msg
-    except requests.RequestException as ex:
-        logger.exception(ex, exc_info=False)
-        return False, ex
 
 
 def update_rag():
@@ -88,12 +60,12 @@ def update_rag():
 
 def set_prompt():
     """Switch Prompt Engineering"""
-    if state.rag_params["enable"]:
+    if "rag_params" in state and state.rag_params["enable"]:
         state.lm_instr_prompt = "RAG Example"
     else:
         state.lm_instr_prompt = "Basic Example"
 
-    if state.lm_instr != state.lm_instr_config[state.lm_instr_prompt]["prompt"]:
+    if "lm_instr" in state and state.lm_instr != state.lm_instr_config[state.lm_instr_prompt]["prompt"]:
         state.lm_instr = state.lm_instr_config[state.lm_instr_prompt]["prompt"]
         st.info(f"Prompt Engineering - {state.lm_instr_prompt} Prompt has been set.")
 
@@ -114,24 +86,29 @@ def reset_rag():
         state.rag_params = {"enable": True}
     state.pop("vs_tables", None)
     state.pop("chat_manager", None)
-    clear_initialised()
+    clear_initialized()
 
     # Set the RAG Prompt
     set_prompt()
 
 
-def initialise_rag():
-    """Initialise the RAG LOVs"""
-    logger.debug("Initializing RAG")
+def initialize_rag():
+    """Initialize the RAG LOVs"""
     try:
         if not state.db_configured:
+            logger.debug("RAG Disabled (no DB connection)")
             st.warning("Database is not configured, RAG functionality is disabled.", icon="⚠️")
 
+        if len(state.enabled_embed) == 0:
+            logger.debug("RAG Disabled (no Embedding Models)")
+            st.warning("Embedding Model not configured, RAG functionality is disabled.", icon="⚠️")
+
         # Look-up Embedding Tables to generate RAG LOVs (don't use function)
-        if state.db_configured:
+        if state.db_configured and len(state.enabled_embed) > 0:
+            logger.debug("Initializing RAG")
             if "db_conn" not in state or "vs_tables" not in state:
-                state.db_conn = db.connect(state.db_config)
-                state.vs_tables = json.loads(db.get_vs_tables(state.db_conn))
+                state.db_conn = utilities.db_connect(state.db_config)
+                state.vs_tables = json.loads(utilities.get_vs_tables(state.db_conn, state.enabled_embed))
         else:
             state.vs_tables = {}
 
@@ -161,17 +138,17 @@ def initialise_rag():
                     state.rag_params.setdefault(param, None)
         set_prompt()
     except AttributeError:
-        st.error("Application has not been initialised, please restart.", icon="⛑️")
+        st.error("Application has not been initialized, please restart.", icon="⛑️")
 
 
-def initialise_chatbot(lm_model):
-    """Initialise the Chatbot"""
-    logger.info("Initializing ChatBot using %s; RAG: %s", lm_model, state.rag_params["enable"])
+def initialize_chatbot(ll_model):
+    """Initialize the Chatbot"""
+    logger.info("Initializing ChatBot using %s; RAG: %s", ll_model, state.rag_params["enable"])
     vectorstore = None
     ## RAG
     if state.rag_params["enable"]:
         try:
-            model, api_accessible, err_msg = vectorstorage.get_embedding_model(
+            embed_model, api_accessible, err_msg = utilities.get_embedding_model(
                 state.rag_params["model"], state.embed_model_config
             )
         except ValueError:
@@ -189,34 +166,34 @@ def initialise_chatbot(lm_model):
             st.stop()
 
         # Get the Store Table
-        rag_store_table, _ = vectorstorage.get_vs_table(
+        rag_store_table, _ = utilities.get_vs_table(
             state.rag_params["model"],
             state.rag_params["chunk_size"],
             state.rag_params["chunk_overlap"],
             state.rag_params["distance_metric"],
             state.rag_params["alias"],
         )
-        # Initialise Retriever
-        vectorstore = vectorstorage.init_vs(
+        # Initialize Retriever
+        vectorstore = utilities.init_vs(
             state.db_conn,
-            model,
+            embed_model,
             rag_store_table,
             state.rag_params["distance_metric"],
         )
 
     # Chatbot
-    lm_model_state = state.lm_model_config[lm_model]
-    if lm_model_state["api"] == "" or lm_model_state["url"] == "":
-        raise ValueError(f"{lm_model} not fully configured")
-    url_accessible, err_msg = is_url_accessible(lm_model_state["url"])
-    if not url_accessible:
-        raise ValueError(f"Unable to access {lm_model}: {err_msg}")
-    cmd = chatbot.ChatCmd(
-        lm_model,
-        lm_model_state,
-        vectorstore,
-    )
-    logger.info("Initialised ChatBot!")
+    if state.ll_model_config[ll_model]["api"] == "" or state.ll_model_config[ll_model]["url"] == "":
+        raise ValueError(f"{ll_model} not fully configured")
+
+    llm_client, api_accessible, err_msg = utilities.get_ll_model(ll_model, state.ll_model_config)
+    if not api_accessible:
+        st.warning(f"{err_msg}.  Chat Model in not accessible", icon="⚠️")
+        if st.button("Retry", key="retry_chatbot_api_accessible"):
+            st.rerun()
+        st.stop()
+    cmd = ChatCmd(llm_client, vectorstore)
+
+    logger.info("initialized ChatBot!")
     return cmd
 
 
@@ -230,25 +207,22 @@ def lm_sidebar():
 
     def update_chat_param():
         """Update user chat parameters"""
-        for key in [k for k in state.keys() if k.startswith(f"user_{state.user_lm_model}")]:
-            state.lm_model_config[state.user_lm_model][key.split("~")[1]][0] = state[key]
+        for key in [k for k in state.keys() if k.startswith(f"user_{state.user_ll_model}")]:
+            state.ll_model_config[state.user_ll_model][key.split("~")[1]][0] = state[key]
         # Discard the chat_mgr
-        clear_initialised()
+        clear_initialized()
 
     lm_parameters = meta.lm_parameters()
-    st.sidebar.divider()
-    enabled_llms = list(key for key, value in state.lm_model_config.items() if value.get("enabled"))
-    logger.debug("Enabled LLMs: %s", enabled_llms)
     try:
-        llm_idx = enabled_llms.index(state.lm_model)
+        llm_idx = state.enabled_llms.index(state.ll_model)
     except ValueError:
         llm_idx = 0
-    lm_model = st.sidebar.selectbox(
+    ll_model = st.sidebar.selectbox(
         "Chat model:",
-        options=enabled_llms,
+        options=state.enabled_llms,
         index=llm_idx,
-        on_change=clear_initialised,
-        key="user_lm_model",
+        on_change=clear_initialized,
+        key="user_ll_model",
     )
     parameters = [
         "temperature",
@@ -258,19 +232,20 @@ def lm_sidebar():
         "presence_penalty",
     ]
     for param in parameters:
-        if param in state.lm_model_config[lm_model]:
+        if param in state.ll_model_config[ll_model]:
             label = lm_parameters[param]["label"]
-            default = state.lm_model_config[lm_model][param][1]
+            default = state.ll_model_config[ll_model][param][1]
             st.sidebar.slider(
                 f"{label} (Default: {default}):",
-                value=state.lm_model_config[lm_model][param][0],
-                min_value=state.lm_model_config[lm_model][param][2],
-                max_value=state.lm_model_config[lm_model][param][3],
+                value=state.ll_model_config[ll_model][param][0],
+                min_value=state.ll_model_config[ll_model][param][2],
+                max_value=state.ll_model_config[ll_model][param][3],
                 help=lm_parameters[param]["desc_en"],
-                key=f"user_{lm_model}~{param}",
+                key=f"user_{ll_model}~{param}",
                 on_change=update_chat_param,
             )
-    return lm_model
+    st.sidebar.divider()
+    return ll_model
 
 
 ###################################
@@ -366,16 +341,18 @@ def rag_sidebar():
         attributes = ["alias", "model", "chunk_size", "chunk_overlap", "distance_metric"]
         for attr in attributes:
             filtered_list = state.rag_filter[attr]
-            user_value = getattr(state, f"rag_user_{attr}")
+            try:
+                user_value = getattr(state, f"rag_user_{attr}")
+            except AttributeError:
+                setattr(state, f"rag_user_{attr}", [])
+
             try:
                 idx = 0 if len(filtered_list) == 1 else filtered_list.index(user_value)
-            except ValueError:
+            except (ValueError, AttributeError):
                 idx = None
 
             state.rag_user_idx[attr] = idx
 
-    st.sidebar.divider()
-    st.sidebar.subheader("RAG Embeddings")
     rag_enable = st.sidebar.checkbox(
         "RAG?",
         value=state.rag_params["enable"],
@@ -447,7 +424,7 @@ def rag_sidebar():
                 help=custom_help.gui_help["rag_lambda_mult"]["english"],
                 on_change=update_rag,
             )
-        st.sidebar.divider()
+
         if any(state.rag_filter["alias"]):
             st.sidebar.selectbox(
                 "Embedding Alias: ",
@@ -491,8 +468,7 @@ def rag_sidebar():
         )
 
         st.sidebar.button("Reset RAG", type="primary", on_click=reset_rag)
-        st.sidebar.divider()
-        chatbot_server.sidebar_start_server()
+    st.sidebar.divider()
 
 
 ###################################
@@ -526,12 +502,12 @@ def save_settings_sidebar():
     # This is set for inclusion so that exported state is intentional
     include_keys = [
         "embed_model_config",
-        "lm_model_config",
+        "ll_model_config",
         "lm_instr_config",
         "oci_config",
         "db_config",
         "context_instr",
-        "lm_model",
+        "ll_model",
         "lm_instr_prompt",
         "rag_params",
     ]
@@ -539,7 +515,11 @@ def save_settings_sidebar():
     state_dict_filt = {key: state_dict[key] for key in include_keys if key in state_dict}
     state_dict_filt = empty_key(state_dict_filt)
     session_state_json = json.dumps(state_dict_filt, indent=4)
-    st.sidebar.divider()
-    st.sidebar.download_button(
-        label="Download Settings", data=session_state_json, file_name="sandbox_settings.json", use_container_width=True
-    )
+    # Only allow exporting settings if tools/admin is enabled
+    if not state.disable_tools and not state.disable_admin:
+        st.sidebar.download_button(
+            label="Download Settings",
+            data=session_state_json,
+            file_name="sandbox_settings.json",
+            use_container_width=True,
+        )

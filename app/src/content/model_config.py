@@ -4,11 +4,13 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 This script initializes a web interface for model configuration using Streamlit (`st`).
 """
+# spell-checker:ignore streamlit, llms, langchain, testid, vectorstores
 
 import inspect
 
 import modules.logging_config as logging_config
 import modules.metadata as metadata
+from modules.st_common import reset_rag
 
 import streamlit as st
 from streamlit import session_state as state
@@ -19,18 +21,27 @@ from langchain_community.vectorstores.utils import DistanceStrategy
 logger = logging_config.logging.getLogger("model_config")
 
 
-def initialise_streamlit():
-    """Initialise Streamlit Session State"""
+def state_enabled_models():
+    """Set state for enabled LLMs"""
+    if "ll_model_config" in state:
+        state.enabled_llms = list(key for key, value in state.ll_model_config.items() if value.get("enabled"))
+        logger.debug("Enabled LLMs: %s", state.enabled_llms)
+        state.enabled_embed = list(key for key, value in state.embed_model_config.items() if value.get("enabled"))
+        logger.debug("Enabled Embedding Models: %s", state.enabled_embed)
+
+
+def initialize_streamlit():
+    """initialize Streamlit Session State"""
     ## Embedding Model
     if "embed_model_config" not in state:
         state.embed_model_config = metadata.embedding_models()
-        logger.info("Initialised Embedding Model Config")
+        logger.info("initialized Embedding Model Config")
 
     ## Chat Model
-    if "lm_model_config" not in state:
-        state.lm_model_config = metadata.lm_models()
-        state.lm_model = list(state.lm_model_config.keys())[0]
-        logger.info("Initialised Language Model Config")
+    if "ll_model_config" not in state:
+        state.ll_model_config = metadata.ll_models()
+        state.ll_model = list(state.ll_model_config.keys())[0]
+        logger.info("initialized Language Model Config")
 
     ## Distance Metrics
     if "distance_metric_config" not in state:
@@ -40,7 +51,10 @@ def initialise_streamlit():
             "DOT_PRODUCT": [DistanceStrategy.EUCLIDEAN_DISTANCE],
             "MAX_INNER_PRODUCT": [DistanceStrategy.MAX_INNER_PRODUCT],
         }
-        logger.info("Initialised Distance Metric Config")
+        logger.info("initialized Distance Metric Config")
+
+    # Set Enabled State
+    state_enabled_models()
 
 
 def get_class_name(class_ref):
@@ -55,18 +69,24 @@ def update_embed_model_config():
         state.embed_model_config[model_name]["enabled"] = state[f"embed_{model_name}_enabled"]
         state.embed_model_config[model_name]["url"] = state[f"embed_{model_name}_api_server"]
         state.embed_model_config[model_name]["api_key"] = state[f"embed_{model_name}_api_key"]
-    st.success("Embedding Model Configuration - Updated", icon="✅")
+    # Reset RAG
+    reset_rag()
+
+    # Set Enabled State
+    state_enabled_models()
 
 
-def update_lm_model_config():
+def update_ll_model_config():
     """Update Language Model Configuration"""
-    for model_name, _ in state.lm_model_config.items():
-        state.lm_model_config[model_name]["enabled"] = state[f"lm_{model_name}_enabled"]
-        state.lm_model_config[model_name]["url"] = state[f"lm_{model_name}_api_server"]
-        state.lm_model_config[model_name]["api_key"] = state[f"lm_{model_name}_api_key"]
+    for model_name, _ in state.ll_model_config.items():
+        state.ll_model_config[model_name]["enabled"] = state[f"lm_{model_name}_enabled"]
+        state.ll_model_config[model_name]["url"] = state[f"lm_{model_name}_api_server"]
+        state.ll_model_config[model_name]["api_key"] = state[f"lm_{model_name}_api_key"]
     # Re-init the chatbot
-    state.pop("initialised", None)
-    st.success("Language Model Configuration - Updated", icon="✅")
+    state.pop("initialized", None)
+
+    # Set Enabled State
+    state_enabled_models()
 
 
 #############################################################################
@@ -83,10 +103,10 @@ def main():
     """
     st.markdown(css, unsafe_allow_html=True)
 
-    initialise_streamlit()
+    initialize_streamlit()
 
     st.header("Language Models")
-    with st.form("update_lm_model_config"):
+    with st.form("update_ll_model_config"):
         # Create table header
         table2_col_format = st.columns([0.08, 0.3, 0.2, 0.2, 0.2])
         col1_2, col2_2, col3_2, col4_2, col5_2 = table2_col_format
@@ -97,7 +117,7 @@ def main():
         col5_2.markdown("**<u>API Key</u>**", unsafe_allow_html=True)
 
         # Create table rows
-        for model_name, config in state.lm_model_config.items():
+        for model_name, config in state.ll_model_config.items():
             col1_2, col2_2, col3_2, col4_2, col5_2 = table2_col_format
             col1_2.checkbox(
                 "Enabled",
@@ -133,7 +153,10 @@ def main():
                 type="password",
                 label_visibility="collapsed",
             )
-        st.form_submit_button(label="Save", on_click=update_lm_model_config)
+        update_ll_model = st.form_submit_button(label="Save", on_click=update_ll_model_config)
+        if update_ll_model:
+            st.success("Language Model Configuration - Updated", icon="✅")
+
 
     st.header("Embedding Models")
     with st.form("update_embed_model_config"):
@@ -183,8 +206,9 @@ def main():
                 type="password",
                 label_visibility="collapsed",
             )
-        st.form_submit_button(label="Save", on_click=update_embed_model_config)
-
+        update_embed_model = st.form_submit_button(label="Save", on_click=update_embed_model_config)
+        if update_embed_model:
+            st.success("Embedding Model Configuration - Updated", icon="✅")
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:
     main()

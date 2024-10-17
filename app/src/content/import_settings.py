@@ -4,6 +4,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 This script allows importing/exporting configurations using Streamlit (`st`).
 """
+# spell-checker:ignore streamlit
 
 import inspect
 import json

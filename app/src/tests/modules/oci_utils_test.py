@@ -7,11 +7,11 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 from unittest.mock import patch, MagicMock, ANY
 import pytest
-from modules import oci_utils
+from modules import utilities
 
 
 ###################################################
-# db_utils.initialise
+# db_utils.initialize
 ###################################################
 @pytest.mark.parametrize(
     "tenancy, region, fingerprint, key_file, user, security_token_file, expected_result",
@@ -75,7 +75,7 @@ from modules import oci_utils
         ),
     ],
 )
-def test_initialise_manual(
+def test_initialize_manual(
     unset_oci_env,
     tenancy,
     region,
@@ -85,9 +85,9 @@ def test_initialise_manual(
     security_token_file,
     expected_result,
 ):
-    """Initialise with User Input"""
+    """initialize with User Input"""
     assert (
-        oci_utils.initialise(
+        utilities.oci_initialize(
             tenancy=tenancy,
             region=region,
             fingerprint=fingerprint,
@@ -99,9 +99,9 @@ def test_initialise_manual(
     )
 
 
-def test_initialise_env_user(set_oci_env_user):
-    """Initialise with User Environment"""
-    assert oci_utils.initialise() == (
+def test_initialize_env_user(set_oci_env_user):
+    """initialize with User Environment"""
+    assert utilities.oci_initialize() == (
         {
             "tenancy": "TEST_TENANCY",
             "region": "TEST_REGION",
@@ -116,9 +116,9 @@ def test_initialise_env_user(set_oci_env_user):
     )
 
 
-def test_initialise_env_security_token(set_oci_env_token):
-    """Initialise with Token Environment"""
-    assert oci_utils.initialise() == (
+def test_initialize_env_security_token(set_oci_env_token):
+    """initialize with Token Environment"""
+    assert utilities.oci_initialize() == (
         {
             "tenancy": "TEST_TENANCY",
             "region": "TEST_REGION",
@@ -134,14 +134,14 @@ def test_initialise_env_security_token(set_oci_env_token):
 
 
 def test_init_client_no_env_user(unset_oci_env):
-    """Initialise Client without User Environment"""
+    """initialize Client without User Environment"""
     mock_client_type = MagicMock()
-    mock_config = oci_utils.initialise(
+    mock_config = utilities.oci_initialize(
         "TEST_TENANCY", "TEST_REGION", "TEST_FINGERPRINT", "TEST_KEY_FILE", "TEST_USER", None
     )
     with patch("oci.retry.NoneRetryStrategy") as mocknoneretrystrategy:
         mock_none_retry_strategy_instance = mocknoneretrystrategy.return_value
-        client = oci_utils.init_client(mock_client_type, mock_config, retries=False)
+        client = utilities.oci_init_client(mock_client_type, mock_config, retries=False)
 
         mock_client_type.assert_called_once_with(mock_config, retry_strategy=mock_none_retry_strategy_instance)
         assert client == mock_client_type()
@@ -150,13 +150,13 @@ def test_init_client_no_env_user(unset_oci_env):
 
 
 def test_init_client_env_user(set_oci_env_user, mock_oci):
-    """Initialise Client with User Environment"""
+    """initialize Client with User Environment"""
     mock_client_type = MagicMock()
-    mock_config = oci_utils.initialise()
+    mock_config = utilities.oci_initialize()
 
     with patch("oci.retry.NoneRetryStrategy") as mocknoneretrystrategy:
         mock_none_retry_strategy_instance = mocknoneretrystrategy.return_value
-        client = oci_utils.init_client(mock_client_type, mock_config, retries=False)
+        client = utilities.oci_init_client(mock_client_type, mock_config, retries=False)
 
         mock_client_type.assert_called_once_with(mock_config, retry_strategy=mock_none_retry_strategy_instance)
         assert client == mock_client_type()
@@ -166,14 +166,14 @@ def test_init_client_env_user(set_oci_env_user, mock_oci):
 
 def test_get_namespace_env_user(set_oci_env_user, mock_oci_init_client, mock_oci_object_storage_client):
     """Test AuthN with User Environment"""
-    config = oci_utils.initialise()
+    config = utilities.oci_initialize()
     mock_namespace = "test_namespace"
 
     mock_client = MagicMock()
     mock_client.get_namespace.return_value.data = mock_namespace
     mock_oci_init_client.return_value = mock_client
 
-    namespace = oci_utils.get_namespace(config)
+    namespace = utilities.oci_get_namespace(config)
 
     mock_oci_init_client.assert_called_once_with(mock_oci_object_storage_client, config, True)
     mock_client.get_namespace.assert_called_once()
