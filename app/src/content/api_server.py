@@ -35,15 +35,18 @@ def display_logs():
     log_placeholder = st.empty()  # A placeholder to update logs
     logs = []  # Store logs for display
 
-    while True:
-        try:
-            # Retrieve log from queue (non-blocking)
-            log_item = api_server.log_queue.get_nowait()
-            logs.append(log_item)
-            # Update the placeholder with new logs
-            log_placeholder.text("\n".join(logs))
-        except api_server.queue.Empty:
-            time.sleep(0.1)  # Avoid busy-waiting
+    try:
+        while "server_thread" in st.session_state:
+            try:
+                # Retrieve log from queue (non-blocking)
+                log_item = api_server.log_queue.get_nowait()
+                logs.append(log_item)
+                # Update the placeholder with new logs
+                log_placeholder.text("\n".join(logs))
+            except api_server.queue.Empty:
+                time.sleep(0.1)  # Avoid busy-waiting
+    finally:
+        logger.info("API Server events display has stopped.")
 
 
 def api_server_start():
@@ -104,7 +107,7 @@ def api_server_stop():
 def main():
     """Streamlit GUI"""
     initialize_streamlit()
-    st.header("API Server", divider="rainbow")
+    st.header("API Server")
 
     # LLM Params
     ll_model = st_common.lm_sidebar()
