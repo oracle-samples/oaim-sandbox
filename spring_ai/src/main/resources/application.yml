@@ -1,0 +1,37 @@
+spring:
+  datasource:
+    url: ${DB_DSN}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  ai:
+    vectorstore:
+      oracle:
+        distance-type: ${DISTANCE_TYPE}
+        remove-existing-vector-store-table: True
+        initialize-schema: True
+        index-type: None
+    openai:
+      chat:
+        options:
+          temperature: 0.0
+          model: ${OPENAI_CHAT_MODEL}
+          maxTokens : 200
+      embedding:
+        options:
+          model: ${OPENAI_EMBEDDING_MODEL}
+    ollama:
+      base-url: ${OLLAMA_BASE_URL}
+      embedding:
+        options: 
+          model: ${OLLAMA_EMBEDDING_MODEL}
+      chat:
+        options: 
+          model: ${OLLAMA_CHAT_MODEL}
+aims:
+  context_instr: ${CONTEXT_INSTR}
+  vectortable:
+    name: ${VECTOR_STORE}
+  rag_params: 
+    search_type: Similarity
+    top_k: ${TOP_K}
+

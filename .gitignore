@@ -38,3 +38,7 @@ sonar-project.properties
 __pycache__/
 *.py[cod]
 *$py.class
+spring_ai/src/main/resources/data/sandbox_settings.json
+spring_ai/target/**
+spring_ai/create_user.sql
+spring_ai/drop.sql
