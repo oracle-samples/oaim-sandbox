@@ -1,4 +1,4 @@
-# Spring AI with OpenAI
+# Spring AI template
 
 ## How to run:
 Create a `start.sh` script putting:

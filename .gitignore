@@ -36,3 +36,4 @@ spring_ai/src/main/resources/data/sandbox_settings.json
 spring_ai/target/**
 spring_ai/create_user.sql
 spring_ai/drop.sql
+start.sh
