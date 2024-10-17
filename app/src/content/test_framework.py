@@ -256,7 +256,7 @@ def main():
             # Generate Q&A
             qa_file = os.path.join(state["temp_dir"], f"{file_name}_{str(qa_count)}_test_set.json")
             state.qa_file = qa_file
-            state.test_set = utilities.generate_qa(qa_file, kb, qa_count, model=qa_llm, client=llm_client)
+            state.test_set = utilities.generate_qa(qa_file, kb, qa_count, client=llm_client)
             placeholder.empty()
             st.success("Q&A Generation Succeeded.", icon="✅")
         right.button("Reset", key="reset_test_framework", type="primary", on_click=reset_test_set)

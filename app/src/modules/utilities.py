@@ -700,11 +700,11 @@ def build_knowledge_base(text_nodes, kb_file, llm_client, embed_client):
     return knowledge_base
 
 
-def generate_qa(qa_file, kb, qa_count, api="openai", model="gpt-4o-mini", client=None):
+def generate_qa(qa_file, kb, qa_count, api="openai", client=None):
     """Generate an example QA"""
-    logger.info("QA Generation starting.. (model=%s, client=%s)", model, client)
+    logger.info("QA Generation starting.. (client=%s)", client)
     set_llm_api(api)
-    set_default_client(OpenAIClient(model=model, client=client))
+    set_default_client(client)
 
     test_set = generate_testset(
         kb,
