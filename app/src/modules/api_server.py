@@ -4,7 +4,11 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 """
 # spell-checker:ignore streamlit, langchain
 
+import os
+import socket
+import secrets
 import json
+import queue
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse
 
@@ -15,6 +19,33 @@ import modules.chatbot as chatbot
 import modules.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("modules.api_server")
+
+
+# Create a queue to store the requests and responses
+log_queue = queue.Queue()
+
+
+def config():
+    """Define API Server Config"""
+
+    def find_available_port():
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("0.0.0.0", 0))
+        port = sock.getsockname()[1]
+        sock.close()
+
+        return port
+
+    def generate_api_key(length=32):
+        # Generates a URL-safe, base64-encoded random string with the given length
+        return secrets.token_urlsafe(length)
+
+    auto_port = find_available_port()
+    auto_api_key = generate_api_key()
+    return {
+        "port": os.environ.get("API_SERVER_PORT", default=auto_port),
+        "key": os.environ.get("API_SERVER_KEY", default=auto_api_key),
+    }
 
 
 def get_answer_fn(
@@ -120,6 +151,10 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
                         # If no message is provided, return an error
                         response = {"error": "No 'message' field found in request."}
                         self.send_response(400)  # Bad request
+
+                    # Add request/response to the queue
+                    log_queue.put(f"Request: {post_data}")
+                    log_queue.put(f"Response: {response}")
                 except json.JSONDecodeError:
                     # If JSON parsing fails, return an error
                     response = {"error": "Invalid JSON in request."}

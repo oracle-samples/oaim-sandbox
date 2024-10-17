@@ -6,6 +6,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # spell-checker:ignore streamlit
 import inspect
 import threading
+import time
 
 # Streamlit
 import streamlit as st
@@ -23,16 +24,40 @@ logger = logging_config.logging.getLogger("api_server")
 #############################################################################
 # Functions
 #############################################################################
+def initialize_streamlit():
+    """initialize Streamlit Session State"""
+    if "api_server_config" not in state:
+        state.api_server_config = api_server.config()
+        logger.info("initialized API Server Config")
+
+
+def display_logs():
+    log_placeholder = st.empty()  # A placeholder to update logs
+    logs = []  # Store logs for display
+
+    while True:
+        try:
+            # Retrieve log from queue (non-blocking)
+            log_item = api_server.log_queue.get_nowait()
+            logs.append(log_item)
+            # Update the placeholder with new logs
+            log_placeholder.text("\n".join(logs))
+        except api_server.queue.Empty:
+            time.sleep(0.1)  # Avoid busy-waiting
+
+
 def api_server_start():
+    state.api_server_config["port"] = state.user_api_server_port
+    state.api_server_config["key"] = state.user_api_server_key
     if "initialized" in state and state.initialized:
         if "server_thread" not in state:
             state.httpd = api_server.run_server(
-                state.api_server_port,
+                state.api_server_config["port"],
                 state.chat_manager,
                 state.rag_params,
                 state.lm_instr,
                 state.context_instr,
-                state.api_server_key,
+                state.api_server_config["key"],
             )
 
             # Start the server in the thread
@@ -46,8 +71,7 @@ def api_server_start():
                 daemon=True,
             )
             state.server_thread.start()
-            logger.info("Started API Server on port: %i", state.api_server_port)
-            st.success(f"API Server started on port {state.api_server_port}.")
+            logger.info("Started API Server on port: %i", state.api_server_config["port"])
         else:
             st.warning("API Server is already running.")
     else:
@@ -79,6 +103,7 @@ def api_server_stop():
 #############################################################################
 def main():
     """Streamlit GUI"""
+    initialize_streamlit()
     st.header("API Server", divider="rainbow")
 
     # LLM Params
@@ -126,22 +151,22 @@ def main():
     server_running = False
     if "server_thread" in state:
         server_running = True
-        st.write("API Server is Running:")
+        st.success("API Server is Running")
 
     left, right = st.columns([0.2, 0.8])
     left.number_input(
         "API Server Port:",
-        value=8000,
+        value=state.api_server_config["port"],
         min_value=1,
         max_value=65535,
-        key="api_server_port",
+        key="user_api_server_port",
         disabled=server_running,
     )
     right.text_input(
         "API Server Key:",
         type="password",
-        value="abc",
-        key="api_server_key",
+        value=state.api_server_config["key"],
+        key="user_api_server_key",
         disabled=server_running,
     )
 
@@ -155,12 +180,8 @@ def main():
     st.subheader("Activity")
     if "server_thread" in state:
         with st.container(border=True):
-            st.write("Hello")
-            # for msg in chat_history.messages:
-            # if msg.type == "AIMessageChunk":
-            #     st.chat_message("ai").write(msg.content)
-            # else:
-            #     st.chat_message(msg.type).write(msg.content)
+            display_logs()
+
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:
     main()

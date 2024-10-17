@@ -91,7 +91,7 @@ def main():
         split_embed = st.Page("content/split_embed.py", title="Split/Embed", icon="📚")
         model_config = st.Page("content/model_config.py", title="Models", icon="🤖")
         db_config = st.Page("content/db_config.py", title="Database", icon="🗄️")
-        settings = st.Page("content/settings.py", title="Import/Export Settings", icon="💾")
+        settings = st.Page("content/settings.py", title="Settings", icon="💾")
         # Update Navigation
         navigation["Tools"].insert(0, split_embed)
         navigation["Configuration"] = [model_config]
