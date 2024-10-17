@@ -1,6 +1,20 @@
 # Spring AI template
 
 ## How to run:
+Prepare two configuration in `oaim-sandbox` based on vector stores created using:
+
+* OLLAMA: 
+  * Embdeding model: mxbai-embed-large
+  * Chunk size: 512
+  * overlap: 103
+  * distance: COSINE
+
+* OPENAI: 
+  * Embdeding model: text-embedding-3-small
+  * Chunk size: 8191
+  * overlap: 1639
+  * distance: COSINE
+
 Create a `start.sh` script putting:
 ```
 export SPRING_AI_OPENAI_API_KEY=$OPENAI_API_KEY
@@ -36,11 +50,7 @@ This project contains a web service that will accept HTTP GET requests at
 * `http://localhost:8080/search/`
 
 
-There is optional `message` parameter whose default value is "Tell me a joke".
-
-The response to the request is from the OpenAI ChatGPT Service.
-
-Call example: 
+RAG call example with openai build profile: 
 
 ```
 curl --get --data-urlencode 'message=Can I use any kind of development environment to run the example?' localhost:8080/rag| jq .
