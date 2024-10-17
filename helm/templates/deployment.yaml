@@ -119,21 +119,21 @@ spec:
               value: "true"
             {{- end }}
             {{- if .models }}
-            {{- if .models.openAI.secretName }}
+            {{- if .models.openAI }}
             - name: OPENAI_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ .models.openAI.secretName }}
                   key: {{ .models.openAI.secretKey }}
             {{- end }}
-            {{- if .models.perplexity.secretName }}
+            {{- if .models.perplexity }}
             - name: PPLX_API_KEY
               valueFrom:
                 secretKeyRef:
                   name: {{ .models.perplexity.secretName }}
                   key: {{ .models.perplexity.secretKey }}
             {{- end }}
-            {{- if .models.cohere.secretName }}
+            {{- if .models.cohere }}
             - name: COHERE_API_KEY
               valueFrom:
                 secretKeyRef:

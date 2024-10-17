@@ -17,7 +17,7 @@ from streamlit import session_state as state
 # Utilities
 import modules.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("import_settings")
+logger = logging_config.logging.getLogger("settings")
 
 
 #############################################################################

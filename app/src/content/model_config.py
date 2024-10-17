@@ -96,7 +96,7 @@ def main():
     """Streamlit GUI"""
     css = """
     <style>
-        div[data-testid="element-container"] .stCheckbox {
+        div[data-testid="stElementContainer"] .stCheckbox {
             min-height: 2.5em !important;
         }
     </style>

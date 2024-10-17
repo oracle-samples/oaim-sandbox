@@ -77,24 +77,26 @@ def main():
     if not state.disable_tests:
         test_framework = st.Page("content/test_framework.py", title="Test Framework", icon="🧪")
         navigation[""].append(test_framework)
+    if not state.disable_api:
+        api_server = st.Page("content/api_server.py", title="API Server", icon="📡")
+        navigation[""].append(api_server)
 
     # Tools
     if not state.disable_tools:
         prompt_eng = st.Page("content/prompt_eng.py", title="Prompts", icon="🎤")
         navigation["Tools"] = [prompt_eng]
-
     # Administration
     if not state.disable_tools and not state.disable_admin:
         # Define Additional Pages
-        import_settings = st.Page("content/import_settings.py", title="Import Settings", icon="💾")
         split_embed = st.Page("content/split_embed.py", title="Split/Embed", icon="📚")
         model_config = st.Page("content/model_config.py", title="Models", icon="🤖")
         db_config = st.Page("content/db_config.py", title="Database", icon="🗄️")
+        settings = st.Page("content/settings.py", title="Settings", icon="💾")
         # Update Navigation
         navigation["Tools"].insert(0, split_embed)
         navigation["Configuration"] = [model_config]
-        navigation["Configuration"].insert(1, db_config)
-        navigation["Configuration"].insert(2, import_settings)
+        navigation["Configuration"].append(db_config)
+        navigation["Configuration"].append(settings)
         if not state.disable_oci:
             oci_config = st.Page("content/oci_config.py", title="OCI", icon="☁️")
             navigation["Configuration"].insert(2, oci_config)

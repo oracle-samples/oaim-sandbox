@@ -73,6 +73,7 @@ class ChatCmd:
 
         # Search Type
         search_type = rag_params["search_type"]
+        retriever = None
         if search_type == "Similarity":
             retriever = self.vectorstore.as_retriever(
                 search_type="similarity", search_kwargs={"k": rag_params["top_k"]}

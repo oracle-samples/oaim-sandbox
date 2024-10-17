@@ -4,46 +4,87 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 """
 # spell-checker:ignore streamlit, langchain
 
+import os
+import socket
+import secrets
 import json
+import queue
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import threading
 from urllib.parse import urlparse
-import streamlit as st
-from streamlit import session_state as state
-
-# Utilities
-import modules.logging_config as logging_config
-import modules.chatbot as chatbot
 
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 
-logger = logging_config.logging.getLogger("modules.chatbot_server")
+# Utilities
+import modules.chatbot as chatbot
+import modules.logging_config as logging_config
+
+logger = logging_config.logging.getLogger("modules.api_server")
+
+
+# Create a queue to store the requests and responses
+log_queue = queue.Queue()
+
+
+def config():
+    """Define API Server Config"""
+
+    def find_available_port():
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("0.0.0.0", 0))
+        port = sock.getsockname()[1]
+        sock.close()
+
+        return port
+
+    def generate_api_key(length=32):
+        # Generates a URL-safe, base64-encoded random string with the given length
+        return secrets.token_urlsafe(length)
+
+    auto_port = find_available_port()
+    auto_api_key = generate_api_key()
+    return {
+        "port": os.environ.get("API_SERVER_PORT", default=auto_port),
+        "key": os.environ.get("API_SERVER_KEY", default=auto_api_key),
+    }
 
 
 def get_answer_fn(
-    question: str, history=None, chat_manager=None, rag_params=None, lm_instr=None, context_instr=None
+    question: str,
+    history=None,
+    chat_manager=None,
+    rag_params=None,
+    lm_instr=None,
+    context_instr=None,
 ) -> str:
     """Send for completion"""
     # Format appropriately the history for your RAG agent
-    chat_history_empty = StreamlitChatMessageHistory(key="empty")
-    chat_history_empty.clear()
+    chat_history_api = StreamlitChatMessageHistory(key="empty")
+    chat_history_api.clear()
     if history:
         for h in history:
             if h["role"] == "assistant":
-                chat_history_empty.add_ai_message(h["content"])
+                chat_history_api.add_ai_message(h["content"])
             else:
-                chat_history_empty.add_user_message(h["content"])
+                chat_history_api.add_user_message(h["content"])
 
-    answer = chatbot.generate_response(
-        chat_manager,
-        question,
-        chat_history_empty,
-        False,
-        rag_params,
-        lm_instr,
-        context_instr,
-    )
-    return answer["answer"]
+    try:
+        response = chatbot.generate_response(
+            chat_mgr=chat_manager,
+            input=question,
+            chat_history=chat_history_api,
+            enable_history=True,
+            rag_params=rag_params,
+            chat_instr=lm_instr,
+            context_instr=context_instr,
+            stream=False,
+        )
+        logger.info("MSG from Chatbot API: %s", response)
+        if rag_params["enable"]:
+            return response["answer"]
+        else:
+            return response.content
+    except Exception as ex:
+        return f"I'm sorry, something's gone wrong: {ex}"
 
 
 class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
@@ -103,8 +144,6 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
                             message, None, self.chat_manager, self.rag_params, self.lm_instr, self.context_instr
                         )
 
-                        logger.info("MSG from Chatbot API: %s", answer)
-
                         # Prepare the response as JSON
                         response = {"choices": [{"message": {"content": answer}}]}
                         self.send_response(200)
@@ -112,6 +151,10 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
                         # If no message is provided, return an error
                         response = {"error": "No 'message' field found in request."}
                         self.send_response(400)  # Bad request
+
+                    # Add request/response to the queue
+                    log_queue.put(f"Request: {post_data}")
+                    log_queue.put(f"Response: {response}")
                 except json.JSONDecodeError:
                     # If JSON parsing fails, return an error
                     response = {"error": "Invalid JSON in request."}
@@ -136,78 +179,23 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(response).encode("utf-8"))
 
 
-def create_handler(chat_manager, rag_params, lm_instr, context_instr, api_key):
-    def handler(*args, **kwargs):
-        ChatbotHTTPRequestHandler(
-            *args,
-            chat_manager=chat_manager,
-            rag_params=rag_params,
-            lm_instr=lm_instr,
-            context_instr=context_instr,
-            api_key=api_key,
-            **kwargs,
-        )
-
-    return handler
-
-
 def run_server(port, chat_manager, rag_params, lm_instr, context_instr, api_key):
-    logger.info("run_server:server started on port %i", port)
-    logger.info("run_server: rag_params")
-    logger.info(rag_params)
-    logger.info("run_server: api_key")
-    logger.info(api_key)
+    def create_handler(chat_manager, rag_params, lm_instr, context_instr, api_key):
+        def handler(*args, **kwargs):
+            ChatbotHTTPRequestHandler(
+                *args,
+                chat_manager=chat_manager,
+                rag_params=rag_params,
+                lm_instr=lm_instr,
+                context_instr=context_instr,
+                api_key=api_key,
+                **kwargs,
+            )
+
+        return handler
+
     handler_with_params = create_handler(chat_manager, rag_params, lm_instr, context_instr, api_key)
     server_address = ("", port)
     httpd = HTTPServer(server_address, handler_with_params)
-    httpd.serve_forever()
 
-
-def gui_start():
-    logger.info("GUI start: log for state")
-    if "chat_manager" in st.session_state:
-        logger.info(state.chat_manager)
-    if "rag_params" in st.session_state:
-        logger.info(state.rag_params)
-    if "lm_instr" in st.session_state:
-        logger.info(state.lm_instr)
-    if "context_instr" in st.session_state:
-        logger.info(state.context_instr)
-    if "api_key" in st.session_state:
-        logger.info(state.api_key)
-
-    if "initialized" in st.session_state:
-        if st.session_state.initialized:
-            if "server_thread" not in st.session_state:
-                st.session_state.server_thread = threading.Thread(
-                    target=run_server,
-                    args=(
-                        st.session_state["port"],  # port
-                        state.chat_manager,  # chat_manager
-                        state.rag_params,  # rag_params
-                        state.lm_instr,  # lm_instr
-                        state.context_instr,  # context_instr
-                        st.session_state["api_key"],  # api_key
-                    ),
-                    daemon=True,
-                )
-                st.session_state.server_thread.start()
-                port = st.session_state["port"]
-                st.success(f"Chatbot server started on port {port}.")
-            else:
-                st.warning("Server is already running.")
-    else:
-        st.warning("Chatbot not yet configured.")
-
-
-###################################
-# ChatBot Sidebar
-###################################
-def chatbot_sidebar():
-    if not state.disable_api:
-        st.session_state["port"] = st.sidebar.number_input(
-            "Enter the port number for the chatbot server:", value=8000, min_value=1, max_value=65535
-        )
-        st.session_state["api_key"] = st.sidebar.text_input("API_KEY", type="password", value="abc")
-        st.sidebar.button("Start server", type="primary", on_click=gui_start)
-        st.sidebar.divider()
+    return httpd
