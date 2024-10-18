@@ -14,7 +14,6 @@ from streamlit import session_state as state
 import modules.st_common as st_common
 import modules.logging_config as logging_config
 import modules.chatbot as chatbot
-import modules.chatbot_server as chatbot_server
 
 # History
 from langchain_community.chat_message_histories import StreamlitChatMessageHistory
@@ -99,9 +98,6 @@ def main():
 
     # RAG
     st_common.rag_sidebar()
-
-    # Chatbot
-    chatbot_server.chatbot_sidebar()
 
     # Save
     st_common.save_settings_sidebar()

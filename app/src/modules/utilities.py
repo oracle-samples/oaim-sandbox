@@ -98,6 +98,7 @@ def get_ll_model(model, ll_models_config=None, giskarded=False):
     logger.debug("Matching LLM API: %s", llm_api)
 
     ## Start - Add Additional Model Authentication Here
+    client = None
     if giskarded:
         giskard_key = lm_params.get("api_key") or "giskard"
         _client = OpenAI(api_key=giskard_key, base_url=f"{llm_url}/v1/")

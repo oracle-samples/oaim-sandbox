@@ -237,6 +237,7 @@ def main():
     st.header("Load and Split Documents", divider="rainbow")
     file_source = st.radio("File Source:", file_sources, key="radio_file_source", horizontal=True)
     populate_button_disabled = True
+    button_help = None
 
     ######################################
     # Local Source
