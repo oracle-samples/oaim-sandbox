@@ -37,3 +37,4 @@ spring_ai/target/**
 spring_ai/create_user.sql
 spring_ai/drop.sql
 start.sh
+spring_ai/env.sh

@@ -15,34 +15,42 @@ Prepare two configuration in `oaim-sandbox` based on vector stores created using
   * overlap: 1639
   * distance: COSINE
 
-Create a `start.sh` script putting:
+Download one of them through the `Download SpringAI` button and save in the `/spring_ai` dir as `env.sh`.
+
+Set the executable props with `chmod 755 ./env.sh`.
+
+Edit it to add the DB_PASSWORD not exported, as in this example:
 ```
 export SPRING_AI_OPENAI_API_KEY=$OPENAI_API_KEY
 export DB_DSN="jdbc:oracle:thin:@localhost:1521/FREEPDB1"
 export DB_USERNAME=<DB_USER_NAME>
-export DB_PASSWORD=<DB_USER_PASSWORD>
+export DB_PASSWORD=""
 export DISTANCE_TYPE=COSINE
 export OPENAI_CHAT_MODEL=gpt-4o-mini
 export OPENAI_EMBEDDING_MODEL=text-embedding-3-small
 export OLLAMA_CHAT_MODEL="llama3.1"
 export OLLAMA_EMBEDDING_MODEL=mxbai-embed-large
 export OLLAMA_BASE_URL="http://<OLLAMA_SERVER>:11434"
-export CONTEXT_INSTR="You are an assistant for question-answering tasks. Use the retrieved Documents and history to answer the question as accurately and comprehensively as possible. Keep your answer grounded in the facts of the Documents, be concise, and reference the Documents where possible. If you don't know the answer, just say that you are sorry as you don't haven't enough information."
-export TOP_K=5
-export VECTOR_STORE=$2
-mvn spring-boot:run -P "$1"
+export CONTEXT_INSTR=" You are an assistant for question-answering tasks. Use the retrieved Documents and history to answer the question as accurately and comprehensively as possible. Keep your answer grounded in the facts of the Documents, be concise, and reference the Documents where possible. If you don't know the answer, just say that you are sorry as you don't haven't enough information. "
+export TOP_K=4
+export VECTOR_STORE=TEXT_EMBEDDING_3_SMALL_8191_1639_COSINE
+export PROVIDER=openai
+mvn spring-boot:run -P openai
 ```
 
+Drop the table `SPRING_AI_VECTORS` if exists running in sql:
 
-### ollama start example:
 ```
-./start.sh ollama MXBAI_EMBED_LARGE_512_103_COSINE
+DROP TABLE SPRING_AI_VECTORS CASCADE CONSTRAINTS;
+COMMIT;
 ```
 
-### full openai example: 
+Start with:
+
 ```
-./start.sh openai TEXT_EMBEDDING_3_SMALL_8191_1639_COSINE
+./env.sh
 ```
+
 This project contains a web service that will accept HTTP GET requests at
 
 * `http://localhost:8080/ai/`

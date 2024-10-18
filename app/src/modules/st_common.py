@@ -20,6 +20,29 @@ from modules.chatbot import ChatCmd
 
 logger = logging_config.logging.getLogger("modules.st_common")
 
+MODELS={
+    "hf":{ 
+        "embedding":["thenlper/gte-base"],
+        "chat":[]
+        },
+    "cohere":{ 
+        "embedding":["embed-english-v3.0","embed-english-light-v3.0"],
+        "chat":["command-r"]
+        },
+    "openai":{ 
+        "embedding":["text-embedding-ada-002","text-embedding-3-large","text-embedding-3-small"],
+        "chat":["gpt-3.5-turbo","gpt-4o-mini","gpt-4","gpt-4o"]
+        },
+    "perplexity":{ 
+        "embedding":[],
+        "chat":["llama-3.1-sonar-small-128k-chat","llama-3.1-sonar-small-128k-online"]
+        },
+    "ollama":{
+        "embedding":["mxbai-embed-large", "nomic-embed-text","all-minilm"],
+        "chat":["llama3.1"]
+    }
+}
+
 
 def clear_initialized():
     """Reset the initialization of the ChatBot"""
@@ -195,6 +218,43 @@ def initialize_chatbot(ll_model):
 
     logger.info("initialized ChatBot!")
     return cmd
+
+
+def get_yaml_env(session_state_json,provider):
+
+    #for key, value in session_state_json.items():
+    #    print(f"{key}: {value}")
+
+    instr_context=session_state_json["lm_instr_config"][session_state_json["lm_instr_prompt"]]["prompt"]
+    vector_table,_= utilities.get_vs_table(session_state_json["rag_params"]["model"],session_state_json["rag_params"]["chunk_size"],session_state_json["rag_params"]["chunk_overlap"],session_state_json["rag_params"]["distance_metric"])
+    env_vars= f"""
+    export SPRING_AI_OPENAI_API_KEY=$OPENAI_API_KEY
+    export DB_DSN=\"jdbc:oracle:thin:@{session_state_json["db_config"]["dsn"]}\"
+    export DB_USERNAME=\"{session_state_json["db_config"]["user"]}\"
+    export DB_PASSWORD=\"{session_state_json["db_config"]["password"]}\"
+    export DISTANCE_TYPE={session_state_json["rag_params"]["distance_metric"]}
+    export OPENAI_CHAT_MODEL=gpt-4o-mini
+    export OPENAI_EMBEDDING_MODEL={session_state_json["rag_params"]["model"]}
+    export OLLAMA_CHAT_MODEL=\"llama3.1\"
+    export OLLAMA_EMBEDDING_MODEL=mxbai-embed-large
+    export OLLAMA_BASE_URL=\"http://129.153.86.160:11434\"
+    export CONTEXT_INSTR=\"{instr_context}\"
+    export TOP_K={session_state_json.get("rag_params", {}).get("top_k")}
+    export VECTOR_STORE={vector_table}
+    export PROVIDER={provider}
+    mvn spring-boot:run -P {provider}
+    """
+    return env_vars
+
+# Check if the conf is full ollama or openai, currently supported for springai export
+def check_hybrid_conf(session_state_json,models):
+    root_keys = list(models.keys())
+    for root_key in root_keys:
+        embedding_models = models[root_key]["embedding"]
+        chat_models = models[root_key]["chat"]        
+        if session_state_json["rag_params"]["model"] in embedding_models and session_state_json["ll_model"] in chat_models:
+            return False,root_key
+    return True,"hybrid"
 
 
 ###################################
@@ -516,10 +576,23 @@ def save_settings_sidebar():
     state_dict_filt = empty_key(state_dict_filt)
     session_state_json = json.dumps(state_dict_filt, indent=4)
     # Only allow exporting settings if tools/admin is enabled
+
+    
     if not state.disable_tools and not state.disable_admin:
         st.sidebar.download_button(
             label="Download Settings",
             data=session_state_json,
             file_name="sandbox_settings.json",
+            use_container_width=True,
+        )
+
+
+    show_download_spring_ai,provider= check_hybrid_conf(state_dict_filt,MODELS)
+
+    if not state.disable_tools and not state.disable_admin and not show_download_spring_ai:
+        st.sidebar.download_button(
+            label="Download SpringAI",
+            data=get_yaml_env(state_dict_filt,provider),
+            file_name="env.sh",
             use_container_width=True,
         )

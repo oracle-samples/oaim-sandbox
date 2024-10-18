@@ -157,7 +157,7 @@ class AIController {
 	}
 
 	@GetMapping("/search")
-	List<Map<String, Object>> search(@RequestParam(value = "message", defaultValue = "Tell me a joke") String query, @RequestParam(value = "topk", defaultValue = 5 ) Integer topK) {
+	List<Map<String, Object>> search(@RequestParam(value = "message", defaultValue = "Tell me a joke") String query, @RequestParam(value = "topk", defaultValue = "5" ) Integer topK) {
 		
 		List<Document> similarDocs = vectorStore.similaritySearch(SearchRequest.defaults()
 		.withQuery(query)
