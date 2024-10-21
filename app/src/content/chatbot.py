@@ -20,51 +20,6 @@ from langchain_community.chat_message_histories import StreamlitChatMessageHisto
 
 logger = logging_config.logging.getLogger("chatbot")
 
-
-#############################################################################
-# Functions
-#############################################################################
-def show_refs(context):
-    """When RAG Enabled, show the references"""
-    st.markdown(
-        """
-        <style>
-            .stButton button {
-                width: 8px;  /* Adjust the width as needed */
-                height: 8px;  /* Adjust the height as needed */
-                font-size: 8px;  /* Adjust the font size as needed */
-            }
-            ul {
-                padding: 0px
-                }
-        </style>
-        """,
-        unsafe_allow_html=True,
-    )
-
-    column_sizes = [10, 8, 8, 8, 2, 24]
-    cols = st.columns(column_sizes)
-    # Create a button in each column
-    links = set()
-    with cols[0]:
-        st.markdown("**References:**")
-        # Limit the maximum number of items to 3 (counting from 0)
-        max_items = min(len(context), 3)
-
-        # Loop through the chunks and display them
-        for i in range(max_items):
-            with cols[i + 1]:
-                chunk = context[i]
-                links.add(chunk.metadata["source"])
-                with st.popover(f"Ref: {i+1}"):
-                    st.markdown(chunk.metadata["source"])
-                    st.markdown(chunk.page_content)
-                    st.markdown(chunk.metadata["id"])
-
-    for link in links:
-        st.markdown("- " + link)
-
-
 #############################################################################
 # MAIN
 #############################################################################
@@ -156,7 +111,7 @@ def main():
                             full_context = chunk["context"]
                         message_placeholder.markdown(full_answer)
                     if full_context:
-                        show_refs(full_context)
+                        st_common.show_rag_refs(full_context)
                 else:
                     st.chat_message("ai").write_stream(response)
             except Exception as ex:

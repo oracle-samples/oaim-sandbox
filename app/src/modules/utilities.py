@@ -264,7 +264,7 @@ def init_vs(db_conn, embedding_function, store_table, distance_metric):
 
 
 def get_vs_table(model, chunk_size, chunk_overlap, distance_metric, embed_alias=None):
-    """Get a list of Vector Store Tables"""
+    """Return the concatenated VS Table name and comment"""
     chunk_overlap_ceil = math.ceil(chunk_overlap)
     table_string = f"{model}_{chunk_size}_{chunk_overlap_ceil}_{distance_metric}"
     if embed_alias:

@@ -12,14 +12,11 @@ import queue
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse
 
-from langchain_community.chat_message_histories import StreamlitChatMessageHistory
-
 # Utilities
 import modules.chatbot as chatbot
 import modules.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("modules.api_server")
-
 
 # Create a queue to store the requests and responses
 log_queue = queue.Queue()
@@ -49,6 +46,8 @@ def config():
 
 
 def get_answer_fn(
+
+
     question: str,
     history=None,
     chat_manager=None,
@@ -57,29 +56,20 @@ def get_answer_fn(
     context_instr=None,
 ) -> str:
     """Send for completion"""
-    # Format appropriately the history for your RAG agent
-    chat_history_api = StreamlitChatMessageHistory(key="empty")
-    chat_history_api.clear()
-    if history:
-        for h in history:
-            if h["role"] == "assistant":
-                chat_history_api.add_ai_message(h["content"])
-            else:
-                chat_history_api.add_user_message(h["content"])
-
     try:
         response = chatbot.generate_response(
             chat_mgr=chat_manager,
             input=question,
-            chat_history=chat_history_api,
-            enable_history=True,
+            chat_history={},
+            enable_history=False,
             rag_params=rag_params,
             chat_instr=lm_instr,
             context_instr=context_instr,
             stream=False,
         )
-        logger.info("MSG from Chatbot API: %s", response)
+        logger.info("Raw MSG from Chatbot API: %s", response)
         if rag_params["enable"]:
+            return {"messages": response}
             return response["answer"]
         else:
             return response.content
@@ -98,6 +88,7 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
         self.lm_instr = lm_instr
         self.context_instr = context_instr
         self.api_key = api_key
+        self.workflow = StateGraph(state_schema=MessagesState)
         super().__init__(*args, **kwargs)
 
     def do_OPTIONS(self):  # pylint: disable=invalid-name
