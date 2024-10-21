@@ -15,11 +15,9 @@ Prepare two configuration in `oaim-sandbox` based on vector stores created using
   * overlap: 1639
   * distance: COSINE
 
-Download one of them through the `Download SpringAI` button and save in the `/spring_ai` dir as `env.sh`.
+Download one of them through the `Download SpringAI` button. Unzip the content and set the executable permission with `chmod 755 ./env.sh`.
 
-Set the executable props with `chmod 755 ./env.sh`.
-
-Edit it to add the DB_PASSWORD not exported, as in this example:
+Edit `env.sh` to add the DB_PASSWORD not exported, as in this example:
 ```
 export SPRING_AI_OPENAI_API_KEY=$OPENAI_API_KEY
 export DB_DSN="jdbc:oracle:thin:@localhost:1521/FREEPDB1"
@@ -53,15 +51,16 @@ Start with:
 
 This project contains a web service that will accept HTTP GET requests at
 
-* `http://localhost:8080/ai/`
-* `http://localhost:8080/rag/`
-* `http://localhost:8080/search/`
+* `http://localhost:8080/v1/chat/completions`: to use RAG via OpenAI REST API 
+
+* `http://localhost:8080/v1/service/llm` : to chat straight with the LLM used
+* `http://localhost:8080/v1/service/search/`: to search for document similar to the message provided
 
 
 RAG call example with openai build profile: 
 
 ```
-curl --get --data-urlencode 'message=Can I use any kind of development environment to run the example?' localhost:8080/rag| jq .
+curl --get --data-urlencode 'message=Can I use any kind of development environment to run the example?' localhost:8080/v1/chat/completions | jq .
 ```
 the response without RAG:
 

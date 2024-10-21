@@ -1,3 +1,6 @@
+server:
+  servlet:
+    context-path: /v1
 spring:
   datasource:
     url: ${DB_DSN}

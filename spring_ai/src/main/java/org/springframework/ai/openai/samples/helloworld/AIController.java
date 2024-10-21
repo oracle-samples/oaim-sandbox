@@ -75,7 +75,7 @@ class AIController {
 
 	}
 
-	@GetMapping("/ai")
+	@GetMapping("/service/llm")
 	Map<String, String> completion(@RequestParam(value = "message", defaultValue = "Tell me a joke") String message) {
 
 			return Map.of(
@@ -143,7 +143,7 @@ class AIController {
 		return context;
 	}
 
-	@GetMapping("/rag")
+	@GetMapping("/chat/completions")
 	Map<String, String> completionRag(@RequestParam(value = "message", defaultValue = "Tell me a joke") String message) {
 
 		Prompt prompt = promptEngineering(message,contextInstr);
@@ -156,7 +156,7 @@ class AIController {
 						.content());
 	}
 
-	@GetMapping("/search")
+	@GetMapping("/service/search")
 	List<Map<String, Object>> search(@RequestParam(value = "message", defaultValue = "Tell me a joke") String query, @RequestParam(value = "topk", defaultValue = "5" ) Integer topK) {
 		
 		List<Document> similarDocs = vectorStore.similaritySearch(SearchRequest.defaults()

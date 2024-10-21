@@ -6,6 +6,11 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 import json
 import copy
+import io
+import zipfile
+import tempfile
+import shutil
+import os
 
 # Streamlit
 import streamlit as st
@@ -245,6 +250,37 @@ def get_yaml_env(session_state_json,provider):
     mvn spring-boot:run -P {provider}
     """
     return env_vars
+
+
+def create_zip(state_dict_filt, provider):
+    # Source directory that you want to copy
+    toCopy=["mvnw","mvnw.cmd","pom.xml","README.md"]
+    source_dir_root = '../../spring_ai'
+    source_dir = '../../spring_ai/src'
+
+    logger.info(f"Local dir : {os.getcwd()}")
+    # Using TemporaryDirectory
+    with tempfile.TemporaryDirectory() as temp_dir:
+        destination_dir= os.path.join(temp_dir, "spring_ai")
+      
+        shutil.copytree(source_dir, os.path.join(temp_dir, "spring_ai/src"))
+        for item in toCopy:
+            shutil.copy(os.path.join(source_dir_root,item), os.path.join(temp_dir, "spring_ai"))
+        logger.info(f"Temporary directory created and copied: {temp_dir}")
+    
+        zip_buffer = io.BytesIO()
+
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for foldername, subfolders, filenames in os.walk(destination_dir):
+                for filename in filenames:
+                    file_path = os.path.join(foldername, filename)
+                
+                    arcname = os.path.relpath(file_path, destination_dir)  # Make the path relative
+                    zip_file.write(file_path, arcname)
+            env_content = get_yaml_env(state_dict_filt, provider)
+            zip_file.writestr('env.sh', env_content)    
+        zip_buffer.seek(0)  
+    return zip_buffer
 
 # Check if the conf is full ollama or openai, currently supported for springai export
 def check_hybrid_conf(session_state_json,models):
@@ -592,7 +628,8 @@ def save_settings_sidebar():
     if not state.disable_tools and not state.disable_admin and not show_download_spring_ai:
         st.sidebar.download_button(
             label="Download SpringAI",
-            data=get_yaml_env(state_dict_filt,provider),
-            file_name="env.sh",
+            data=create_zip(state_dict_filt, provider),  # Generate zip on the fly
+            file_name="spring_ai.zip",  # Zip file name
+            mime="application/zip",  # Mime type for zip file
             use_container_width=True,
         )
