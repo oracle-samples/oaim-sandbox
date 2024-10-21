@@ -60,15 +60,39 @@ This project contains a web service that will accept HTTP GET requests at
 RAG call example with openai build profile: 
 
 ```
-curl --get --data-urlencode 'message=Can I use any kind of development environment to run the example?' localhost:8080/v1/chat/completions | jq .
+curl -X POST "localhost:8080/v1/chat/completions" \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer your_api_key" \
+     -d '{"message": "Can I use any kind of development environment to run the example?"}' | jq .
 ```
-the response without RAG:
+
+the response with RAG:
 
 ```
 {
-  "completion": ""Yes, you can use any kind of development environment to run the example, but the guide specifically mentions using IntelliJ IDEA as the integrated development environment (IDE) for ease in developing the application. It is recommended to use an IDE to create and update the files for the application, but it does not restrict you to only using IntelliJ; other environments can also be utilized as long as they support Java development (Document 4.1.5)."."
+  "choices": [
+    {
+      "message": {
+        "content": "Yes, you can use any kind of development environment to run the example, but for ease of development, the guide specifically mentions using an integrated development environment (IDE). It uses IntelliJ IDEA Community version as an example for creating and updating the files for the application (see Document 96EECD7484D3B56C). However, you are not limited to this IDE and can choose any development environment that suits your needs."
+      }
+    }
+  ]
 }
 ```
+
+or the request without RAG:
+```
+curl --get --data-urlencode 'message=Can I use any kind of development environment to run the example?' localhost:8080/v1/service/llm | jq .
+```
+
+response not grounded:
+
+```
+{
+  "completion": "Yes, you can use various development environments to run examples, depending on the programming language and the specific example you are working with. Here are some common options:\n\n1. **Integrated Development Environments (IDEs)**:\n   - **Visual Studio Code**: A versatile code editor that supports many languages through extensions.\n   - **PyCharm**: Great for Python development.\n   - **Eclipse**: Commonly used for Java development.\n   - **IntelliJ IDEA**: Another popular choice for Java and other languages.\n   - **Xcode**: For macOS and iOS development (Swift, Objective-C).\n\n2. **Text Editors**:\n   - **Sublime Text**: A lightweight text editor with support for many languages.\n   - **Atom**: A hackable text editor for the 21st century.\n   - **Notepad++**: A free source code editor for Windows.\n\n3. **Command Line Interfaces**:\n   - You can run"
+}
+```
+
 
 ## Prerequisites
 

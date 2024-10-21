@@ -17,10 +17,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.ai.vectorstore.OracleVectorStore;
-
 
 import jakarta.annotation.PostConstruct;
 
@@ -45,16 +46,16 @@ class AIController {
 	private final OracleVectorStore vectorStore;
 
 	@Autowired
-	private final EmbeddingModel embeddingModel; 
-	
+	private final EmbeddingModel embeddingModel;
+
 	@Autowired
 	private final ChatClient chatClient;
 
 	@Value("${aims.vectortable.name}")
-    private String legacyTable;
+	private String legacyTable;
 
 	@Value("${aims.context_instr}")
-    private String contextInstr;
+	private String contextInstr;
 
 	@Value("${aims.rag_params.search_type}")
 	private String searchType;
@@ -63,10 +64,10 @@ class AIController {
 	private int TOPK;
 
 	@Autowired
-    private JdbcTemplate jdbcTemplate;
+	private JdbcTemplate jdbcTemplate;
 
 	private static final Logger logger = LoggerFactory.getLogger(AIController.class);
-	
+
 	AIController(ChatClient chatClient, EmbeddingModel embeddingModel, OracleVectorStore vectorStore) {
 
 		this.chatClient = chatClient;
@@ -78,23 +79,23 @@ class AIController {
 	@GetMapping("/service/llm")
 	Map<String, String> completion(@RequestParam(value = "message", defaultValue = "Tell me a joke") String message) {
 
-			return Map.of(
-					"completion",
-					chatClient.prompt()
-							.user(message)
-							.call()
-							.content());
+		return Map.of(
+				"completion",
+				chatClient.prompt()
+						.user(message)
+						.call()
+						.content());
 	}
 
 	@PostConstruct
-	public void insertData() {	
-			String sql = "INSERT INTO SPRING_AI_VECTORS (ID, CONTENT, METADATA, EMBEDDING) " +
-						 "SELECT ID, TEXT, METADATA, EMBEDDING FROM "+ legacyTable;
-			// Execute the insert
-			jdbcTemplate.update(sql);
+	public void insertData() {
+		String sql = "INSERT INTO SPRING_AI_VECTORS (ID, CONTENT, METADATA, EMBEDDING) " +
+				"SELECT ID, TEXT, METADATA, EMBEDDING FROM " + legacyTable;
+		// Execute the insert
+		jdbcTemplate.update(sql);
 	}
- 
-	public Prompt promptEngineering(String message, String contextInstr ) {
+
+	public Prompt promptEngineering(String message, String contextInstr) {
 
 		String template = """
 				DOCUMENTS:
@@ -105,8 +106,8 @@ class AIController {
 
 				INSTRUCTIONS:""";
 
-		String default_Instr ="""
-		 		Answer the users question using the DOCUMENTS text above.
+		String default_Instr = """
+					Answer the users question using the DOCUMENTS text above.
 				Keep your answer ground in the facts of the DOCUMENTS.
 				If the DOCUMENTS doesn’t contain the facts to answer the QUESTION, return:
 				I'm sorry but I haven't enough information to answer.
@@ -143,33 +144,42 @@ class AIController {
 		return context;
 	}
 
-	@GetMapping("/chat/completions")
-	Map<String, String> completionRag(@RequestParam(value = "message", defaultValue = "Tell me a joke") String message) {
-
-		Prompt prompt = promptEngineering(message,contextInstr);
+	@PostMapping("/chat/completions")
+	Map<String, Object> completionRag(@RequestBody Map<String, String> requestBody) {
+		
+		String message = requestBody.getOrDefault("message", "Tell me a joke");
+		Prompt prompt = promptEngineering(message, contextInstr);
 		logger.info(prompt.getContents());
+		try {
+			String content = chatClient.prompt(prompt).call().content();
+			Map<String, Object> messageMap = Map.of("content", content);
+			Map<String, Object> choicesMap = Map.of("message", messageMap);
+			List<Map<String, Object>> choicesList = List.of(choicesMap);
 
-		return Map.of(
-				"completion",
-				chatClient.prompt(prompt)
-						.call()
-						.content());
+			return Map.of("choices", choicesList);
+
+		} catch (Exception e) {
+			logger.error("Error while fetching completion", e);
+			return Map.of("error", "Failed to fetch completion");
+		}
 	}
 
 	@GetMapping("/service/search")
-	List<Map<String, Object>> search(@RequestParam(value = "message", defaultValue = "Tell me a joke") String query, @RequestParam(value = "topk", defaultValue = "5" ) Integer topK) {
-		
+	List<Map<String, Object>> search(@RequestParam(value = "message", defaultValue = "Tell me a joke") String query,
+			@RequestParam(value = "topk", defaultValue = "5") Integer topK) {
+
 		List<Document> similarDocs = vectorStore.similaritySearch(SearchRequest.defaults()
-		.withQuery(query)
-		.withTopK(topK));
+				.withQuery(query)
+				.withTopK(topK));
 
 		List<Map<String, Object>> resultList = new ArrayList<>();
 		for (Document d : similarDocs) {
-            Map<String, Object> metadata = d.getMetadata();
-            Map doc = new HashMap<>();
-            doc.put("id", d.getId());
-            resultList.add(doc);
-        };
-        return resultList;
+			Map<String, Object> metadata = d.getMetadata();
+			Map doc = new HashMap<>();
+			doc.put("id", d.getId());
+			resultList.add(doc);
+		}
+		;
+		return resultList;
 	}
 }
