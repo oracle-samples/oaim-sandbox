@@ -23,31 +23,13 @@ import modules.metadata as meta
 import modules.help as custom_help
 from modules.chatbot import ChatCmd
 
+
+from langchain_huggingface import HuggingFaceEndpointEmbeddings
+from langchain_openai import OpenAIEmbeddings
+from langchain_ollama import OllamaEmbeddings
+from langchain_cohere import CohereEmbeddings
+
 logger = logging_config.logging.getLogger("modules.st_common")
-
-MODELS={
-    "hf":{ 
-        "embedding":["thenlper/gte-base"],
-        "chat":[]
-        },
-    "cohere":{ 
-        "embedding":["embed-english-v3.0","embed-english-light-v3.0"],
-        "chat":["command-r"]
-        },
-    "openai":{ 
-        "embedding":["text-embedding-ada-002","text-embedding-3-large","text-embedding-3-small"],
-        "chat":["gpt-3.5-turbo","gpt-4o-mini","gpt-4","gpt-4o"]
-        },
-    "perplexity":{ 
-        "embedding":[],
-        "chat":["llama-3.1-sonar-small-128k-chat","llama-3.1-sonar-small-128k-online"]
-        },
-    "ollama":{
-        "embedding":["mxbai-embed-large", "nomic-embed-text","all-minilm"],
-        "chat":["llama3.1"]
-    }
-}
-
 
 def clear_initialized():
     """Reset the initialization of the ChatBot"""
@@ -118,6 +100,7 @@ def reset_rag():
 
     # Set the RAG Prompt
     set_prompt()
+    state.show_download_spring_ai = False
 
 
 def initialize_rag():
@@ -232,24 +215,42 @@ def get_yaml_env(session_state_json,provider):
 
     instr_context=session_state_json["lm_instr_config"][session_state_json["lm_instr_prompt"]]["prompt"]
     vector_table,_= utilities.get_vs_table(session_state_json["rag_params"]["model"],session_state_json["rag_params"]["chunk_size"],session_state_json["rag_params"]["chunk_overlap"],session_state_json["rag_params"]["distance_metric"])
+    
+    logger.info("ll_model selected: %s",session_state_json["ll_model"])
+    logger.info(session_state_json["ll_model"] != "llama3.1")
+
+    if session_state_json["ll_model"] != "llama3.1":
+        env_vars_LLM= f"""
+        export OPENAI_CHAT_MODEL={session_state_json["ll_model"]}
+        export OPENAI_EMBEDDING_MODEL={session_state_json["rag_params"]["model"]}
+        export OLLAMA_CHAT_MODEL=\"\"
+        export OLLAMA_EMBEDDING_MODEL=\"\"
+        """
+
+    else:
+        env_vars_LLM= f"""
+        export OPENAI_CHAT_MODEL=\"\"
+        export OPENAI_EMBEDDING_MODEL=\"\"
+        export OLLAMA_CHAT_MODEL=\"{session_state_json["ll_model"]}\"
+        export OLLAMA_EMBEDDING_MODEL=\"{session_state_json["rag_params"]["model"]}\"
+        """
+
     env_vars= f"""
     export SPRING_AI_OPENAI_API_KEY=$OPENAI_API_KEY
     export DB_DSN=\"jdbc:oracle:thin:@{session_state_json["db_config"]["dsn"]}\"
     export DB_USERNAME=\"{session_state_json["db_config"]["user"]}\"
     export DB_PASSWORD=\"{session_state_json["db_config"]["password"]}\"
     export DISTANCE_TYPE={session_state_json["rag_params"]["distance_metric"]}
-    export OPENAI_CHAT_MODEL=gpt-4o-mini
-    export OPENAI_EMBEDDING_MODEL={session_state_json["rag_params"]["model"]}
-    export OLLAMA_CHAT_MODEL=\"llama3.1\"
-    export OLLAMA_EMBEDDING_MODEL=mxbai-embed-large
-    export OLLAMA_BASE_URL=\"http://129.153.86.160:11434\"
+    export OLLAMA_BASE_URL=\"{session_state_json["ll_model_config"]["llama3.1"]["url"]}\"
     export CONTEXT_INSTR=\"{instr_context}\"
     export TOP_K={session_state_json.get("rag_params", {}).get("top_k")}
     export VECTOR_STORE={vector_table}
     export PROVIDER={provider}
     mvn spring-boot:run -P {provider}
     """
-    return env_vars
+    logger.info(env_vars_LLM+env_vars)
+
+    return env_vars_LLM+env_vars
 
 
 def create_zip(state_dict_filt, provider):
@@ -283,14 +284,36 @@ def create_zip(state_dict_filt, provider):
     return zip_buffer
 
 # Check if the conf is full ollama or openai, currently supported for springai export
-def check_hybrid_conf(session_state_json,models):
-    root_keys = list(models.keys())
-    for root_key in root_keys:
-        embedding_models = models[root_key]["embedding"]
-        chat_models = models[root_key]["chat"]        
-        if session_state_json["rag_params"]["model"] in embedding_models and session_state_json["ll_model"] in chat_models:
-            return False,root_key
-    return True,"hybrid"
+def check_hybrid_conf(session_state_json):
+
+    embedding_models = meta.embedding_models()
+    chat_models = meta.ll_models()
+    
+    embModel = embedding_models.get(session_state_json["rag_params"]["model"])
+    chatModel = chat_models.get(session_state_json["ll_model"])
+    logger.info("Model: %s",session_state_json["ll_model"])
+    logger.info("Embedding Model embModel: %s",embModel)
+    logger.info("Chat Model: %s",chatModel)
+    if (chatModel is not None) and  (embModel is not None):
+        
+        logger.info("Embeddings to string: %s", str(embModel["api"]))
+
+        if ("OpenAI" in str(embModel["api"])) and (chatModel["api"]== "OpenAI"):
+            logger.info("RETURN openai")
+            logger.info("chatModel[api]: %s",chatModel["api"])
+            logger.info("Embedding Model embModel[api]: %s",embModel["api"])
+            return "openai"
+        else:
+            if ("Ollama" in str(embModel["api"])) and (chatModel["api"]== "ChatOllama"):
+                logger.info("RETURN ollama")
+                logger.info("chatModel[api]: %s",chatModel["api"])
+                logger.info("Embedding Model embModel[api]: %s",embModel["api"])
+                return "ollama"
+            else:
+                return "hybrid"
+    else:
+        return "hybrid"
+
 
 
 ###################################
@@ -623,12 +646,13 @@ def save_settings_sidebar():
         )
 
 
-    show_download_spring_ai,provider= check_hybrid_conf(state_dict_filt,MODELS)
-
-    if not state.disable_tools and not state.disable_admin and not show_download_spring_ai:
+    state.provider= check_hybrid_conf(state_dict_filt)
+    logger.info("Provider type: %s", state.provider)
+    
+    if not state.disable_tools and not state.disable_admin and state.provider != "hybrid":
         st.sidebar.download_button(
             label="Download SpringAI",
-            data=create_zip(state_dict_filt, provider),  # Generate zip on the fly
+            data=create_zip(state_dict_filt, state.provider),  # Generate zip on the fly
             file_name="spring_ai.zip",  # Zip file name
             mime="application/zip",  # Mime type for zip file
             use_container_width=True,
