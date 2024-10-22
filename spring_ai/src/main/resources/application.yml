@@ -14,6 +14,15 @@ spring:
         initialize-schema: True
         index-type: None
     openai:
+      base-url: {OPENAI_URL}
+      api-key:
+        chat:
+          options:
+            temperature: {OP_TEMPERATURE}
+            frequencyPenalty: {OP_FREQUENCY_PENALTY}
+            presencePenalty: {OP_PRESENCE_PENALTY}
+            maxTokens: {OP_MAX_TOKENS}
+            topP: {OP_TOP_P}
       chat:
         options:
           temperature: 0.0
@@ -23,6 +32,13 @@ spring:
         options:
           model: ${OPENAI_EMBEDDING_MODEL}
     ollama:
+      chat:
+        options:
+          top-p: {OL_TOP_P}
+          presence-penalty: {OL_PRESENCE_PENALTY}
+          frequency-penalty: {OL_FREQUENCY_PENALTY}
+          temperature: {OL_TEMPERATURE}
+          num-predict: {OL_MAX_TOKENS}
       base-url: ${OLLAMA_BASE_URL}
       embedding:
         options: 

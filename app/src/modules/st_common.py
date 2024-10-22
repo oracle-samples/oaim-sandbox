@@ -210,30 +210,53 @@ def initialize_chatbot(ll_model):
 
 def get_yaml_env(session_state_json,provider):
 
-    #for key, value in session_state_json.items():
-    #    print(f"{key}: {value}")
+    OLLAMA_MODEL="llama3.1"
 
     instr_context=session_state_json["lm_instr_config"][session_state_json["lm_instr_prompt"]]["prompt"]
     vector_table,_= utilities.get_vs_table(session_state_json["rag_params"]["model"],session_state_json["rag_params"]["chunk_size"],session_state_json["rag_params"]["chunk_overlap"],session_state_json["rag_params"]["distance_metric"])
     
     logger.info("ll_model selected: %s",session_state_json["ll_model"])
-    logger.info(session_state_json["ll_model"] != "llama3.1")
+    logger.info(session_state_json["ll_model"] != OLLAMA_MODEL)
 
-    if session_state_json["ll_model"] != "llama3.1":
+    if session_state_json["ll_model"] != OLLAMA_MODEL:
         env_vars_LLM= f"""
-        export OPENAI_CHAT_MODEL={session_state_json["ll_model"]}
-        export OPENAI_EMBEDDING_MODEL={session_state_json["rag_params"]["model"]}
-        export OLLAMA_CHAT_MODEL=\"\"
-        export OLLAMA_EMBEDDING_MODEL=\"\"
+    export OPENAI_CHAT_MODEL={session_state_json["ll_model"]}
+    export OPENAI_EMBEDDING_MODEL={session_state_json["rag_params"]["model"]}
+    export OPENAI_URL=\"{session_state_json["ll_model_config"][session_state_json["ll_model"]]["url"]}\"
+    export OP_TEMPERATURE={session_state_json["ll_model_config"][session_state_json["ll_model"]]["temperature"][0]}
+    export OP_FREQUENCY_PENALTY={session_state_json["ll_model_config"][session_state_json["ll_model"]]["frequency_penalty"][0]}
+    export OP_PRESENCE_PENALTY={session_state_json["ll_model_config"][session_state_json["ll_model"]]["presence_penalty"][0]}
+    export OP_MAX_TOKENS={session_state_json["ll_model_config"][session_state_json["ll_model"]]["max_tokens"][0]}
+    export OP_TOP_P={session_state_json["ll_model_config"][session_state_json["ll_model"]]["top_p"][0]}
+    export OL_TEMPERATURE=
+    export OL_FREQUENCY_PENALTY=
+    export OL_PRESENCE_PENALTY=
+    export OL_MAX_TOKENS=
+    export OL_TOP_P=
+    export OLLAMA_CHAT_MODEL=\"\"
+    export OLLAMA_EMBEDDING_MODEL=\"\"
         """
 
     else:
         env_vars_LLM= f"""
-        export OPENAI_CHAT_MODEL=\"\"
-        export OPENAI_EMBEDDING_MODEL=\"\"
-        export OLLAMA_CHAT_MODEL=\"{session_state_json["ll_model"]}\"
-        export OLLAMA_EMBEDDING_MODEL=\"{session_state_json["rag_params"]["model"]}\"
-        """
+    export OPENAI_CHAT_MODEL=\"\"
+    export OPENAI_EMBEDDING_MODEL=\"\"
+    export OLLAMA_CHAT_MODEL=\"{session_state_json["ll_model"]}\"
+    export OLLAMA_EMBEDDING_MODEL=\"{session_state_json["rag_params"]["model"]}\"
+    export OPENAI_CHAT_MODEL={session_state_json["ll_model"]}
+    export OPENAI_EMBEDDING_MODEL={session_state_json["rag_params"]["model"]}
+    export OPENAI_URL=\"{session_state_json["ll_model_config"][session_state_json["ll_model"]]["url"]}\"
+    export OL_TEMPERATURE={session_state_json["ll_model_config"][session_state_json["ll_model"]]["temperature"][0]}
+    export OL_FREQUENCY_PENALTY={session_state_json["ll_model_config"][session_state_json["ll_model"]]["frequency_penalty"][0]}
+    export OL_PRESENCE_PENALTY={session_state_json["ll_model_config"][session_state_json["ll_model"]]["presence_penalty"][0]}
+    export OL_MAX_TOKENS={session_state_json["ll_model_config"][session_state_json["ll_model"]]["max_tokens"][0]}
+    export OL_TOP_P={session_state_json["ll_model_config"][session_state_json["ll_model"]]["top_p"][0]}
+    export OP_TEMPERATURE=
+    export OP_FREQUENCY_PENALTY=
+    export OP_PRESENCE_PENALTY=
+    export OP_MAX_TOKENS=
+    export OP_TOP_P=
+    """
 
     env_vars= f"""
     export SPRING_AI_OPENAI_API_KEY=$OPENAI_API_KEY
@@ -241,9 +264,12 @@ def get_yaml_env(session_state_json,provider):
     export DB_USERNAME=\"{session_state_json["db_config"]["user"]}\"
     export DB_PASSWORD=\"{session_state_json["db_config"]["password"]}\"
     export DISTANCE_TYPE={session_state_json["rag_params"]["distance_metric"]}
-    export OLLAMA_BASE_URL=\"{session_state_json["ll_model_config"]["llama3.1"]["url"]}\"
+    export OLLAMA_BASE_URL=\"{session_state_json["ll_model_config"][OLLAMA_MODEL]["url"]}\"
     export CONTEXT_INSTR=\"{instr_context}\"
     export TOP_K={session_state_json.get("rag_params", {}).get("top_k")}
+
+
+
     export VECTOR_STORE={vector_table}
     export PROVIDER={provider}
     mvn spring-boot:run -P {provider}
