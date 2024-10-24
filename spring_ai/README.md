@@ -1,7 +1,7 @@
 # Spring AI template
 
 ## How to run:
-Prepare two configuration in `oaim-sandbox` based on vector stores created using:
+Prepare two configurations in the `oaim-sandbox`, based on vector stores created using this kind of configuration:
 
 * OLLAMA: 
   * Embbeding model: mxbai-embed-large
@@ -15,9 +15,12 @@ Prepare two configuration in `oaim-sandbox` based on vector stores created using
   * overlap: 1639
   * distance: COSINE
 
-Download one of them through the `Download SpringAI` button. Unzip the content and set the executable permission with `chmod 755 ./env.sh`.
+and loading a document like [Oracle® Database
+Get Started with Java Development](https://docs.oracle.com/en/database/oracle/oracle-database/23/tdpjd/get-started-java-development.pdf).
 
-Edit `env.sh` to add the DB_PASSWORD not exported, as in this example:
+Download one of them through the `Download SpringAI` button. Unzip the content and set the executable permission on the `env.sh`  with `chmod 755 ./env.sh`.
+
+Edit `env.sh` to add only the DB_PASSWORD not exported, as in this example:
 ```
 export SPRING_AI_OPENAI_API_KEY=$OPENAI_API_KEY
 export DB_DSN="jdbc:oracle:thin:@localhost:1521/FREEPDB1"
@@ -36,7 +39,7 @@ export PROVIDER=openai
 mvn spring-boot:run -P openai
 ```
 
-Drop the table `SPRING_AI_VECTORS` if exists running in sql:
+Drop the table `SPRING_AI_VECTORS`, if exists, running in sql:
 
 ```
 DROP TABLE SPRING_AI_VECTORS CASCADE CONSTRAINTS;
@@ -57,7 +60,7 @@ This project contains a web service that will accept HTTP GET requests at
 * `http://localhost:8080/v1/service/search/`: to search for document similar to the message provided
 
 
-RAG call example with openai build profile: 
+RAG call example with `openai` build profile: 
 
 ```
 curl -X POST "localhost:8080/v1/chat/completions" \
@@ -97,20 +100,20 @@ response not grounded:
 
 
 
-* Add in application-obaas.yml the OPENAI_API_KEY if based on OpenAI services:
+* Add in `application-obaas.yml` the **OPENAI_API_KEY**, if the deployement is based on the OpenAI LLM services:
 ```
    openai:
       base-url: 
       api-key: <OPENAI_API_KEY>
 ```
 
-* Build depending the provider:
+* Build, depending the provider `<ollama|openai>`:
 
 ```
 mvn clean package -DskipTests -P <ollama|openai> -Dspring-boot.run.profiles=obaas
 ```
 
-* Set, one time the ollama server. Prepare a `ollama-values.yaml`:
+* Set, one time only, the ollama server running in the **Oracle Backend for Microservices and AI**. Prepare an `ollama-values.yaml`:
 ```
 ollama:
   gpu:
@@ -139,12 +142,12 @@ NAME                        ID              SIZE      MODIFIED
 llama3.1:latest             42182419e950    4.7 GB    About a minute ago    
 mxbai-embed-large:latest    468836162de7    669 MB    About a minute ago 
 ```
-* test single:
+* test a single LLM:
 ```
 kubectl -n ollama exec svc/ollama -- ollama run "llama3.1" "what is spring boot?"
 ```
 
-* access to AI Sandbox :
+* **NOTE**: The Microservices will access to the ADB23ai on which the vector store table should be created as done in the local desktop example shown before. To access the OAIM-Sandbox running on **Oracle Backend for Microservices and AI** and create the same configuration, let's do:
   * tunnel:
   ```
   kubectl -n oaim-sandbox port-forward svc/oaim-sandbox 8181:8501 
@@ -154,7 +157,7 @@ kubectl -n ollama exec svc/ollama -- ollama run "llama3.1" "what is spring boot?
   http://localhost:8181/ai-sandbox
   ```
 
-* Deploy with `oractl` on new schema `vector`:
+* Deploy with `oractl` on a new schema `vector`:
   * tunnel:
   ```
     kubectl -n obaas-admin port-forward svc/obaas-admin 8080:8080
@@ -166,19 +169,20 @@ kubectl -n ollama exec svc/ollama -- ollama run "llama3.1" "what is spring boot?
   bind --app-name rag --service-name myspringai --username vector
   ```
 
-* with user ADMIN on ADB:
+
+* the `bind` will create the new user, if not exists, but to have the `SPRING_AI_VECTORS` table compatible with SpringAI Oracle vector store adapter, the microservices need to access to the vector store table created by the OAIM-sandbox with user ADMIN on ADB:
 ```
 GRANT SELECT ON ADMIN.MXBAI_EMBED_LARGE_512_103_COSINE TO vector;
 ```
-then deploy:
+* then deploy:
 ```
 deploy --app-name rag --service-name myspringai --artifact-path <ProjectDir>/target/myspringai-0.0.1-SNAPSHOT.jar --image-version 0.0.1 --java-version ghcr.io/oracle/graalvm-native-image-obaas:21 --service-profile obaas
 ```
-test:
+* test:
 ```
 kubectl -n rag port-forward svc/myspringai 9090:8080
 ```
-from shell:
+* from shell:
 ```
 curl -X POST "http://localhost:9090/v1/chat/completions" \
      -H "Content-Type: application/json" \
