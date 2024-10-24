@@ -208,6 +208,89 @@ def initialize_chatbot(ll_model):
     return cmd
 
 
+def get_yaml_obaas(session_state_json,provider):
+
+    ########## OBAAS VERSION ##########
+    # eureka:
+    #    instance:
+    #       hostname: ${spring.application.name}
+    #       preferIpAddress: true
+    #    client:
+    #      service-url:
+    #        defaultZone: ${eureka.service-url}
+    #    fetch-registry: true
+    #    register-with-eureka: true
+    #    enabled: true
+    vector_table,_= utilities.get_vs_table(session_state_json["rag_params"]["model"],session_state_json["rag_params"]["chunk_size"],session_state_json["rag_params"]["chunk_overlap"],session_state_json["rag_params"]["distance_metric"])
+    instr_context=session_state_json["lm_instr_config"][session_state_json["lm_instr_prompt"]]["prompt"]
+
+    yaml_base=f"""
+server:
+  servlet:
+    context-path: /v1
+spring:
+  datasource:
+    url: ${{spring.datasource.url}}
+    username: ${{spring.datasource.username}}
+    password: ${{spring.datasource.password}}
+  ai:
+    vectorstore:
+      oracle:
+        distance-type: {session_state_json["rag_params"]["distance_metric"]}
+        remove-existing-vector-store-table: True
+        initialize-schema: True
+        index-type: None
+    """
+    
+    yaml_base_aims=f"""
+aims:
+  context_instr: \"{instr_context}\"
+  vectortable:
+    name: {vector_table}
+  rag_params: 
+    search_type: Similarity
+    top_k: {session_state_json.get("rag_params", {}).get("top_k",4)}  
+"""
+    openai_yaml=f"""
+    openai:
+      base-url: \"{session_state_json["ll_model_config"][session_state_json["ll_model"]]["url"]}\"
+      api-key: 
+      chat:
+        options:
+          temperature: {session_state_json["ll_model_config"][session_state_json["ll_model"]]["temperature"][0]}
+          frequencyPenalty: {session_state_json["ll_model_config"][session_state_json["ll_model"]]["frequency_penalty"][0]}
+          presencePenalty: {session_state_json["ll_model_config"][session_state_json["ll_model"]]["presence_penalty"][0]}
+          maxTokens: {session_state_json["ll_model_config"][session_state_json["ll_model"]]["max_tokens"][0]}
+          topP: {session_state_json["ll_model_config"][session_state_json["ll_model"]]["top_p"][0]}
+          model: {session_state_json["ll_model"]}
+      embedding:
+        options:
+          model: {session_state_json["rag_params"]["model"]}
+    """
+
+    ollama_yaml=f"""
+    ollama:
+      base-url: "http://ollama.ollama.svc.cluster.local:11434"
+      chat:
+        options:
+          top-p: {session_state_json["ll_model_config"][session_state_json["ll_model"]]["top_p"][0]}
+          presence-penalty: {session_state_json["ll_model_config"][session_state_json["ll_model"]]["presence_penalty"][0]}
+          frequency-penalty: {session_state_json["ll_model_config"][session_state_json["ll_model"]]["frequency_penalty"][0]}
+          temperature: {session_state_json["ll_model_config"][session_state_json["ll_model"]]["temperature"][0]}
+          num-predict: {session_state_json["ll_model_config"][session_state_json["ll_model"]]["max_tokens"][0]}
+          model: \"{session_state_json["ll_model"]}\"
+      embedding:
+        options: 
+          model: \"{session_state_json["rag_params"]["model"]}\"
+    """
+
+    if provider=="ollama":
+        yaml = yaml_base + ollama_yaml + yaml_base_aims
+    else:
+        yaml = yaml_base + openai_yaml + yaml_base_aims
+
+    return yaml
+
 def get_yaml_env(session_state_json,provider):
 
     OLLAMA_MODEL="llama3.1"
@@ -241,11 +324,9 @@ def get_yaml_env(session_state_json,provider):
         env_vars_LLM= f"""
     export OPENAI_CHAT_MODEL=\"\"
     export OPENAI_EMBEDDING_MODEL=\"\"
+    export OPENAI_URL=\"\"
     export OLLAMA_CHAT_MODEL=\"{session_state_json["ll_model"]}\"
     export OLLAMA_EMBEDDING_MODEL=\"{session_state_json["rag_params"]["model"]}\"
-    export OPENAI_CHAT_MODEL={session_state_json["ll_model"]}
-    export OPENAI_EMBEDDING_MODEL={session_state_json["rag_params"]["model"]}
-    export OPENAI_URL=\"{session_state_json["ll_model_config"][session_state_json["ll_model"]]["url"]}\"
     export OL_TEMPERATURE={session_state_json["ll_model_config"][session_state_json["ll_model"]]["temperature"][0]}
     export OL_FREQUENCY_PENALTY={session_state_json["ll_model_config"][session_state_json["ll_model"]]["frequency_penalty"][0]}
     export OL_PRESENCE_PENALTY={session_state_json["ll_model_config"][session_state_json["ll_model"]]["presence_penalty"][0]}
@@ -266,7 +347,7 @@ def get_yaml_env(session_state_json,provider):
     export DISTANCE_TYPE={session_state_json["rag_params"]["distance_metric"]}
     export OLLAMA_BASE_URL=\"{session_state_json["ll_model_config"][OLLAMA_MODEL]["url"]}\"
     export CONTEXT_INSTR=\"{instr_context}\"
-    export TOP_K={session_state_json.get("rag_params", {}).get("top_k")}
+    export TOP_K={session_state_json.get("rag_params", {}).get("top_k",4)}  
 
 
 
@@ -305,7 +386,9 @@ def create_zip(state_dict_filt, provider):
                     arcname = os.path.relpath(file_path, destination_dir)  # Make the path relative
                     zip_file.write(file_path, arcname)
             env_content = get_yaml_env(state_dict_filt, provider)
+            obaas_yaml = get_yaml_obaas(state_dict_filt,provider)
             zip_file.writestr('env.sh', env_content)    
+            zip_file.writestr('src/main/resources/application-obaas.yml', obaas_yaml)     
         zip_buffer.seek(0)  
     return zip_buffer
 
@@ -315,7 +398,7 @@ def check_hybrid_conf(session_state_json):
     embedding_models = meta.embedding_models()
     chat_models = meta.ll_models()
     
-    embModel = embedding_models.get(session_state_json["rag_params"]["model"])
+    embModel =  embedding_models.get(session_state_json["rag_params"].get("model"))
     chatModel = chat_models.get(session_state_json["ll_model"])
     logger.info("Model: %s",session_state_json["ll_model"])
     logger.info("Embedding Model embModel: %s",embModel)

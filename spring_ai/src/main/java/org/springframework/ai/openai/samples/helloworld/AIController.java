@@ -89,10 +89,67 @@ class AIController {
 
 	@PostConstruct
 	public void insertData() {
-		String sql = "INSERT INTO SPRING_AI_VECTORS (ID, CONTENT, METADATA, EMBEDDING) " +
-				"SELECT ID, TEXT, METADATA, EMBEDDING FROM " + legacyTable;
+		String sqlUser = "SELECT USER FROM DUAL";
+		String user = "";
+		String sql = "";
+
+		user = jdbcTemplate.queryForObject(sqlUser, String.class);
+		if (doesTableExist(legacyTable,user)!=-1) {
+			// RUNNING LOCAL
+			logger.info("Running local with user: " + user);
+			sql = "INSERT INTO " + user + ".SPRING_AI_VECTORS (ID, CONTENT, METADATA, EMBEDDING) " +
+					"SELECT ID, TEXT, METADATA, EMBEDDING FROM " + user + "." + legacyTable;
+		} else {
+			// RUNNING in OBAAS
+			logger.info("Running on OBaaS with user: " + user);
+			sql = "INSERT INTO " + user + ".SPRING_AI_VECTORS (ID, CONTENT, METADATA, EMBEDDING) " +
+					"SELECT ID, TEXT, METADATA, EMBEDDING FROM ADMIN." + legacyTable;
+		}
 		// Execute the insert
-		jdbcTemplate.update(sql);
+		logger.info("doesExist"+  user + ": "+ doesTableExist("SPRING_AI_VECTORS",user));
+		if (countRecordsInTable("SPRING_AI_VECTORS",user)==0) {
+			// First microservice execution
+			logger.info("Table " + user + ".SPRING_AI_VECTORS doesn't exist: create from ADMIN/USER." + legacyTable);
+			jdbcTemplate.update(sql);
+		} else {
+			// Table conversion already done
+			logger.info("Table SPRING_AI_VECTORS exists: drop before if you want use new contents " + legacyTable);
+		}
+	}
+
+	public int countRecordsInTable(String tableName, String schemaName) {
+		// Dynamically construct the SQL query with the table and schema names
+		String sql = String.format("SELECT COUNT(*) FROM %s.%s", schemaName.toUpperCase(), tableName.toUpperCase());
+		logger.info("Checking if table is empty: " + tableName + " in schema: " + schemaName);
+		
+		try {
+			// Execute the query and get the count of records in the table
+			Integer count = jdbcTemplate.queryForObject(sql, Integer.class);
+			
+			// Return the count if it's not null, otherwise return -1
+			return count != null ? count : -1;
+		} catch (Exception e) {
+			logger.error("Error checking table record count: " + e.getMessage());
+			return -1; // Return -1 in case of an error
+		}
+	}
+
+	public int doesTableExist(String tableName, String schemaName) {
+		String sql = "SELECT COUNT(*) FROM all_tables WHERE table_name = ? AND owner = ?";
+		logger.info("Checking if table exists: " + tableName + " in schema: " + schemaName);
+
+		try {
+			// Query the system catalog to check for the existence of the table in the given
+			// schema
+			Integer count = jdbcTemplate.queryForObject(sql, Integer.class, tableName.toUpperCase(),
+					schemaName.toUpperCase());
+			
+			if (count != null && count > 0) { return count;}
+			else {return -1;}
+		} catch (Exception e) {
+			logger.error("Error checking table existence: " + e.getMessage());
+			return -1;
+		}
 	}
 
 	public Prompt promptEngineering(String message, String contextInstr) {
@@ -146,7 +203,7 @@ class AIController {
 
 	@PostMapping("/chat/completions")
 	Map<String, Object> completionRag(@RequestBody Map<String, String> requestBody) {
-		
+
 		String message = requestBody.getOrDefault("message", "Tell me a joke");
 		Prompt prompt = promptEngineering(message, contextInstr);
 		logger.info(prompt.getContents());
