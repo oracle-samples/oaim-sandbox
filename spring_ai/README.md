@@ -172,7 +172,7 @@ GRANT SELECT ON ADMIN.MXBAI_EMBED_LARGE_512_103_COSINE TO vector;
 ```
 then deploy:
 ```
-deploy --app-name rag --service-name myspringai --artifact-path /Users/cdebari/Downloads/springai-temp/spring_ai/target/myspringai-0.0.1-SNAPSHOT.jar --image-version 0.0.1 --java-version ghcr.io/oracle/graalvm-native-image-obaas:21 --service-profile obaas
+deploy --app-name rag --service-name myspringai --artifact-path <ProjectDir>/target/myspringai-0.0.1-SNAPSHOT.jar --image-version 0.0.1 --java-version ghcr.io/oracle/graalvm-native-image-obaas:21 --service-profile obaas
 ```
 test:
 ```
