@@ -2,6 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
+
 # spell-checker:ignore streamlit, langchain
 
 import os
@@ -11,6 +12,8 @@ import json
 import queue
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse
+
+from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 
 # Utilities
 import modules.chatbot as chatbot
@@ -44,51 +47,28 @@ def config():
         "key": os.environ.get("API_SERVER_KEY", default=auto_api_key),
     }
 
-
-def get_answer_fn(
-
-
-    question: str,
-    history=None,
-    chat_manager=None,
-    rag_params=None,
-    lm_instr=None,
-    context_instr=None,
-) -> str:
-    """Send for completion"""
-    try:
-        response = chatbot.generate_response(
-            chat_mgr=chat_manager,
-            input=question,
-            chat_history={},
-            enable_history=False,
-            rag_params=rag_params,
-            chat_instr=lm_instr,
-            context_instr=context_instr,
-            stream=False,
-        )
-        logger.info("Raw MSG from Chatbot API: %s", response)
-        if rag_params["enable"]:
-            return {"messages": response}
-            return response["answer"]
-        else:
-            return response.content
-    except Exception as ex:
-        return f"I'm sorry, something's gone wrong: {ex}"
-
-
 class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
     """Handler for mini-chatbot"""
 
     def __init__(
-        self, *args, chat_manager=None, rag_params=None, lm_instr=None, context_instr=None, api_key=None, **kwargs
+        self,
+        *args,
+        chat_manager=None,
+        rag_params=None,
+        lm_instr=None,
+        context_instr=None,
+        api_key=None,
+        chat_history=None,
+        enable_history=False,
+        **kwargs
     ):
         self.chat_manager = chat_manager
         self.rag_params = rag_params
         self.lm_instr = lm_instr
         self.context_instr = context_instr
         self.api_key = api_key
-        self.workflow = StateGraph(state_schema=MessagesState)
+        self.chat_history = chat_history
+        self.enable_history = enable_history
         super().__init__(*args, **kwargs)
 
     def do_OPTIONS(self):  # pylint: disable=invalid-name
@@ -117,38 +97,37 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
 
                 content_length = int(self.headers["Content-Length"])
                 post_data = self.rfile.read(content_length).decode("utf-8")
-                # Log the raw body
-                logger.info("Raw Body: %s", post_data)
                 try:
                     # Parse the POST data as JSON
                     post_json = json.loads(post_data)
 
                     # Extract the 'message' field from the JSON
                     message = post_json.get("message")
-
+                    response = None
                     if message:
                         # Log the incoming message
                         logger.info("MSG to Chatbot API: %s", message)
 
                         # Call your function to get the chatbot response
-                        answer = get_answer_fn(
-                            message, None, self.chat_manager, self.rag_params, self.lm_instr, self.context_instr
+                        response = chatbot.generate_response(
+                            chat_mgr=self.chat_manager,
+                            input=message,
+                            chat_history=self.chat_history,
+                            enable_history=self.enable_history,
+                            rag_params=self.rag_params,
+                            chat_instr=self.lm_instr,
+                            context_instr=self.context_instr,
+                            stream=False,
                         )
-
-                        # Prepare the response as JSON
-                        response = {"choices": [{"message": {"content": answer}}]}
                         self.send_response(200)
+                        # Process response to JSON
                     else:
-                        # If no message is provided, return an error
-                        response = {"error": "No 'message' field found in request."}
                         self.send_response(400)  # Bad request
 
-                    # Add request/response to the queue
-                    log_queue.put(f"Request: {post_data}")
-                    log_queue.put(f"Response: {response}")
+                    # Add request/response to the queue for output
+                    log_queue.put(post_json)
+                    log_queue.put(response)
                 except json.JSONDecodeError:
-                    # If JSON parsing fails, return an error
-                    response = {"error": "Invalid JSON in request."}
                     self.send_response(400)  # Bad request
             else:
                 # Invalid or missing API Key
@@ -156,37 +135,33 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(401)
                 self.send_header("Content-type", "application/json")
                 self.end_headers()
-                self.wfile.write(b'{"error": "Unauthorized. Invalid API Key."}')
                 return
         else:
             # Return a 404 response for unknown paths
             self.send_response(404)
-            response = {"error": "Path not found."}
 
         # Send the response
         self.send_header("Access-Control-Allow-Origin", "*")  # Add CORS header
         self.send_header("Content-Type", "application/json")
         self.end_headers()
-        self.wfile.write(json.dumps(response).encode("utf-8"))
 
 
-def run_server(port, chat_manager, rag_params, lm_instr, context_instr, api_key):
-    def create_handler(chat_manager, rag_params, lm_instr, context_instr, api_key):
-        def handler(*args, **kwargs):
-            ChatbotHTTPRequestHandler(
-                *args,
-                chat_manager=chat_manager,
-                rag_params=rag_params,
-                lm_instr=lm_instr,
-                context_instr=context_instr,
-                api_key=api_key,
-                **kwargs,
-            )
+def run_server(port, chat_manager, rag_params, lm_instr, context_instr, api_key, chat_history, enable_history):
+    # Define the request handler function
+    def handler(*args, **kwargs):
+        return ChatbotHTTPRequestHandler(
+            *args,
+            chat_manager=chat_manager,
+            rag_params=rag_params,
+            lm_instr=lm_instr,
+            context_instr=context_instr,
+            api_key=api_key,
+            chat_history=chat_history,
+            enable_history=enable_history,
+            **kwargs,
+        )
 
-        return handler
-
-    handler_with_params = create_handler(chat_manager, rag_params, lm_instr, context_instr, api_key)
     server_address = ("", port)
-    httpd = HTTPServer(server_address, handler_with_params)
+    httpd = HTTPServer(server_address, handler)
 
     return httpd

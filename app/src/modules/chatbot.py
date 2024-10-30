@@ -138,6 +138,10 @@ class ChatCmd:
         # History Aware Chain
         rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
 
+        ### Statefully manage chat history ###
+        
+
+
         conversational_rag_chain = RunnableWithMessageHistory(
             rag_chain,
             lambda session_id: chat_history,

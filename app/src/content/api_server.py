@@ -2,12 +2,13 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
+
 # spell-checker:ignore streamlit, langchain, llms
 
 import inspect
 import time
-import threading
 import json
+import threading
 
 # Streamlit
 import streamlit as st
@@ -33,54 +34,76 @@ def initialize_streamlit():
         state.api_server_config = api_server.config()
         logger.info("initialized API Server Config")
 
-# def display_logs(chat_history):
-#     log_placeholder = st.empty()  # A placeholder to update logs
-#     logs = []  # Store logs for display
 
-#     try:
-#         while "server_thread" in st.session_state:
-#             try:
-#                 # Retrieve log from queue (non-blocking)
-#                 log_item = api_server.log_queue.get_nowait()
-#                 if log_item['type'] == "AIMessageChunk":
-#                     st.chat_message("ai").write(log_item['message'])
-#             except (KeyError, TypeError):
-#                 st.chat_message("human").write(log_item['message'])
-#                 #logs.append(log_item)               
-#                 # Update the placeholder with new logs
-#                 # log_placeholder.text("\n".join(logs))
-#             except api_server.queue.Empty:
-#                 time.sleep(0.1)  # Avoid busy-waiting
-#     finally:
-#         logger.info("API Server events display has stopped.")
+def display_logs():
+    # log_placeholder = st.empty()  # A placeholder to update logs
+    # logs = []  # Store logs for display
+
+    try:
+        while "server_thread" in st.session_state:
+            try:
+                # Retrieve log from queue (non-blocking)
+                msg = api_server.log_queue.get_nowait()
+                print(msg)
+                # if "content" in msg:
+                #     st.chat_message("ai").write(dir(msg))
+                # else:
+                #     st.chat_message("human").write(msg['message'])
+                #print(msg)
+                # try:
+                #     print(msg.message)
+                # except:
+                #     print(msg)
+
+                # if msg.type == "AIMessageChunk":
+                #     st.chat_message("ai").write(msg.content)
+                # else:
+                #     st.chat_message(msg.type).write(msg.content)
+                # try:
+                #     st.chat_message("ai").write_stream(msg)
+                # except (KeyError, TypeError):
+                #     st.chat_message("human").write(msg)
+                # logs.append(log_item)
+                # Update the placeholder with new logs
+                # log_placeholder.text("\n".join(logs))
+            except api_server.queue.Empty:
+                time.sleep(0.1)  # Avoid busy-waiting
+    finally:
+        logger.info("API Server events display has stopped.")
 
 
 def api_server_start():
+    chat_history = StreamlitChatMessageHistory(key="api_chat_history")
     state.api_server_config["port"] = state.user_api_server_port
     state.api_server_config["key"] = state.user_api_server_key
     if "initialized" in state and state.initialized:
         if "server_thread" not in state:
-            state.httpd = api_server.run_server(
-                state.api_server_config["port"],
-                state.chat_manager,
-                state.rag_params,
-                state.lm_instr,
-                state.context_instr,
-                state.api_server_config["key"],
-            )
+            try:
+                state.httpd = api_server.run_server(
+                    state.api_server_config["port"],
+                    state.chat_manager,
+                    state.rag_params,
+                    state.lm_instr,
+                    state.context_instr,
+                    state.api_server_config["key"],
+                    chat_history,
+                    False,
+                )
 
-            # Start the server in the thread
-            def api_server_process(httpd):
-                httpd.serve_forever()
+                # Start the server in the thread
+                def api_server_process(httpd):
+                    httpd.serve_forever()
 
-            state.server_thread = threading.Thread(
-                target=api_server_process,
-                # Trailing , ensures tuple is passed
-                args=(state.httpd,),
-                daemon=True,
-            )
-            state.server_thread.start()
-            logger.info("Started API Server on port: %i", state.api_server_config["port"])
+                state.server_thread = threading.Thread(
+                    target=api_server_process,
+                    # Trailing , ensures tuple is passed
+                    args=(state.httpd,),
+                    daemon=True,
+                )
+                state.server_thread.start()
+                logger.info("Started API Server on port: %i", state.api_server_config["port"])
+            except OSError:
+                st.error("Port is already in use.")
         else:
             st.warning("API Server is already running.")
     else:
@@ -190,10 +213,10 @@ def main():
     #########################################################################
     # API Server Centre
     #########################################################################
-    # if "server_thread" in state:
-    #     st.subheader("Activity")
-    #     with st.container(border=True):
-    #         display_logs(chat_history)
+    if "server_thread" in state:
+        st.subheader("Activity")
+        with st.container(border=True):
+            display_logs()
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:
