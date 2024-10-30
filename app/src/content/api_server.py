@@ -7,10 +7,10 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 import inspect
 import time
-import json
 import threading
 
 # Streamlit
+import msgpack
 import streamlit as st
 from streamlit import session_state as state
 
@@ -36,36 +36,15 @@ def initialize_streamlit():
 
 
 def display_logs():
-    # log_placeholder = st.empty()  # A placeholder to update logs
-    # logs = []  # Store logs for display
-
     try:
         while "server_thread" in st.session_state:
             try:
                 # Retrieve log from queue (non-blocking)
                 msg = api_server.log_queue.get_nowait()
-                print(msg)
-                # if "content" in msg:
-                #     st.chat_message("ai").write(dir(msg))
-                # else:
-                #     st.chat_message("human").write(msg['message'])
-                #print(msg)
-                # try:
-                #     print(msg.message)
-                # except:
-                #     print(msg)
-
-                # if msg.type == "AIMessageChunk":
-                #     st.chat_message("ai").write(msg.content)
-                # else:
-                #     st.chat_message(msg.type).write(msg.content)
-                # try:
-                #     st.chat_message("ai").write_stream(msg)
-                # except (KeyError, TypeError):
-                #     st.chat_message("human").write(msg)
-                # logs.append(log_item)
-                # Update the placeholder with new logs
-                # log_placeholder.text("\n".join(logs))
+                if 'message' in msg:
+                    st.chat_message("human").write(msg['message'])
+                else:
+                    st.chat_message("ai").write(msg.content)
             except api_server.queue.Empty:
                 time.sleep(0.1)  # Avoid busy-waiting
     finally:
