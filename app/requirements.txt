@@ -7,32 +7,32 @@
 ## Installation Example (from repo root):
 ### python3.11 -m venv .venv
 ### source .venv/bin/activate
-### pip3 install --upgrade pip wheel
+### pip3 install --upgrade pip wheel setuptools
 ### pip3 install -r app/requirements.txt
 
 ## Top-Level brings in the required dependencies, if adding modules, try to find the minimum required
 bokeh==3.6.0
 evaluate==0.4.3
 faiss-cpu==1.9.0
-giskard==2.15.2
-IPython==8.28.0
+giskard==2.15.3
+IPython==8.29.0
 langchain-cohere==0.3.1
-langchain-community==0.3.2
-langchain-huggingface==0.1.0
+langchain-community==0.3.3
+langchain-huggingface==0.1.1
 langchain-ollama==0.2.0
-langchain-openai==0.2.2
+langchain-openai==0.2.4
 langgraph==0.2.39
-llama_index==0.11.18
+llama_index==0.11.20
 lxml==5.3.0
 matplotlib==3.9.2
 oci>=2.0.0
 oracledb>=2.0.0
 plotly==5.24.1
 streamlit==1.39.0
-umap-learn==0.5.6
+umap-learn==0.5.7
 
 ## For Licensing Purposes; ensures no GPU modules are installed
 ## as part of langchain-huggingface
 -f https://download.pytorch.org/whl/cpu/torch
-torch==2.4.1+cpu ; sys_platform == "linux"
-torch==2.2.2 ; sys_platform == "darwin"
+torch==2.5.1+cpu ; sys_platform == "linux"
+torch==2.5.1 ; sys_platform == "darwin"
