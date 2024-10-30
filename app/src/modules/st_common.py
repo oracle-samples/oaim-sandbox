@@ -312,82 +312,107 @@ def rag_sidebar():
         if user_alias:
             rag_filt_alias = [user_alias]
         else:
-            rag_filt_alias = [
-                v.get("alias", None)
-                for v in state.vs_tables.values()
-                if (user_model is None or v["model"] == user_model)
-                and (user_chunk_size is None or v["chunk_size"] == user_chunk_size)
-                and (user_chunk_overlap is None or v["chunk_overlap"] == user_chunk_overlap)
-                and (user_distance_metric is None or v["distance_metric"] == user_distance_metric)
-            ]
+            try:
+                rag_filt_alias = [
+                    v.get("alias", None)
+                    for v in state.vs_tables.values()
+                    if (user_model is None or v["model"] == user_model)
+                    and (user_chunk_size is None or v["chunk_size"] == user_chunk_size)
+                    and (user_chunk_overlap is None or v["chunk_overlap"] == user_chunk_overlap)
+                    and (user_distance_metric is None or v["distance_metric"] == user_distance_metric)
+                ]
+            except AttributeError:
+                # st.session_state has no attribute "vs_tables"
+                clear_initialized()
 
         if user_model:
             rag_filt_model = [user_model]
         else:
-            rag_filt_model = [
-                v["model"]
-                for v in state.vs_tables.values()
-                if (user_alias is None or v.get("alias", None) == user_alias)
-                and (user_chunk_size is None or v["chunk_size"] == user_chunk_size)
-                and (user_chunk_overlap is None or v["chunk_overlap"] == user_chunk_overlap)
-                and (user_distance_metric is None or v["distance_metric"] == user_distance_metric)
-            ]
+            try:
+                rag_filt_model = [
+                    v["model"]
+                    for v in state.vs_tables.values()
+                    if (user_alias is None or v.get("alias", None) == user_alias)
+                    and (user_chunk_size is None or v["chunk_size"] == user_chunk_size)
+                    and (user_chunk_overlap is None or v["chunk_overlap"] == user_chunk_overlap)
+                    and (user_distance_metric is None or v["distance_metric"] == user_distance_metric)
+                ]
+            except AttributeError:
+                # st.session_state has no attribute "vs_tables"
+                clear_initialized()
 
         if user_chunk_size:
             rag_filt_chunk_size = [user_chunk_size]
         else:
-            rag_filt_chunk_size = [
-                v["chunk_size"]
-                for v in state.vs_tables.values()
-                if (user_alias is None or v.get("alias", None) == user_alias)
-                and (user_model is None or v["model"] == user_model)
-                and (user_chunk_overlap is None or v["chunk_overlap"] == user_chunk_overlap)
-                and (user_distance_metric is None or v["distance_metric"] == user_distance_metric)
-            ]
+            try:
+                rag_filt_chunk_size = [
+                    v["chunk_size"]
+                    for v in state.vs_tables.values()
+                    if (user_alias is None or v.get("alias", None) == user_alias)
+                    and (user_model is None or v["model"] == user_model)
+                    and (user_chunk_overlap is None or v["chunk_overlap"] == user_chunk_overlap)
+                    and (user_distance_metric is None or v["distance_metric"] == user_distance_metric)
+                ]
+            except AttributeError:
+                # st.session_state has no attribute "vs_tables"
+                clear_initialized()
 
         if user_chunk_overlap:
             rag_filt_chunk_overlap = [user_chunk_overlap]
         else:
-            rag_filt_chunk_overlap = [
-                v["chunk_overlap"]
-                for v in state.vs_tables.values()
-                if (user_alias is None or v.get("alias", None) == user_alias)
-                and (user_model is None or v["model"] == user_model)
-                and (user_chunk_size is None or v["chunk_size"] == user_chunk_size)
-                and (user_distance_metric is None or v["distance_metric"] == user_distance_metric)
-            ]
+            try:
+                rag_filt_chunk_overlap = [
+                    v["chunk_overlap"]
+                    for v in state.vs_tables.values()
+                    if (user_alias is None or v.get("alias", None) == user_alias)
+                    and (user_model is None or v["model"] == user_model)
+                    and (user_chunk_size is None or v["chunk_size"] == user_chunk_size)
+                    and (user_distance_metric is None or v["distance_metric"] == user_distance_metric)
+                ]
+            except AttributeError:
+                # st.session_state has no attribute "vs_tables"
+                clear_initialized()
 
         if user_distance_metric:
             rag_filt_distance_metric = [user_distance_metric]
         else:
-            rag_filt_distance_metric = [
-                v["distance_metric"]
-                for v in state.vs_tables.values()
-                if (user_alias is None or v.get("alias", None) == user_alias)
-                and (user_model is None or v["model"] == user_model)
-                and (user_chunk_size is None or v["chunk_size"] == user_chunk_size)
-                and (user_chunk_overlap is None or v["chunk_overlap"] == user_chunk_overlap)
-            ]
+            try:
+                rag_filt_distance_metric = [
+                    v["distance_metric"]
+                    for v in state.vs_tables.values()
+                    if (user_alias is None or v.get("alias", None) == user_alias)
+                    and (user_model is None or v["model"] == user_model)
+                    and (user_chunk_size is None or v["chunk_size"] == user_chunk_size)
+                    and (user_chunk_overlap is None or v["chunk_overlap"] == user_chunk_overlap)
+                ]
+            except AttributeError:
+                # st.session_state has no attribute "vs_tables"
+                clear_initialized()
 
         # Remove duplicates and sort
-        state.rag_filter["alias"] = sorted(set(rag_filt_alias))
-        state.rag_filter["model"] = sorted(set(rag_filt_model))
-        state.rag_filter["chunk_size"] = sorted(set(rag_filt_chunk_size))
-        state.rag_filter["chunk_overlap"] = sorted(set(rag_filt_chunk_overlap))
-        state.rag_filter["distance_metric"] = sorted(set(rag_filt_distance_metric))
+        try:
+            state.rag_filter["alias"] = sorted(set(rag_filt_alias))
+            state.rag_filter["model"] = sorted(set(rag_filt_model))
+            state.rag_filter["chunk_size"] = sorted(set(rag_filt_chunk_size))
+            state.rag_filter["chunk_overlap"] = sorted(set(rag_filt_chunk_overlap))
+            state.rag_filter["distance_metric"] = sorted(set(rag_filt_distance_metric))
+        except UnboundLocalError:
+            clear_initialized()
 
         # (Re)set the index to previously selected option
         attributes = ["alias", "model", "chunk_size", "chunk_overlap", "distance_metric"]
         for attr in attributes:
-            filtered_list = state.rag_filter[attr]
             try:
+                filtered_list = state.rag_filter[attr]
                 user_value = getattr(state, f"rag_user_{attr}")
             except AttributeError:
                 setattr(state, f"rag_user_{attr}", [])
+            except KeyError:
+                clear_initialized()
 
             try:
                 idx = 0 if len(filtered_list) == 1 else filtered_list.index(user_value)
-            except (ValueError, AttributeError):
+            except (ValueError, AttributeError, UnboundLocalError):
                 idx = None
 
             state.rag_user_idx[attr] = idx

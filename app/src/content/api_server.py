@@ -10,7 +10,6 @@ import time
 import threading
 
 # Streamlit
-import msgpack
 import streamlit as st
 from streamlit import session_state as state
 
@@ -41,10 +40,15 @@ def display_logs():
             try:
                 # Retrieve log from queue (non-blocking)
                 msg = api_server.log_queue.get_nowait()
-                if 'message' in msg:
-                    st.chat_message("human").write(msg['message'])
+                logger.info("API Msg: %s", msg)
+                if "message" in msg:
+                    st.chat_message("human").write(msg["message"])
                 else:
-                    st.chat_message("ai").write(msg.content)
+                    if state.rag_params["enable"]:
+                        st.chat_message("ai").write(msg["answer"])
+                        st_common.show_rag_refs(msg["context"])
+                    else:
+                        st.chat_message("ai").write(msg.content)
             except api_server.queue.Empty:
                 time.sleep(0.1)  # Avoid busy-waiting
     finally:
@@ -66,7 +70,7 @@ def api_server_start():
                     state.context_instr,
                     state.api_server_config["key"],
                     chat_history,
-                    False,
+                    state.user_chat_history,
                 )
 
                 # Start the server in the thread

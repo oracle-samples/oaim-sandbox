@@ -13,8 +13,6 @@ import queue
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import urlparse
 
-from langchain_community.chat_message_histories import StreamlitChatMessageHistory
-
 # Utilities
 import modules.chatbot as chatbot
 import modules.logging_config as logging_config
