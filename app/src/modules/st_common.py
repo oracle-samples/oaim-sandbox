@@ -417,7 +417,7 @@ def rag_sidebar():
 
             state.rag_user_idx[attr] = idx
 
-    rag_enable = st.sidebar.checkbox(
+    st.sidebar.checkbox(
         "RAG?",
         value=state.rag_params["enable"],
         key="rag_user_enable",
@@ -426,7 +426,7 @@ def rag_sidebar():
         on_change=reset_rag,
     )
 
-    if rag_enable:
+    if state.rag_params["enable"]:
         set_default_state("rag_user_rerank", False)
         st.sidebar.checkbox(
             "Enable Re-Ranking?",

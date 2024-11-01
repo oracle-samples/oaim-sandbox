@@ -130,27 +130,6 @@ def main():
     enabled_llms = sum(model_info["enabled"] for model_info in state.ll_model_config.values())
     if enabled_llms > 0:
         initialize_streamlit()
-        server_running = False
-        if "server_thread" in state:
-            server_running = True
-            st.success("API Server is Running")
-
-        left, right = st.columns([0.2, 0.8])
-        left.number_input(
-            "API Server Port:",
-            value=state.api_server_config["port"],
-            min_value=1,
-            max_value=65535,
-            key="user_api_server_port",
-            disabled=server_running,
-        )
-        right.text_input(
-            "API Server Key:",
-            type="password",
-            value=state.api_server_config["key"],
-            key="user_api_server_key",
-            disabled=server_running,
-        )
         enable_history = st.sidebar.checkbox(
             "Enable History and Context?",
             value=True,
@@ -160,21 +139,16 @@ def main():
             chat_history.clear()
         st.sidebar.divider()
         ll_model = st_common.lm_sidebar()
-        if "server_thread" in state:
-            st.button("Stop Server", type="primary", on_click=api_server_stop)
-        elif "initialized" in state and state.initialized:
-            st.button("Start Server", type="primary", on_click=api_server_start)
+        st_common.rag_sidebar()
     else:
         st.error("No chat models are configured and/or enabled.", icon="🚨")
         st.stop()
 
-    # RAG
-    st_common.rag_sidebar()
-
     #########################################################################
-    # Initialize the Client
+    # Main
     #########################################################################
     if "initialized" not in state:
+        api_server_stop()
         if not state.rag_params["enable"] or all(
             state.rag_params[key] for key in ["model", "chunk_size", "chunk_overlap", "distance_metric"]
         ):
@@ -193,6 +167,40 @@ def main():
                 st.stop()
         else:
             st.error("Not all required RAG options are set, please review or disable RAG.")
+            st.stop()
+
+    server_running = False
+    if "server_thread" in state:
+        server_running = True
+    elif state.api_server_config["auto_start"]:
+        server_running = True
+
+    left, right = st.columns([0.2, 0.8])
+    left.number_input(
+        "API Server Port:",
+        value=state.api_server_config["port"],
+        min_value=1,
+        max_value=65535,
+        key="user_api_server_port",
+        disabled=server_running,
+    )
+    right.text_input(
+        "API Server Key:",
+        type="password",
+        value=state.api_server_config["key"],
+        key="user_api_server_key",
+        disabled=server_running,
+    )
+
+    if state.api_server_config["auto_start"]:
+        st.success("API Server automatically started.")
+        api_server_start()
+    else:
+        if server_running:
+            st.button("Stop Server", type="primary", on_click=api_server_stop)
+        else:
+            st.button("Start Server", type="primary", on_click=api_server_start)
+
     #########################################################################
     # API Server Centre
     #########################################################################

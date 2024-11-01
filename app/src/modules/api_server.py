@@ -38,11 +38,15 @@ def config():
         # Generates a URL-safe, base64-encoded random string with the given length
         return secrets.token_urlsafe(length)
 
-    auto_port = find_available_port()
-    auto_api_key = generate_api_key()
+    api_server_port = os.environ.get("API_SERVER_PORT")
+    api_server_key = os.environ.get("API_SERVER_KEY")
+
+    auto_start = bool(api_server_port and api_server_key)
+
     return {
-        "port": os.environ.get("API_SERVER_PORT", default=auto_port),
-        "key": os.environ.get("API_SERVER_KEY", default=auto_api_key),
+        "port": int(api_server_port) if api_server_port else find_available_port(),
+        "key": api_server_key if api_server_key else generate_api_key(),
+        "auto_start": auto_start
     }
 
 class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):

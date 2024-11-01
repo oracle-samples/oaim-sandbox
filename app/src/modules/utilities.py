@@ -51,29 +51,25 @@ import oci  # pylint: disable=wrong-import-position
 # General
 ###############################################################################
 def is_url_accessible(url):
-    """Check that URL is Available"""
-    logger.debug("Checking %s is accessible", url)
+    """Check if the URL is accessible."""
+    logger.debug("Checking if %s is accessible", url)
+
     try:
         response = requests.get(url, timeout=2)
-        logger.info("Checking %s resulted in %s", url, response.status_code)
-        # Check if the response status code is 200 (OK) 403 (Forbidden) 404 (Not Found) 421 (Misdirected)
-        if response.status_code in [200, 403, 404, 421]:
+        logger.info("Response for %s: %s", url, response.status_code)
+
+        if response.status_code in {200, 403, 404, 421}:
             return True, None
-        else:
-            err_msg = f"{url} is not accessible. (Status: {response.status_code})"
-            logger.warning(err_msg)
-            return False, err_msg
-    except requests.exceptions.ConnectionError:
-        err_msg = f"{url} is not accessible. (Connection Error)"
+
+        err_msg = f"{url} is not accessible. (Status: {response.status_code})"
         logger.warning(err_msg)
         return False, err_msg
-    except requests.exceptions.Timeout:
-        err_msg = f"{url} is not accessible. (Request Timeout)"
+
+    except requests.exceptions.RequestException as ex:
+        err_msg = f"{url} is not accessible. ({type(ex).__name__})"
         logger.warning(err_msg)
-        return False, err_msg
-    except requests.RequestException as ex:
         logger.exception(ex, exc_info=False)
-        return False, ex
+        return False, err_msg
 
 
 ###############################################################################
@@ -97,6 +93,15 @@ def get_ll_model(model, ll_models_config=None, giskarded=False):
 
     logger.debug("Matching LLM API: %s", llm_api)
 
+    common_params = {
+        "model": model,
+        "temperature": lm_params["temperature"][0],
+        "max_tokens": lm_params["max_tokens"][0],
+        "top_p": lm_params["top_p"][0],
+        "frequency_penalty": lm_params["frequency_penalty"][0],
+        "presence_penalty": lm_params["presence_penalty"][0],
+    }
+
     ## Start - Add Additional Model Authentication Here
     client = None
     if giskarded:
@@ -104,49 +109,13 @@ def get_ll_model(model, ll_models_config=None, giskarded=False):
         _client = OpenAI(api_key=giskard_key, base_url=f"{llm_url}/v1/")
         client = OpenAIClient(model=model, client=_client)
     elif llm_api == "OpenAI":
-        client = ChatOpenAI(
-            api_key=lm_params["api_key"],
-            model_name=model,
-            temperature=lm_params["temperature"][0],
-            max_tokens=lm_params["max_tokens"][0],
-            top_p=lm_params["top_p"][0],
-            frequency_penalty=lm_params["frequency_penalty"][0],
-            presence_penalty=lm_params["presence_penalty"][0],
-        )
+        client = ChatOpenAI(api_key=lm_params["api_key"], **common_params)
     elif llm_api == "Cohere":
-        client = ChatCohere(
-            cohere_api_key=lm_params["api_key"],
-            model=model,
-            temperature=lm_params["temperature"][0],
-            max_tokens=lm_params["max_tokens"][0],
-            top_p=lm_params["top_p"][0],
-            frequency_penalty=lm_params["frequency_penalty"][0],
-            presence_penalty=lm_params["presence_penalty"][0],
-        )
+        client = ChatCohere(cohere_api_key=lm_params["api_key"], **common_params)
     elif llm_api == "ChatPerplexity":
-        client = ChatPerplexity(
-            pplx_api_key=lm_params["api_key"],
-            model=model,
-            temperature=lm_params["temperature"][0],
-            max_tokens=lm_params["max_tokens"][0],
-            model_kwargs={
-                "top_p": lm_params["top_p"][0],
-                "frequency_penalty": lm_params["frequency_penalty"][0],
-                "presence_penalty": lm_params["presence_penalty"][0],
-            },
-        )
+        client = ChatPerplexity(pplx_api_key=lm_params["api_key"], model_kwargs=common_params)
     elif llm_api == "ChatOllama":
-        client = ChatOllama(
-            model=model,
-            base_url=llm_url,
-            temperature=lm_params["temperature"][0],
-            max_tokens=lm_params["max_tokens"][0],
-            model_kwargs={
-                "top_p": lm_params["top_p"][0],
-                "frequency_penalty": lm_params["frequency_penalty"][0],
-                "presence_penalty": lm_params["presence_penalty"][0],
-            },
-        )
+        client = ChatOllama(base_url=lm_params["url"], model_kwargs=common_params)
     ## End - Add Additional Model Authentication Here
     api_accessible, err_msg = is_url_accessible(llm_url)
 
@@ -514,35 +483,33 @@ def oci_config_from_file(file=None, profile=None):
 
 
 def oci_get_namespace(config, retries=True):
-    """Get the Object Storage Namespace.  Also used for testing AuthN"""
+    """Get the Object Storage Namespace. Also used for testing AuthN."""
     logger.info("Getting Object Storage Namespace")
+
+    client = None
     try:
         client = oci_init_client(oci.object_storage.ObjectStorageClient, config, retries)
-    except oci.exceptions.InvalidConfig:
+    except (oci.exceptions.InvalidConfig, FileNotFoundError):
         try:
             client = oci_init_client(oci.object_storage.ObjectStorageClient, retries=retries)
         except ValueError:
-            pass
-    except FileNotFoundError:
-        pass
+            logger.error("Failed to initialize client without config")
+            return None
+
+    if client is None:
+        logger.error("Client could not be initialized")
+        raise OciException("No Configuration - Disabling OCI")
 
     try:
         namespace = client.get_namespace().data
         logger.info("Succeeded - Namespace = %s", namespace)
-    except oci.exceptions.InvalidConfig as ex:
-        raise OciException("Invalid Config - Disabling OCI") from ex
-    except oci.exceptions.ServiceError as ex:
+        return namespace
+    except (oci.exceptions.InvalidConfig, oci.exceptions.ServiceError) as ex:
         raise OciException("AuthN Error - Disabling OCI") from ex
-    except oci.exceptions.RequestException as ex:
-        raise OciException("No Network Access - Disabling OCI") from ex
-    except oci.exceptions.ConnectTimeout as ex:
+    except (oci.exceptions.RequestException, oci.exceptions.ConnectTimeout) as ex:
         raise OciException("No Network Access - Disabling OCI") from ex
     except FileNotFoundError as ex:
         raise OciException("Invalid Key Path") from ex
-    except UnboundLocalError as ex:
-        raise OciException("No Configuration - Disabling OCI") from ex
-
-    return namespace
 
 
 def oci_get_compartments(config, retries=True):
