@@ -483,33 +483,33 @@ def oci_config_from_file(file=None, profile=None):
 
 
 def oci_get_namespace(config, retries=True):
-    """Get the Object Storage Namespace. Also used for testing AuthN."""
+    """Get the Object Storage Namespace.  Also used for testing AuthN"""
     logger.info("Getting Object Storage Namespace")
-
-    client = None
     try:
         client = oci_init_client(oci.object_storage.ObjectStorageClient, config, retries)
-    except (oci.exceptions.InvalidConfig, FileNotFoundError):
+    except oci.exceptions.InvalidConfig:
         try:
             client = oci_init_client(oci.object_storage.ObjectStorageClient, retries=retries)
         except ValueError:
-            logger.error("Failed to initialize client without config")
-            return None
-
-    if client is None:
-        logger.error("Client could not be initialized")
-        raise OciException("No Configuration - Disabling OCI")
+            pass
+    except FileNotFoundError:
+        pass
 
     try:
         namespace = client.get_namespace().data
         logger.info("Succeeded - Namespace = %s", namespace)
-        return namespace
-    except (oci.exceptions.InvalidConfig, oci.exceptions.ServiceError) as ex:
+    except oci.exceptions.InvalidConfig as ex:
+        raise OciException("Invalid Config - Disabling OCI") from ex
+    except oci.exceptions.ServiceError as ex:
         raise OciException("AuthN Error - Disabling OCI") from ex
-    except (oci.exceptions.RequestException, oci.exceptions.ConnectTimeout) as ex:
+    except oci.exceptions.RequestException as ex:
         raise OciException("No Network Access - Disabling OCI") from ex
     except FileNotFoundError as ex:
         raise OciException("Invalid Key Path") from ex
+    except UnboundLocalError as ex:
+        raise OciException("No Configuration - Disabling OCI") from ex
+
+    return namespace
 
 
 def oci_get_compartments(config, retries=True):
