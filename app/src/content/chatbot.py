@@ -20,6 +20,7 @@ from langchain_community.chat_message_histories import StreamlitChatMessageHisto
 
 logger = logging_config.logging.getLogger("chatbot")
 
+
 #############################################################################
 # MAIN
 #############################################################################

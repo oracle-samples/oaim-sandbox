@@ -46,8 +46,9 @@ def config():
     return {
         "port": int(api_server_port) if api_server_port else find_available_port(),
         "key": api_server_key if api_server_key else generate_api_key(),
-        "auto_start": auto_start
+        "auto_start": auto_start,
     }
+
 
 class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
     """Handler for mini-chatbot"""
@@ -62,7 +63,7 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
         api_key=None,
         chat_history=None,
         enable_history=False,
-        **kwargs
+        **kwargs,
     ):
         self.chat_manager = chat_manager
         self.rag_params = rag_params

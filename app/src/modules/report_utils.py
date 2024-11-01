@@ -67,9 +67,7 @@ def record_update():
     if "reference_answer_input" not in state:
         state.reference_answer_input = state.df.iloc[state.index]["reference_answer"]
     if "reference_context_input" not in state:
-        state.reference_context_input = state.df.iloc[state.index][
-            "reference_context"
-        ]
+        state.reference_context_input = state.df.iloc[state.index]["reference_context"]
     if "metadata_input" not in state:
         state.metadata_input = state.df.iloc[state.index]["metadata"]
 
@@ -86,12 +84,8 @@ def record_update():
                 state.index -= 1
                 state.hide_input = state.df.at[state.index, "hide"]
                 state.question_input = state.df.at[state.index, "question"]
-                state.reference_answer_input = state.df.at[
-                    state.index, "reference_answer"
-                ]
-                state.reference_context_input = state.df.at[
-                    state.index, "reference_context"
-                ]
+                state.reference_answer_input = state.df.at[state.index, "reference_answer"]
+                state.reference_context_input = state.df.at[state.index, "reference_context"]
                 state.metadata_input = state.df.at[state.index, "metadata"]
 
     # Button to move to the next question
@@ -102,12 +96,8 @@ def record_update():
                 state.index += 1
                 state.hide_input = state.df.at[state.index, "hide"]
                 state.question_input = state.df.at[state.index, "question"]
-                state.reference_answer_input = state.df.at[
-                    state.index, "reference_answer"
-                ]
-                state.reference_context_input = state.df.at[
-                    state.index, "reference_context"
-                ]
+                state.reference_answer_input = state.df.at[state.index, "reference_answer"]
+                state.reference_context_input = state.df.at[state.index, "reference_context"]
                 state.metadata_input = state.df.at[state.index, "metadata"]
 
     # Button to save the current input value
@@ -117,12 +107,8 @@ def record_update():
             # Save the current input value in the DataFrame
             state.df.at[state.index, "hide"] = state.hide_input
             state.df.at[state.index, "question"] = state.question_input
-            state.df.at[state.index, "reference_answer"] = (
-                state.reference_answer_input
-            )
-            state.df.at[state.index, "reference_context"] = (
-                state.reference_context_input
-            )
+            state.df.at[state.index, "reference_answer"] = state.reference_answer_input
+            state.df.at[state.index, "reference_context"] = state.reference_context_input
             # state.df.at[state.index, 'metadata'] = state.metadata_input  # It's read-only
             logger.info("--------SAVE----------------------")
 
@@ -141,20 +127,14 @@ def record_update():
             state.df.to_json(file_path, orient="records", lines=True, index=False)
 
     # Text input for the question, storing the user's input in the session state
-    state.index_output = st.write(
-        "Record: " + str(state.index + 1) + "/" + str(state.df.shape[0])
-    )
+    state.index_output = st.write("Record: " + str(state.index + 1) + "/" + str(state.df.shape[0]))
     state.hide_input = st.checkbox("Hide", value=state.hide_input)
     state.question_input = st.text_area("question", height=1, value=state.question_input)
-    state.reference_answer_input = st.text_area(
-        "Reference answer", height=1, value=state.reference_answer_input
-    )
+    state.reference_answer_input = st.text_area("Reference answer", height=1, value=state.reference_answer_input)
     state.reference_context_input = st.text_area(
         "Reference context", height=10, value=state.reference_context_input, disabled=True
     )
-    state.metadata_input = st.text_area(
-        "Metadata", height=1, value=state.metadata_input, disabled=True
-    )
+    state.metadata_input = st.text_area("Metadata", height=1, value=state.metadata_input, disabled=True)
 
     if save_clicked:
         st.success("Q&A saved successfully!")

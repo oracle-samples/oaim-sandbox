@@ -19,6 +19,7 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 
 logger = logging_config.logging.getLogger("modules.chatbot")
 
+
 def generate_response(
     chat_mgr, input, chat_history, enable_history, rag_params, chat_instr, context_instr=None, stream=False
 ):
@@ -137,10 +138,6 @@ class ChatCmd:
 
         # History Aware Chain
         rag_chain = create_retrieval_chain(history_aware_retriever, question_answer_chain)
-
-        ### Statefully manage chat history ###
-        
-
 
         conversational_rag_chain = RunnableWithMessageHistory(
             rag_chain,

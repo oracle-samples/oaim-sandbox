@@ -140,6 +140,7 @@ def initialize_rag():
     except AttributeError:
         st.error("Application has not been initialized, please restart.", icon="⛑️")
 
+
 def show_rag_refs(context):
     """When RAG Enabled, show the references"""
     st.markdown(
@@ -179,6 +180,7 @@ def show_rag_refs(context):
 
     for link in links:
         st.markdown("- " + link)
+
 
 def initialize_chatbot(ll_model):
     """Initialize the Chatbot"""
