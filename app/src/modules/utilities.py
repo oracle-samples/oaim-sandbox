@@ -394,11 +394,11 @@ def oci_init_client(client_type, config=None, retries=True):
         retry_strategy = oci.retry.NoneRetryStrategy()
 
     # Initialize Client (Workload Identity, Token and API)
+    client = None
     if not config:
         logger.info("OCI Authentication with Workload Identity")
-        signer = oci.auth.signers.get_oke_workload_identity_resource_principal_signer()
-        # Region is required for endpoint generation; not sure its value matters
-        client = client_type(config={"region": "us-ashburn-1"}, signer=signer)
+        oke_workload_signer = oci.auth.signers.get_oke_workload_identity_resource_principal_signer()
+        client = client_type(config={}, signer=oke_workload_signer)
     elif config and config["security_token_file"]:
         logger.info("OCI Authentication with Security Token")
         token = None
@@ -406,7 +406,7 @@ def oci_init_client(client_type, config=None, retries=True):
             token = f.read()
         private_key = oci.signer.load_private_key_from_file(config["key_file"])
         signer = oci.auth.signers.SecurityTokenSigner(token, private_key)
-        client = client_type({"region": config["region"]}, signer=signer)
+        client = client_type(config={"region": config["region"]}, signer=signer)
     else:
         logger.info("OCI Authentication as Standard")
         client = client_type(config, retry_strategy=retry_strategy)
@@ -508,6 +508,8 @@ def oci_get_namespace(config, retries=True):
         raise OciException("Invalid Key Path") from ex
     except UnboundLocalError as ex:
         raise OciException("No Configuration - Disabling OCI") from ex
+    except Exception as ex:
+        raise OciException("Uncaught Exception - Disabling OCI") from ex
 
     return namespace
 

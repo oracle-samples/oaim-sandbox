@@ -57,8 +57,10 @@ def display_logs():
 
 def api_server_start():
     chat_history = StreamlitChatMessageHistory(key="api_chat_history")
-    state.api_server_config["port"] = state.user_api_server_port
-    state.api_server_config["key"] = state.user_api_server_key
+    if "user_api_server_port" in state:
+        state.api_server_config["port"] = state.user_api_server_port
+    if "user_api_server_key" in state:
+        state.api_server_config["key"] = state.user_api_server_key
     if "initialized" in state and state.initialized:
         if "server_thread" not in state:
             try:
@@ -86,7 +88,8 @@ def api_server_start():
                 state.server_thread.start()
                 logger.info("Started API Server on port: %i", state.api_server_config["port"])
             except OSError:
-                st.error("Port is already in use.")
+                if not state.api_server_config["auto_start"]:
+                    st.error("Port is already in use.")
         else:
             st.warning("API Server is already running.")
     else:
@@ -184,6 +187,7 @@ def main():
         key="user_api_server_port",
         disabled=server_running,
     )
+
     right.text_input(
         "API Server Key:",
         type="password",
@@ -193,8 +197,8 @@ def main():
     )
 
     if state.api_server_config["auto_start"]:
-        st.success("API Server automatically started.")
         api_server_start()
+        st.success("API Server automatically started.")
     else:
         if server_running:
             st.button("Stop Server", type="primary", on_click=api_server_stop)

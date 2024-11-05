@@ -17,12 +17,12 @@ faiss-cpu==1.9.0
 giskard==2.15.3
 IPython==8.29.0
 langchain-cohere==0.3.1
-langchain-community==0.3.3
-langchain-huggingface==0.1.1
+langchain-community==0.3.5
+langchain-huggingface==0.1.2
 langchain-ollama==0.2.0
-langchain-openai==0.2.4
-langgraph==0.2.39
-llama_index==0.11.20
+langchain-openai==0.2.5
+langgraph==0.2.45
+llama_index==0.11.21
 lxml==5.3.0
 matplotlib==3.9.2
 oci>=2.0.0

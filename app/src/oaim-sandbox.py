@@ -19,6 +19,7 @@ from content.model_config import initialize_streamlit as model_initialize
 from content.db_config import initialize_streamlit as db_initialize
 from content.prompt_eng import initialize_streamlit as prompt_initialize
 from content.oci_config import initialize_streamlit as oci_initialize
+import content.api_server as api_server_content
 
 logger = logging_config.logging.getLogger("sandbox")
 
@@ -38,6 +39,7 @@ def main():
     model_initialize()
     prompt_initialize()
     oci_initialize()
+    api_server_content.initialize_streamlit()
 
     # Setup rag_params into state enable as default
     if "rag_params" not in state:
@@ -46,6 +48,10 @@ def main():
         state.rag_user_idx = {}
     if "rag_filter" not in state:
         state.rag_filter = {}
+
+    # Start the API server
+    if state.api_server_config["auto_start"]:
+        api_server_content.api_server_start()
 
     # GUI Defaults
     css = """
