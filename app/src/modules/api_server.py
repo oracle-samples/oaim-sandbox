@@ -125,12 +125,14 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
                         self.send_response(200)
                         # Process response to JSON
                     else:
+                        json_response = {"error": "No 'message' field found in request."}
                         self.send_response(400)  # Bad request
 
                     # Add request/response to the queue for output
                     log_queue.put(post_json)
                     log_queue.put(response)
                 except json.JSONDecodeError:
+                    json_response = {"error": "Invalid JSON in request."}
                     self.send_response(400)  # Bad request
             else:
                 # Invalid or missing API Key
@@ -138,15 +140,34 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
                 self.send_response(401)
                 self.send_header("Content-type", "application/json")
                 self.end_headers()
+                self.wfile.write(b'{"error": "Unauthorized. Invalid API Key."}')
                 return
         else:
             # Return a 404 response for unknown paths
             self.send_response(404)
+            json_response = {"error": "Path not found."}
 
         # Send the response
         self.send_header("Access-Control-Allow-Origin", "*")  # Add CORS header
         self.send_header("Content-Type", "application/json")
         self.end_headers()
+
+        full_context = None
+        max_items = 0
+        if self.rag_params["enable"]:
+            if "context" in response:
+                full_context = response["context"]
+                max_items = min(len(full_context), 3)
+            if full_context:
+                sources = set()
+                for i in range(max_items):
+                    chunk = full_context[i]
+                    sources.add(os.path.basename(chunk.metadata["source"]))
+                json_response = {"answer": response["answer"], "sources": list(sources)}
+        else:
+            json_response = {"answer": response.content}
+
+        self.wfile.write(json.dumps(json_response).encode("utf-8"))
 
 
 def run_server(port, chat_manager, rag_params, lm_instr, context_instr, api_key, chat_history, enable_history):

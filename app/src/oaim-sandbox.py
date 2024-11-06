@@ -52,6 +52,8 @@ def main():
     # Start the API server
     if state.api_server_config["auto_start"]:
         api_server_content.api_server_start()
+    if "user_chat_history" not in state:
+        state.user_chat_history = True
 
     # GUI Defaults
     css = """
