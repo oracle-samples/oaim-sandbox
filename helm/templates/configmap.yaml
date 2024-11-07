@@ -17,7 +17,7 @@ data:
     serverAddress = "127.0.0.1"
 
     [server]
-    port = "{{ .Values.service.port }}"
+    port = "{{ .Values.service.http.port }}"
     cookieSecret = "{{ .Chart.Name }}-cookie"
     headless = true
     fileWatcherType = "none"

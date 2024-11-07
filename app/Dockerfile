@@ -12,7 +12,7 @@ RUN microdnf -y install python3.11 python3.11-pip
 RUN python3.11 -m venv --symlinks --upgrade-deps /opt/venv
 COPY ./requirements.txt /opt/requirements.txt
 RUN source /opt/venv/bin/activate && \
-    pip3 install --upgrade pip wheel && \
+    pip3 install --upgrade pip wheel setuptools && \
     pip3 install -r /opt/requirements.txt
 RUN groupadd $RUNUSER && useradd -u 10001 -g $RUNUSER -md /app $RUNUSER;
 RUN install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/.oci

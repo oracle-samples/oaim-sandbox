@@ -19,6 +19,7 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 
 logger = logging_config.logging.getLogger("modules.chatbot")
 
+
 def generate_response(
     chat_mgr, input, chat_history, enable_history, rag_params, chat_instr, context_instr=None, stream=False
 ):
