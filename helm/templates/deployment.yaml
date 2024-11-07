@@ -46,8 +46,13 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.port }}
+              containerPort: {{ .Values.service.http.port }}
               protocol: TCP
+            {{- if .Values.service.api }}
+            - name: api
+              containerPort: {{ .Values.service.api.port }}
+              protocol: TCP
+            {{- end }}
           livenessProbe:
             httpGet:
               path: {{ include "getPath" . | quote }}
@@ -99,6 +104,19 @@ spec:
                 secretKeyRef:
                   name: {{ .Values.oaimSandbox.database.name | lower }}-db-wallet-pass-{{ .Release.Revision }}
                   key: {{ .Values.oaimSandbox.database.name | lower }}-db-wallet-pass-{{ .Release.Revision }}       
+            {{- end }}
+            {{- end }}
+            {{- if .Values.service.api }}
+            {{- if .Values.service.api.port }}
+            - name: API_SERVER_PORT
+              value: {{ .Values.service.api.port | quote }}
+            {{- end }}
+            {{- if and .Values.service.api.apiKeySecretName .Values.service.api.apiKeySecretKey }}
+            - name: API_SERVER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.service.api.apiKeySecretName }}
+                  key: {{ .Values.service.api.apiKeySecretKey }}
             {{- end }}
             {{- end }}
             {{- with .Values.oaimSandbox }}

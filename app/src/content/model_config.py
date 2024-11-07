@@ -157,7 +157,6 @@ def main():
         if update_ll_model:
             st.success("Language Model Configuration - Updated", icon="✅")
 
-
     st.header("Embedding Models")
     with st.form("update_embed_model_config"):
         # Create table header
@@ -209,6 +208,7 @@ def main():
         update_embed_model = st.form_submit_button(label="Save", on_click=update_embed_model_config)
         if update_embed_model:
             st.success("Embedding Model Configuration - Updated", icon="✅")
+
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:
     main()

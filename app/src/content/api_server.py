@@ -3,10 +3,11 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
 
-# spell-checker:ignore streamlit
+# spell-checker:ignore streamlit, langchain, llms
+
 import inspect
-import threading
 import time
+import threading
 
 # Streamlit
 import streamlit as st
@@ -15,8 +16,10 @@ from streamlit import session_state as state
 # Utilities
 import modules.st_common as st_common
 import modules.api_server as api_server
-
 import modules.logging_config as logging_config
+
+# History
+from langchain_community.chat_message_histories import StreamlitChatMessageHistory
 
 logger = logging_config.logging.getLogger("api_server")
 
@@ -32,17 +35,20 @@ def initialize_streamlit():
 
 
 def display_logs():
-    log_placeholder = st.empty()  # A placeholder to update logs
-    logs = []  # Store logs for display
-
     try:
         while "server_thread" in st.session_state:
             try:
                 # Retrieve log from queue (non-blocking)
-                log_item = api_server.log_queue.get_nowait()
-                logs.append(log_item)
-                # Update the placeholder with new logs
-                log_placeholder.text("\n".join(logs))
+                msg = api_server.log_queue.get_nowait()
+                logger.info("API Msg: %s", msg)
+                if "message" in msg:
+                    st.chat_message("human").write(msg["message"])
+                else:
+                    if state.rag_params["enable"]:
+                        st.chat_message("ai").write(msg["answer"])
+                        st_common.show_rag_refs(msg["context"])
+                    else:
+                        st.chat_message("ai").write(msg.content)
             except api_server.queue.Empty:
                 time.sleep(0.1)  # Avoid busy-waiting
     finally:
@@ -50,31 +56,40 @@ def display_logs():
 
 
 def api_server_start():
-    state.api_server_config["port"] = state.user_api_server_port
-    state.api_server_config["key"] = state.user_api_server_key
+    chat_history = StreamlitChatMessageHistory(key="api_chat_history")
+    if "user_api_server_port" in state:
+        state.api_server_config["port"] = state.user_api_server_port
+    if "user_api_server_key" in state:
+        state.api_server_config["key"] = state.user_api_server_key
     if "initialized" in state and state.initialized:
         if "server_thread" not in state:
-            state.httpd = api_server.run_server(
-                state.api_server_config["port"],
-                state.chat_manager,
-                state.rag_params,
-                state.lm_instr,
-                state.context_instr,
-                state.api_server_config["key"],
-            )
+            try:
+                state.httpd = api_server.run_server(
+                    state.api_server_config["port"],
+                    state.chat_manager,
+                    state.rag_params,
+                    state.lm_instr,
+                    state.context_instr,
+                    state.api_server_config["key"],
+                    chat_history,
+                    state.user_chat_history,
+                )
 
-            # Start the server in the thread
-            def api_server_process(httpd):
-                httpd.serve_forever()
+                # Start the server in the thread
+                def api_server_process(httpd):
+                    httpd.serve_forever()
 
-            state.server_thread = threading.Thread(
-                target=api_server_process,
-                # Trailing , ensures tuple is passed
-                args=(state.httpd,),
-                daemon=True,
-            )
-            state.server_thread.start()
-            logger.info("Started API Server on port: %i", state.api_server_config["port"])
+                state.server_thread = threading.Thread(
+                    target=api_server_process,
+                    # Trailing , ensures tuple is passed
+                    args=(state.httpd,),
+                    daemon=True,
+                )
+                state.server_thread.start()
+                logger.info("Started API Server on port: %i", state.api_server_config["port"])
+            except OSError:
+                if not state.api_server_config["auto_start"]:
+                    st.error("Port is already in use.")
         else:
             st.warning("API Server is already running.")
     else:
@@ -106,22 +121,37 @@ def api_server_stop():
 #############################################################################
 def main():
     """Streamlit GUI"""
-    initialize_streamlit()
     st.header("API Server")
-
-    # LLM Params
-    ll_model = st_common.lm_sidebar()
-
     # Initialize RAG
     st_common.initialize_rag()
-
-    # RAG
-    st_common.rag_sidebar()
+    # Setup History
+    chat_history = StreamlitChatMessageHistory(key="api_chat_history")
 
     #########################################################################
-    # Initialize the Client
+    # Sidebar Settings
+    #########################################################################
+    enabled_llms = sum(model_info["enabled"] for model_info in state.ll_model_config.values())
+    if enabled_llms > 0:
+        initialize_streamlit()
+        enable_history = st.sidebar.checkbox(
+            "Enable History and Context?",
+            value=True,
+            key="user_chat_history",
+        )
+        if st.sidebar.button("Clear History", disabled=not enable_history):
+            chat_history.clear()
+        st.sidebar.divider()
+        ll_model = st_common.lm_sidebar()
+        st_common.rag_sidebar()
+    else:
+        st.error("No chat models are configured and/or enabled.", icon="🚨")
+        st.stop()
+
+    #########################################################################
+    # Main
     #########################################################################
     if "initialized" not in state:
+        api_server_stop()
         if not state.rag_params["enable"] or all(
             state.rag_params[key] for key in ["model", "chunk_size", "chunk_overlap", "distance_metric"]
         ):
@@ -130,10 +160,6 @@ def main():
                 state.initialized = True
                 st_common.update_rag()
                 logger.debug("Force rerun to save state")
-                if "server_thread" in state:
-                    logger.info("Restarting API Server")
-                    api_server_stop()
-                    api_server_start()
                 st.rerun()
             except Exception as ex:
                 logger.exception(ex, exc_info=False)
@@ -143,18 +169,14 @@ def main():
                     st.rerun()
                 st.stop()
         else:
-            # RAG Enabled but not configured
-            if "server_thread" in state:
-                logger.info("Stopping API Server")
-                api_server_stop()
+            st.error("Not all required RAG options are set, please review or disable RAG.")
+            st.stop()
 
-    #########################################################################
-    # API Server
-    #########################################################################
     server_running = False
     if "server_thread" in state:
         server_running = True
-        st.success("API Server is Running")
+    elif state.api_server_config["auto_start"]:
+        server_running = True
 
     left, right = st.columns([0.2, 0.8])
     left.number_input(
@@ -165,6 +187,7 @@ def main():
         key="user_api_server_port",
         disabled=server_running,
     )
+
     right.text_input(
         "API Server Key:",
         type="password",
@@ -173,15 +196,20 @@ def main():
         disabled=server_running,
     )
 
-    if "server_thread" in state:
-        st.button("Stop Server", type="primary", on_click=api_server_stop)
-    elif "initialized" in state and state.initialized:
-        st.button("Start Server", type="primary", on_click=api_server_start)
+    if state.api_server_config["auto_start"]:
+        api_server_start()
+        st.success("API Server automatically started.")
     else:
-        st.error("Not all required RAG options are set, please review or disable RAG.")
+        if server_running:
+            st.button("Stop Server", type="primary", on_click=api_server_stop)
+        else:
+            st.button("Start Server", type="primary", on_click=api_server_start)
 
-    st.subheader("Activity")
+    #########################################################################
+    # API Server Centre
+    #########################################################################
     if "server_thread" in state:
+        st.subheader("Activity")
         with st.container(border=True):
             display_logs()
 

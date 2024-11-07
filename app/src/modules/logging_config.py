@@ -28,5 +28,6 @@ def setup_logging():
     # Sagemaker continuously complains about config, suppress
     logging.getLogger("sagemaker.config").setLevel(logging.WARNING)
 
+
 # Call setup_logging when this module is imported
 setup_logging()

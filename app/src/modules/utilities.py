@@ -51,29 +51,25 @@ import oci  # pylint: disable=wrong-import-position
 # General
 ###############################################################################
 def is_url_accessible(url):
-    """Check that URL is Available"""
-    logger.debug("Checking %s is accessible", url)
+    """Check if the URL is accessible."""
+    logger.debug("Checking if %s is accessible", url)
+
     try:
         response = requests.get(url, timeout=2)
-        logger.info("Checking %s resulted in %s", url, response.status_code)
-        # Check if the response status code is 200 (OK) 403 (Forbidden) 404 (Not Found) 421 (Misdirected)
-        if response.status_code in [200, 403, 404, 421]:
+        logger.info("Response for %s: %s", url, response.status_code)
+
+        if response.status_code in {200, 403, 404, 421}:
             return True, None
-        else:
-            err_msg = f"{url} is not accessible. (Status: {response.status_code})"
-            logger.warning(err_msg)
-            return False, err_msg
-    except requests.exceptions.ConnectionError:
-        err_msg = f"{url} is not accessible. (Connection Error)"
+
+        err_msg = f"{url} is not accessible. (Status: {response.status_code})"
         logger.warning(err_msg)
         return False, err_msg
-    except requests.exceptions.Timeout:
-        err_msg = f"{url} is not accessible. (Request Timeout)"
+
+    except requests.exceptions.RequestException as ex:
+        err_msg = f"{url} is not accessible. ({type(ex).__name__})"
         logger.warning(err_msg)
-        return False, err_msg
-    except requests.RequestException as ex:
         logger.exception(ex, exc_info=False)
-        return False, ex
+        return False, err_msg
 
 
 ###############################################################################
@@ -97,6 +93,15 @@ def get_ll_model(model, ll_models_config=None, giskarded=False):
 
     logger.debug("Matching LLM API: %s", llm_api)
 
+    common_params = {
+        "model": model,
+        "temperature": lm_params["temperature"][0],
+        "max_tokens": lm_params["max_tokens"][0],
+        "top_p": lm_params["top_p"][0],
+        "frequency_penalty": lm_params["frequency_penalty"][0],
+        "presence_penalty": lm_params["presence_penalty"][0],
+    }
+
     ## Start - Add Additional Model Authentication Here
     client = None
     if giskarded:
@@ -104,49 +109,13 @@ def get_ll_model(model, ll_models_config=None, giskarded=False):
         _client = OpenAI(api_key=giskard_key, base_url=f"{llm_url}/v1/")
         client = OpenAIClient(model=model, client=_client)
     elif llm_api == "OpenAI":
-        client = ChatOpenAI(
-            api_key=lm_params["api_key"],
-            model_name=model,
-            temperature=lm_params["temperature"][0],
-            max_tokens=lm_params["max_tokens"][0],
-            top_p=lm_params["top_p"][0],
-            frequency_penalty=lm_params["frequency_penalty"][0],
-            presence_penalty=lm_params["presence_penalty"][0],
-        )
+        client = ChatOpenAI(api_key=lm_params["api_key"], **common_params)
     elif llm_api == "Cohere":
-        client = ChatCohere(
-            cohere_api_key=lm_params["api_key"],
-            model=model,
-            temperature=lm_params["temperature"][0],
-            max_tokens=lm_params["max_tokens"][0],
-            top_p=lm_params["top_p"][0],
-            frequency_penalty=lm_params["frequency_penalty"][0],
-            presence_penalty=lm_params["presence_penalty"][0],
-        )
+        client = ChatCohere(cohere_api_key=lm_params["api_key"], **common_params)
     elif llm_api == "ChatPerplexity":
-        client = ChatPerplexity(
-            pplx_api_key=lm_params["api_key"],
-            model=model,
-            temperature=lm_params["temperature"][0],
-            max_tokens=lm_params["max_tokens"][0],
-            model_kwargs={
-                "top_p": lm_params["top_p"][0],
-                "frequency_penalty": lm_params["frequency_penalty"][0],
-                "presence_penalty": lm_params["presence_penalty"][0],
-            },
-        )
+        client = ChatPerplexity(pplx_api_key=lm_params["api_key"], model_kwargs=common_params)
     elif llm_api == "ChatOllama":
-        client = ChatOllama(
-            model=model,
-            base_url=llm_url,
-            temperature=lm_params["temperature"][0],
-            max_tokens=lm_params["max_tokens"][0],
-            model_kwargs={
-                "top_p": lm_params["top_p"][0],
-                "frequency_penalty": lm_params["frequency_penalty"][0],
-                "presence_penalty": lm_params["presence_penalty"][0],
-            },
-        )
+        client = ChatOllama(base_url=lm_params["url"], model_kwargs=common_params)
     ## End - Add Additional Model Authentication Here
     api_accessible, err_msg = is_url_accessible(llm_url)
 
@@ -264,7 +233,7 @@ def init_vs(db_conn, embedding_function, store_table, distance_metric):
 
 
 def get_vs_table(model, chunk_size, chunk_overlap, distance_metric, embed_alias=None):
-    """Get a list of Vector Store Tables"""
+    """Return the concatenated VS Table name and comment"""
     chunk_overlap_ceil = math.ceil(chunk_overlap)
     table_string = f"{model}_{chunk_size}_{chunk_overlap_ceil}_{distance_metric}"
     if embed_alias:
@@ -425,11 +394,11 @@ def oci_init_client(client_type, config=None, retries=True):
         retry_strategy = oci.retry.NoneRetryStrategy()
 
     # Initialize Client (Workload Identity, Token and API)
+    client = None
     if not config:
         logger.info("OCI Authentication with Workload Identity")
-        signer = oci.auth.signers.get_oke_workload_identity_resource_principal_signer()
-        # Region is required for endpoint generation; not sure its value matters
-        client = client_type(config={"region": "us-ashburn-1"}, signer=signer)
+        oke_workload_signer = oci.auth.signers.get_oke_workload_identity_resource_principal_signer()
+        client = client_type(config={}, signer=oke_workload_signer)
     elif config and config["security_token_file"]:
         logger.info("OCI Authentication with Security Token")
         token = None
@@ -437,7 +406,7 @@ def oci_init_client(client_type, config=None, retries=True):
             token = f.read()
         private_key = oci.signer.load_private_key_from_file(config["key_file"])
         signer = oci.auth.signers.SecurityTokenSigner(token, private_key)
-        client = client_type({"region": config["region"]}, signer=signer)
+        client = client_type(config={"region": config["region"]}, signer=signer)
     else:
         logger.info("OCI Authentication as Standard")
         client = client_type(config, retry_strategy=retry_strategy)
@@ -539,6 +508,8 @@ def oci_get_namespace(config, retries=True):
         raise OciException("Invalid Key Path") from ex
     except UnboundLocalError as ex:
         raise OciException("No Configuration - Disabling OCI") from ex
+    except Exception as ex:
+        raise OciException("Uncaught Exception - Disabling OCI") from ex
 
     return namespace
 

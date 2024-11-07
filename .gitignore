@@ -15,6 +15,7 @@ app/THIRD_PARTY_LICENSES.txt
 rag/**
 sbin/**
 helm/values.yaml
+**/*.bak
 
 ##############################################################################
 # Enviroment (PyVen, IDE, etc.)
