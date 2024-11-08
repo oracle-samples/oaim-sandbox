@@ -61,6 +61,8 @@ def api_server_start():
         state.api_server_config["port"] = state.user_api_server_port
     if "user_api_server_key" in state:
         state.api_server_config["key"] = state.user_api_server_key
+    if "user_chat_history" not in state:
+        state.user_chat_history = True
     if "initialized" in state and state.initialized:
         if "server_thread" not in state:
             try:
