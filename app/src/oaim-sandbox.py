@@ -79,8 +79,9 @@ def main():
     state.disable_admin = os.environ.get("DISABLE_ADMIN", "false").lower() == "true" and not state.disable_tools
     state.disable_oci = os.environ.get("DISABLE_OCI", "false").lower() == "true" and not state.disable_admin
     
-    state.disable_agents = True # EXPERIMENTAL FUNCTION
-
+    state.disable_agents = os.environ.get("DISABLE_AGENTS", "false").lower()  # EXPERIMENTAL FUNCTION
+    logger.info("DISABLE_AGENTS: "+str(state.disable_agents))
+ 
 
     # Left Hand Side - Navigation
     chatbot = st.Page("content/chatbot.py", title="ChatBot", icon="💬", default=True)

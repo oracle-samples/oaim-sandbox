@@ -29,6 +29,10 @@ spring:
           model: ${OPENAI_EMBEDDING_MODEL}
     ollama:
       base-url: ${OLLAMA_BASE_URL}
+      init:
+        pull-model-strategy: always
+        timeout: 60s
+        max-retries: 1
       chat:
         options:
           top-p: {OL_TOP_P}

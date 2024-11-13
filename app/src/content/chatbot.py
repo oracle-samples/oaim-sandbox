@@ -9,6 +9,7 @@ import inspect
 # Streamlit
 import streamlit as st
 from streamlit import session_state as state
+import os
 
 # Utilities
 import modules.st_common as st_common
@@ -20,7 +21,11 @@ from langchain_community.chat_message_histories import StreamlitChatMessageHisto
 
 logger = logging_config.logging.getLogger("chatbot")
 
-DISABLE_AGENTS = True
+
+state.disable_agents = os.environ.get("DISABLE_AGENTS") # EXPERIMENTAL FUNCTION
+DISABLE_AGENTS = state.disable_agents  if os.environ.get("DISABLE_AGENTS") is not None else true
+logger.info("DISABLE_AGENTS: " + str(DISABLE_AGENTS))
+
 
 #############################################################################
 # MAIN
