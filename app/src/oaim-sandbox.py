@@ -70,18 +70,27 @@ def main():
     st.markdown(css, unsafe_allow_html=True)
     st.logo("images/logo_light.png")
 
+    
+
     # Enable/Disable Functionality
     state.disable_api = os.environ.get("DISABLE_API", "false").lower() == "true"
     state.disable_tools = os.environ.get("DISABLE_TOOLS", "false").lower() == "true"
     state.disable_tests = os.environ.get("DISABLE_TESTS", "false").lower() == "true" and not state.disable_tools
     state.disable_admin = os.environ.get("DISABLE_ADMIN", "false").lower() == "true" and not state.disable_tools
     state.disable_oci = os.environ.get("DISABLE_OCI", "false").lower() == "true" and not state.disable_admin
+    
+    state.disable_agents = True # EXPERIMENTAL FUNCTION
+
 
     # Left Hand Side - Navigation
     chatbot = st.Page("content/chatbot.py", title="ChatBot", icon="💬", default=True)
     navigation = {
         "": [chatbot],
     }
+    if not state.disable_agents:
+        agents = st.Page("content/agents.py", title="Agents", icon="🧪")
+        navigation[""].append(agents)
+
     if not state.disable_tests:
         test_framework = st.Page("content/test_framework.py", title="Test Framework", icon="🧪")
         navigation[""].append(test_framework)

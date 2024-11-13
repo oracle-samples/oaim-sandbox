@@ -63,7 +63,9 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const data = await response.json();
-            return data.choices[0].message.content;
+            console.log(data)
+            //return data.choices[0].message.content;
+            return data.answer + "\n \n Source: " + data.sources[0]
         } catch (error) {
             console.error('Error fetching API:', error);
             return "Sorry, I couldn't connect to the server.";

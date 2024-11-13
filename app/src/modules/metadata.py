@@ -341,3 +341,20 @@ def prompt_engineering():
     for key, value in prompt_engineering_dict.items():
         prompt_engineering_dict[key]["prompt"] = " ".join(re.split(pattern, value["prompt"], flags=re.UNICODE))
     return prompt_engineering_dict
+
+
+
+##########################################
+# LM Agents
+##########################################
+def agents():
+    """Define agents signature"""
+    agents_dict = {
+        "DEFAULT": {
+            "name": "query_entity",
+            "desc": """Query the entity employee only giving a name as input""",
+            "type": "SQL",
+            "action" : "SELECT * FROM emp WHERE UPPER(ename) = UPPER(:key)" 
+        },
+    }
+    return agents_dict

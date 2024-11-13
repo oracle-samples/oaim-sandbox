@@ -20,6 +20,7 @@ from langchain_community.chat_message_histories import StreamlitChatMessageHisto
 
 logger = logging_config.logging.getLogger("chatbot")
 
+DISABLE_AGENTS = True
 
 #############################################################################
 # MAIN
@@ -101,20 +102,41 @@ def main():
                     context_instr=state.context_instr,
                     stream=True,
                 )
+                logger.info("chatbot.generate_response() done")
+
                 if state.rag_params["enable"]:
+                    logger.info("RAGS param enabled")
                     message_placeholder = st.chat_message("ai").empty()
                     full_answer = ""
                     full_context = None
-
+                    logger.info("response:")
+                    logger.info(response)
                     for chunk in response:
-                        full_answer += chunk.get("answer", "")
+                        logger.info("Chunks in response")
+                        if 'disable_agents' not in state:
+                            state.disable_agents = DISABLE_AGENTS
+                        if (not state.disable_agents):
+                            full_answer += chunk.get("output", "")
+                            logger.info("AGENT chunk")
+                            logger.info(full_answer)
+                        else:
+                            logger.info("RAG chunk")
+                            full_answer += chunk.get("answer", "")
+                            logger.info(full_answer)
                         if "context" in chunk:
                             full_context = chunk["context"]
                         message_placeholder.markdown(full_answer)
                     if full_context:
+                        #CONFLICT
                         st_common.show_rag_refs(full_context)
+                    logger.info("full context:")
+                    logger.info(full_answer)
                 else:
+                    #if full_context:
+                    #    logger.info("full context:")
+                    #    logger.info(full_answer)
                     st.chat_message("ai").write_stream(response)
+                    
             except Exception as ex:
                 st.chat_message("ai").write(f"I'm sorry, something's gone wrong: {ex}")
                 st.chat_message("ai").write("Please try refreshing your browser.")
