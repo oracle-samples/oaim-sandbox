@@ -436,11 +436,9 @@ def create_zip(state_dict_filt, provider):
 # Check if the conf is full ollama or openai, currently supported for springai export
 def check_hybrid_conf(session_state_json):
 
-    embedding_models = meta.embedding_models()
-    chat_models = meta.ll_models()
-    
-    embModel =  embedding_models.get(session_state_json["rag_params"].get("model"))
-    chatModel = chat_models.get(session_state_json["ll_model"])
+    chatModel = state.ll_model_config.get(session_state_json["ll_model"])
+    embModel = state.embed_model_config.get(state.rag_params["model"])
+
     logger.info("Model: %s",session_state_json["ll_model"])
     logger.info("Embedding Model embModel: %s",embModel)
     logger.info("Chat Model: %s",chatModel)
