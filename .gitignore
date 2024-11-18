@@ -39,3 +39,7 @@ spring_ai/create_user.sql
 spring_ai/drop.sql
 start.sh
 spring_ai/env.sh
+temp/rag_agent.ipynb
+temp/tools.ipynb
+temp/tools.py
+temp/json-dual.sql
