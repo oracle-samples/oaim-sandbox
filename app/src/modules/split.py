@@ -150,7 +150,7 @@ def load_and_split_documents(
     If output_dir, a list of written json files
     """
     split_files = []
-    split_docos = []
+    all_split_docos = []
     for file in src_files:
         name = os.path.basename(file)
         stat = os.stat(file)
@@ -175,13 +175,15 @@ def load_and_split_documents(
         split_doc = split_document(model, chunk_size, chunk_overlap, loaded_doc, extension)
 
         # Add IDs to metadata
+        split_docos = []
         for idx, chunk in enumerate(split_doc, start=1):
             split_doc_with_mdata = process_metadata(idx, chunk)
             split_docos += split_doc_with_mdata
-
+            
         if write_json and output_dir:
             split_files.append(doc_to_json(split_docos, file, output_dir))
-    logger.info("Total Number of Chunks: %i", len(split_docos))
+        all_split_docos += split_docos
+    logger.info("Total Number of Chunks: %i", len(all_split_docos))
 
     return split_docos, split_files
 
