@@ -52,6 +52,12 @@ To run the application on bare-metal; download the [source](https://github.com/o
    pip3 install -r app/requirements.txt
    ```
 
+1. Exit from your shell and run again:
+
+   ```bash
+   source .venv/bin/activate
+   ```
+
 1. Start Streamlit:
 
    ```bash

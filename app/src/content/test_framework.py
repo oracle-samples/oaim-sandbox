@@ -188,10 +188,6 @@ def main():
     st_common.set_default_state("test_set", None)
     st_common.set_default_state("temp_dir", None)
 
-    # TO CHECK
-    # file_path = "temp_file.csv"
-    # if os.path.exists(file_path):
-    #    os.remove(file_path)
 
     if state.toggle_generate_test:
         st.header("Q&A Test Dataset Generation")
@@ -256,6 +252,8 @@ def main():
             # Generate Q&A
             qa_file = os.path.join(state["temp_dir"], f"{file_name}_{str(qa_count)}_test_set.json")
             state.qa_file = qa_file
+            logger.info("calling generate with client: ")
+            logger.info(llm_client)
             state.test_set = utilities.generate_qa(qa_file, kb, qa_count, client=llm_client)
             placeholder.empty()
             st.success("Q&A Generation Succeeded.", icon="✅")
