@@ -437,8 +437,13 @@ def create_zip(state_dict_filt, provider):
 def check_hybrid_conf(session_state_json):
 
     chatModel = state.ll_model_config.get(session_state_json["ll_model"])
-    embModel = state.embed_model_config.get(state.rag_params["model"])
 
+    if "rag_params" in state and "model" in state.rag_params:
+        embModel = state.embed_model_config.get(state.rag_params["model"])
+    else:
+        # Handle the case where rag_params or "model" key does not exist
+        embModel = None  # or some default value
+    
     logger.info("Model: %s",session_state_json["ll_model"])
     logger.info("Embedding Model embModel: %s",embModel)
     logger.info("Chat Model: %s",chatModel)
