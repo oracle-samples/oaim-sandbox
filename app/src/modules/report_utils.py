@@ -120,7 +120,7 @@ def record_update():
                 "question": state.question_input,
                 "reference_answer": state.reference_answer_input,
                 "reference_context": state.reference_context_input,
-                "conversation_history": "",
+                "conversation_history": [],
             }
             for key, value in new_data.items():
                 state.df.at[index, key] = value
