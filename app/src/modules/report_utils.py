@@ -129,12 +129,12 @@ def record_update():
     # Text input for the question, storing the user's input in the session state
     state.index_output = st.write("Record: " + str(state.index + 1) + "/" + str(state.df.shape[0]))
     state.hide_input = st.checkbox("Hide", value=state.hide_input)
-    state.question_input = st.text_area("question", height=1, value=state.question_input)
-    state.reference_answer_input = st.text_area("Reference answer", height=1, value=state.reference_answer_input)
+    state.question_input = st.text_area("question", height=100, value=state.question_input)
+    state.reference_answer_input = st.text_area("Reference answer", height=100, value=state.reference_answer_input)
     state.reference_context_input = st.text_area(
-        "Reference context", height=10, value=state.reference_context_input, disabled=True
+        "Reference context", height=100, value=state.reference_context_input, disabled=True
     )
-    state.metadata_input = st.text_area("Metadata", height=1, value=state.metadata_input, disabled=True)
+    state.metadata_input = st.text_area("Metadata", height=100, value=state.metadata_input, disabled=True)
 
     if save_clicked:
         st.success("Q&A saved successfully!")
