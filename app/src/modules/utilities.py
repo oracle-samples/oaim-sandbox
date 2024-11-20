@@ -82,7 +82,8 @@ def get_ll_model(model, ll_models_config=None, giskarded=False):
     lm_params = ll_models_config[model]
 
     logger.info(
-        "Configuring LLM - URL: %s; Temp - %s; Max Tokens - %s",
+        "Configuring LLM - Model: %s; URL: %s; Temp - %s; Max Tokens - %s",
+        model,
         lm_params["url"],
         lm_params["temperature"][0],
         lm_params["max_tokens"][0],
@@ -115,7 +116,7 @@ def get_ll_model(model, ll_models_config=None, giskarded=False):
     elif llm_api == "ChatPerplexity":
         client = ChatPerplexity(pplx_api_key=lm_params["api_key"], model_kwargs=common_params)
     elif llm_api == "ChatOllama":
-        client = ChatOllama(base_url=lm_params["url"], model_kwargs=common_params)
+        client = ChatOllama(model=model,base_url=lm_params["url"], model_kwargs=common_params)
     ## End - Add Additional Model Authentication Here
     api_accessible, err_msg = is_url_accessible(llm_url)
 

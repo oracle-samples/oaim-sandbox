@@ -45,8 +45,11 @@ def display_logs():
                     st.chat_message("human").write(msg["message"])
                 else:
                     if state.rag_params["enable"]:
-                        st.chat_message("ai").write(msg["answer"])
-                        st_common.show_rag_refs(msg["context"])
+                        logger.info("msg[\"answer\"]")
+                        logger.info(msg)
+                        st.chat_message("ai").write(msg)
+                        if "context" in msg and msg["context"]:
+                            st_common.show_rag_refs(msg["context"])
                     else:
                         st.chat_message("ai").write(msg.content)
             except api_server.queue.Empty:

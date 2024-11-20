@@ -48,8 +48,15 @@ document.addEventListener('DOMContentLoaded', () => {
     async function getBotResponse(userMessage) {
         const apiUrl = chatBotUrl;
         const messagePayload = {
-            message: userMessage
+            model: "",
+            messages: [
+                {
+                    role: "user",
+                    content: userMessage
+                }
+            ]
         };
+
 
 
         try {
@@ -63,7 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             const data = await response.json();
-            return data.choices[0].message.content;
+            //return data.answer;
+            return data.choices[0].text+"\n Source: "+data.sources[0];
         } catch (error) {
             console.error('Error fetching API:', error);
             return "Sorry, I couldn't connect to the server.";

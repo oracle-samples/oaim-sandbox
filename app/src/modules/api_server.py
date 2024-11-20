@@ -103,9 +103,14 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
                 try:
                     # Parse the POST data as JSON
                     post_json = json.loads(post_data)
+                    messages = post_json.get("messages")
+                   
+                    # Extract the content of 'user'
+                    message = next(item['content'] for item in messages if item['role'] == 'user')
 
-                    # Extract the 'message' field from the JSON
-                    message = post_json.get("message")
+                    logger.info(messages)
+                    logger.info(message)
+
                     response = None
                     if message:
                         # Log the incoming message
@@ -123,6 +128,8 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
                             stream=False,
                         )
                         self.send_response(200)
+                        logger.info("RESPONSE:")
+                        logger.info(response)
                         # Process response to JSON
                     else:
                         json_response = {"error": "No 'message' field found in request."}
@@ -163,9 +170,9 @@ class ChatbotHTTPRequestHandler(BaseHTTPRequestHandler):
                 for i in range(max_items):
                     chunk = full_context[i]
                     sources.add(os.path.basename(chunk.metadata["source"]))
-                json_response = {"answer": response["answer"], "sources": list(sources)}
+                json_response = {"choices": [{"text":response["answer"],"index":0}], "sources": list(sources)}
         else:
-            json_response = {"answer": response.content}
+            json_response = {"choices": [{"text":response["answer"],"index":0}]}
 
         self.wfile.write(json.dumps(json_response).encode("utf-8"))
 
