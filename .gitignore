@@ -1,20 +1,14 @@
-## Copyright (c) 2023, 2024, Oracle and/or its affiliates.
-## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
-##############################################################################
-# Developer Custom
-##############################################################################
-assets/docos/samples/oracle-ai-vector-search-users-guide-qa.jsonl
-assets/docos/oracle-ai-vector-search-users-guide.pdf
-
 ##############################################################################
 # Project/User Specific
 ##############################################################################
+**/*.log
 **/requirements.txt
-!app/requirements.txt
+!requirements.txt
+!app/server/requirements.txt
+!app/sandbox/requirements.txt
 app/THIRD_PARTY_LICENSES.txt
-rag/**
-sbin/**
 helm/values.yaml
+sbin/**
 **/*.bak
 
 ##############################################################################
@@ -33,6 +27,11 @@ sonar-project.properties
 __pycache__/
 *.py[cod]
 *$py.class
+
+##############################################################################
+# Random
+##############################################################################
+**/demo*.sh
 spring_ai/src/main/resources/data/sandbox_settings.json
 spring_ai/target/**
 spring_ai/create_user.sql
