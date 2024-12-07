@@ -250,10 +250,45 @@ class LargeLanguageSettings(LanguageParametersModel):
 
 
 class PromptSettings(BaseModel):
-    """Stor Prompt Settings"""
+    """Store Prompt Settings"""
 
     ctx: str = Field(default=None, description="Context Prompt Name")
     sys: str = Field(default=None, description="System Prompt Name")
+
+
+class RagSettings(BaseModel):
+    """Store RAG Settings"""
+
+    enabled: bool = Field(default=False, description="RAG Enabled")
+    vector_store: Optional[str] = Field(default=None, description="Vector Store")
+    search_type: Literal["Similarity", "Similarity Score Threshold", "Maximal Marginal Relevance"] = Field(
+        default="Similarity",
+        description="Search Type",
+    )
+    top_k: Optional[int] = Field(
+        default=4,
+        ge=1,
+        le=10000,
+        description="Top K",
+    )
+    score_threshold: Optional[float] = Field(
+        default=0.0,
+        ge=0.0,
+        le=1.0,
+        description="Minimum Relevance Threshold (for Similarity Score Threshold)",
+    )
+    fetch_k: Optional[int] = Field(
+        default=20,
+        ge=1,
+        le=10000,
+        description="Fetch K (for Maximal Marginal Relevance)",
+    )
+    lambda_mult: Optional[float] = Field(
+        default=0.5,
+        ge=0.0,
+        le=1.0,
+        description="Degree of Diversity (for Maximal Marginal Relevance)",
+    )
 
 
 class Settings(BaseModel):
@@ -272,6 +307,9 @@ class Settings(BaseModel):
     )
     database: Optional[str] = Field(
         description="Database Settings",
+    )
+    rag: Optional[RagSettings] = Field(
+        description="RAG Settings",
     )
 
 

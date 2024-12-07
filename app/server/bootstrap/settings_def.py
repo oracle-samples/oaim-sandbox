@@ -13,6 +13,9 @@ def main() -> list[dict]:
             "prompts": {
                 "ctx": "Basic Example",
                 "sys": "Basic Example"
+            },
+            "rag": {
+                "enabled": False
             }
         },
         {
@@ -21,6 +24,9 @@ def main() -> list[dict]:
             "prompts": {
                 "ctx": "Basic Example",
                 "sys": "Basic Example"
+            },
+            "rag": {
+                "enabled": False
             }
         },
     ]

@@ -4,6 +4,8 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 """
 # spell-checker:ignore streamlit, selectbox
 
+import pandas as pd
+
 import streamlit as st
 from streamlit import session_state as state
 
@@ -56,16 +58,18 @@ def history_sidebar() -> None:
         # Establish a new thread
         state.user_settings["client"] = gen_client_id()
         clear_state_key("sandbox_client")
-    st.sidebar.divider()
 
-
+#####################################################
+# Large Language Options
+#####################################################
 def ll_sidebar() -> None:
     """Language Model Sidebar"""
+    st.sidebar.subheader("Language Model Parameters", divider="red")
     get_model(model_type="ll", enabled=True)
     available_ll_models = list(state.ll_model_enabled.keys())
     if not available_ll_models:
         st.error("No language models are configured and/or enabled. Disabling Sandbox.", icon="❌")
-        st.stop()
+        state.enable_sandbox = False
 
     # If no user_settings defined for , set to the first available_ll_model
     if state.user_settings["ll_model"].get("model") is None:
@@ -149,10 +153,14 @@ def ll_sidebar() -> None:
         on_change=update_user_settings_state,
         args=("ll_model", "presence_penalty"),
     )
-    st.sidebar.divider()
 
 
+
+#####################################################
+# RAG Options
+#####################################################
 def rag_sidebar() -> None:
+    st.sidebar.subheader("Retreival Agumented Generation", divider="red")
     get_model(model_type="embed", enabled=True)
     available_embed_models = list(state.embed_model_enabled.keys())
     if not available_embed_models:
@@ -166,13 +174,144 @@ def rag_sidebar() -> None:
     if db_status != "ACTIVE":
         logger.debug("RAG Disabled (Database not configured)")
         st.warning("Database is not configured. Disabling RAG.", icon="⚠️")
+        update_user_settings_state("rag", "enabled", False)
 
-    rag_enable = st.sidebar.checkbox(
+    rag_enabled = st.sidebar.checkbox(
         "Enable RAG?",
-        value=db_status == "ACTIVE",
+        value=state.user_settings["rag"]["enabled"],
         disabled=db_status != "ACTIVE",
+        key="selected_rag_enabled",
+        on_change=update_user_settings_state,
+        args=("rag", "enabled"),
     )
 
-    if rag_enable:
-        # Get Vector Storage
-        pass
+    if rag_enabled:
+        ##########################
+        # Search
+        ##########################
+        # TODO(gotsysdba) "Similarity Score Threshold" currently raises NotImplementedError
+        # rag_search_type_list =
+        # ["Similarity", "Similarity Score Threshold", "Maximal Marginal Relevance"]
+        rag_search_type_list = ["Similarity", "Maximal Marginal Relevance"]
+        rag_search_type = st.sidebar.selectbox(
+            "Search Type:",
+            rag_search_type_list,
+            index=rag_search_type_list.index(state.user_settings["rag"]["search_type"]),
+            key="selected_rag_search_type",
+            on_change=update_user_settings_state,
+            args=("rag", "search_type"),
+        )
+        st.sidebar.number_input(
+            "Top K:",
+            value=state.user_settings["rag"]["top_k"],
+            min_value=1,
+            max_value=10000,
+            step=1,
+            key="selected_rag_top_k",
+            on_change=update_user_settings_state,
+            args=("rag", "top_k"),
+        )
+        if rag_search_type == "Similarity Score Threshold":
+            st.sidebar.slider(
+                "Minimum Relevance Threshold:",
+                value=state.user_settings["rag"]["score_threshold"],
+                min_value=0.0,
+                max_value=1.0,
+                step=0.1,
+                on_change=update_user_settings_state,
+                args=("rag", "score_threshold"),
+            )
+        if rag_search_type == "Maximal Marginal Relevance":
+            st.sidebar.number_input(
+                "Fetch K:",
+                value=state.user_settings["rag"]["fetch_k"],
+                min_value=1,
+                max_value=10000,
+                step=1,
+                key="selected_rag_fetch_k",
+                on_change=update_user_settings_state,
+                args=("rag", "fetch_k"),
+            )
+            st.sidebar.slider(
+                "Degree of Diversity:",
+                value=state.user_settings["rag"]["lambda_mult"],
+                min_value=0.0,
+                max_value=1.0,
+                step=0.1,
+                key="selected_rag_lambda_mult",
+                on_change=update_user_settings_state,
+                args=("rag", "lambda_mult"),
+            )
+
+        ##########################
+        # Vector Store
+        ##########################
+        st.sidebar.subheader("Embedding",divider="red")
+        vs_df = pd.DataFrame(state.database_config[state.user_settings["database"]].get("vector_stores"))
+
+        def rag_reset() -> None:
+            for key in [k for k in state if "selected_rag" in k]:
+                clear_state_key(key)
+            update_user_settings_state("rag", "vector_store", None)
+
+        # Function to handle selectbox with auto-setting for a single unique value
+        def rag_gen_selectbox(label, options, key):
+            valid_options = [option for option in options if option != ""]
+            if not valid_options:  # Disable the selectbox if no valid options are available
+                disabled = True
+                selected_value = ""
+            else:
+                disabled = False
+                if len(valid_options) == 1:  # Pre-select if only one unique option
+                    selected_value = valid_options[0]
+                else:
+                    selected_value = ""
+
+            return st.sidebar.selectbox(
+                label,
+                options=[""] + valid_options,
+                key=key,
+                index=([""] + valid_options).index(selected_value),
+                disabled=disabled,
+            )
+
+        # Dynamically update filtered_df based on selected filters
+        def update_filtered_df():
+            filtered = vs_df.copy()
+            if st.session_state.get("selected_rag_alias"):
+                filtered = filtered[filtered["alias"] == st.session_state["selected_rag_alias"]]
+            if st.session_state.get("selected_rag_model"):
+                filtered = filtered[filtered["model"] == st.session_state["selected_rag_model"]]
+            if st.session_state.get("selected_rag_chunk_size"):
+                filtered = filtered[filtered["chunk_size"] == st.session_state["selected_rag_chunk_size"]]
+            if st.session_state.get("selected_rag_chunk_overlap"):
+                filtered = filtered[filtered["chunk_overlap"] == st.session_state["selected_rag_chunk_overlap"]]
+            if st.session_state.get("selected_rag_distance_metric"):
+                filtered = filtered[filtered["distance_metric"] == st.session_state["selected_rag_distance_metric"]]
+            return filtered
+
+        # Initialize filtered options
+        filtered_df = update_filtered_df()
+
+        # Render selectboxes with updated options
+        alias = rag_gen_selectbox("Select Alias:", filtered_df["alias"].unique().tolist(), "selected_rag_alias")
+        model = rag_gen_selectbox("Select Model:", filtered_df["model"].unique().tolist(), "selected_rag_model")
+        chunk_size = rag_gen_selectbox(
+            "Select Chunk Size:", filtered_df["chunk_size"].unique().tolist(), "selected_rag_chunk_size"
+        )
+        chunk_overlap = rag_gen_selectbox(
+            "Select Chunk Overlap:", filtered_df["chunk_overlap"].unique().tolist(), "selected_rag_chunk_overlap"
+        )
+        distance_metric = rag_gen_selectbox(
+            "Select Distance Metric:", filtered_df["distance_metric"].unique().tolist(), "selected_rag_distance_metric"
+        )
+
+        # Reset button
+        st.sidebar.button("Reset RAG", type="primary", on_click=rag_reset)
+
+        if all([model, chunk_size, chunk_overlap, distance_metric]):
+            vector_store_table = filtered_df["table"].iloc[0]
+            update_user_settings_state("rag", "vector_store", vector_store_table)
+        else:
+            st.error("Please select Embedding options or disable RAG to continue.", icon="❌")
+            state.enable_sandbox = False

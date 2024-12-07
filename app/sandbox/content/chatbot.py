@@ -35,9 +35,13 @@ async def main() -> None:
     #########################################################################
     # Sidebar Settings
     #########################################################################
+    # the sidebars will set this to False if not everything is configured.
+    state.enable_sandbox = True
     st_common.history_sidebar()
     st_common.ll_sidebar()
     st_common.rag_sidebar()
+    if not state.enable_sandbox:
+        st.stop()
 
     #########################################################################
     # Chatty-Bot Centre
