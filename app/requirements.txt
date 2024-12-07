@@ -13,5 +13,5 @@
 ### source .venv/bin/activate
 ### pip3 install --upgrade pip wheel setuptools
 ### pip3 install -r requirements.txt
--r app/server/requirements.txt
--r app/sandbox/requirements.txt
+-r server/requirements.txt
+-r sandbox/requirements.txt

@@ -5,6 +5,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # spell-checker:ignore ainvoke, langgraph, modelcfg, jsonable
 
 import copy
+import json
 from typing import Optional, Any, Tuple
 from uuid import uuid4
 
@@ -16,7 +17,7 @@ from langchain_core.runnables import RunnableConfig
 import common.logging_config as logging_config
 import common.schema as schema
 import server.agents.chatbot as chatbot
-import server.bootstrap as bootstrap  # __init__.py import scripts
+import server.bootstrap as bootstrap  # __init__.py imports scripts
 import server.models as models
 import server.database as database
 
@@ -122,10 +123,7 @@ def register_endpoints(app: FastAPI) -> None:
     def test_database(db_config: schema.DatabaseModel) -> Tuple[schema.Statuses, str]:
         err = None
         try:
-            _ = database.connect(
-                config=db_config.model_dump(exclude={"tns_admin", "name", "status"}),
-                test=True,
-            )
+            _ = database.connect(db_config, test=True)
             status = "ACTIVE"
         except database.oracledb.DatabaseError as ex:
             err = str(ex)
@@ -134,6 +132,16 @@ def register_endpoints(app: FastAPI) -> None:
                 status = "BAD_AUTH"
         return status, err
 
+    def get_vector_stores(db_config: schema.DatabaseModel) -> list:
+        """Retrieve Vector Storage Tables"""
+        logger.info("Looking for Vector Storage Tables")
+        sql = """SELECT ut.table_name, 
+                        REPLACE(utc.comments, 'GENAI: ', '') AS comments
+                   FROM all_tab_comments utc, all_tables ut
+                  WHERE utc.table_name = ut.table_name
+                    AND utc.comments LIKE 'GENAI:%'"""
+        return database.execute_sql(db_config, sql)
+
     @app.get("/v1/databases", response_model=schema.ResponseList[schema.DatabaseModel])
     async def list_databases() -> schema.ResponseList[schema.DatabaseModel]:
         """List all databases"""
@@ -141,8 +149,14 @@ def register_endpoints(app: FastAPI) -> None:
         for db in database_objects:
             status, _ = test_database(db)
             db.status = status
+            if status == "ACTIVE":
+                vector_stores = []
+                results = get_vector_stores(db)
+                for table_name, comments in results:
+                    comments_dict = json.loads(comments)
+                    vector_stores.append(schema.DatabaseVectorStorage(table=table_name, **comments_dict))
+                db.vector_stores = vector_stores
             databases_all.append(db)
-
         return schema.ResponseList[schema.DatabaseModel](
             data=databases_all,
             msg=f"{len(databases_all)} database(s) configured",

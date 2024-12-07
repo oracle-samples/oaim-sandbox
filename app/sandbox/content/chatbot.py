@@ -17,8 +17,8 @@ import sandbox.utils.st_common as st_common
 import sandbox.utils.client as client
 import common.logging_config as logging_config
 
-from sandbox.content.config.models import get as get_model_data
 from sandbox.content.tools.prompt_eng import get_prompt_text
+
 
 logger = logging_config.logging.getLogger("content.chatbot")
 #############################################################################
@@ -31,17 +31,13 @@ logger = logging_config.logging.getLogger("content.chatbot")
 #############################################################################
 async def main() -> None:
     """Streamlit GUI"""
+
     #########################################################################
     # Sidebar Settings
     #########################################################################
-    get_model_data(model_type="ll", enabled=True)
-    available_models = list(state.ll_model_enabled.keys())
-    if not available_models:
-        st.error("No language models are configured and/or enabled. Disabling Chatbot.", icon="❌")
-        st.stop()
-
     st_common.history_sidebar()
     st_common.ll_sidebar()
+    st_common.rag_sidebar()
 
     #########################################################################
     # Chatty-Bot Centre
@@ -53,8 +49,8 @@ async def main() -> None:
             settings=state["user_settings"],
             sys_prompt=get_prompt_text("sys", state["user_settings"]["prompts"]["sys"]),
             ctx_prompt=get_prompt_text("ctx", state["user_settings"]["prompts"]["ctx"]),
-            timeout=10
-            )
+            timeout=10,
+        )
     sandbox_client: client.SandboxClient = state.sandbox_client
 
     history = await sandbox_client.get_history()

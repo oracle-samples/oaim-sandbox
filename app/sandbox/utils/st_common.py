@@ -9,6 +9,9 @@ from streamlit import session_state as state
 
 from sandbox.utils.client import gen_client_id
 
+from sandbox.content.config.models import get_model
+from sandbox.content.config.database import get_database
+
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("sandbox.utils.st_common")
@@ -58,13 +61,19 @@ def history_sidebar() -> None:
 
 def ll_sidebar() -> None:
     """Language Model Sidebar"""
+    get_model(model_type="ll", enabled=True)
+    available_ll_models = list(state.ll_model_enabled.keys())
+    if not available_ll_models:
+        st.error("No language models are configured and/or enabled. Disabling Sandbox.", icon="❌")
+        st.stop()
 
+    # If no user_settings defined for , set to the first available_ll_model
     if state.user_settings["ll_model"].get("model") is None:
-        model = list(state.ll_model_enabled.keys())[0]
+        default_ll_model = list(state.ll_model_enabled.keys())[0]
         defaults = {
-            "model": model,
-            "temperature": state.ll_model_enabled[model]["temperature"],
-            "max_completion_tokens": state.ll_model_enabled[model]["max_completion_tokens"],
+            "model": default_ll_model,
+            "temperature": state.ll_model_enabled[default_ll_model]["temperature"],
+            "max_completion_tokens": state.ll_model_enabled[default_ll_model]["max_completion_tokens"],
         }
         state.user_settings["ll_model"].update(defaults)
 
@@ -141,3 +150,29 @@ def ll_sidebar() -> None:
         args=("ll_model", "presence_penalty"),
     )
     st.sidebar.divider()
+
+
+def rag_sidebar() -> None:
+    get_model(model_type="embed", enabled=True)
+    available_embed_models = list(state.embed_model_enabled.keys())
+    if not available_embed_models:
+        logger.debug("RAG Disabled (no Embedding Models)")
+        st.warning("No embedding models are configured and/or enabled. Disabling RAG.", icon="⚠️")
+        db_status = None
+    else:
+        get_database()
+        db_status = state.database_config[state.user_settings["database"]].get("status")
+
+    if db_status != "ACTIVE":
+        logger.debug("RAG Disabled (Database not configured)")
+        st.warning("Database is not configured. Disabling RAG.", icon="⚠️")
+
+    rag_enable = st.sidebar.checkbox(
+        "Enable RAG?",
+        value=db_status == "ACTIVE",
+        disabled=db_status != "ACTIVE",
+    )
+
+    if rag_enable:
+        # Get Vector Storage
+        pass

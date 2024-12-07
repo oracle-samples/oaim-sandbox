@@ -15,7 +15,6 @@ from streamlit import session_state as state
 import sandbox.utils.api_call as api_call
 import sandbox.utils.st_common as st_common
 
-import common.schema as schema
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("sandbox.config.database")
@@ -29,8 +28,8 @@ if "server" in state:
 #####################################################
 # Functions
 #####################################################
-def get() -> dict[str, dict]:
-    """Get a dictionary of all Databases"""
+def get_database() -> dict[str, dict]:
+    """Get a dictionary of all Databases and Vector Store Tables"""
     if "database_config" not in state or state["database_config"] == dict():
         try:
             response = api_call.get(url=API_ENDPOINT, token=state.server["key"])
@@ -41,9 +40,10 @@ def get() -> dict[str, dict]:
         except api_call.SandboxError as ex:
             st.error(f"Unable to retrieve databases: {ex}", icon="🚨")
             state["database_config"] = dict()
+            raise
 
 
-def patch(name: str, user: str, password: str, dsn: str, wallet_password: str) -> None:
+def patch_database(name: str, user: str, password: str, dsn: str, wallet_password: str) -> None:
     """Update Database"""
     # Check if the database configuration is changed, or if not ACTIVE
     if (
@@ -68,7 +68,7 @@ def patch(name: str, user: str, password: str, dsn: str, wallet_password: str) -
             )
             st.success(f"{name} Database Configuration - Updated", icon="✅")
             st_common.clear_state_key("database_config")
-            get()  # Refresh the Config
+            st.rerun()
         except api_call.SandboxError as ex:
             logger.error("Database Update failed: %s", ex)
             st.error(f"Unable to perform update: {ex}", icon="🚨")
@@ -82,11 +82,14 @@ def patch(name: str, user: str, password: str, dsn: str, wallet_password: str) -
 def main() -> None:
     """Streamlit GUI"""
     st.header("Database")
-    st.write("Configure the database vector storage.")
-    get()  # Create/Rebuild state
+    st.write("Configure the database used for vector storage.")
+    try:
+        get_database()  # Create/Rebuild state
+    except api_call.SandboxError:
+        st.stop()
 
     name = "DEFAULT"
-    st.subheader(f"{name} Configuration")
+    st.subheader("Configuration")
     with st.form("update_database_config"):
         user = st.text_input(
             "Database User:",
@@ -112,12 +115,74 @@ def main() -> None:
         )
         if state.database_config[name]["status"] != "ACTIVE":
             st.error(f"Current Status: {state.database_config[name]['status']}")
-
+        else:
+            st.success(f"Current Status: {state.database_config[name]['status']}")
         if st.form_submit_button("Save"):
             if not user or not password or not dsn:
                 st.error("Username, Password and Connect String fields are required.", icon="❌")
                 st.stop()
-            patch(name, user, password, dsn, wallet_password)
+            patch_database(name, user, password, dsn, wallet_password)
+
+    if state.database_config[name]["status"] == "ACTIVE":
+        st.subheader("Database Vector Storage")
+        table_col_format = st.columns([0.02, 0.05, 0.1, 0.05, 0.05, 0.05, 0.04])
+        col1, col2, col3, col4, col5, col6, col7 = table_col_format
+        col1.markdown("**<u>&nbsp;</u>**", unsafe_allow_html=True)
+        col2.markdown("**<u>Alias</u>**", unsafe_allow_html=True)
+        col3.markdown("**<u>Model</u>**", unsafe_allow_html=True)
+        col4.markdown("**<u>Chunk Size</u>**", unsafe_allow_html=True)
+        col5.markdown("**<u>Chunk Overlap</u>**", unsafe_allow_html=True)
+        col6.markdown("**<u>Distance Metric</u>**", unsafe_allow_html=True)
+        col7.markdown("**<u>Index Type</u>**", unsafe_allow_html=True)
+        for vs in state.database_config[name]["vector_stores"]:
+            table = vs["table"].lower()
+            col1.button(
+                "",
+                icon="🗑️",
+                key=f"vector_stores_{table}",
+            )
+            col2.text_input(
+                "Alias",
+                value=vs["alias"],
+                label_visibility="collapsed",
+                key=f"vector_stores_{table}_alias",
+                disabled=True,
+            )
+            col3.text_input(
+                "Model",
+                value=vs["model"],
+                label_visibility="collapsed",
+                key=f"vector_stores_{table}_model",
+                disabled=True,
+            )
+            col4.text_input(
+                "Chunk Size",
+                value=vs["chunk_size"],
+                label_visibility="collapsed",
+                key=f"vector_stores_{table}_chunk_size",
+                disabled=True,
+            )
+            col5.text_input(
+                "Chunk Overlap",
+                value=vs["chunk_overlap"],
+                label_visibility="collapsed",
+                key=f"vector_stores_{table}_chunk_overlap",
+                disabled=True,
+            )
+            col6.text_input(
+                "Distance Metric",
+                value=vs["distance_metric"],
+                label_visibility="collapsed",
+                key=f"vector_stores_{table}_distance_metric",
+                disabled=True,
+            )
+            col7.text_input(
+                "Index Type",
+                value=vs["index_type"],
+                label_visibility="collapsed",
+                key=f"vector_stores_{table}_index_type",
+                disabled=True,
+            )
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:

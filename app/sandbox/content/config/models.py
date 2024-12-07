@@ -33,7 +33,7 @@ if "server" in state:
 ###################################
 # Functions
 ###################################
-def get(model_type: str, enabled: bool = None) -> dict[str, dict]:
+def get_model(model_type: str, enabled: bool = None) -> dict[str, dict]:
     """Get a dictionary of either all Language/Embed Models or only enabled ones."""
 
     state_key = f"{model_type}_model_config"
@@ -54,7 +54,7 @@ def get(model_type: str, enabled: bool = None) -> dict[str, dict]:
             state[state_key] = dict()
 
 
-def patch(model_type: str) -> None:
+def patch_model(model_type: str) -> None:
     """Update Model Configuration for either Language Models or Embed Models"""
     state_key = f"{model_type}_model_config"
 
@@ -89,7 +89,7 @@ def patch(model_type: str) -> None:
         st.info("Model Configuration - No Changes Required.", icon="ℹ️")
     else:
         st_common.clear_state_key(state_key)
-        get(model_type)
+        get_model(model_type)
 
 #############################################################################
 # MAIN
@@ -110,7 +110,7 @@ def main() -> None:
     st.write("Update model configuration parameters.")
 
     st.subheader("Language Models")
-    get(model_type="ll")
+    get_model(model_type="ll")
     with st.form("update_ll_model_config"):
         # Create table header
         table2_col_format = st.columns([0.08, 0.3, 0.2, 0.2, 0.2])
@@ -160,10 +160,10 @@ def main() -> None:
             )
         update_ll_model = st.form_submit_button(label="Save")
         if update_ll_model:
-            patch("ll")
+            patch_model("ll")
 
     st.subheader("Embedding Models")
-    get(model_type="embed")
+    get_model(model_type="embed")
     with st.form("update_embed_model_config"):
         # Create table header
         table1_col_format = st.columns([0.08, 0.3, 0.2, 0.2, 0.2])
@@ -213,7 +213,7 @@ def main() -> None:
             )
         update_embed_model = st.form_submit_button(label="Save")
         if update_embed_model:
-            patch("embed")
+            patch_model("embed")
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:

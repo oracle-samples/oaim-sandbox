@@ -13,6 +13,7 @@ from langchain_core.messages import ChatMessage
 # Standardized Classes
 #####################################################
 Statuses = Literal["ACTIVE", "INACTIVE", "BAD_AUTH", "UNREACHABLE"]
+DistanceMetrics = Literal["COSINE", "DOT_PRODUCT", "EUCLIDEAN_DISTANCE", "MAX_INNER_PRODUCT"]
 Payload = TypeVar("Payload", bound=BaseModel)
 
 
@@ -168,6 +169,32 @@ class PromptModel(Prompt):
 #####################################################
 # Database
 #####################################################
+class DatabaseVectorStorage(BaseModel):
+    """Database Vector Storage Tables"""
+
+    table: str = Field(
+        description="Table Name",
+    )
+    alias: Optional[str] = Field(
+        default=None,
+        description="Identifiable Alias",
+    )
+    model: str = Field(
+        description="Embedding Model",
+    )
+    chunk_size: int = Field(
+        description="Chunk Size",
+    )
+    chunk_overlap: int = Field(
+        description="Chunk Overlap",
+    )
+    distance_metric: DistanceMetrics = Field(
+        default="COSIGN",
+        description="Distance Metric",
+    )
+    index_type: Literal["HNSW", "IVF"] = Field(default="HNSW", description="Vector Index")
+
+
 class Database(BaseModel):
     """Database Configuration (sent to oracledb)"""
 
@@ -192,6 +219,7 @@ class Database(BaseModel):
         description="TCP Timeout in seconds",
     )
 
+
 class DatabaseModel(Database):
     """Database Object"""
 
@@ -208,6 +236,8 @@ class DatabaseModel(Database):
         default="tns_admin",
         description="Location of TNS_ADMIN directory",
     )
+    vector_stores: Optional[list[DatabaseVectorStorage]] = Field(default=None, description="Vector Storage")
+
 
 #####################################################
 # Settings
