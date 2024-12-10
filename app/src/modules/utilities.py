@@ -110,7 +110,7 @@ def get_ll_model(model, ll_models_config=None, giskarded=False):
         _client = OpenAI(api_key=giskard_key, base_url=f"{llm_url}/v1/")
         client = OpenAIClient(model=model, client=_client)
     elif llm_api == "OpenAI":
-        client = ChatOpenAI(api_key=lm_params["api_key"], **common_params)
+        client = ChatOpenAI(api_key=lm_params["api_key"],base_url=f"{llm_url}/v1/", **common_params)
     elif llm_api == "Cohere":
         client = ChatCohere(cohere_api_key=lm_params["api_key"], **common_params)
     elif llm_api == "ChatPerplexity":

@@ -122,7 +122,9 @@ ollama:
     number: 1
   models:
     - llama3.1
+    - llama3.2
     - mxbai-embed-large
+    - nomic-embed-text
 nodeSelector:
   node.kubernetes.io/instance-type: VM.GPU.A10.1
 ```
@@ -138,9 +140,10 @@ kubectl -n ollama exec svc/ollama -- ollama ls
 ```
 it should be:
 ```
-NAME                        ID              SIZE      MODIFIED           
-llama3.1:latest             42182419e950    4.7 GB    About a minute ago    
-mxbai-embed-large:latest    468836162de7    669 MB    About a minute ago 
+NAME                        ID              SIZE      MODIFIED      
+nomic-embed-text:latest     0a109f422b47    274 MB    3 minutes ago    
+mxbai-embed-large:latest    468836162de7    669 MB    3 minutes ago    
+llama3.1:latest             a80c4f17acd5    2.0 GB    3 minutes ago 
 ```
 * test a single LLM:
 ```

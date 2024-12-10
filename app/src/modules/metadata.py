@@ -139,6 +139,19 @@ def ll_models():
             "frequency_penalty": [0.0, 0.0, -1.0, 1.0],
             "presence_penalty": [0.0, 0.0, -2.0, 2.0],
         },
+        "tgi": {
+            "enabled": False,
+            "api": "OpenAI",
+            "url": "http://127.0.0.1:8080",
+            "api_key": "",
+            "openai_compat": True,
+            "context_length": 127072,
+            "temperature": [1.0, 1.0, 0.0, 2.0],
+            "top_p": [0.99, .99, 0.0, 0.99],
+            "max_tokens": [256, 256, 1, 8191],
+            "frequency_penalty": [0.0, 0.0, -1.0, 1.0],
+            "presence_penalty": [0.0, 0.0, -2.0, 2.0],
+        },
         "gpt-4o": {
             "enabled": os.getenv("OPENAI_API_KEY") is not None,
             "api": "OpenAI",
@@ -180,6 +193,20 @@ def ll_models():
         },
         # llama3.1-8b
         "llama3.1": {
+            "enabled": os.getenv("ON_PREM_OLLAMA_URL") is not None,
+            "api": "ChatOllama",
+            "url": os.environ.get("ON_PREM_OLLAMA_URL", default="http://127.0.0.1:11434"),
+            "api_key": "",
+            "openai_compat": True,
+            "context_length": 131072,
+            "temperature": [1.0, 1.0, 0.0, 2.0],
+            "top_p": [1.0, 1.0, 0.0, 1.0],
+            "max_tokens": [256, 256, 1, 2048],
+            "frequency_penalty": [0.0, 0.0, -2.0, 2.0],
+            "presence_penalty": [0.0, 0.0, -2.0, 2.0],
+        },
+        # llama3.2-3b
+        "llama3.2": {
             "enabled": os.getenv("ON_PREM_OLLAMA_URL") is not None,
             "api": "ChatOllama",
             "url": os.environ.get("ON_PREM_OLLAMA_URL", default="http://127.0.0.1:11434"),

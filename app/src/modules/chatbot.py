@@ -99,9 +99,10 @@ class ChatCmd:
 
         retrieved_documents = retriever.invoke(input)
         logger.debug("Retrieved %i documents", len(retrieved_documents))
+        logger.info("Retrieved %i documents", len(retrieved_documents))
         # Retrieve documents for inspection (Use for debugging)
-        # for i, doc in enumerate(retrieved_documents):
-        #     logger.debug("Document %i %s", i + 1, doc)
+        for i, doc in enumerate(retrieved_documents):
+             logger.info("Document %i %s", i + 1, doc)
 
         # QA Chain
         context_messages = [("system", context_instr)]
