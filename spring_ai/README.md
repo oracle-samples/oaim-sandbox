@@ -122,6 +122,7 @@ ollama:
     number: 1
   models:
     - llama3.1
+    - llama3.2
     - mxbai-embed-large
     - nomic-embed-text
 nodeSelector:
