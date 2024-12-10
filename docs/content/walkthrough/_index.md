@@ -114,7 +114,7 @@ To start Oracle Database 23ai Free:
 
    alter session set container=FREEPDB1;
 
-   CREATE USER "WALKTHROUGH" IDENTIFIED BY ORA_41_M_SANDBOX
+   CREATE USER "WALKTHROUGH" IDENTIFIED BY OrA_41_M_SANDBOX
        DEFAULT TABLESPACE "USERS"
        TEMPORARY TABLESPACE "TEMP";
    GRANT "DB_DEVELOPER_ROLE" TO "WALKTHROUGH";
@@ -215,7 +215,7 @@ To configure the On-Premises Embedding Model, navigate back to the _Configuratio
 To configure Oracle Database 23ai Free, navigate to the _Configuration -> Database_ screen:
 
 1. Enter the Database Username: `WALKTHROUGH`
-1. Enter the Database Password for `WALKTHROUGH`: `ORA_41_M_SANDBOX`
+1. Enter the Database Password for `WALKTHROUGH`: `OrA_41_M_SANDBOX`
 1. Enter the Database Connection String: `//localhost:1521/FREEPDB1`
 1. Save
 
@@ -256,7 +256,7 @@ From the command line:
 1. Connect to the Oracle Database 23ai Database:
 
    ```bash
-   podman exec -it oaim-db sqlplus 'WALKTHROUGH/ORA_41_M_SANDBOX@FREEPDB1'
+   podman exec -it oaim-db sqlplus 'WALKTHROUGH/OrA_41_M_SANDBOX@FREEPDB1'
    ```
 
 1. Query the Vector Store:

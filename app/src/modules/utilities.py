@@ -235,19 +235,24 @@ def init_vs(db_conn, embedding_function, store_table, distance_metric):
 
 def get_vs_table(model, chunk_size, chunk_overlap, distance_metric, embed_alias=None):
     """Return the concatenated VS Table name and comment"""
-    chunk_overlap_ceil = math.ceil(chunk_overlap)
-    table_string = f"{model}_{chunk_size}_{chunk_overlap_ceil}_{distance_metric}"
-    if embed_alias:
-        table_string = f"{embed_alias}_{table_string}"
-    store_table = re.sub(r"\W", "_", table_string.upper())
-    store_comment = (
-        f'{{"alias": "{embed_alias}",'
-        f'"model": "{model}",'
-        f'"chunk_size": {chunk_size},'
-        f'"chunk_overlap": {chunk_overlap_ceil},'
-        f'"distance_metric": "{distance_metric}"}}'
-    )
-    logger.info("Vector Store Table: %s; Comment: %s", store_table, store_comment)
+    store_table = None
+    store_comment = None
+    try:
+        chunk_overlap_ceil = math.ceil(chunk_overlap)
+        table_string = f"{model}_{chunk_size}_{chunk_overlap_ceil}_{distance_metric}"
+        if embed_alias:
+            table_string = f"{embed_alias}_{table_string}"
+        store_table = re.sub(r"\W", "_", table_string.upper())
+        store_comment = (
+            f'{{"alias": "{embed_alias}",'
+            f'"model": "{model}",'
+            f'"chunk_size": {chunk_size},'
+            f'"chunk_overlap": {chunk_overlap_ceil},'
+            f'"distance_metric": "{distance_metric}"}}'
+        )
+        logger.info("Vector Store Table: %s; Comment: %s", store_table, store_comment)
+    except TypeError:
+        logger.fatal("Not all required values provided to get Vector Store Table name.")
     return store_table, store_comment
 
 
@@ -332,7 +337,8 @@ def populate_vs(
     # Build the Index
     logger.info("Creating index on: %s", store_table)
     try:
-        LangchainVS.create_index(db_conn, vectorstore)
+        params = {"idx_name": f"{store_table}_HNSW_IDX", "idx_type": "HNSW"}
+        LangchainVS.create_index(db_conn, vectorstore, params)
     except Exception as ex:
         logger.error("Unable to create vector index: %s", ex)
 
@@ -369,7 +375,6 @@ def get_vs_tables(conn, enabled_embed):
         cursor.close()
 
     return json.dumps(output, indent=4)
-
 
 ###############################################################################
 # Oracle Cloud Infrastructure
