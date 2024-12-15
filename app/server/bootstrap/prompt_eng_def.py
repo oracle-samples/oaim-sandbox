@@ -3,6 +3,8 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
 
+from common.schema import PromptModel
+
 
 def main() -> list[dict]:
     """Define example Prompts"""
@@ -56,7 +58,9 @@ def main() -> list[dict]:
             raise ValueError(f"Prompt '{prompt['name']}':'{prompt['category']}' already exists.")
         unique_entries.add((prompt["name"], prompt["category"]))
 
-    return prompt_eng_list
+    prompt_objects = [PromptModel(**prompt_dict) for prompt_dict in prompt_eng_list]
+
+    return prompt_objects
 
 
 if __name__ == "__main__":

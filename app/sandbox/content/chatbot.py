@@ -6,7 +6,6 @@ Session States Set:
 - sandbox_client: Stores the SandboxClient
 """
 # spell-checker:ignore streamlit
-
 import asyncio
 import inspect
 
@@ -16,9 +15,6 @@ from streamlit import session_state as state
 import sandbox.utils.st_common as st_common
 import sandbox.utils.client as client
 import common.logging_config as logging_config
-
-from sandbox.content.tools.prompt_eng import get_prompt_text
-
 
 logger = logging_config.logging.getLogger("content.chatbot")
 #############################################################################
@@ -51,8 +47,6 @@ async def main() -> None:
         state.sandbox_client = client.SandboxClient(
             server=state.server,
             settings=state["user_settings"],
-            sys_prompt=get_prompt_text("sys", state["user_settings"]["prompts"]["sys"]),
-            ctx_prompt=get_prompt_text("ctx", state["user_settings"]["prompts"]["ctx"]),
             timeout=10,
         )
     sandbox_client: client.SandboxClient = state.sandbox_client
@@ -74,10 +68,17 @@ async def main() -> None:
         try:
             ai_response = await sandbox_client.completions(message=human_request)
             st.chat_message("ai").write(ai_response.choices[0].message.content)
-        except Exception as ex:
+        except Exception:
+            st_common.clear_state_key("sandbox_client")
             logger.error("Exception:", exc_info=1)
-            st.chat_message("ai").write(f"I'm sorry, something's gone wrong: {ex}")
+            st.chat_message("ai").write("I'm sorry, something's gone wrong.  Please try again.")
+            
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except Exception as ex:
+        logger.exception("Unable to contact the server: %s", ex)
+        st.error("Unable to contact the server, is it running?", icon="🚨")
+

@@ -5,6 +5,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # spell-checker:ignore ollama, minilm, pplx, thenlper, mxbai, nomic
 
 import os
+from common.schema import ModelModel
 
 
 def main() -> list[dict]:
@@ -206,8 +207,8 @@ def main() -> list[dict]:
             raise ValueError(f"Model '{model['name']}' already exists.")
         unique_entries.add(model["name"])
 
-    return models_list
-
+    model_objects = [ModelModel(**model_dict) for model_dict in models_list]
+    return model_objects
 
 if __name__ == "__main__":
     main()

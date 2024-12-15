@@ -2,15 +2,16 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore ollama, pplx
+# spell-checker:ignore ollama, pplx, huggingface
 
 from typing import Optional
 
 from langchain_community.chat_models import ChatPerplexity
 from langchain_core.language_models.chat_models import BaseChatModel
-from langchain_cohere import ChatCohere
-from langchain_ollama import ChatOllama
-from langchain_openai import ChatOpenAI
+from langchain_cohere import ChatCohere, CohereEmbeddings
+from langchain_ollama import ChatOllama, OllamaEmbeddings
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_huggingface import HuggingFaceEndpointEmbeddings
 
 import common.logging_config as logging_config
 import common.schema as schema
@@ -21,7 +22,7 @@ logger = logging_config.logging.getLogger("server.models")
 #####################################################
 # Functions
 #####################################################
-async def filter_models(
+async def filter(
     models_all: list[schema.ModelModel],
     model_name: Optional[schema.ModelNameType] = None,
     model_type: Optional[schema.ModelTypeType] = None,
@@ -40,8 +41,10 @@ async def filter_models(
     return models_all
 
 
-async def get_model_key_value(
-    model_objects: list[schema.ModelModel], model_name: schema.ModelNameType, model_key: str
+async def get_key_value(
+    model_objects: list[schema.ModelModel],
+    model_name: schema.ModelNameType,
+    model_key: str,
 ) -> str:
     for model in model_objects:
         if model.name == model_name:
@@ -49,47 +52,66 @@ async def get_model_key_value(
     return None
 
 
-async def get_model_client(
+async def get_client(
     model_objects: list[schema.ModelModel],
-    model_type: schema.ModelTypeType,
-    model_config: schema.LanguageParametersModel,
+    model_config: dict,
 ) -> BaseChatModel:
     # Retrieve model configuration
+    logger.info("Model Config: %s", model_config)
+    model_name = model_config.model
+    model_api = await get_key_value(model_objects, model_name, "api")
+    model_api_key = await get_key_value(model_objects, model_name, "api_key")
+    model_url = await get_key_value(model_objects, model_name, "url")
 
-    model_api = await get_model_key_value(model_objects, model_config.model, "api")
-    model_api_key = await get_model_key_value(model_objects, model_config.model, "api_key")
+    # Determine if configuring an embedding model
+    try:
+        embedding = model_config.rag_enabled
+    except AttributeError:
+        embedding = False
 
-    if model_type == "ll":
-        common_params = {
-            "temperature": model_config.temperature,
-            "max_tokens": model_config.max_completion_tokens,
-            "top_p": model_config.top_p,
-            "frequency_penalty": model_config.frequency_penalty,
-            "presence_penalty": model_config.presence_penalty,
-        }
-        if model_api == "OpenAI":
-            return ChatOpenAI(
+    # Model Classes
+    model_classes = {}
+    if not embedding:
+        logger.debug("Configuring LL Model")
+        ll_common_params = {}
+        for key in ["temperature", "max_completion_tokens", "top_p", "frequency_penalty", "presence_penalty"]:
+            try:
+                ll_common_params[key] = getattr(model_config, key, None) or await get_key_value(model_objects, model_name, key)
+            except KeyError:
+                # Mainly for embeddings
+                continue
+        logger.info("LL Model Parameters: %s", ll_common_params)
+        model_classes = {
+            "OpenAI": lambda: ChatOpenAI(model=model_name, api_key=model_api_key, **ll_common_params),
+            "Cohere": lambda: ChatCohere(model=model_name, cohere_api_key=model_api_key, **ll_common_params),
+            "ChatOllama": lambda: ChatOllama(model=model_name, base_url=model_url, model_kwargs=ll_common_params),
+            "ChatPerplexity": ChatPerplexity(
+                model=model_name,
                 api_key=model_api_key,
-                **common_params,
-            )
+                temperature=ll_common_params["temperature"],
+                model_kwargs={k: v for k, v in ll_common_params.items() if k != "temperature"},
+            ),
+            "GenericOpenAI": lambda: ChatOpenAI(
+                model=model_name, base_url=model_url, api_key=model_api_key, **ll_common_params
+            ),
+        }
+    if embedding:
+        logger.debug("Configuring Embed Model")
+        model_classes = {
+            "OpenAIEmbeddings": lambda: OpenAIEmbeddings(model=model_name, api_key=model_api_key),
+            "CohereEmbeddings": lambda: CohereEmbeddings(model=model_name, cohere_api_key=model_api_key),
+            "OllamaEmbeddings": OllamaEmbeddings(model=model_name, base_url=model_url),
+            "HuggingFaceEndpointEmbeddings": HuggingFaceEndpointEmbeddings(model=model_url),
+            "GenericOpenAIEmbeddings": lambda: OpenAIEmbeddings(
+                model=model_name, base_url=model_url, api_key=model_api_key
+            ),
+        }
 
-        if model_api == "Cohere":
-            return ChatCohere(
-                cohere_api_key=model_api_key,
-                **common_params,
-            )
-
-        if model_api == "ChatOllama":
-            return ChatOllama(
-                model=model_config.model,
-                base_url=model_config.url,
-                model_kwargs=common_params,
-            )
-
-        if model_api == "ChatPerplexity":
-            return ChatPerplexity(
-                pplx_api_key=model_api_key,
-                model_kwargs=common_params,
-            )
-
-    return None
+    try:
+        logger.info("Searching for %s in %s", model_api, model_classes)
+        client = model_classes[model_api]()
+        logger.info("Model Client: %s", client)
+        return client
+    except (UnboundLocalError, KeyError):
+        logger.error("Unable to find client; expect trouble!")
+        return None

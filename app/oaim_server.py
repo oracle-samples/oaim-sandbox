@@ -12,19 +12,14 @@ import socket
 import subprocess
 import threading
 from typing import Annotated
-from collections.abc import AsyncGenerator
-from contextlib import asynccontextmanager
 
 import psutil
 
-from langgraph.checkpoint.memory import MemorySaver
-
+# from langgraph.store.memory import InMemoryStore
 import common.logging_config as logging_config
 
 # Endpoints
 from server.endpoints import register_endpoints
-import server.agents.chatbot as chatbot
-
 
 from fastapi import FastAPI, HTTPException, Depends, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -122,25 +117,13 @@ def verify_key(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    logger.debug("Established lifespan to %s", app)
-    async with MemorySaver() as saver:
-        chatbot.checkpointer = saver
-        yield
-
-
 #############################################################################
 # MAIN
 #############################################################################
 _ = os.getenv("API_SERVER_KEY") or generate_auth_key()
 logger.info("Auth Key: %s", os.getenv("API_SERVER_KEY"))
 
-app = FastAPI(
-    title="Oracle AI Microservices Server",
-    dependencies=[Depends(verify_key)],
-    lifespan=lifespan,
-)
+app = FastAPI(title="Oracle AI Microservices Server", dependencies=[Depends(verify_key)])
 
 # Register Endpoints
 register_endpoints(app)

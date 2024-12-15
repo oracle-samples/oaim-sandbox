@@ -34,14 +34,21 @@ def get() -> dict[str, dict]:
         try:
             state["prompts_config"] = api_call.get(url=API_ENDPOINT, token=state.server["key"])
             logger.info("State created: state['prompts_config']")
-        except api_call.SandboxError as ex:
+        except api_call.ApiError as ex:
+            logger.error("Unable to retrieve prompts: %s", ex)
             st.error(f"Unable to retrieve prompts: {ex}", icon="🚨")
             state["prompts_config"] = dict()
+
 
 def patch(category: str, prompt_name: str, prompt: str) -> None:
     """Update Prompt Instructions"""
     # Check if the prompt instructions are changed
-    if get_prompt_text(category, prompt_name) != prompt:
+    configured_prompt = next(
+        item["prompt"]
+        for item in state["prompts_config"]
+        if item["name"] == prompt_name and item["category"] == category
+    )
+    if configured_prompt != prompt:
         try:
             api_call.patch(
                 url=API_ENDPOINT + "/" + category + "/" + prompt_name,
@@ -49,29 +56,17 @@ def patch(category: str, prompt_name: str, prompt: str) -> None:
                 token=state.server["key"],
             )
             # Success
+            logger.info("Prompt instructions updated for: %s (%s)", prompt_name, category)
             st.success(f"{prompt_name} Instructions - Updated", icon="✅")
             st_common.clear_state_key(f"selected_prompt_{category}_name")
             st_common.clear_state_key(f"prompt_{category}_prompt")
             st_common.clear_state_key("prompts_config")
             get()  # Refresh the Config
-        except api_call.SandboxError as ex:
-            st.error(f"Unable to perform update: {ex}", icon="🚨")
+        except api_call.ApiError as ex:
+            logger.info("Unable to perform prompt update for %s (%s): %s", prompt_name, category, ex)
+            st.error(f"Unable to perform prompt update: {ex}", icon="🚨")
     else:
-        st.info("Prompt Instructions - No Changes Required.", icon="ℹ️")
-
-
-def get_prompt_text(category: str, prompt_name: str) -> str:
-    if "prompts_config" not in state:
-        get()
-    try:
-        return next(
-            item["prompt"]
-            for item in state["prompts_config"]
-            if item["name"] == prompt_name and item["category"] == category
-        )
-    except KeyError:
-        st.error("No prompts are configured. Disabling Chatbot.", icon="❌")
-        st.stop()
+        st.info("Prompt Instructions - No Changes Detected.", icon="ℹ️")
 
 
 #############################################################################

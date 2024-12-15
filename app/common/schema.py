@@ -2,17 +2,19 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore ollama
+# spell-checker:ignore ollama, hnsw, mult
 
 from typing import TypeVar, Generic, Optional, Literal, Union
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 from langchain_core.messages import ChatMessage
+
+import oracledb
 
 #####################################################
 # Standardized Classes
 #####################################################
-Statuses = Literal["ACTIVE", "INACTIVE", "BAD_AUTH", "UNREACHABLE"]
+Statuses = Literal["NOT_CONFIGURED", "UNVERIFIED", "NOT_AUTHORIZED", "UNREACHABLE", "VALID", "CONNECTED"]
 DistanceMetrics = Literal["COSINE", "DOT_PRODUCT", "EUCLIDEAN_DISTANCE", "MAX_INNER_PRODUCT"]
 Payload = TypeVar("Payload", bound=BaseModel)
 
@@ -189,10 +191,13 @@ class DatabaseVectorStorage(BaseModel):
         description="Chunk Overlap",
     )
     distance_metric: DistanceMetrics = Field(
-        default="COSIGN",
+        default="COSINE",
         description="Distance Metric",
     )
-    index_type: Literal["HNSW", "IVF"] = Field(default="HNSW", description="Vector Index")
+    index_type: Literal["HNSW", "IVF"] = Field(
+        default="HNSW",
+        description="Vector Index",
+    )
 
 
 class Database(BaseModel):
@@ -228,7 +233,7 @@ class DatabaseModel(Database):
         description="Name of Database (Alias)",
     )
     status: Statuses = Field(
-        default="INACTIVE",
+        default="UNVERIFIED",
         description="Status (read-only)",
         readOnly=True,
     )
@@ -236,7 +241,20 @@ class DatabaseModel(Database):
         default="tns_admin",
         description="Location of TNS_ADMIN directory",
     )
-    vector_stores: Optional[list[DatabaseVectorStorage]] = Field(default=None, description="Vector Storage")
+    vector_stores: Optional[list[DatabaseVectorStorage]] = Field(
+        default=None,
+        description="Vector Storage (read-only)",
+        readOnly=True,
+    )
+    # Do not expose the connection to the endpoint
+    _connection: oracledb.Connection = PrivateAttr(default=None)
+
+    @property
+    def connection(self) -> Optional[oracledb.Connection]:
+        return self._connection
+
+    def set_connection(self, connection: oracledb.Connection) -> None:
+        self._connection = connection
 
 
 #####################################################
@@ -259,8 +277,14 @@ class PromptSettings(BaseModel):
 class RagSettings(BaseModel):
     """Store RAG Settings"""
 
-    enabled: bool = Field(default=False, description="RAG Enabled")
-    vector_store: Optional[str] = Field(default=None, description="Vector Store")
+    rag_enabled: bool = Field(default=False, description="RAG Enabled")
+    database: Optional[str] = Field(description="Database Settings")
+    store_table: Optional[str] = Field(default=None, description="Vector Store Table")
+    model: Optional[str] = Field(default=None, description="Embedding Model")
+    distance_metric: DistanceMetrics = Field(
+        default="COSINE",
+        description="Distance Metric",
+    )
     search_type: Literal["Similarity", "Similarity Score Threshold", "Maximal Marginal Relevance"] = Field(
         default="Similarity",
         description="Search Type",
@@ -291,7 +315,7 @@ class RagSettings(BaseModel):
     )
 
 
-class Settings(BaseModel):
+class SettingsModel(BaseModel):
     """Server Settings"""
 
     client: str = Field(
@@ -304,9 +328,6 @@ class Settings(BaseModel):
     )
     prompts: Optional[PromptSettings] = Field(
         description="Prompt Engineering Settings",
-    )
-    database: Optional[str] = Field(
-        description="Database Settings",
     )
     rag: Optional[RagSettings] = Field(
         description="RAG Settings",
@@ -381,15 +402,13 @@ class ChatResponse(BaseModel):
 
 
 class ChatRequest(LanguageParametersModel):
-    """Request Body (inherits ModelParametersModel)"""
+    """
+    Request Body (inherits LanguageParametersModel)
+    Do not change as this has to remain OpenAI Compatible
+    """
 
-    model: Optional[str] = Field(
-        default=None,
+    model: str = Field(
         description="The model to use for chat completions.",
-    )
-    chat_history: Optional[bool] = Field(
-        default=True,
-        description="Send history for the completion.",
     )
     messages: list[ChatMessage] = Field(
         description="A list of messages comprising the conversation so far.",

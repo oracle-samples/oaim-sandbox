@@ -86,7 +86,7 @@ def patch_model(model_type: str) -> None:
                 break
 
     if model_changes == 0:
-        st.info("Model Configuration - No Changes Required.", icon="ℹ️")
+        st.info("Model Configuration - No Changes Detected.", icon="ℹ️")
     else:
         st_common.clear_state_key(state_key)
         get_model(model_type)

@@ -11,8 +11,8 @@ import common.logging_config as logging_config
 logger = logging_config.logging.getLogger("sandbox.utils.api_call")
 
 
-class SandboxError(Exception):
-    """Catch Sandbox Errors"""
+class ApiError(Exception):
+    """Catch ApiError Errors"""
 
     def __init__(self, message):
         super().__init__(message)
@@ -24,7 +24,7 @@ class SandboxError(Exception):
             self.message = str(message)  # Fallback to using the whole message if not a dict
 
         # Log the error message directly
-        logger.debug("SandboxError: %s", self.message)
+        logger.debug("ApiError: %s", self.message)
 
     def __str__(self):
         return self.message
@@ -42,7 +42,7 @@ def make_request(
     method_map = {"GET": requests.get, "POST": requests.post, "PATCH": requests.patch}
 
     if method not in method_map:
-        raise SandboxError(f"Unsupported HTTP method: {method}")
+        raise ApiError(f"Unsupported HTTP method: {method}")
 
     for attempt in range(retries + 1):
         try:
@@ -60,21 +60,21 @@ def make_request(
             return response.json()
 
         except requests.exceptions.MissingSchema as ex:
-            raise SandboxError(ex) from ex
+            raise ApiError(ex) from ex
         except requests.exceptions.RequestException as ex:
             logger.error("Attempt %d: Error: %s", attempt + 1, ex)
             if isinstance(ex, requests.HTTPError) and ex.response.status_code in (405, 422):
-                raise SandboxError(f"HTTP 405 Method Not Allowed: {ex}") from ex
+                raise ApiError(f"HTTP 405 Method Not Allowed: {ex}") from ex
             if isinstance(ex, requests.HTTPError) and ex.response.status_code == 500:
-                raise SandboxError(ex.response.json()) from ex
+                raise ApiError(ex.response.json()) from ex
             if attempt < retries:
                 sleep_time = backoff_factor * (2**attempt)
                 logger.info("Retrying in %.1f seconds...", sleep_time)
                 time.sleep(sleep_time)
             else:
-                raise SandboxError(f"Unable to contact Sandbox Server; Max retries exceeded (URL: {url}).") from ex
+                raise ApiError(f"Unable to contact Sandbox Server; Max retries exceeded (URL: {url}).") from ex
 
-    raise SandboxError("An unexpected error occurred.")
+    raise ApiError("An unexpected error occurred.")
 
 
 def get(url: str, token: str, params: Optional[dict] = None, retries: int = 3, backoff_factor: float = 2.0) -> dict:

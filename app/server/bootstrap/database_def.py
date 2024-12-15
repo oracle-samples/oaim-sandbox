@@ -4,6 +4,8 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 """
 
 import os
+import server.databases as databases
+from common.schema import DatabaseModel
 
 
 def main() -> list[dict]:
@@ -21,12 +23,26 @@ def main() -> list[dict]:
 
     # Check for Duplicates
     unique_entries = set()
-    for database in database_list:
-        if database["name"] in unique_entries:
-            raise ValueError(f"Database '{database['name']}' already exists.")
-        unique_entries.add(database["name"])
+    for db in database_list:
+        if db["name"] in unique_entries:
+            raise ValueError(f"Database '{db['name']}' already exists.")
+        unique_entries.add(db["name"])
 
-    return database_list
+    # Validate Configuration and set vector_stores/status
+    database_objects = []
+    for database_obj in database_list:
+        db = DatabaseModel(**database_obj)
+        conn, db.status = databases.connect(db)
+        if db.status == "VALID":
+            db.vector_stores = databases.get_vs(conn)
+            if not db.connection and len(database_objects) > 1:
+                db.set_connection = databases.disconnect(conn)
+            else:
+                db.set_connection(conn)
+                db.status = "CONNECTED"
+        database_objects.append(db)
+
+    return database_objects
 
 
 if __name__ == "__main__":

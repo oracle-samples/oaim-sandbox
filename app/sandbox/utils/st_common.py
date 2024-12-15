@@ -2,17 +2,17 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore streamlit, selectbox
+# spell-checker:ignore streamlit, selectbox, mult, iloc
 
 import pandas as pd
 
 import streamlit as st
 from streamlit import session_state as state
 
-from sandbox.utils.client import gen_client_id
+from common.functions import client_gen_id
 
 from sandbox.content.config.models import get_model
-from sandbox.content.config.database import get_database
+from sandbox.content.config.database import get_databases
 
 import common.logging_config as logging_config
 
@@ -24,7 +24,7 @@ logger = logging_config.logging.getLogger("sandbox.utils.st_common")
 #############################################################################
 def clear_state_key(state_key: str) -> None:
     state.pop(state_key, None)
-    logger.info("State cleared: %s", state_key)
+    logger.debug("State cleared: %s", state_key)
 
 
 def update_user_settings_state(
@@ -56,8 +56,9 @@ def history_sidebar() -> None:
     )
     if st.sidebar.button("Clear History", disabled=not chat_history_enable):
         # Establish a new thread
-        state.user_settings["client"] = gen_client_id()
+        state.user_settings["client"] = client_gen_id()
         clear_state_key("sandbox_client")
+
 
 #####################################################
 # Large Language Options
@@ -155,12 +156,11 @@ def ll_sidebar() -> None:
     )
 
 
-
 #####################################################
 # RAG Options
 #####################################################
 def rag_sidebar() -> None:
-    st.sidebar.subheader("Retreival Agumented Generation", divider="red")
+    st.sidebar.subheader("Retrieval Augmented Generation", divider="red")
     get_model(model_type="embed", enabled=True)
     available_embed_models = list(state.embed_model_enabled.keys())
     if not available_embed_models:
@@ -168,21 +168,25 @@ def rag_sidebar() -> None:
         st.warning("No embedding models are configured and/or enabled. Disabling RAG.", icon="⚠️")
         db_status = None
     else:
-        get_database()
-        db_status = state.database_config[state.user_settings["database"]].get("status")
+        get_databases()
+        db_status = state.database_config[state.user_settings["rag"]["database"]].get("status")
 
-    if db_status != "ACTIVE":
+    if db_status != "CONNECTED":
         logger.debug("RAG Disabled (Database not configured)")
         st.warning("Database is not configured. Disabling RAG.", icon="⚠️")
-        update_user_settings_state("rag", "enabled", False)
+        update_user_settings_state("rag", "rag_enabled", False)
+    elif not state.database_config[state.user_settings["rag"]["database"]].get("vector_stores"):
+        logger.debug("RAG Disabled (Database has no vector stores.)")
+        st.warning("Database has no Vector Stores. Disabling RAG.", icon="⚠️")
+        update_user_settings_state("rag", "rag_enabled", False)
 
     rag_enabled = st.sidebar.checkbox(
         "Enable RAG?",
-        value=state.user_settings["rag"]["enabled"],
-        disabled=db_status != "ACTIVE",
-        key="selected_rag_enabled",
+        value=state.user_settings["rag"]["rag_enabled"],
+        disabled=db_status != "CONNECTED",
+        key="selected_rag_rag_enabled",
         on_change=update_user_settings_state,
-        args=("rag", "enabled"),
+        args=("rag", "rag_enabled"),
     )
 
     if rag_enabled:
@@ -246,8 +250,8 @@ def rag_sidebar() -> None:
         ##########################
         # Vector Store
         ##########################
-        st.sidebar.subheader("Embedding",divider="red")
-        vs_df = pd.DataFrame(state.database_config[state.user_settings["database"]].get("vector_stores"))
+        st.sidebar.subheader("Embedding", divider="red")
+        vs_df = pd.DataFrame(state.database_config[state.user_settings["rag"]["database"]].get("vector_stores"))
 
         def rag_reset() -> None:
             for key in [k for k in state if "selected_rag" in k]:
@@ -293,9 +297,11 @@ def rag_sidebar() -> None:
         # Initialize filtered options
         filtered_df = update_filtered_df()
 
-        # Render selectboxes with updated options
-        alias = rag_gen_selectbox("Select Alias:", filtered_df["alias"].unique().tolist(), "selected_rag_alias")
-        model = rag_gen_selectbox("Select Model:", filtered_df["model"].unique().tolist(), "selected_rag_model")
+        # Render selectbox with updated options
+        rag_gen_selectbox("Select Alias:", filtered_df["alias"].unique().tolist(), "selected_rag_alias")
+        embed_model = rag_gen_selectbox(
+            "Select Model:", filtered_df["model"].unique().tolist(), "selected_rag_embed_model"
+        )
         chunk_size = rag_gen_selectbox(
             "Select Chunk Size:", filtered_df["chunk_size"].unique().tolist(), "selected_rag_chunk_size"
         )
@@ -309,9 +315,11 @@ def rag_sidebar() -> None:
         # Reset button
         st.sidebar.button("Reset RAG", type="primary", on_click=rag_reset)
 
-        if all([model, chunk_size, chunk_overlap, distance_metric]):
+        if all([embed_model, chunk_size, chunk_overlap, distance_metric]):
             vector_store_table = filtered_df["table"].iloc[0]
-            update_user_settings_state("rag", "vector_store", vector_store_table)
+            update_user_settings_state("rag", "store_table", vector_store_table)
+            update_user_settings_state("rag", "model", embed_model)
+            update_user_settings_state("rag", "distance_metric", distance_metric)
         else:
             st.error("Please select Embedding options or disable RAG to continue.", icon="❌")
             state.enable_sandbox = False

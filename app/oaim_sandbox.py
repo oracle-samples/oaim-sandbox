@@ -15,7 +15,7 @@ from streamlit import session_state as state
 # import sandbox.content.server as server
 from sandbox.utils import api_call
 from sandbox.content import server
-from sandbox.utils.client import gen_client_id
+from common.functions import client_gen_id
 
 import common.logging_config as logging_config
 
@@ -52,10 +52,10 @@ def main() -> None:
     if "user_settings" not in state:
         # Create the client in the server and store results in session_state
         try:
-            client_id = gen_client_id()
+            client_id = client_gen_id()
             api_endpoint = f"{state.server['url']}:{state.server['port']}/v1/settings/{client_id}"
             state.user_settings = api_call.post(url=api_endpoint, token=state.server["key"])
-        except api_call.SandboxError as ex:
+        except api_call.ApiError as ex:
             st.error(ex, icon="🚨")
 
     # Enable/Disable Functionality
