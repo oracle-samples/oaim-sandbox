@@ -7,6 +7,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 from typing import TypeVar, Generic, Optional, Literal, Union
 from pydantic import BaseModel, Field, PrivateAttr
 
+import common.help_text as help_text
 from langchain_core.messages import ChatMessage
 
 import oracledb
@@ -46,100 +47,58 @@ class LanguageParametersModel(BaseModel):
     """Language Model Parameters (also used by settings.py)"""
 
     frequency_penalty: Optional[float] = Field(
+        description=help_text.help_dict["frequency_penalty"],
         default=0.0,
         ge=-2.0,
         le=2.0,
-        description="Penalty for token frequency.",
     )
     max_completion_tokens: Optional[int] = Field(
+        description=help_text.help_dict["max_completion_tokens"],
         default=None,
-        description=(
-            "An upper bound for the number of tokens that can be generated for a completion, "
-            "including visible output tokens and reasoning tokens."
-        ),
     )
     presence_penalty: Optional[float] = Field(
+        description=help_text.help_dict["presence_penalty"],
         default=0.0,
         ge=-2.0,
         le=2.0,
-        description=(
-            "Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the "
-            "text so far, increasing the model's likelihood to talk about new topics."
-        ),
     )
-    stream: Optional[bool] = Field(default=False, description="If set, partial message deltas will be sent.")
+    stream: Optional[bool] = Field(
+        description="If set, partial message deltas will be sent.",
+        default=False,
+    )
     temperature: Optional[float] = Field(
+        description=help_text.help_dict["temperature"],
         default=1.0,
         ge=0.0,
         le=2.0,
-        description=(
-            "What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more "
-            "random, while lower values like 0.2 will make it more focused and deterministic."
-        ),
     )
     top_p: Optional[float] = Field(
+        description=help_text.help_dict["top_p"],
         default=1.0,
         ge=0.0,
         le=1.0,
-        description=(
-            "An alternative to sampling with temperature, called nucleus sampling, "
-            "where the model considers the results of the tokens with top_p probability mass. "
-            "So 0.1 means only the tokens comprising the top 10% probability mass are considered."
-        ),
     )
 
 
 class EmbeddingParametersModel(BaseModel):
     """Embedding Model Parameters (also used by settings.py)"""
 
-    context_length: Optional[int] = Field(
-        default=None,
-        description="The context length (window) of an Language Model.",
-    )
-    max_chunk_size: Optional[int] = Field(
-        default=None,
-        description="Max Chunk Size for Embedding Models.",
-    )
+    context_length: Optional[int] = Field(default=None, description="The context window for Language Model.")
+    max_chunk_size: Optional[int] = Field(default=None, description="Max Chunk Size for Embedding Models.")
 
 
 class ModelModel(LanguageParametersModel, EmbeddingParametersModel):
     """Model Object"""
 
-    name: str = Field(
-        ...,
-        description="The model to use",
-    )
+    name: str = Field(..., description="The model to use")
 
-    enabled: Optional[bool] = Field(
-        default=False,
-        description="Model is available for use.",
-    )
-    type: Literal["ll", "embed", "re-rank"] = Field(
-        ...,
-        description="Type of Model.",
-    )
-    api: str = Field(
-        ...,
-        description="API for Model.",
-        examples=["ChatOllama", "OpenAI", "OpenAIEmbeddings"],
-    )
-    api_key: Optional[str] = Field(
-        default="",
-        description="Model API Key.",
-    )
-    openai_compat: bool = Field(
-        default=True,
-        description="Is the API OpenAI compatible?",
-    )
-    url: Optional[str] = Field(
-        default="",
-        description="URL to Model API.",
-    )
-    status: Statuses = Field(
-        default="INACTIVE",
-        description="Status (read-only)",
-        readOnly=True,
-    )
+    enabled: Optional[bool] = Field(default=False, description="Model is available for use.")
+    type: Literal["ll", "embed", "re-rank"] = Field(..., description="Type of Model.")
+    api: str = Field(..., description="API for Model.", examples=["ChatOllama", "OpenAI", "OpenAIEmbeddings"])
+    api_key: Optional[str] = Field(default="", description="Model API Key.")
+    openai_compat: bool = Field(default=True, description="Is the API OpenAI compatible?")
+    url: Optional[str] = Field(default="", description="URL to Model API.")
+    status: Statuses = Field(default="INACTIVE", description="Status (read-only)", readOnly=True)
 
 
 #####################################################
@@ -148,24 +107,16 @@ class ModelModel(LanguageParametersModel, EmbeddingParametersModel):
 class Prompt(BaseModel):
     """Prompt inherits from PromptModel"""
 
-    prompt: str = Field(
-        ...,
-        description="Prompt Text",
-    )
+    prompt: str = Field(..., description="Prompt Text")
 
 
 class PromptModel(Prompt):
     """Prompt Object"""
 
     name: str = Field(
-        default="Basic Example",
-        description="Name of Prompt.",
-        examples=["Basic Example", "RAG Example", "Custom"],
+        default="Basic Example", description="Name of Prompt.", examples=["Basic Example", "RAG Example", "Custom"]
     )
-    category: Literal["sys", "ctx"] = Field(
-        ...,
-        description="Category of Prompt.",
-    )
+    category: Literal["sys", "ctx"] = Field(..., description="Category of Prompt.")
 
 
 #####################################################
@@ -174,85 +125,34 @@ class PromptModel(Prompt):
 class DatabaseVectorStorage(BaseModel):
     """Database Vector Storage Tables"""
 
-    database: Optional[str] = Field(
-        default="DEFAULT",
-        description="Name of Database (Alias)",
-    )
-    vector_store: str = Field(
-        default=None,
-        description="Vector Store Table Name",
-    )
-    alias: Optional[str] = Field(
-        default=None,
-        description="Identifiable Alias",
-    )
-    model: str = Field(
-        default=None,
-        description="Embedding Model",
-    )
-    chunk_size: int = Field(
-        default=None,
-        description="Chunk Size",
-    )
-    chunk_overlap: int = Field(
-        default=None,
-        description="Chunk Overlap",
-    )
-    distance_metric: DistanceMetrics = Field(
-        default="COSINE",
-        description="Distance Metric",
-    )
-    index_type: Literal["HNSW", "IVF"] = Field(
-        default="HNSW",
-        description="Vector Index",
-    )
+    database: Optional[str] = Field(default="DEFAULT", description="Name of Database (Alias)")
+    vector_store: str = Field(default=None, description="Vector Store Table Name")
+    alias: Optional[str] = Field(default=None, description="Identifiable Alias")
+    model: str = Field(default=None, description="Embedding Model")
+    chunk_size: int = Field(default=None, description="Chunk Size")
+    chunk_overlap: int = Field(default=None, description="Chunk Overlap")
+    distance_metric: DistanceMetrics = Field(default="COSINE", description="Distance Metric")
+    index_type: Literal["HNSW", "IVF"] = Field(default="HNSW", description="Vector Index")
 
 
 class Database(BaseModel):
     """Database Configuration (sent to oracledb)"""
 
-    user: Optional[str] = Field(
-        default=None,
-        description="Username",
-    )
-    password: Optional[str] = Field(
-        default=None,
-        description="Password",
-    )
-    dsn: Optional[str] = Field(
-        default=None,
-        description="Connect String",
-    )
-    wallet_password: Optional[str] = Field(
-        default=None,
-        description="Wallet Password (for mTLS)",
-    )
-    tcp_connect_timeout: int = Field(
-        default=5,
-        description="TCP Timeout in seconds",
-    )
+    user: Optional[str] = Field(default=None, description="Username")
+    password: Optional[str] = Field(default=None, description="Password")
+    dsn: Optional[str] = Field(default=None, description="Connect String")
+    wallet_password: Optional[str] = Field(default=None, description="Wallet Password (for mTLS)")
+    tcp_connect_timeout: int = Field(default=5, description="TCP Timeout in seconds")
 
 
 class DatabaseModel(Database):
     """Database Object"""
 
-    name: str = Field(
-        default="DEFAULT",
-        description="Name of Database (Alias)",
-    )
-    status: Statuses = Field(
-        default="UNVERIFIED",
-        description="Status (read-only)",
-        readOnly=True,
-    )
-    tns_admin: str = Field(
-        default="tns_admin",
-        description="Location of TNS_ADMIN directory",
-    )
+    name: str = Field(default="DEFAULT", description="Name of Database (Alias)")
+    status: Statuses = Field(default="UNVERIFIED", description="Status (read-only)", readOnly=True)
+    tns_admin: str = Field(default="tns_admin", description="Location of TNS_ADMIN directory")
     vector_stores: Optional[list[DatabaseVectorStorage]] = Field(
-        default=None,
-        description="Vector Storage (read-only)",
-        readOnly=True,
+        default=None, description="Vector Storage (read-only)", readOnly=True
     )
     # Do not expose the connection to the endpoint
     _connection: oracledb.Connection = PrivateAttr(default=None)
@@ -287,32 +187,15 @@ class RagSettings(DatabaseVectorStorage):
 
     rag_enabled: bool = Field(default=False, description="RAG Enabled")
     search_type: Literal["Similarity", "Similarity Score Threshold", "Maximal Marginal Relevance"] = Field(
-        default="Similarity",
-        description="Search Type",
+        default="Similarity", description="Search Type"
     )
-    top_k: Optional[int] = Field(
-        default=4,
-        ge=1,
-        le=10000,
-        description="Top K",
-    )
+    top_k: Optional[int] = Field(default=4, ge=1, le=10000, description="Top K")
     score_threshold: Optional[float] = Field(
-        default=0.0,
-        ge=0.0,
-        le=1.0,
-        description="Minimum Relevance Threshold (for Similarity Score Threshold)",
+        default=0.0, ge=0.0, le=1.0, description="Minimum Relevance Threshold (for Similarity Score Threshold)"
     )
-    fetch_k: Optional[int] = Field(
-        default=20,
-        ge=1,
-        le=10000,
-        description="Fetch K (for Maximal Marginal Relevance)",
-    )
+    fetch_k: Optional[int] = Field(default=20, ge=1, le=10000, description="Fetch K (for Maximal Marginal Relevance)")
     lambda_mult: Optional[float] = Field(
-        default=0.5,
-        ge=0.0,
-        le=1.0,
-        description="Degree of Diversity (for Maximal Marginal Relevance)",
+        default=0.5, ge=0.0, le=1.0, description="Degree of Diversity (for Maximal Marginal Relevance)"
     )
 
 
@@ -324,17 +207,13 @@ class SettingsModel(BaseModel):
         description="Unique Client Identifier",
     )
     ll_model: Optional[LargeLanguageSettings] = Field(
-        default_factory=LargeLanguageSettings,
-        description="Large Language Settings",
+        default_factory=LargeLanguageSettings, description="Large Language Settings"
     )
     prompts: Optional[PromptSettings] = Field(
-        default_factory=PromptSettings,
-        description="Prompt Engineering Settings",
+        default_factory=PromptSettings, description="Prompt Engineering Settings"
     )
-    rag: Optional[RagSettings] = Field(
-        default_factory=RagSettings,
-        description="RAG Settings",
-    )
+    rag: Optional[RagSettings] = Field(default_factory=RagSettings, description="RAG Settings")
+
 
 #####################################################
 # Completions
@@ -364,10 +243,7 @@ class ChatChoices(BaseModel):
             "tool_calls if the model called a tool."
         )
     )
-    logprobs: Optional[ChatLogprobs] = Field(
-        default=None,
-        description="Log probability information for the choice.",
-    )
+    logprobs: Optional[ChatLogprobs] = Field(default=None, description="Log probability information for the choice.")
 
 
 class ChatUsage(BaseModel):
@@ -381,26 +257,12 @@ class ChatUsage(BaseModel):
 class ChatResponse(BaseModel):
     """Represents a chat completion response returned by model, based on the provided input."""
 
-    id: str = Field(
-        description="A unique identifier for the chat completion.",
-    )
-    choices: list[ChatChoices] = Field(
-        description="A list of chat completion choices.",
-    )
-    created: int = Field(
-        description="The Unix timestamp (in seconds) of when the chat completion was created.",
-    )
-    model: str = Field(
-        description="The model used for the chat completion.",
-    )
-    object: str = Field(
-        default="chat.completion",
-        description="The model used for the chat completion.",
-    )
-    usage: Optional[ChatUsage] = Field(
-        default=None,
-        description="Usage statistics for the completion request.",
-    )
+    id: str = Field(description="A unique identifier for the chat completion.")
+    choices: list[ChatChoices] = Field(description="A list of chat completion choices.")
+    created: int = Field(description="The Unix timestamp (in seconds) of when the chat completion was created.")
+    model: str = Field(description="The model used for the chat completion.")
+    object: str = Field(default="chat.completion", description="The model used for the chat completion.")
+    usage: Optional[ChatUsage] = Field(default=None, description="Usage statistics for the completion request.")
 
 
 class ChatRequest(LanguageParametersModel):
@@ -409,12 +271,8 @@ class ChatRequest(LanguageParametersModel):
     Do not change as this has to remain OpenAI Compatible
     """
 
-    model: str = Field(
-        description="The model to use for chat completions.",
-    )
-    messages: list[ChatMessage] = Field(
-        description="A list of messages comprising the conversation so far.",
-    )
+    model: str = Field(description="The model to use for chat completions.")
+    messages: list[ChatMessage] = Field(description="A list of messages comprising the conversation so far.")
 
 
 #####################################################
