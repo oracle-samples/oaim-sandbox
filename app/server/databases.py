@@ -79,6 +79,6 @@ def get_vs(conn: oracledb.Connection) -> DatabaseVectorStorage:
     results = execute_sql(conn, sql)
     for table_name, comments in results:
         comments_dict = json.loads(comments)
-        vector_stores.append(DatabaseVectorStorage(table=table_name, **comments_dict))
+        vector_stores.append(DatabaseVectorStorage(vector_store=table_name, **comments_dict))
 
     return vector_stores

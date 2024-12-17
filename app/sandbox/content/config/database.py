@@ -133,52 +133,52 @@ def main() -> None:
             col6.markdown("**<u>Distance Metric</u>**", unsafe_allow_html=True)
             col7.markdown("**<u>Index Type</u>**", unsafe_allow_html=True)
             for vs in state.database_config[name]["vector_stores"]:
-                table = vs["table"].lower()
+                vector_store = vs["vector_store"].lower()
                 col1.button(
                     "",
                     icon="🗑️",
-                    key=f"vector_stores_{table}",
+                    key=f"vector_stores_{vector_store}",
                 )
                 col2.text_input(
                     "Alias",
                     value=vs["alias"],
                     label_visibility="collapsed",
-                    key=f"vector_stores_{table}_alias",
+                    key=f"vector_stores_{vector_store}_alias",
                     disabled=True,
                 )
                 col3.text_input(
                     "Model",
                     value=vs["model"],
                     label_visibility="collapsed",
-                    key=f"vector_stores_{table}_model",
+                    key=f"vector_stores_{vector_store}_model",
                     disabled=True,
                 )
                 col4.text_input(
                     "Chunk Size",
                     value=vs["chunk_size"],
                     label_visibility="collapsed",
-                    key=f"vector_stores_{table}_chunk_size",
+                    key=f"vector_stores_{vector_store}_chunk_size",
                     disabled=True,
                 )
                 col5.text_input(
                     "Chunk Overlap",
                     value=vs["chunk_overlap"],
                     label_visibility="collapsed",
-                    key=f"vector_stores_{table}_chunk_overlap",
+                    key=f"vector_stores_{vector_store}_chunk_overlap",
                     disabled=True,
                 )
                 col6.text_input(
                     "Distance Metric",
                     value=vs["distance_metric"],
                     label_visibility="collapsed",
-                    key=f"vector_stores_{table}_distance_metric",
+                    key=f"vector_stores_{vector_store}_distance_metric",
                     disabled=True,
                 )
                 col7.text_input(
                     "Index Type",
                     value=vs["index_type"],
                     label_visibility="collapsed",
-                    key=f"vector_stores_{table}_index_type",
+                    key=f"vector_stores_{vector_store}_index_type",
                     disabled=True,
                 )
         else:

@@ -5,6 +5,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 Session States Set:
 - sandbox_client: Stores the SandboxClient
 """
+
 # spell-checker:ignore streamlit
 import asyncio
 import inspect
@@ -69,16 +70,28 @@ async def main() -> None:
             ai_response = await sandbox_client.completions(message=human_request)
             st.chat_message("ai").write(ai_response.choices[0].message.content)
         except Exception:
-            st_common.clear_state_key("sandbox_client")
             logger.error("Exception:", exc_info=1)
-            st.chat_message("ai").write("I'm sorry, something's gone wrong.  Please try again.")
-            
+            st.chat_message("ai").write(
+                """
+                I'm sorry, something's gone wrong.  Please try again.
+                If the problem persists, please raise an issue.
+                """
+            )
+            if st.button("Retry", key="reload_chatbot"):
+                st_common.clear_state_key("sandbox_client")
+                st.rerun()
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:
     try:
         asyncio.run(main())
-    except Exception as ex:
+    except ValueError as ex:
+        logger.exception("Bug detected: %s", ex)
+        st.error("It looks like you found a bug; please open an issue", icon="🚨")
+        st.stop()
+    except IndexError as ex:
         logger.exception("Unable to contact the server: %s", ex)
         st.error("Unable to contact the server, is it running?", icon="🚨")
-
+        if st.button("Retry", key="reload_chatbot"):
+            st_common.clear_state_key("sandbox_client")
+            st.rerun()

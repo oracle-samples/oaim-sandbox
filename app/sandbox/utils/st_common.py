@@ -250,16 +250,19 @@ def rag_sidebar() -> None:
         ##########################
         # Vector Store
         ##########################
-        st.sidebar.subheader("Embedding", divider="red")
+        st.sidebar.subheader("Vector Store", divider="red")
+        # Create a DataFrame of all database vector storage tables
         vs_df = pd.DataFrame(state.database_config[state.user_settings["rag"]["database"]].get("vector_stores"))
 
-        def rag_reset() -> None:
-            for key in [k for k in state if "selected_rag" in k]:
-                clear_state_key(key)
-            update_user_settings_state("rag", "vector_store", None)
+        def vs_reset() -> None:
+            # Reset Vector Store Selections
+            for key in state["user_settings"]["rag"]:
+                if key in ("model", "chunk_size", "chunk_overlap", "distance_metric", "vector_store", "alias"):
+                    clear_state_key(f"selected_rag_{key}")
+                    update_user_settings_state("rag", key)
 
         # Function to handle selectbox with auto-setting for a single unique value
-        def rag_gen_selectbox(label, options, key):
+        def vs_gen_selectbox(label, options, key):
             valid_options = [option for option in options if option != ""]
             if not valid_options:  # Disable the selectbox if no valid options are available
                 disabled = True
@@ -269,7 +272,7 @@ def rag_sidebar() -> None:
                 if len(valid_options) == 1:  # Pre-select if only one unique option
                     selected_value = valid_options[0]
                 else:
-                    selected_value = ""
+                    selected_value = state["user_settings"]["rag"][key.removeprefix("selected_rag_")] or ""
 
             return st.sidebar.selectbox(
                 label,
@@ -298,28 +301,29 @@ def rag_sidebar() -> None:
         filtered_df = update_filtered_df()
 
         # Render selectbox with updated options
-        rag_gen_selectbox("Select Alias:", filtered_df["alias"].unique().tolist(), "selected_rag_alias")
-        embed_model = rag_gen_selectbox(
-            "Select Model:", filtered_df["model"].unique().tolist(), "selected_rag_embed_model"
-        )
-        chunk_size = rag_gen_selectbox(
+        alias = vs_gen_selectbox("Select Alias:", filtered_df["alias"].unique().tolist(), "selected_rag_alias")
+        embed_model = vs_gen_selectbox("Select Model:", filtered_df["model"].unique().tolist(), "selected_rag_model")
+        chunk_size = vs_gen_selectbox(
             "Select Chunk Size:", filtered_df["chunk_size"].unique().tolist(), "selected_rag_chunk_size"
         )
-        chunk_overlap = rag_gen_selectbox(
+        chunk_overlap = vs_gen_selectbox(
             "Select Chunk Overlap:", filtered_df["chunk_overlap"].unique().tolist(), "selected_rag_chunk_overlap"
         )
-        distance_metric = rag_gen_selectbox(
+        distance_metric = vs_gen_selectbox(
             "Select Distance Metric:", filtered_df["distance_metric"].unique().tolist(), "selected_rag_distance_metric"
         )
 
-        # Reset button
-        st.sidebar.button("Reset RAG", type="primary", on_click=rag_reset)
-
         if all([embed_model, chunk_size, chunk_overlap, distance_metric]):
-            vector_store_table = filtered_df["table"].iloc[0]
-            update_user_settings_state("rag", "store_table", vector_store_table)
+            vs = filtered_df["vector_store"].iloc[0]
+            update_user_settings_state("rag", "vector_store", vs)
+            update_user_settings_state("rag", "alias", alias)
             update_user_settings_state("rag", "model", embed_model)
+            update_user_settings_state("rag", "chunk_size", chunk_size)
+            update_user_settings_state("rag", "chunk_overlap", chunk_overlap)
             update_user_settings_state("rag", "distance_metric", distance_metric)
         else:
             st.error("Please select Embedding options or disable RAG to continue.", icon="❌")
             state.enable_sandbox = False
+
+        # Reset button
+        st.sidebar.button("Reset", type="primary", on_click=vs_reset)

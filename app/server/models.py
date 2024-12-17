@@ -29,7 +29,7 @@ async def filter(
     enabled: Optional[schema.ModelEnabledType] = None,
 ) -> list[schema.ModelModel]:
     """Used in direct call from list_models and agents.models"""
-    logger.info("%i models are defined", len(models_all))
+    logger.debug("%i models are defined", len(models_all))
     models_all = [
         model
         for model in models_all
@@ -37,7 +37,7 @@ async def filter(
         and (model_type is None or model.type == model_type)
         and (enabled is None or model.enabled == enabled)
     ]
-    logger.info("%i models after filtering", len(models_all))
+    logger.debug("%i models after filtering", len(models_all))
     return models_all
 
 
@@ -57,7 +57,7 @@ async def get_client(
     model_config: dict,
 ) -> BaseChatModel:
     # Retrieve model configuration
-    logger.info("Model Config: %s", model_config)
+    logger.debug("Model Config: %s", model_config)
     model_name = model_config.model
     model_api = await get_key_value(model_objects, model_name, "api")
     model_api_key = await get_key_value(model_objects, model_name, "api_key")
@@ -80,7 +80,7 @@ async def get_client(
             except KeyError:
                 # Mainly for embeddings
                 continue
-        logger.info("LL Model Parameters: %s", ll_common_params)
+        logger.debug("LL Model Parameters: %s", ll_common_params)
         model_classes = {
             "OpenAI": lambda: ChatOpenAI(model=model_name, api_key=model_api_key, **ll_common_params),
             "Cohere": lambda: ChatCohere(model=model_name, cohere_api_key=model_api_key, **ll_common_params),
@@ -108,9 +108,9 @@ async def get_client(
         }
 
     try:
-        logger.info("Searching for %s in %s", model_api, model_classes)
+        logger.debug("Searching for %s in %s", model_api, model_classes)
         client = model_classes[model_api]()
-        logger.info("Model Client: %s", client)
+        logger.debug("Model Client: %s", client)
         return client
     except (UnboundLocalError, KeyError):
         logger.error("Unable to find client; expect trouble!")

@@ -246,25 +246,28 @@ def register_endpoints(app: FastAPI) -> None:
         # Establish LL Model Params
         ll_client = await models.get_client(model_objects, request)
         try:
-            user_sys_prompt = getattr(user_settings.prompts, 'sys', "Basic Example")
+            user_sys_prompt = getattr(user_settings.prompts, "sys", "Basic Example")
             sys_prompt = next(
-                (prompt for prompt in prompt_objects if prompt.category == "sys" and prompt.name == user_sys_prompt), None
+                (prompt for prompt in prompt_objects if prompt.category == "sys" and prompt.name == user_sys_prompt),
+                None,
             )
         except AttributeError as ex:
             # Settings not on server-side
             logger.error("An exception occurred: %s", ex)
             raise HTTPException(status_code=500, detail="Unexpected error") from ex
-        
+
         embed_client, ctx_prompt, db_conn = None, None, None
         if user_settings.rag.rag_enabled:
             rag_config = user_settings.rag
             embed_client = await models.get_client(model_objects, rag_config)
-            user_ctx_prompt = getattr(user_settings.prompts, "ctx", "Basic Example")
-            ctx_prompt = next(
-                (prompt for prompt in prompt_objects if prompt.category == "ctx" and prompt.name == user_ctx_prompt), None
-            )
             user_db = getattr(rag_config, "database", "DEFAULT")
             db_conn = next((settings.connection for settings in database_objects if settings.name == user_db), None)
+
+            user_ctx_prompt = getattr(user_settings.prompts, "ctx", "Basic Example")
+            ctx_prompt = next(
+                (prompt for prompt in prompt_objects if prompt.category == "ctx" and prompt.name == user_ctx_prompt),
+                None,
+            )
 
         kwargs = {
             "input": {"messages": [HumanMessage(content=request.messages[0].content)]},

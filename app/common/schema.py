@@ -174,20 +174,28 @@ class PromptModel(Prompt):
 class DatabaseVectorStorage(BaseModel):
     """Database Vector Storage Tables"""
 
-    table: str = Field(
-        description="Table Name",
+    database: Optional[str] = Field(
+        default="DEFAULT",
+        description="Name of Database (Alias)",
+    )
+    vector_store: str = Field(
+        default=None,
+        description="Vector Store Table Name",
     )
     alias: Optional[str] = Field(
         default=None,
         description="Identifiable Alias",
     )
     model: str = Field(
+        default=None,
         description="Embedding Model",
     )
     chunk_size: int = Field(
+        default=None,
         description="Chunk Size",
     )
     chunk_overlap: int = Field(
+        default=None,
         description="Chunk Overlap",
     )
     distance_metric: DistanceMetrics = Field(
@@ -270,21 +278,14 @@ class LargeLanguageSettings(LanguageParametersModel):
 class PromptSettings(BaseModel):
     """Store Prompt Settings"""
 
-    ctx: str = Field(default=None, description="Context Prompt Name")
-    sys: str = Field(default=None, description="System Prompt Name")
+    ctx: str = Field(default="Basic Example", description="Context Prompt Name")
+    sys: str = Field(default="Basic Example", description="System Prompt Name")
 
 
-class RagSettings(BaseModel):
-    """Store RAG Settings"""
+class RagSettings(DatabaseVectorStorage):
+    """Store RAG Settings incl Vector Storage"""
 
     rag_enabled: bool = Field(default=False, description="RAG Enabled")
-    database: Optional[str] = Field(description="Database Settings")
-    store_table: Optional[str] = Field(default=None, description="Vector Store Table")
-    model: Optional[str] = Field(default=None, description="Embedding Model")
-    distance_metric: DistanceMetrics = Field(
-        default="COSINE",
-        description="Distance Metric",
-    )
     search_type: Literal["Similarity", "Similarity Score Threshold", "Maximal Marginal Relevance"] = Field(
         default="Similarity",
         description="Search Type",
@@ -327,12 +328,13 @@ class SettingsModel(BaseModel):
         description="Large Language Settings",
     )
     prompts: Optional[PromptSettings] = Field(
+        default_factory=PromptSettings,
         description="Prompt Engineering Settings",
     )
     rag: Optional[RagSettings] = Field(
+        default_factory=RagSettings,
         description="RAG Settings",
     )
-
 
 #####################################################
 # Completions

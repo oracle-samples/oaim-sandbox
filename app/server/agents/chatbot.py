@@ -6,17 +6,15 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 from datetime import datetime, timezone
 import json
-from typing import Annotated, Sequence, Literal
-from typing_extensions import TypedDict
+from typing import Literal
 
-from langchain_core.messages import BaseMessage, HumanMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableConfig
 
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import MessagesState, StateGraph, START, END
-from langgraph.graph.message import add_messages
 from langgraph.prebuilt import tools_condition, ToolNode
 
 from pydantic import BaseModel, Field
@@ -71,7 +69,7 @@ def format_response(state: AgentState) -> ChatResponse:
         ],
     )
     response = {"final_response": openai_response}
-    return {"final_response": openai_response}
+    return response
 
 
 def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["generate", "rewrite"]:
@@ -144,42 +142,35 @@ def rewrite(state: AgentState, config: RunnableConfig):
     """
     # Send rewrite request
     model = config["configurable"].get("ll_client", None)
-    response = model.invoke([HumanMessage(content=rewrite_message)])
+    response = model.invoke([SystemMessage(content=rewrite_message)])
     return {"messages": [response]}
 
 
 def generate(state: AgentState, config: RunnableConfig):
-    """Generate answer"""
+    """Generate answer when RAG enabled"""
+    logger.info("Generating Response")
     messages = state["messages"]
     question = messages[0].content
     # result will be a str, convert for processing
     context = json.loads(messages[-1].content)
-
     chunks = "\n\n".join([doc["page_content"] for doc in context])
+    logger.debug("Generate Chunks: %s", chunks)
 
-    sys_prompt = config["metadata"]["sys_prompt"].prompt
-    if config["metadata"]["rag_settings"].rag_enabled and chunks:
-        generate_template = f"""
-            {sys_prompt}
-            question: {{question}}
-            context:  {{context}}
-            """
-    else:
-        context = None
-        generate_template = sys_prompt
-
-    generate_prompt = PromptTemplate(
+    generate_template = "SystemMessage(content='{sys_prompt}\n {context}'), HumanMessage(content='{question}')"
+    prompt_template = PromptTemplate(
         template=generate_template,
-        input_variables=["context", "question"],
+        input_variables=["sys_prompt", "context", "question"],
     )
-
+    # Chain and Run
     llm = config["configurable"].get("ll_client", None)
-
-    # Chain
-    generate_chain = generate_prompt | llm | StrOutputParser()
-
-    # Run
-    response = generate_chain.invoke({"context": chunks, "question": question})
+    generate_chain = prompt_template | llm | StrOutputParser()
+    response = generate_chain.invoke(
+        {
+            "sys_prompt": config["metadata"]["sys_prompt"].prompt,
+            "context": chunks,
+            "question": question,
+        }
+    )
     return {"messages": [response]}
 
 

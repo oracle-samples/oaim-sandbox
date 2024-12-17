@@ -21,7 +21,7 @@ logger = logging_config.logging.getLogger("server.tools.oraclevs_retriever")
 # Oracle Vector Store Retriever Tool
 #############################################################################
 def oraclevs_tool(
-    messages: Annotated[list, InjectedState("messages")],
+    state: Annotated[dict, InjectedState],
     config: RunnableConfig,
 ) -> list[dict]:
     """Oracle Vector Search Tool"""
@@ -30,10 +30,10 @@ def oraclevs_tool(
         db_conn = config["configurable"]["db_conn"]
         embed_client = config["configurable"]["embed_client"]
         rag_settings = config["metadata"]["rag_settings"]
-        logger.info("Initializing Vectorstore table: %s", rag_settings.store_table)
+        logger.info("Initializing Vector Store: %s", rag_settings.vector_store)
         try:
             logger.info("Connecting to VectorStore")
-            vectorstore = OracleVS(db_conn, embed_client, rag_settings.store_table, rag_settings.distance_metric)
+            vectorstore = OracleVS(db_conn, embed_client, rag_settings.vector_store, rag_settings.distance_metric)
         except Exception as ex:
             logger.exception("Failed to initialize the Vector Store")
             raise ex
@@ -59,9 +59,8 @@ def oraclevs_tool(
                 retriever = vectorstore.as_retriever(search_type="mmr", search_kwargs=search_kwargs)
             else:
                 raise ValueError(f"Unsupported search_type: {search_type}")
-
-            logger.info("Invoking retriever on: %s", {messages[0].content})
-            documents = retriever.invoke(messages[0].content)
+            logger.info("Invoking retriever on: %s", {state["messages"][-2].content})
+            documents = retriever.invoke(state["messages"][-2].content)
         except Exception as ex:
             logger.exception("Failed to perform Oracle Vector Store retrieval")
             raise ex
@@ -73,6 +72,7 @@ def oraclevs_tool(
         )
 
     documents_dict = [vars(doc) for doc in documents]
+    logger.info("Found Documents: %s", documents_dict)
     return documents_dict
 
 oraclevs_retriever: BaseTool = tool(oraclevs_tool)

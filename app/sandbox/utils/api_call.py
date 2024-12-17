@@ -49,7 +49,7 @@ def make_request(
             args = {
                 "url": url,
                 "headers": headers,
-                "timeout": 10,
+                "timeout": 60,
                 "params": params_or_body if method == "GET" else None,
                 "json": params_or_body if method in {"POST", "PATCH"} else None,
             }

@@ -8,20 +8,8 @@ from common.schema import SettingsModel
 
 def main() -> list[dict]:
     """Define example Settings Support"""
-    settings_list = [
-        {
-            "client": "default",
-            "prompts": {"ctx": "Basic Example", "sys": "Basic Example"},
-            "rag": {"database": "DEFAULT", "rag_enabled": False},
-        },
-        {
-            "client": "server",
-            "database": "DEFAULT",
-            "prompts": {"ctx": "Basic Example", "sys": "Basic Example"},
-            "rag": {"database": "DEFAULT", "rag_enabled": False},
-        },
-    ]
-    settings_objects = [SettingsModel(**settings_dict) for settings_dict in settings_list]
+    clients = ["default", "server"]
+    settings_objects = [SettingsModel(client=client) for client in clients]
     return settings_objects
 
 
