@@ -8,7 +8,7 @@ import server.databases as databases
 from common.schema import DatabaseModel
 
 
-def main() -> list[dict]:
+def main() -> list[DatabaseModel]:
     """Define Default Database"""
     database_list = [
         {
@@ -32,15 +32,18 @@ def main() -> list[dict]:
     database_objects = []
     for database_obj in database_list:
         db = DatabaseModel(**database_obj)
-        conn, db.status = databases.connect(db)
-        if db.status == "VALID":
-            db.vector_stores = databases.get_vs(conn)
-            if not db.connection and len(database_objects) > 1:
-                db.set_connection = databases.disconnect(conn)
-            else:
-                db.set_connection(conn)
-                db.status = "CONNECTED"
         database_objects.append(db)
+        try:
+            conn = databases.connect(db)
+            db.connected = True
+        except databases.DbException:
+            db.connected = False
+            continue
+        db.vector_stores = databases.get_vs(conn)
+        if not db.connection and len(database_objects) > 1:
+            db.set_connection = databases.disconnect(conn)
+        else:
+            db.set_connection(conn)
 
     return database_objects
 

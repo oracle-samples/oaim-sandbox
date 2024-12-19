@@ -19,15 +19,17 @@ import server.agents.chatbot as chatbot
 import server.bootstrap as bootstrap  # __init__.py imports scripts
 import server.models as models
 import server.databases as databases
+import server.oci as server_oci
 
 from fastapi import FastAPI, Query, HTTPException
 
 logger = logging_config.logging.getLogger("server.endpoints")
 
 # Load Models with Definition Data
-model_objects = bootstrap.model_def.main()
-prompt_objects = bootstrap.prompt_eng_def.main()
 database_objects = bootstrap.database_def.main()
+model_objects = bootstrap.model_def.main()
+oci_objects = bootstrap.oci_def.main()
+prompt_objects = bootstrap.prompt_eng_def.main()
 settings_objects = bootstrap.settings_def.main()
 
 
@@ -36,6 +38,69 @@ settings_objects = bootstrap.settings_def.main()
 #####################################################
 def register_endpoints(app: FastAPI) -> None:
     logger.debug("Registering Server Endpoints")
+
+    #################################################
+    # Database
+    #################################################
+    @app.get(
+        "/v1/databases",
+        description="Get all Databases Configurations",
+        response_model=schema.ResponseList[schema.DatabaseModel],
+    )
+    async def databases_list() -> schema.ResponseList[schema.DatabaseModel]:
+        """List all databases"""
+        return schema.ResponseList[schema.DatabaseModel](
+            data=database_objects,
+            msg=f"{len(database_objects)} database(s) found",
+        )
+
+    @app.get(
+        "/v1/databases/{name}",
+        description="Get single Database Configuration",
+        response_model=schema.Response[schema.DatabaseModel],
+    )
+    async def databases_get(name: schema.DatabaseNameType) -> schema.ResponseList[schema.DatabaseModel]:
+        """Get single db object"""
+        db = next((db for db in database_objects if db.name == name), None)
+        if not db:
+            raise HTTPException(status_code=404, detail=f"Database {name} not found")
+
+        return schema.Response[schema.DatabaseModel](
+            data=db,
+            msg=f"{name} database found",
+        )
+
+    @app.patch(
+        "/v1/databases/{name}",
+        description="Update, Test, Set as Default Database Configuration",
+        response_model=schema.Response[schema.DatabaseModel],
+    )
+    async def databases_update(
+        name: schema.DatabaseNameType, patch: schema.Request[schema.Database]
+    ) -> schema.Response[schema.DatabaseModel]:
+        """Update Database"""
+        logger.info("Received Database Payload: %s", patch)
+        db = next((db for db in database_objects if db.name == name), None)
+        if db:
+            try:
+                conn = databases.connect(patch.data)
+            except databases.DbException as ex:
+                db.connected = False
+                raise HTTPException(status_code=500, detail=str(ex)) from ex
+            db.user = patch.data.user
+            db.password = patch.data.password
+            db.dsn = patch.data.dsn
+            db.wallet_password = patch.data.wallet_password
+            db.connected = True
+            db.vector_stores = databases.get_vs(conn)
+            db.set_connection(conn)
+            # Unset and disconnect other databases
+            for other_db in database_objects:
+                if other_db.name != name and other_db.connection:
+                    other_db.set_connection(databases.disconnect(db.connection))
+                    other_db.connected = False
+            return schema.Response[schema.DatabaseModel](data=db, msg=f"{name} updated and set as default")
+        raise HTTPException(status_code=404, detail=f"Database {name} not found")
 
     #################################################
     # Models
@@ -72,6 +137,41 @@ def register_endpoints(app: FastAPI) -> None:
                 raise HTTPException(status_code=400, detail=f"Invalid key: {key}")
 
         return schema.Response[schema.ModelModel](data=model_upd[0])
+
+    #################################################
+    # OCI
+    #################################################
+    @app.get("/v1/oci", description="View OCI Configuration", response_model=schema.ResponseList[schema.OracleCloudSettings])
+    async def oci_list() -> schema.ResponseList[schema.OracleCloudSettings]:
+        """List OCI Configuration"""
+        return schema.ResponseList[schema.OracleCloudSettings](data=oci_objects)
+
+    @app.patch(
+        "/v1/oci/{profile}",
+        description="Update, Test, Set as Default OCI Configuration",
+        response_model=schema.Response[schema.OracleCloudSettings],
+    )
+    async def oci_update(
+        profile: schema.OCIProfileType, patch: schema.Request[schema.OracleCloudSettings]
+    ) -> schema.Response[schema.OracleCloudSettings]:
+        """Update OCI Configuration"""
+        logger.debug("Received OCI Payload: %s", patch)
+        oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
+        if oci_config:
+            try:
+                client, namespace = server_oci.create_client(patch.data)
+            except server_oci.OciException as ex:
+                raise HTTPException(status_code=500, detail=str(ex)) from ex
+            oci_config.set_client(client)
+            oci_config.namespace = namespace
+            oci_config.tenancy = patch.data.tenancy
+            oci_config.region = patch.data.region
+            oci_config.user = patch.data.user
+            oci_config.fingerprint = patch.data.fingerprint
+            oci_config.key_file = patch.data.key_file
+            oci_config.security_token_file = patch.data.security_token_file
+            return schema.Response[schema.OracleCloudSettings](data=oci_config, msg=f"{profile} updated and set as default")
+        raise HTTPException(status_code=404, detail=f"{profile} profile for OCI not found")
 
     #################################################
     # Prompt Engineering
@@ -127,68 +227,6 @@ def register_endpoints(app: FastAPI) -> None:
                 return schema.Response[schema.PromptModel](data=prompt)
 
         raise HTTPException(status_code=404, detail=f"Prompt {category}:{name} not found")
-
-    #################################################
-    # Database
-    #################################################
-    @app.get(
-        "/v1/databases",
-        description="Get all Databases Configurations",
-        response_model=schema.ResponseList[schema.DatabaseModel],
-    )
-    async def databases_list() -> schema.ResponseList[schema.DatabaseModel]:
-        """List all databases"""
-        return schema.ResponseList[schema.DatabaseModel](
-            data=database_objects,
-            msg=f"{len(database_objects)} database(s) found",
-        )
-
-    @app.get(
-        "/v1/databases/{name}",
-        description="Get single Database Configuration",
-        response_model=schema.Response[schema.DatabaseModel],
-    )
-    async def databases_get(name: schema.DatabaseNameType) -> schema.ResponseList[schema.DatabaseModel]:
-        """Get single db object"""
-        db = next((db for db in database_objects if db.name == name), None)
-        if not db:
-            raise HTTPException(status_code=404, detail=f"Database {name} not found")
-
-        return schema.Response[schema.DatabaseModel](
-            data=db,
-            msg=f"{name} database found",
-        )
-
-    @app.patch(
-        "/v1/databases/{name}",
-        description="Update, Test, Set as Default Database Configuration",
-        response_model=schema.Response[schema.DatabaseModel],
-    )
-    async def databases_update(
-        name: schema.DatabaseNameType, patch: schema.Request[schema.Database]
-    ) -> schema.Response[schema.DatabaseModel]:
-        """Update Database"""
-        logger.debug("Received Database Payload: %s", patch)
-        db = next((db for db in database_objects if db.name == name), None)
-        if db:
-            conn, status = databases.connect(db)
-            if status == "VALID":
-                db.user = patch.data.user
-                db.password = patch.data.password
-                db.dsn = patch.data.dsn
-                db.wallet_password = patch.data.wallet_password
-                db.vector_stores = databases.get_vs(conn)
-                db.set_connection(conn)
-                db.status = "CONNECTED"
-                # Unset and disconnect other databases
-                for other_db in database_objects:
-                    if other_db.name != name and other_db.connection:
-                        other_db.set_connection(databases.disconnect(db.connection))
-                        other_db.status = "VALID"
-                return schema.Response[schema.DatabaseModel](data=db, msg=f"{name} updated and set as default")
-            else:
-                raise HTTPException(status_code=404, detail=f"Unable to connect to database {name}: {status}")
-        raise HTTPException(status_code=404, detail=f"Database {name} not found")
 
     #################################################
     # Settings

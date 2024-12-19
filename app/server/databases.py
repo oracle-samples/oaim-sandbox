@@ -7,32 +7,37 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 import json
 import oracledb
 
-from common.schema import Database, DatabaseModel, DatabaseVectorStorage, Statuses
+from common.schema import Database, DatabaseModel, DatabaseVectorStorage
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("utils.database")
+logger = logging_config.logging.getLogger("server.database")
 
 
-def connect(config: DatabaseModel) -> tuple[oracledb.Connection, Statuses]:
+class DbException(Exception):
+    """Custom DB Exception"""
+
+    def __init__(self, message):
+        super().__init__(message)
+
+
+def connect(config: DatabaseModel) -> oracledb.Connection:
     """Establish a connection to an Oracle Database"""
-    conn, status = None, config.status
+    logger.info("Connecting to Database: %s", config.dsn)
     include_fields = set(Database.model_fields.keys())
     db_config = config.model_dump(include=include_fields)
     # Check if connection settings are configured
     if any(not db_config[key] for key in ("user", "password", "dsn")):
-        return None, "NOT_CONFIGURED"
-    
+        raise DbException("Not all connection details supplied.")
+
     # Attempt to Connect
-    logger.info("Connecting to Database: %s", config.name)
     try:
         conn = oracledb.connect(**db_config)
-        status = "VALID"
     except oracledb.DatabaseError as ex:
         if "ORA-01017" in str(ex):
-            status = "NOT_AUTHORIZED"
+            raise DbException("Invalid Credentials") from ex
         else:
-            status = "NOT_CONFIGURED"
-    return conn, status
+            raise DbException(str(ex)) from ex
+    return conn
 
 
 def disconnect(conn: oracledb.Connection) -> None:

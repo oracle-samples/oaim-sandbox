@@ -8,7 +8,7 @@ import os
 from common.schema import ModelModel
 
 
-def main() -> list[dict]:
+def main() -> list[ModelModel]:
     """Define example Model Support"""
     models_list = [
         {

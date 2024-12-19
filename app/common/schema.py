@@ -11,6 +11,7 @@ import common.help_text as help_text
 from langchain_core.messages import ChatMessage
 
 import oracledb
+import oci
 
 #####################################################
 # Standardized Classes
@@ -126,11 +127,11 @@ class DatabaseVectorStorage(BaseModel):
     """Database Vector Storage Tables"""
 
     database: Optional[str] = Field(default="DEFAULT", description="Name of Database (Alias)")
-    vector_store: str = Field(default=None, description="Vector Store Table Name")
+    vector_store: Optional[str] = Field(default=None, description="Vector Store Table Name")
     alias: Optional[str] = Field(default=None, description="Identifiable Alias")
-    model: str = Field(default=None, description="Embedding Model")
-    chunk_size: int = Field(default=None, description="Chunk Size")
-    chunk_overlap: int = Field(default=None, description="Chunk Overlap")
+    model: Optional[str] = Field(default=None, description="Embedding Model")
+    chunk_size: Optional[int] = Field(default=None, description="Chunk Size")
+    chunk_overlap: Optional[int] = Field(default=None, description="Chunk Overlap")
     distance_metric: DistanceMetrics = Field(default="COSINE", description="Distance Metric")
     index_type: Literal["HNSW", "IVF"] = Field(default="HNSW", description="Vector Index")
 
@@ -149,7 +150,7 @@ class DatabaseModel(Database):
     """Database Object"""
 
     name: str = Field(default="DEFAULT", description="Name of Database (Alias)")
-    status: Statuses = Field(default="UNVERIFIED", description="Status (read-only)", readOnly=True)
+    connected: bool = Field(default=False, description="Connection Established")
     tns_admin: str = Field(default="tns_admin", description="Location of TNS_ADMIN directory")
     vector_stores: Optional[list[DatabaseVectorStorage]] = Field(
         default=None, description="Vector Storage (read-only)", readOnly=True
@@ -163,6 +164,31 @@ class DatabaseModel(Database):
 
     def set_connection(self, connection: oracledb.Connection) -> None:
         self._connection = connection
+
+
+#####################################################
+# Oracle Cloud Infrastructure
+#####################################################
+class OracleCloudSettings(BaseModel):
+    """Store Oracle Cloud Infrastructure Settings"""
+
+    profile: str = Field(default="default", description="Config File Profile")
+    namespace: Optional[str] = Field(default=None, description="Object Store Namespace", readOnly=True)
+
+    class Config:
+        """Allow arbitrary keys for other values as we don't know what will be supplied"""
+
+        extra = "allow"
+
+    # Do not expose the connection to the endpoint
+    _client: oci.object_storage.ObjectStorageClient = PrivateAttr(default=None)
+
+    @property
+    def client(self) -> Optional[oci.object_storage.ObjectStorageClient]:
+        return self._client
+
+    def set_client(self, connection: oci.object_storage.ObjectStorageClient) -> None:
+        self._client = connection
 
 
 #####################################################
@@ -213,6 +239,7 @@ class SettingsModel(BaseModel):
         default_factory=PromptSettings, description="Prompt Engineering Settings"
     )
     rag: Optional[RagSettings] = Field(default_factory=RagSettings, description="RAG Settings")
+    oci_profile: Optional[str] = Field(default="DEFAULT", description="Oracle Cloud Settings Profile")
 
 
 #####################################################
@@ -278,10 +305,11 @@ class ChatRequest(LanguageParametersModel):
 #####################################################
 # Types
 #####################################################
+DatabaseNameType = DatabaseModel.__annotations__["name"]
 ModelNameType = ModelModel.__annotations__["name"]
 ModelEnabledType = ModelModel.__annotations__["enabled"]
 ModelTypeType = ModelModel.__annotations__["type"]
+OCIProfileType = OracleCloudSettings.__annotations__["profile"]
 PromptNameType = PromptModel.__annotations__["name"]
 PromptCategoryType = PromptModel.__annotations__["category"]
 PromptPromptType = Prompt.__annotations__["prompt"]
-DatabaseNameType = DatabaseModel.__annotations__["name"]

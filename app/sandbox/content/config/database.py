@@ -24,6 +24,7 @@ API_ENDPOINT = None
 if "server" in state:
     API_ENDPOINT = f"{state.server['url']}:{state.server['port']}/v1/databases"
 
+
 #####################################################
 # Functions
 #####################################################
@@ -40,6 +41,7 @@ def get_databases() -> dict[str, dict]:
             st.error(f"Unable to retrieve databases: {ex}", icon="🚨")
             state["database_config"] = dict()
 
+
 def patch_database(name: str, user: str, password: str, dsn: str, wallet_password: str) -> None:
     """Update Database"""
     # Check if the database configuration is changed, or if not CONNECTED
@@ -48,7 +50,7 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
         or state.database_config[name]["password"] != password
         or state.database_config[name]["dsn"] != dsn
         or state.database_config[name]["wallet_password"] != wallet_password
-        or state.database_config[name]["status"] != "CONNECTED"
+        or not state.database_config[name]["connected"]
     ):
         try:
             api_call.patch(
@@ -65,10 +67,13 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
             )
             st.success(f"{name} Database Configuration - Updated", icon="✅")
             st_common.clear_state_key("database_config")
-            st.rerun()
+            st_common.clear_state_key("database_error")
+            state.database_error = None
         except api_call.ApiError as ex:
             logger.error("Database Update failed: %s", ex)
-            st.error(f"Unable to perform update: {ex}", icon="🚨")
+            state.database_error = ex
+            state.database_config[name]["connected"] = False
+        st.rerun()
     else:
         st.info(f"{name} Database Configuration - No Changes Detected.", icon="ℹ️")
 
@@ -85,6 +90,7 @@ def main() -> None:
     except api_call.ApiError:
         st.stop()
 
+    # TODO(gotsysdba) Add select for databases
     name = "DEFAULT"
     st.subheader("Configuration")
     with st.form("update_database_config"):
@@ -110,17 +116,20 @@ def main() -> None:
             key="database_wallet_password",
             type="password",
         )
-        if state.database_config[name]["status"] != "CONNECTED":
-            st.error(f"Current Status: {state.database_config[name]['status']}")
+        if state.database_config[name]["connected"]:
+            st.success("Current Status: Connected")
         else:
-            st.success(f"Current Status: {state.database_config[name]['status']}")
+            st.error("Current Status: Disconnected")
+            if "database_error" in state:
+                st.error(f"Unable to perform update: {state.database_error}", icon="🚨")
+
         if st.form_submit_button("Save"):
             if not user or not password or not dsn:
                 st.error("Username, Password and Connect String fields are required.", icon="❌")
                 st.stop()
             patch_database(name, user, password, dsn, wallet_password)
 
-    if state.database_config[name]["status"] == "CONNECTED":
+    if state.database_config[name]["connected"]:
         st.subheader("Database Vector Storage")
         if state.database_config[name]["vector_stores"]:
             table_col_format = st.columns([0.02, 0.05, 0.1, 0.05, 0.05, 0.05, 0.04])

@@ -111,7 +111,7 @@ def ll_sidebar() -> None:
     user_completion_tokens = state.user_settings["ll_model"]["max_completion_tokens"]
     st.sidebar.slider(
         f"Maximum Tokens (Default: {max_completion_tokens}):",
-        help=help_text.help_dict["max_tokens"],
+        help=help_text.help_dict["max_completion_tokens"],
         value=(
             user_completion_tokens
             if user_completion_tokens is not None and user_completion_tokens <= max_completion_tokens
@@ -171,12 +171,12 @@ def rag_sidebar() -> None:
     if not available_embed_models:
         logger.debug("RAG Disabled (no Embedding Models)")
         st.warning("No embedding models are configured and/or enabled. Disabling RAG.", icon="⚠️")
-        db_status = None
+        db_avail = False
     else:
         get_databases()
-        db_status = state.database_config[state.user_settings["rag"]["database"]].get("status")
+        db_avail = state.database_config[state.user_settings["rag"]["database"]].get("connected")
 
-    if db_status != "CONNECTED":
+    if not db_avail:
         logger.debug("RAG Disabled (Database not configured)")
         st.warning("Database is not configured. Disabling RAG.", icon="⚠️")
         update_user_settings_state("rag", "rag_enabled", False)
@@ -189,7 +189,7 @@ def rag_sidebar() -> None:
         "Enable RAG?",
         help=help_text.help_dict["rag"],
         value=state.user_settings["rag"]["rag_enabled"],
-        disabled=db_status != "CONNECTED",
+        disabled=not db_avail,
         key="selected_rag_rag_enabled",
         on_change=update_user_settings_state,
         args=("rag", "rag_enabled"),

@@ -6,7 +6,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 from common.schema import PromptModel
 
 
-def main() -> list[dict]:
+def main() -> list[PromptModel]:
     """Define example Prompts"""
     prompt_eng_list = [
         {

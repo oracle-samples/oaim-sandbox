@@ -21,7 +21,7 @@ import sandbox.utils.api_call as api_call
 
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("config.model")
+logger = logging_config.logging.getLogger("config.models")
 
 
 # Set endpoint if server has been established
@@ -49,7 +49,7 @@ def get_model(model_type: str, enabled: bool = None) -> dict[str, dict]:
             response = api_call.get(url=API_ENDPOINT, params=params, token=state.server["key"])
             state[state_key] = {item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response}
             logger.info("State created: state['%s']", state_key)
-        except api_call.SandboxError as ex:
+        except api_call.ApiError as ex:
             st.error(f"Unable to retrieve models: {ex}", icon="🚨")
             state[state_key] = dict()
 
@@ -81,7 +81,7 @@ def patch_model(model_type: str) -> None:
                 st_common.clear_state_key(f"{model_type}_{model_name}_enabled")
                 st_common.clear_state_key(f"{model_type}_{model_name}_url")
                 st_common.clear_state_key(f"{model_type}_{model_name}_api_key")
-            except api_call.SandboxError as ex:
+            except api_call.ApiError as ex:
                 st.error(f"Unable to perform update: {ex}", icon="🚨")
                 break
 

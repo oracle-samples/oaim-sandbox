@@ -19,7 +19,7 @@ from langgraph.prebuilt import tools_condition, ToolNode
 
 from pydantic import BaseModel, Field
 
-from server.tools import oraclevs_retriever
+from server.agents.tools import oraclevs_retriever
 from common.schema import ChatResponse, ChatUsage, ChatChoices, ChatMessage
 from common import logging_config
 

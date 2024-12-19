@@ -11,7 +11,7 @@ help_dict = {
                 temperature produces more focused and predictable ones.  It is generally
                 recommended altering this or Top P but not both.
                 """,
-    "max_tokens": """
+    "max_completion_tokens": """
                 Sets the maximum length of the response.
                 The higher the number, the longer the potential response, but it won't exceed this
                 limit.

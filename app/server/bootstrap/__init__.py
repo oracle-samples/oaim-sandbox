@@ -5,5 +5,6 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 from .database_def import *
 from .model_def import *
+from .oci_def import *
 from .prompt_eng_def import *
 from .settings_def import *

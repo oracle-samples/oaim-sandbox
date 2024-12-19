@@ -6,7 +6,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 from common.schema import SettingsModel
 
 
-def main() -> list[dict]:
+def main() -> list[SettingsModel]:
     """Define example Settings Support"""
     clients = ["default", "server"]
     settings_objects = [SettingsModel(client=client) for client in clients]
