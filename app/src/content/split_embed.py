@@ -10,6 +10,7 @@ import inspect
 import os
 import re
 import requests
+import time
 
 # Streamlit
 import streamlit as st
@@ -316,6 +317,15 @@ def main():
             progress_text = "Operation in progress. Please wait."
             progress_bar = st.progress(0, text=progress_text)
             progress_ind = 100 / len(process_list)
+
+            try:
+                utilities.oci_create_bucket(state.oci_config, state.oci_namespace, oci_compartments[bucket_compartment], dst_bucket)
+                time.sleep(5)
+            except oci.exceptions.ServiceError as ex:
+                logger.info("WARNING: bucket exists")
+
+     
+            
             for index, f in process_list.iterrows():
                 progress_stat = int((((index + 1) * progress_ind) / 2))
                 progress_bar.progress(progress_stat, text=progress_text)

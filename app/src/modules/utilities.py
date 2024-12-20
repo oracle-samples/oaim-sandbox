@@ -621,19 +621,27 @@ def oci_get_object(config, namespace, bucket_name, directory, object_name, retri
     return file_path
 
 
+
 def oci_put_object(config, namespace, compartment, bucket_name, file_path, retries=True):
     """Upload file to Object Storage"""
+    MAX_RETRY = 2
     file_name = os.path.basename(file_path)
     logger.info("Uploading %s to %s as %s ", file_path, bucket_name, file_name)
     client = oci_init_client(oci.object_storage.ObjectStorageClient, config, retries)
     upload_manager = oci.object_storage.UploadManager(client, allow_parallel_uploads=True, parallel_process_count=10)
     try:
         upload_manager.upload_file(namespace, bucket_name, file_name, file_path)
+        logger.info("Uploaded successfully %s to %s", file_name, bucket_name)
     except oci.exceptions.ServiceError as ex:
         logger.exception(ex, exc_info=False)
-        oci_create_bucket(config, namespace, compartment, bucket_name)
-        upload_manager.upload_file(namespace, bucket_name, file_name, file_path)
-    logger.info("Uploaded %s to %s", file_name, bucket_name)
+        for i in range(1, MAX_RETRY):
+            try:
+                logger.info("RETRY: upload_manager.upload_file()")
+                upload_manager.upload_file(namespace, bucket_name, file_name, file_path)
+                logger.info("Uploaded successfully %s to %s", file_name, bucket_name)
+                break
+            except oci.exceptions.ServiceError as ex:
+                logger.exception(ex, exc_info=False)
 
     os.remove(file_path)
 

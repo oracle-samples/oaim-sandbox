@@ -185,7 +185,7 @@ def load_and_split_documents(
         all_split_docos += split_docos
     logger.info("Total Number of Chunks: %i", len(all_split_docos))
 
-    return split_docos, split_files
+    return all_split_docos, split_files
 
 
 ##########################################
