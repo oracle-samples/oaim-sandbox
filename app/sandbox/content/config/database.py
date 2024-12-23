@@ -20,9 +20,9 @@ import common.logging_config as logging_config
 logger = logging_config.logging.getLogger("sandbox.config.database")
 
 # Set endpoint if server has been established
-API_ENDPOINT = None
+DB_API_ENDPOINT = None
 if "server" in state:
-    API_ENDPOINT = f"{state.server['url']}:{state.server['port']}/v1/databases"
+    DB_API_ENDPOINT = f"{state.server['url']}:{state.server['port']}/v1/databases"
 
 
 #####################################################
@@ -30,16 +30,16 @@ if "server" in state:
 #####################################################
 def get_databases() -> dict[str, dict]:
     """Get a dictionary of all Databases and store Vector Store Tables"""
-    if "database_config" not in state or state["database_config"] == dict():
+    if "database_config" not in state or state["database_config"] == {}:
         try:
-            response = api_call.get(url=API_ENDPOINT, token=state.server["key"])
+            response = api_call.get(url=DB_API_ENDPOINT)
             state["database_config"] = {
                 item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response
             }
             logger.info("State created: state['database_config']")
         except api_call.ApiError as ex:
             st.error(f"Unable to retrieve databases: {ex}", icon="🚨")
-            state["database_config"] = dict()
+            state["database_config"] = {}
 
 
 def patch_database(name: str, user: str, password: str, dsn: str, wallet_password: str) -> None:
@@ -54,7 +54,7 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
     ):
         try:
             api_call.patch(
-                url=API_ENDPOINT + "/" + name,
+                url=DB_API_ENDPOINT + "/" + name,
                 body={
                     "data": {
                         "user": user,
@@ -63,7 +63,6 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
                         "wallet_password": wallet_password,
                     }
                 },
-                token=state.server["key"],
             )
             st.success(f"{name} Database Configuration - Updated", icon="✅")
             st_common.clear_state_key("database_config")

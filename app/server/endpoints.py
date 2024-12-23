@@ -2,10 +2,13 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore ainvoke, langgraph, modelcfg, jsonable, genai
+# spell-checker:ignore ainvoke, langgraph, modelcfg, jsonable, genai, ocid, docos
 
 import copy
+import os
+import shutil
 from typing import Optional, Any
+from pathlib import Path
 
 from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import HumanMessage, AnyMessage, convert_to_openai_messages
@@ -20,8 +23,9 @@ import server.bootstrap as bootstrap  # __init__.py imports scripts
 import server.models as models
 import server.databases as databases
 import server.oci as server_oci
+import server.embedding as embedding
 
-from fastapi import FastAPI, Query, HTTPException
+from fastapi import FastAPI, Query, HTTPException, File, UploadFile
 
 logger = logging_config.logging.getLogger("server.endpoints")
 
@@ -141,7 +145,9 @@ def register_endpoints(app: FastAPI) -> None:
     #################################################
     # OCI
     #################################################
-    @app.get("/v1/oci", description="View OCI Configuration", response_model=schema.ResponseList[schema.OracleCloudSettings])
+    @app.get(
+        "/v1/oci", description="View OCI Configuration", response_model=schema.ResponseList[schema.OracleCloudSettings]
+    )
     async def oci_list() -> schema.ResponseList[schema.OracleCloudSettings]:
         """List OCI Configuration"""
         return schema.ResponseList[schema.OracleCloudSettings](data=oci_objects)
@@ -159,10 +165,9 @@ def register_endpoints(app: FastAPI) -> None:
         oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
         if oci_config:
             try:
-                client, namespace = server_oci.create_client(patch.data)
+                namespace = server_oci.get_namespace(patch.data)
             except server_oci.OciException as ex:
                 raise HTTPException(status_code=500, detail=str(ex)) from ex
-            oci_config.set_client(client)
             oci_config.namespace = namespace
             oci_config.tenancy = patch.data.tenancy
             oci_config.region = patch.data.region
@@ -170,8 +175,43 @@ def register_endpoints(app: FastAPI) -> None:
             oci_config.fingerprint = patch.data.fingerprint
             oci_config.key_file = patch.data.key_file
             oci_config.security_token_file = patch.data.security_token_file
-            return schema.Response[schema.OracleCloudSettings](data=oci_config, msg=f"{profile} updated and set as default")
+            return schema.Response[schema.OracleCloudSettings](
+                data=oci_config, msg=f"{profile} updated and set as default"
+            )
         raise HTTPException(status_code=404, detail=f"{profile} profile for OCI not found")
+
+    @app.get(
+        "/v1/oci/compartments/{profile}",
+        description="Get OCI Compartments",
+        response_model=schema.Response[dict],
+    )
+    async def oci_list_compartments(profile: schema.OCIProfileType) -> schema.Response[dict]:
+        oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
+        compartments = server_oci.get_compartments(oci_config)
+        return schema.Response[dict](data=compartments, msg=f"{len(compartments)} OCI compartments found")
+
+    @app.get(
+        "/v1/oci/buckets/{compartment}/{profile}",
+        description="Get OCI Object Storage buckets in Compartment OCID",
+        response_model=schema.Response[list],
+    )
+    async def oci_list_buckets(profile: schema.OCIProfileType, compartment: str) -> schema.Response[list]:
+        # Validate OCID using Pydantic class
+        compartment_obj = schema.OracleResource(ocid=compartment)
+        oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
+        buckets = server_oci.get_buckets(compartment_obj.ocid, oci_config)
+        return schema.Response[list](data=buckets, msg=f"{len(buckets)} OCI buckets found")
+
+    @app.get(
+        "/v1/oci/bucket/objects/{bucket_name}/{profile}",
+        description="Get OCI Object Storage buckets objects",
+        response_model=schema.Response[list],
+    )
+    async def oci_list_bucket_objects(profile: schema.OCIProfileType, bucket_name: str) -> schema.Response[list]:
+        # Validate OCID using Pydantic class
+        oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
+        objects = server_oci.get_bucket_objects(bucket_name, oci_config)
+        return schema.Response[list](data=objects, msg=f"{len(objects)} bucket objects found")
 
     #################################################
     # Prompt Engineering
@@ -269,6 +309,66 @@ def register_endpoints(app: FastAPI) -> None:
         settings_objects.append(settings)
 
         return schema.Response(data=settings)
+
+    #################################################
+    # Embedding
+    #################################################
+    @app.post(
+        "/v1/embed/local/upload/{client}",
+        description="Upload Local Files for Embedding.",
+        response_model=schema.Response[list],
+    )
+    async def upload_local_file(client: str, file: UploadFile) -> schema.Response[list]:      
+        # Create a folder for the client if it doesn't exist
+        logger.info("Received file: %s", file.filename)
+        client_folder = Path(f"/tmp/{client}")
+        client_folder.mkdir(parents=True, exist_ok=True)
+
+        # Save the file temporarily
+        temp_file_path = client_folder / file.filename
+        file_content = await file.read()
+        with temp_file_path.open("wb") as temp_file:
+            temp_file.write(file_content)
+
+        # Return a response that the file was uploaded successfully
+        files = [f for f in os.listdir(client_folder) if os.path.isfile(os.path.join(client_folder, f))]
+        return schema.Response[list](data=files, msg=f"{len(files)} uploaded")
+
+    @app.post(
+        "/v1/embed/local/{client}",
+        description="Split and Embed Local Files.",
+        response_model=schema.Response[list],
+    )
+    async def split_embed_local_files(
+        client: str, request: schema.DatabaseVectorStorage, rate_limit: int = 0
+    ) -> schema.Response[list]:
+        client_folder = Path(f"/tmp/{client}")
+        files = [f for f in os.listdir(client_folder) if os.path.isfile(os.path.join(client_folder, f))]
+
+        try:
+            split_docos, _ = embedding.load_and_split_documents(
+                files,
+                request.model,
+                request.chunk_size,
+                request.chunk_overlap,
+                write_json=False,
+                output_dir=None,
+            )
+            db = next((db for db in database_objects if db.name == request.database), None)
+            embed_client = models.get_client(model_objects, {"model": request.model, "rag_enabled": True})
+            embedding.populate_vs(
+                vector_store=request,
+                db_conn=db.connection,
+                embed_client=embed_client,
+                input_data=split_docos,
+                rate_limit=rate_limit,
+            )
+            return schema.Response[list](data=split_docos, msg=f"len{split_docos} file embedded.")
+        finally:
+            shutil.rmtree(client_folder)  # Clean up the temporary directory
+
+    # @app.post("/v1/split/oci", description="Split files in OCI Object Storage.")
+    # @app.post("/v1/split/web", description="Split Web Pages.")
 
     #################################################
     # Chat Completions

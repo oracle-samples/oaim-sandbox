@@ -8,12 +8,12 @@ import pandas as pd
 
 import streamlit as st
 from streamlit import session_state as state
-import common.help_text as help_text
-from common.functions import client_gen_id
 
 from sandbox.content.config.models import get_model
 from sandbox.content.config.database import get_databases
 
+from common.functions import client_gen_id
+import common.help_text as help_text
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("sandbox.utils.st_common")
@@ -41,6 +41,13 @@ def update_user_settings_state(
     # Destroying SandboxClient
     clear_state_key("sandbox_client")
 
+def is_db_configured() ->  bool:
+    get_databases()
+    return state.database_config[state.user_settings["rag"]["database"]].get("connected")
+
+def get_avail_embed_models() -> list:
+    get_model(model_type="embed", enabled=True)
+    return list(state.embed_model_enabled.keys())
 
 #############################################################################
 # Sidebar
@@ -166,15 +173,13 @@ def ll_sidebar() -> None:
 #####################################################
 def rag_sidebar() -> None:
     st.sidebar.subheader("Retrieval Augmented Generation", divider="red")
-    get_model(model_type="embed", enabled=True)
-    available_embed_models = list(state.embed_model_enabled.keys())
+    available_embed_models = get_avail_embed_models()
     if not available_embed_models:
         logger.debug("RAG Disabled (no Embedding Models)")
         st.warning("No embedding models are configured and/or enabled. Disabling RAG.", icon="⚠️")
         db_avail = False
     else:
-        get_databases()
-        db_avail = state.database_config[state.user_settings["rag"]["database"]].get("connected")
+        db_avail = is_db_configured()
 
     if not db_avail:
         logger.debug("RAG Disabled (Database not configured)")

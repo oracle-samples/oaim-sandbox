@@ -25,9 +25,9 @@ logger = logging_config.logging.getLogger("config.models")
 
 
 # Set endpoint if server has been established
-API_ENDPOINT = None
+MODEL_API_ENDPOINT = None
 if "server" in state:
-    API_ENDPOINT = f"{state.server['url']}:{state.server['port']}/v1/models"
+    MODEL_API_ENDPOINT = f"{state.server['url']}:{state.server['port']}/v1/models"
 
 
 ###################################
@@ -44,14 +44,14 @@ def get_model(model_type: str, enabled: bool = None) -> dict[str, dict]:
         state_key = f"{model_type}_model_enabled"
         params["enabled"] = enabled
 
-    if state_key not in state or state[state_key] == dict():
+    if state_key not in state or state[state_key] == {}:
         try:
-            response = api_call.get(url=API_ENDPOINT, params=params, token=state.server["key"])
+            response = api_call.get(url=MODEL_API_ENDPOINT, params=params)
             state[state_key] = {item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response}
             logger.info("State created: state['%s']", state_key)
         except api_call.ApiError as ex:
             st.error(f"Unable to retrieve models: {ex}", icon="🚨")
-            state[state_key] = dict()
+            state[state_key] = {}
 
 
 def patch_model(model_type: str) -> None:
@@ -68,13 +68,12 @@ def patch_model(model_type: str) -> None:
             model_changes += 1
             try:
                 api_call.patch(
-                    url=API_ENDPOINT + "/" + model_name,
+                    url=MODEL_API_ENDPOINT + "/" + model_name,
                     body={
                         "enabled": state[f"{model_type}_{model_name}_enabled"],
                         "url": state[f"{model_type}_{model_name}_url"],
                         "api_key": state[f"{model_type}_{model_name}_api_key"],
                     },
-                    token=state.server["key"],
                 )
                 # Success
                 st.success(f"{model_name} Model Configuration - Updated", icon="✅")
@@ -90,6 +89,7 @@ def patch_model(model_type: str) -> None:
     else:
         st_common.clear_state_key(state_key)
         get_model(model_type)
+
 
 #############################################################################
 # MAIN

@@ -6,6 +6,8 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 import time
 from typing import Optional
 import requests
+from streamlit import session_state as state
+
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("sandbox.utils.api_call")
@@ -33,12 +35,14 @@ class ApiError(Exception):
 def make_request(
     method: str,
     url: str,
-    token: str,
     params_or_body: Optional[dict] = None,
+    data: Optional[dict] = None,
+    files: Optional[dict] = None,
     retries: int = 3,
     backoff_factor: float = 2.0,
 ) -> dict:
-    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    token = state.server["key"]
+    headers = {"Authorization": f"Bearer {token}"}
     method_map = {"GET": requests.get, "POST": requests.post, "PATCH": requests.patch}
 
     if method not in method_map:
@@ -50,12 +54,28 @@ def make_request(
                 "url": url,
                 "headers": headers,
                 "timeout": 60,
-                "params": params_or_body if method == "GET" else None,
-                "json": params_or_body if method in {"POST", "PATCH"} else None,
+                "params": params_or_body if params_or_body and method == "GET" else None,
+                "json": params_or_body if params_or_body and method in {"POST", "PATCH"} else None,
+                "data": data if data and method == "POST" else None,
+                "files": files if files and method == "POST" else None,
             }
+            # Remove keys with None Values
+            filtered_args = {k: v for k, v in args.items() if v is not None}
+            logger_args = filtered_args.copy()
+            # Modify the 'files' key in logger_args to replace the binary data with "<binary>"
+            if "files" in filtered_args:
+                logger_args["files"] = {
+                    k: (v[0], "<binary>", v[2]) if isinstance(v, tuple) and len(v) == 3 else v
+                    for k, v in filtered_args["files"].items()
+                }
+                # logger_args["files"] = {
+                #     k: (v[0], "<binary>") if isinstance(v, tuple) and len(v) == 2 else v
+                #     for k, v in filtered_args["files"].items()
+                # }
+
             # Make the request
-            logger.debug("%s Request: %s", method, args)
-            response = method_map[method](**args)
+            logger.info("%s Request: %s", method, logger_args)
+            response = method_map[method](**filtered_args)
             response.raise_for_status()
             return response.json()
 
@@ -63,10 +83,9 @@ def make_request(
             raise ApiError(ex) from ex
         except requests.exceptions.RequestException as ex:
             logger.error("Attempt %d: Error: %s", attempt + 1, ex)
-            if isinstance(ex, requests.HTTPError) and ex.response.status_code in (405, 422):
-                raise ApiError(f"HTTP 405 Method Not Allowed: {ex}") from ex
-            if isinstance(ex, requests.HTTPError) and ex.response.status_code == 500:
-                raise ApiError(ex.response.json()) from ex
+            if isinstance(ex, requests.HTTPError) and ex.response.status_code in (400, 405, 422, 500):
+                # Avoid retries for specific errors
+                raise ApiError(ex) from ex
             if attempt < retries:
                 sleep_time = backoff_factor * (2**attempt)
                 logger.info("Retrying in %.1f seconds...", sleep_time)
@@ -77,16 +96,35 @@ def make_request(
     raise ApiError("An unexpected error occurred.")
 
 
-def get(url: str, token: str, params: Optional[dict] = None, retries: int = 3, backoff_factor: float = 2.0) -> dict:
-    response = make_request("GET", url, token, params, retries, backoff_factor)
+def get(url: str, params: Optional[dict] = None, retries: int = 3, backoff_factor: float = 2.0) -> dict:
+    response = make_request(
+        method="GET", url=url, params_or_body=params, retries=retries, backoff_factor=backoff_factor
+    )
     return response["data"]
 
 
-def post(url: str, token: str, body: Optional[dict] = None, retries: int = 3, backoff_factor: float = 2.0) -> dict:
-    response = make_request("POST", url, token, body, retries, backoff_factor)
+def post(
+    url: str,
+    body: Optional[dict] = None,
+    data: Optional[dict] = None,
+    files: Optional[dict] = None,
+    retries: Optional[int] = 3,
+    backoff_factor: Optional[float] = 2.0,
+) -> dict:
+    response = make_request(
+        method="POST",
+        url=url,
+        params_or_body=body,
+        data=data,
+        files=files,
+        retries=retries,
+        backoff_factor=backoff_factor,
+    )
     return response["data"]
 
 
-def patch(url: str, token: str, body: dict, retries: int = 3, backoff_factor: float = 2.0) -> dict:
-    response = make_request("PATCH", url, token, body, retries, backoff_factor)
+def patch(url: str, body: dict, retries: int = 3, backoff_factor: float = 2.0) -> dict:
+    response = make_request(
+        method="PATCH", url=url, params_or_body=body, retries=retries, backoff_factor=backoff_factor
+    )
     return response["data"]

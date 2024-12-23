@@ -52,11 +52,10 @@ def main() -> list[OracleCloudSettings]:
         oci_objects.append(oci_config)
         if oci_config.profile == "DEFAULT":
             try:
-                client, namespace = server_oci.create_client(oci_config)
+                namespace = server_oci.get_namespace(oci_config)
             except server_oci.OciException:
                 continue
             oci_config.namespace = namespace
-            oci_config.set_client(client)
 
     return oci_objects
 

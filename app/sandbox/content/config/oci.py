@@ -23,9 +23,9 @@ import common.logging_config as logging_config
 logger = logging_config.logging.getLogger("config.oci")
 
 # Set endpoint if server has been established
-API_ENDPOINT = None
+OCI_API_ENDPOINT = None
 if "server" in state:
-    API_ENDPOINT = f"{state.server['url']}:{state.server['port']}/v1/oci"
+    OCI_API_ENDPOINT = f"{state.server['url']}:{state.server['port']}/v1/oci"
 
 
 #####################################################
@@ -33,16 +33,16 @@ if "server" in state:
 #####################################################
 def get_oci() -> dict[str, dict]:
     """Get a dictionary of all OCI Configurations"""
-    if "oci_config" not in state or state["oci_config"] == dict():
+    if "oci_config" not in state or state["oci_config"] == {}:
         try:
-            response = api_call.get(url=API_ENDPOINT, token=state.server["key"])
+            response = api_call.get(url=OCI_API_ENDPOINT)
             state["oci_config"] = {
                 item["profile"]: {k: v for k, v in item.items() if k != "profile"} for item in response
             }
             logger.info("State created: state['oci_config']")
         except api_call.ApiError as ex:
             st.error(f"Unable to retrieve oci_configuration: {ex}", icon="🚨")
-            state["oci_config"] = dict()
+            state["oci_config"] = {}
 
 
 def patch_oci(
@@ -61,7 +61,7 @@ def patch_oci(
     ):
         try:
             api_call.patch(
-                url=API_ENDPOINT + "/" + profile,
+                url=OCI_API_ENDPOINT + "/" + profile,
                 body={
                     "data": {
                         "user": user,
@@ -69,10 +69,9 @@ def patch_oci(
                         "tenancy": tenancy,
                         "region": region,
                         "key_file": key_file,
-                        "security_token_file": security_token_file
+                        "security_token_file": security_token_file,
                     }
                 },
-                token=state.server["key"],
             )
             st.success(f"{profile} OCI Configuration - Updated", icon="✅")
             st_common.clear_state_key("oci_config")
@@ -149,6 +148,7 @@ def main() -> None:
                 st.error("All fields are required.", icon="❌")
                 st.stop()
             patch_oci(profile, user, fingerprint, tenancy, region, key_file, security_token_file)
+
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:
     main()

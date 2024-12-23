@@ -2,22 +2,22 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore ollama, hnsw, mult
+# spell-checker:ignore ollama, hnsw, mult, ocid
 
 from typing import TypeVar, Generic, Optional, Literal, Union
-from pydantic import BaseModel, Field, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr, constr
 
 import common.help_text as help_text
 from langchain_core.messages import ChatMessage
 
 import oracledb
-import oci
 
 #####################################################
 # Standardized Classes
 #####################################################
 Statuses = Literal["NOT_CONFIGURED", "UNVERIFIED", "NOT_AUTHORIZED", "UNREACHABLE", "VALID", "CONNECTED"]
-DistanceMetrics = Literal["COSINE", "DOT_PRODUCT", "EUCLIDEAN_DISTANCE", "MAX_INNER_PRODUCT"]
+DistanceMetrics = Literal["COSINE", "EUCLIDEAN_DISTANCE", "DOT_PRODUCT"]
+IndexTypes = Literal["HNSW", "IVF"]
 Payload = TypeVar("Payload", bound=BaseModel)
 
 
@@ -133,7 +133,7 @@ class DatabaseVectorStorage(BaseModel):
     chunk_size: Optional[int] = Field(default=None, description="Chunk Size")
     chunk_overlap: Optional[int] = Field(default=None, description="Chunk Overlap")
     distance_metric: DistanceMetrics = Field(default="COSINE", description="Distance Metric")
-    index_type: Literal["HNSW", "IVF"] = Field(default="HNSW", description="Vector Index")
+    index_type: IndexTypes = Field(default="HNSW", description="Vector Index")
 
 
 class Database(BaseModel):
@@ -169,6 +169,10 @@ class DatabaseModel(Database):
 #####################################################
 # Oracle Cloud Infrastructure
 #####################################################
+class OracleResource(BaseModel):
+    """For Oracle Resource OCIDs"""
+    ocid: str = Field(..., pattern=r"^([0-9a-zA-Z-_]+[.:])([0-9a-zA-Z-_]*[.:]){3,}([0-9a-zA-Z-_]+)$")
+
 class OracleCloudSettings(BaseModel):
     """Store Oracle Cloud Infrastructure Settings"""
 
@@ -179,16 +183,6 @@ class OracleCloudSettings(BaseModel):
         """Allow arbitrary keys for other values as we don't know what will be supplied"""
 
         extra = "allow"
-
-    # Do not expose the connection to the endpoint
-    _client: oci.object_storage.ObjectStorageClient = PrivateAttr(default=None)
-
-    @property
-    def client(self) -> Optional[oci.object_storage.ObjectStorageClient]:
-        return self._client
-
-    def set_client(self, connection: oci.object_storage.ObjectStorageClient) -> None:
-        self._client = connection
 
 
 #####################################################
