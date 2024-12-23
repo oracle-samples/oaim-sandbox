@@ -31,7 +31,7 @@ import common.schema as schema
 
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("modules.split")
+logger = logging_config.logging.getLogger("server.embedding")
 
 
 def doc_to_json(document: LangchainDocument, file: str, output_dir: str = None) -> List:
@@ -236,7 +236,7 @@ def populate_vs(
     embed_client: BaseChatModel,
     input_data: Union[List["LangchainDocument"], List] = None,
     rate_limit: int = 0,
-):
+) -> None:
     """Populate the Vector Storage"""
     _, store_comment = common.functions.get_vs_table(**vector_store.model_dump(exclude={"database", "vector_store"}))
     store_table = vector_store.vector_store

@@ -38,6 +38,7 @@ def make_request(
     params_or_body: Optional[dict] = None,
     data: Optional[dict] = None,
     files: Optional[dict] = None,
+    timeout: int = 60,
     retries: int = 3,
     backoff_factor: float = 2.0,
 ) -> dict:
@@ -53,7 +54,7 @@ def make_request(
             args = {
                 "url": url,
                 "headers": headers,
-                "timeout": 60,
+                "timeout": timeout,
                 "params": params_or_body if params_or_body and method == "GET" else None,
                 "json": params_or_body if params_or_body and method in {"POST", "PATCH"} else None,
                 "data": data if data and method == "POST" else None,
@@ -68,11 +69,6 @@ def make_request(
                     k: (v[0], "<binary>", v[2]) if isinstance(v, tuple) and len(v) == 3 else v
                     for k, v in filtered_args["files"].items()
                 }
-                # logger_args["files"] = {
-                #     k: (v[0], "<binary>") if isinstance(v, tuple) and len(v) == 2 else v
-                #     for k, v in filtered_args["files"].items()
-                # }
-
             # Make the request
             logger.info("%s Request: %s", method, logger_args)
             response = method_map[method](**filtered_args)
@@ -91,6 +87,8 @@ def make_request(
                 logger.info("Retrying in %.1f seconds...", sleep_time)
                 time.sleep(sleep_time)
             else:
+                if isinstance(ex, requests.HTTPError) and ex.response.status_code == 404:
+                    raise ApiError(f"Invalid Endpoint (URL: {url}).") from ex
                 raise ApiError(f"Unable to contact Sandbox Server; Max retries exceeded (URL: {url}).") from ex
 
     raise ApiError("An unexpected error occurred.")
@@ -98,9 +96,13 @@ def make_request(
 
 def get(url: str, params: Optional[dict] = None, retries: int = 3, backoff_factor: float = 2.0) -> dict:
     response = make_request(
-        method="GET", url=url, params_or_body=params, retries=retries, backoff_factor=backoff_factor
+        method="GET",
+        url=url,
+        params_or_body=params,
+        retries=retries,
+        backoff_factor=backoff_factor,
     )
-    return response["data"]
+    return response
 
 
 def post(
@@ -108,8 +110,9 @@ def post(
     body: Optional[dict] = None,
     data: Optional[dict] = None,
     files: Optional[dict] = None,
-    retries: Optional[int] = 3,
-    backoff_factor: Optional[float] = 2.0,
+    timeout: int = 60,
+    retries: int = 3,
+    backoff_factor: float = 2.0,
 ) -> dict:
     response = make_request(
         method="POST",
@@ -117,14 +120,20 @@ def post(
         params_or_body=body,
         data=data,
         files=files,
+        timeout=timeout,
         retries=retries,
         backoff_factor=backoff_factor,
     )
-    return response["data"]
+    return response
 
 
-def patch(url: str, body: dict, retries: int = 3, backoff_factor: float = 2.0) -> dict:
+def patch(url: str, body: dict, timeout: int = 60, retries: int = 3, backoff_factor: float = 2.0) -> dict:
     response = make_request(
-        method="PATCH", url=url, params_or_body=body, retries=retries, backoff_factor=backoff_factor
+        method="PATCH",
+        url=url,
+        params_or_body=body,
+        timeout=timeout,
+        retries=retries,
+        backoff_factor=backoff_factor,
     )
-    return response["data"]
+    return response

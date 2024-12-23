@@ -54,7 +54,7 @@ def main() -> None:
         try:
             client_id = client_gen_id()
             api_endpoint = f"{state.server['url']}:{state.server['port']}/v1/settings/{client_id}"
-            state.user_settings = api_call.post(url=api_endpoint)
+            state.user_settings = api_call.post(url=api_endpoint)["data"]
         except api_call.ApiError as ex:
             st.error(ex, icon="🚨")
 

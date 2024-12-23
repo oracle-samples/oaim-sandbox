@@ -32,7 +32,7 @@ def get_databases() -> dict[str, dict]:
     """Get a dictionary of all Databases and store Vector Store Tables"""
     if "database_config" not in state or state["database_config"] == {}:
         try:
-            response = api_call.get(url=DB_API_ENDPOINT)
+            response = api_call.get(url=DB_API_ENDPOINT)["data"]
             state["database_config"] = {
                 item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response
             }

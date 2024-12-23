@@ -318,7 +318,7 @@ def register_endpoints(app: FastAPI) -> None:
         description="Upload Local Files for Embedding.",
         response_model=schema.Response[list],
     )
-    async def upload_local_file(client: str, file: UploadFile) -> schema.Response[list]:      
+    async def upload_local_file(client: str, file: UploadFile) -> schema.Response[list]:
         # Create a folder for the client if it doesn't exist
         logger.info("Received file: %s", file.filename)
         client_folder = Path(f"/tmp/{client}")
@@ -335,16 +335,19 @@ def register_endpoints(app: FastAPI) -> None:
         return schema.Response[list](data=files, msg=f"{len(files)} uploaded")
 
     @app.post(
-        "/v1/embed/local/{client}",
-        description="Split and Embed Local Files.",
+        "/v1/embed/{client}",
+        description="Split and Embed Corpus.",
         response_model=schema.Response[list],
     )
-    async def split_embed_local_files(
+    async def split_embed(
         client: str, request: schema.DatabaseVectorStorage, rate_limit: int = 0
     ) -> schema.Response[list]:
         client_folder = Path(f"/tmp/{client}")
-        files = [f for f in os.listdir(client_folder) if os.path.isfile(os.path.join(client_folder, f))]
-
+        try:
+            files = [str(file) for file in client_folder.iterdir() if file.is_file()]
+            logger.info("Processing Files: %s", files)
+        except FileNotFoundError as ex:
+            raise HTTPException(status_code=404, detail=f"Client {client} documents folder not found") from ex
         try:
             split_docos, _ = embedding.load_and_split_documents(
                 files,
@@ -355,7 +358,7 @@ def register_endpoints(app: FastAPI) -> None:
                 output_dir=None,
             )
             db = next((db for db in database_objects if db.name == request.database), None)
-            embed_client = models.get_client(model_objects, {"model": request.model, "rag_enabled": True})
+            embed_client = await models.get_client(model_objects, {"model": request.model, "rag_enabled": True})
             embedding.populate_vs(
                 vector_store=request,
                 db_conn=db.connection,
@@ -363,7 +366,11 @@ def register_endpoints(app: FastAPI) -> None:
                 input_data=split_docos,
                 rate_limit=rate_limit,
             )
-            return schema.Response[list](data=split_docos, msg=f"len{split_docos} file embedded.")
+            return_files = list({doc.metadata["filename"] for doc in split_docos if "filename" in doc.metadata})
+            return schema.Response[list](data=return_files, msg=f"{len(split_docos)} chunks embedded.")
+        except Exception as ex:
+            logger.error("An exception occurred: %s", ex)
+            raise HTTPException(status_code=500, detail="Unexpected error") from ex
         finally:
             shutil.rmtree(client_folder)  # Clean up the temporary directory
 
@@ -382,7 +389,7 @@ def register_endpoints(app: FastAPI) -> None:
         user_settings = next((settings for settings in settings_objects if settings.client == thread_id), None)
         logger.info("User (%s) Settings: %s", thread_id, user_settings)
         # Establish LL Model Params
-        ll_client = await models.get_client(model_objects, request)
+        ll_client = await models.get_client(model_objects, request.model_dump())
         try:
             user_sys_prompt = getattr(user_settings.prompts, "sys", "Basic Example")
             sys_prompt = next(
@@ -397,7 +404,7 @@ def register_endpoints(app: FastAPI) -> None:
         embed_client, ctx_prompt, db_conn = None, None, None
         if user_settings.rag.rag_enabled:
             rag_config = user_settings.rag
-            embed_client = await models.get_client(model_objects, rag_config)
+            embed_client = await models.get_client(model_objects, rag_config.model_dump())
             user_db = getattr(rag_config, "database", "DEFAULT")
             db_conn = next((settings.connection for settings in database_objects if settings.name == user_db), None)
 

@@ -46,7 +46,7 @@ def get_model(model_type: str, enabled: bool = None) -> dict[str, dict]:
 
     if state_key not in state or state[state_key] == {}:
         try:
-            response = api_call.get(url=MODEL_API_ENDPOINT, params=params)
+            response = api_call.get(url=MODEL_API_ENDPOINT, params=params)["data"]
             state[state_key] = {item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response}
             logger.info("State created: state['%s']", state_key)
         except api_call.ApiError as ex:

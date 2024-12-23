@@ -51,10 +51,12 @@ def execute_sql(conn: oracledb.Connection, run_sql: str) -> list:
         # Use context manager to ensure the cursor is closed properly
         with conn.cursor() as cursor:
             cursor.execute(run_sql)
-            rows = cursor.fetchall()
+            if cursor.description:  # Check if the query returns rows
+                rows = cursor.fetchall()
+            else:
+                rows = None  # No rows to fetch
             logger.debug("SQL Executed: %s", run_sql)
             return rows
-
     except oracledb.DatabaseError as ex:
         if ex.args:
             error_obj = ex.args[0]

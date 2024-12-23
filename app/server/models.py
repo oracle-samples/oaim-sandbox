@@ -57,15 +57,15 @@ async def get_client(
     model_config: dict,
 ) -> BaseChatModel:
     # Retrieve model configuration
-    logger.debug("Model Config: %s", model_config)
-    model_name = model_config.model
+    logger.info("Model Config: %s", model_config)
+    model_name = model_config["model"]
     model_api = await get_key_value(model_objects, model_name, "api")
     model_api_key = await get_key_value(model_objects, model_name, "api_key")
     model_url = await get_key_value(model_objects, model_name, "url")
 
     # Determine if configuring an embedding model
     try:
-        embedding = model_config.rag_enabled
+        embedding = model_config["rag_enabled"]
     except AttributeError:
         embedding = False
 
@@ -76,7 +76,9 @@ async def get_client(
         ll_common_params = {}
         for key in ["temperature", "max_completion_tokens", "top_p", "frequency_penalty", "presence_penalty"]:
             try:
-                ll_common_params[key] = getattr(model_config, key, None) or await get_key_value(model_objects, model_name, key)
+                ll_common_params[key] = getattr(model_config, key, None) or await get_key_value(
+                    model_objects, model_name, key
+                )
             except KeyError:
                 # Mainly for embeddings
                 continue
@@ -108,9 +110,9 @@ async def get_client(
         }
 
     try:
-        logger.debug("Searching for %s in %s", model_api, model_classes)
+        logger.info("Searching for %s in %s", model_api, model_classes)
         client = model_classes[model_api]()
-        logger.debug("Model Client: %s", client)
+        logger.info("Model Client: %s", client)
         return client
     except (UnboundLocalError, KeyError):
         logger.error("Unable to find client; expect trouble!")

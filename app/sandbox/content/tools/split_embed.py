@@ -92,6 +92,19 @@ def files_data_editor(files, key):
     )
 
 
+def upload_files() -> None:
+    seen_file=set()
+    response=None
+    for file in state["local_file_uploader"]:
+        if file.name not in seen_file:
+            response = api_call.post(
+                url=f"{EMBED_API_ENDPOINT}/local/upload/{state.user_settings['client']}",
+                files={"file": (file.name, file.getvalue(), file.type)},
+            )
+        seen_file.add(file.name)
+    st.write(f"Uploaded files: {response}")
+
+
 def update_chunk_overlap_slider() -> None:
     """Keep text and slider input aligned"""
     state.selected_chunk_overlap_slider = state.selected_chunk_overlap_input
@@ -243,7 +256,6 @@ def main() -> None:
     populate_button_disabled = True
     button_help = None
     api_endpoint = EMBED_API_ENDPOINT
-    embed_files = []
 
     ######################################
     # Local Source
@@ -259,9 +271,9 @@ def main() -> None:
             key="local_file_uploader",
             help="Large or many files?  Consider OCI Object Storage or invoking the API directly.",
             accept_multiple_files=True,
+            on_change=upload_files,
         )
         populate_button_disabled = len(embed_files) == 0
-        
 
     # ######################################
     # # Web Source
@@ -327,30 +339,32 @@ def main() -> None:
     # Populate Vector Store
     ######################################
     st.text(f"Vector Store: {embed_request.vector_store}")
+    if not populate_button_disabled:
+        if 'button_populate' in state and state.button_populate is True:
+            state.running = True
+        else:
+            state.running = False
+    else:
+        state.running = True
     if st.button(
         "Populate Vector Store",
         type="primary",
         key="button_populate",
-        disabled=populate_button_disabled,
+        disabled=state.running,
         help=button_help,
     ):
-        for file in embed_files:
-            response = api_call.post(
-                url=f"{api_endpoint}/upload/{state.user_settings['client']}",
-                files = {
-                    "file": (file.name, file.getvalue(), file.type)
-                }
-            )
-            print(response)
-        # try:
-        #     data = {
-        #         "request": embed_request,
-        #         "rate_limit": 0,
-        #     }
-        #     response = api_call.post(url=api_endpoint, token=state.server["key"], data=data, files=local_files)
-        #     st.write(response)
-        # except api_call.ApiError as ex:
-        #     st.error(ex, icon="🚨")
+        try:
+            rate_limit = 0
+            url = f"{EMBED_API_ENDPOINT}/{state.user_settings['client']}?rate_limit={rate_limit}"
+            placeholder = st.empty()
+            with placeholder:
+                st.warning("Populating Vector Store... please be patient.", icon="⚠️")
+            response = api_call.post(url=url, data=embed_request.model_dump_json(), timeout=300)
+            placeholder.empty()
+            st.success(f"Vector Store Populated: {response['msg']}", icon="✅")
+        except api_call.ApiError as ex:
+            placeholder.empty()
+            st.error(ex, icon="🚨")
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:
