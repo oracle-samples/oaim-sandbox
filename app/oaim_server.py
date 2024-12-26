@@ -15,7 +15,6 @@ from typing import Annotated
 
 import psutil
 
-# from langgraph.store.memory import InMemoryStore
 import common.logging_config as logging_config
 
 # Endpoints
@@ -36,6 +35,7 @@ def start_server(port: int = 8000) -> int:
     logger.info("Starting Oracle AI Microservices Server")
 
     def find_available_port() -> int:
+        """If port 8000 is not available, find another open one"""
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         sock.bind(("0.0.0.0", 0))
         port = sock.getsockname()[1]
@@ -113,6 +113,7 @@ def verify_key(
         Depends(HTTPBearer(description="Please provide API_SERVER_KEY.")),
     ],
 ) -> None:
+    """Verify the API Key is correct"""
     if http_auth.credentials != os.getenv("API_SERVER_KEY"):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 

@@ -48,8 +48,8 @@ help_dict = {
         between computational efficiency and quality of generated responses.
         """,
     "score_threshold": """
-        The minimum similarity score required for a result to be considered relevant. 
-        It ensures that only items with a similarity score above this threshold are included 
+        The minimum similarity score required for a result to be considered relevant.
+        It ensures that only items with a similarity score above this threshold are included
         in the results, filtering out those with insufficient relevance.
         """,
     "fetch_k": """
@@ -79,8 +79,8 @@ help_dict = {
         - IVF: (Inverted File) Flat index. A partitioned-based index.
         """,
     "distance_metric": """
-        Distance metrics quantify how similar or different two vector representations 
-        are in a high-dimensional space. These metrics help compare and cluster 
+        Distance metrics quantify how similar or different two vector representations
+        are in a high-dimensional space. These metrics help compare and cluster
         embeddings effectively.
-        """
+        """,
 }

@@ -12,14 +12,18 @@ import re
 import requests
 
 import common.logging_config as logging_config
+
 logger = logging_config.logging.getLogger("common.functions")
+
 
 #############################################################################
 # CLIENT
 #############################################################################
 def client_gen_id() -> str:
+    """Generate a new client ID; can be used to clear history"""
     logger.info("Creating new client identifier")
     return str(uuid4())
+
 
 def is_url_accessible(url: str) -> Tuple[bool, str]:
     """Check if the URL is accessible."""
@@ -27,21 +31,25 @@ def is_url_accessible(url: str) -> Tuple[bool, str]:
         return False, "No URL Provided"
     logger.debug("Checking if %s is accessible", url)
 
+    is_accessible = False
+    err_msg = None
+
     try:
         response = requests.get(url, timeout=2)
         logger.info("Response for %s: %s", url, response.status_code)
 
         if response.status_code in {200, 403, 404, 421}:
-            return True, None
-
-        err_msg = f"{url} is not accessible. (Status: {response.status_code})"
-        logger.warning(err_msg)
-        return False, err_msg
+            is_accessible = True
+        else:
+            err_msg = f"{url} is not accessible. (Status: {response.status_code})"
+            logger.warning(err_msg)
     except requests.exceptions.RequestException as ex:
         err_msg = f"{url} is not accessible. ({type(ex).__name__})"
         logger.warning(err_msg)
         logger.exception(ex, exc_info=False)
-        return False, err_msg
+
+    return is_accessible, err_msg
+
 
 def get_vs_table(
     model: str,

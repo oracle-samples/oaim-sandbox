@@ -5,7 +5,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # spell-checker:ignore ollama, hnsw, mult, ocid
 
 from typing import TypeVar, Generic, Optional, Literal, Union
-from pydantic import BaseModel, Field, PrivateAttr, constr
+from pydantic import BaseModel, Field, PrivateAttr
 
 import common.help_text as help_text
 from langchain_core.messages import ChatMessage
@@ -171,7 +171,9 @@ class DatabaseModel(Database):
 #####################################################
 class OracleResource(BaseModel):
     """For Oracle Resource OCIDs"""
+
     ocid: str = Field(..., pattern=r"^([0-9a-zA-Z-_]+[.:])([0-9a-zA-Z-_]*[.:]){3,}([0-9a-zA-Z-_]+)$")
+
 
 class OracleCloudSettings(BaseModel):
     """Store Oracle Cloud Infrastructure Settings"""
@@ -179,7 +181,7 @@ class OracleCloudSettings(BaseModel):
     profile: str = Field(default="default", description="Config File Profile")
     namespace: Optional[str] = Field(default=None, description="Object Store Namespace", readOnly=True)
 
-    class Config:
+    class Config(object):
         """Allow arbitrary keys for other values as we don't know what will be supplied"""
 
         extra = "allow"
