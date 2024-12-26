@@ -37,7 +37,7 @@ def get_oci() -> dict[str, dict]:
         try:
             response = api_call.get(url=OCI_API_ENDPOINT)
             state["oci_config"] = {
-                item["profile"]: {k: v for k, v in item.items() if k != "profile"} for item in response
+                item["profile"]: {k: v for k, v in item.items() if k != "profile"} for item in response['data'][0]
             }
             logger.info("State created: state['oci_config']")
         except api_call.ApiError as ex:

@@ -25,7 +25,7 @@ import server.databases as databases
 import server.oci as server_oci
 import server.embedding as embedding
 
-from fastapi import FastAPI, Query, HTTPException, File, UploadFile
+from fastapi import FastAPI, Query, HTTPException, UploadFile
 
 logger = logging_config.logging.getLogger("server.endpoints")
 
@@ -150,7 +150,7 @@ def register_endpoints(app: FastAPI) -> None:
     )
     async def oci_list() -> schema.ResponseList[schema.OracleCloudSettings]:
         """List OCI Configuration"""
-        return schema.ResponseList[schema.OracleCloudSettings](data=oci_objects)
+        return schema.ResponseList[schema.OracleCloudSettings](data=oci_objects, msg=f"{len(oci_objects)} OCI Configurations found")
 
     @app.patch(
         "/v1/oci/{profile}",

@@ -73,6 +73,7 @@ def make_request(
             logger.info("%s Request: %s", method, logger_args)
             response = method_map[method](**filtered_args)
             response.raise_for_status()
+            logger.info("%s Response: %s", method, response)
             return response.json()
 
         except requests.exceptions.MissingSchema as ex:
