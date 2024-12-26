@@ -11,6 +11,7 @@ helm/values.yaml
 sbin/**
 **/*.bak
 **/tmp/**
+sonar.sh
 
 ##############################################################################
 # Enviroment (PyVen, IDE, etc.)
