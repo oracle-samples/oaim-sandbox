@@ -23,6 +23,7 @@ logger = logging_config.logging.getLogger("sandbox.utils.st_common")
 # Helpers
 #############################################################################
 def clear_state_key(state_key: str) -> None:
+    """Generic clear key from state, handles if key isn't in state"""
     state.pop(state_key, None)
     logger.debug("State cleared: %s", state_key)
 
@@ -41,13 +42,18 @@ def update_user_settings_state(
     # Destroying SandboxClient
     clear_state_key("sandbox_client")
 
-def is_db_configured() ->  bool:
+
+def is_db_configured() -> bool:
+    """Verify that a database is configured"""
     get_databases()
     return state.database_config[state.user_settings["rag"]["database"]].get("connected")
 
+
 def get_avail_embed_models() -> list:
+    """Return a list of available embedding models"""
     get_model(model_type="embed", enabled=True)
     return list(state.embed_model_enabled.keys())
+
 
 #############################################################################
 # Sidebar
@@ -172,6 +178,7 @@ def ll_sidebar() -> None:
 # RAG Options
 #####################################################
 def rag_sidebar() -> None:
+    """RAG Sidebar Settings, conditional if Database/Embeddings are configured"""
     st.sidebar.subheader("Retrieval Augmented Generation", divider="red")
     available_embed_models = get_avail_embed_models()
     if not available_embed_models:
@@ -270,14 +277,14 @@ def rag_sidebar() -> None:
         vs_df = pd.DataFrame(state.database_config[state.user_settings["rag"]["database"]].get("vector_stores"))
 
         def vs_reset() -> None:
-            # Reset Vector Store Selections
+            """Reset Vector Store Selections"""
             for key in state["user_settings"]["rag"]:
                 if key in ("model", "chunk_size", "chunk_overlap", "distance_metric", "vector_store", "alias"):
                     clear_state_key(f"selected_rag_{key}")
                     update_user_settings_state("rag", key)
 
-        # Function to handle selectbox with auto-setting for a single unique value
         def vs_gen_selectbox(label, options, key):
+            """Handle selectbox with auto-setting for a single unique value"""
             valid_options = [option for option in options if option != ""]
             if not valid_options:  # Disable the selectbox if no valid options are available
                 disabled = True
@@ -297,8 +304,8 @@ def rag_sidebar() -> None:
                 disabled=disabled,
             )
 
-        # Dynamically update filtered_df based on selected filters
         def update_filtered_df():
+            """Dynamically update filtered_df based on selected filters"""
             filtered = vs_df.copy()
             if st.session_state.get("selected_rag_alias"):
                 filtered = filtered[filtered["alias"] == st.session_state["selected_rag_alias"]]

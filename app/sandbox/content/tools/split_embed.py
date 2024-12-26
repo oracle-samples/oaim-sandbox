@@ -93,6 +93,7 @@ def files_data_editor(files, key):
 
 
 def upload_files() -> None:
+    """Send local files uploaded to streamlit to the server"""
     seen_file=set()
     response=None
     for file in state["local_file_uploader"]:

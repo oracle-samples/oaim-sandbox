@@ -32,7 +32,7 @@ class ApiError(Exception):
         return self.message
 
 
-def make_request(
+def send_request(
     method: str,
     url: str,
     params_or_body: Optional[dict] = None,
@@ -42,6 +42,7 @@ def make_request(
     retries: int = 3,
     backoff_factor: float = 2.0,
 ) -> dict:
+    """Format and send API call, allowing for retries"""
     token = state.server["key"]
     headers = {"Authorization": f"Bearer {token}"}
     method_map = {"GET": requests.get, "POST": requests.post, "PATCH": requests.patch}
@@ -96,7 +97,8 @@ def make_request(
 
 
 def get(url: str, params: Optional[dict] = None, retries: int = 3, backoff_factor: float = 2.0) -> dict:
-    response = make_request(
+    """GET request"""
+    response = send_request(
         method="GET",
         url=url,
         params_or_body=params,
@@ -115,7 +117,8 @@ def post(
     retries: int = 3,
     backoff_factor: float = 2.0,
 ) -> dict:
-    response = make_request(
+    """POST Request"""
+    response = send_request(
         method="POST",
         url=url,
         params_or_body=body,
@@ -129,7 +132,8 @@ def post(
 
 
 def patch(url: str, body: dict, timeout: int = 60, retries: int = 3, backoff_factor: float = 2.0) -> dict:
-    response = make_request(
+    """PATCH Request"""
+    response = send_request(
         method="PATCH",
         url=url,
         params_or_body=body,

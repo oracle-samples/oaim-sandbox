@@ -12,6 +12,7 @@ from common.schema import OracleCloudSettings
 
 
 def main() -> list[OracleCloudSettings]:
+    """Read in OCI Configuration options into an object"""
     config = []
     try:
         file = os.path.expanduser(os.environ.get("OCI_CLI_CONFIG_FILE", default=oci.config.DEFAULT_LOCATION))

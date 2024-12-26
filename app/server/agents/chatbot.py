@@ -41,6 +41,7 @@ class AgentState(MessagesState):
 # NODES and EDGES
 #############################################################################
 def format_response(state: AgentState) -> ChatResponse:
+    """Format the response to be OpenAI Compatible"""
     logger.debug("Formatting Response of message: %s", state["messages"][1])
     ai_metadata = state["messages"][1]
     ai_message = state["messages"][-1]

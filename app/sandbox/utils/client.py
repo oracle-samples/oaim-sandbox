@@ -32,8 +32,8 @@ class SandboxClient:
         self.timeout = timeout
 
         self.headers = {"Authorization": f"Bearer {server['key']}", "Content-Type": "application/json"}
-        # Send settings to server
         def settings_request(method):
+            """Send Settings to Server"""
             with httpx.Client() as client:
                 return client.request(
                     method=method,

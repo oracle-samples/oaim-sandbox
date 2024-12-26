@@ -29,6 +29,7 @@ def initialize() -> None:
         state.server["key"] = os.getenv("API_SERVER_KEY")
 
 def server_restart() -> None:
+    """Restart the server process when button pressed"""
     os.environ["API_SERVER_KEY"] = state.user_server_key
     state.server["port"] = state.user_server_port
     state.server["key"] = os.getenv("API_SERVER_KEY")
