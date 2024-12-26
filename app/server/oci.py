@@ -65,9 +65,8 @@ def get_namespace(config: OracleCloudSettings = None, retries: bool = True) -> s
     """Get the Object Storage Namespace.  Also used for testing AuthN"""
     logger.info("Getting Object Storage Namespace")
     client_type = oci.object_storage.ObjectStorageClient
-    client = init_client(client_type, config, retries)
-
     try:
+        client = init_client(client_type, config, retries)
         namespace = client.get_namespace().data
         logger.info("Succeeded - Namespace = %s", namespace)
     except oci.exceptions.InvalidConfig as ex:

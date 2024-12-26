@@ -48,6 +48,10 @@ def is_db_configured() -> bool:
     get_databases()
     return state.database_config[state.user_settings["rag"]["database"]].get("connected")
 
+def get_avail_ll_models() -> list:
+    """Return a list of available language models"""
+    get_model(model_type="ll", enabled=True)
+    return list(state.ll_model_enabled.keys())
 
 def get_avail_embed_models() -> list:
     """Return a list of available embedding models"""
@@ -79,12 +83,6 @@ def history_sidebar() -> None:
 def ll_sidebar() -> None:
     """Language Model Sidebar"""
     st.sidebar.subheader("Language Model Parameters", divider="red")
-    get_model(model_type="ll", enabled=True)
-    available_ll_models = list(state.ll_model_enabled.keys())
-    if not available_ll_models:
-        st.error("No language models are configured and/or enabled. Disabling Sandbox.", icon="❌")
-        state.enable_sandbox = False
-
     # If no user_settings defined for , set to the first available_ll_model
     if state.user_settings["ll_model"].get("model") is None:
         default_ll_model = list(state.ll_model_enabled.keys())[0]

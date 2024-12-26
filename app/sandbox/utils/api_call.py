@@ -71,10 +71,10 @@ def send_request(
                     for k, v in filtered_args["files"].items()
                 }
             # Make the request
-            logger.info("%s Request: %s", method, logger_args)
+            logger.debug("%s Request: %s", method, logger_args)
             response = method_map[method](**filtered_args)
             response.raise_for_status()
-            logger.info("%s Response: %s", method, response)
+            logger.debug("%s Response: %s", method, response)
             return response.json()
 
         except requests.exceptions.MissingSchema as ex:

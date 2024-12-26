@@ -32,11 +32,17 @@ async def main() -> None:
     #########################################################################
     # Sidebar Settings
     #########################################################################
+    # Get a list of available language models, if none, then stop
+    available_ll_models = st_common.get_avail_ll_models()
+    if not available_ll_models:
+        st.error("No language models are configured and/or enabled. Disabling Sandbox.", icon="❌")
+        st.stop()
     # the sidebars will set this to False if not everything is configured.
     state.enable_sandbox = True
     st_common.history_sidebar()
     st_common.ll_sidebar()
     st_common.rag_sidebar()
+    # Stop when sidebar configurations not set
     if not state.enable_sandbox:
         st.stop()
 
