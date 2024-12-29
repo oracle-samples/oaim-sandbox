@@ -35,16 +35,50 @@ class ResponseList(BaseModel, Generic[Payload]):
     msg: str = ""
 
 
-class Request(BaseModel, Generic[Payload]):
-    """Generic request wrapper"""
+#####################################################
+# Database
+#####################################################
+class DatabaseVectorStorage(BaseModel):
+    """Database Vector Storage Tables"""
 
-    data: Payload
+    database: Optional[str] = Field(default="DEFAULT", description="Name of Database (Alias)")
+    vector_store: Optional[str] = Field(default=None, description="Vector Store Table Name")
+    alias: Optional[str] = Field(default=None, description="Identifiable Alias")
+    model: Optional[str] = Field(default=None, description="Embedding Model")
+    chunk_size: Optional[int] = Field(default=None, description="Chunk Size")
+    chunk_overlap: Optional[int] = Field(default=None, description="Chunk Overlap")
+    distance_metric: DistanceMetrics = Field(default="COSINE", description="Distance Metric")
+    index_type: IndexTypes = Field(default="HNSW", description="Vector Index")
 
 
-class RequestList(BaseModel):
-    """Request List request wrapper"""
+class DatabaseModel(BaseModel):
+    """Patch'able Database Configuration (sent to oracledb)"""
 
-    data: list[str]
+    user: Optional[str] = Field(default=None, description="Username")
+    password: Optional[str] = Field(default=None, description="Password")
+    dsn: Optional[str] = Field(default=None, description="Connect String")
+    wallet_password: Optional[str] = Field(default=None, description="Wallet Password (for mTLS)")
+    tcp_connect_timeout: int = Field(default=5, description="TCP Timeout in seconds")
+
+
+class Database(DatabaseModel):
+    """Database Object"""
+
+    name: str = Field(default="DEFAULT", description="Name of Database (Alias)")
+    connected: bool = Field(default=False, description="Connection Established")
+    tns_admin: str = Field(default="tns_admin", description="Location of TNS_ADMIN directory")
+    vector_stores: Optional[list[DatabaseVectorStorage]] = Field(
+        default=None, description="Vector Storage (read-only)", readOnly=True
+    )
+    # Do not expose the connection to the endpoint
+    _connection: oracledb.Connection = PrivateAttr(default=None)
+
+    @property
+    def connection(self) -> Optional[oracledb.Connection]:
+        return self._connection
+
+    def set_connection(self, connection: oracledb.Connection) -> None:
+        self._connection = connection
 
 
 #####################################################
@@ -94,82 +128,22 @@ class EmbeddingParametersModel(BaseModel):
     max_chunk_size: Optional[int] = Field(default=None, description="Max Chunk Size for Embedding Models.")
 
 
-class ModelModel(LanguageParametersModel, EmbeddingParametersModel):
+class ModelModel(BaseModel):
+    """Patch'able Model Parameters"""
+
+    enabled: Optional[bool] = Field(default=False, description="Model is available for use.")
+    url: Optional[str] = Field(default="", description="URL to Model API.")
+    api_key: Optional[str] = Field(default="", description="Model API Key.")
+
+
+class Model(ModelModel, LanguageParametersModel, EmbeddingParametersModel):
     """Model Object"""
 
     name: str = Field(..., description="The model to use")
-
-    enabled: Optional[bool] = Field(default=False, description="Model is available for use.")
     type: Literal["ll", "embed", "re-rank"] = Field(..., description="Type of Model.")
     api: str = Field(..., description="API for Model.", examples=["ChatOllama", "OpenAI", "OpenAIEmbeddings"])
-    api_key: Optional[str] = Field(default="", description="Model API Key.")
     openai_compat: bool = Field(default=True, description="Is the API OpenAI compatible?")
-    url: Optional[str] = Field(default="", description="URL to Model API.")
     status: Statuses = Field(default="INACTIVE", description="Status (read-only)", readOnly=True)
-
-
-#####################################################
-# Prompt Engineering
-#####################################################
-class Prompt(BaseModel):
-    """Prompt inherits from PromptModel"""
-
-    prompt: str = Field(..., description="Prompt Text")
-
-
-class PromptModel(Prompt):
-    """Prompt Object"""
-
-    name: str = Field(
-        default="Basic Example", description="Name of Prompt.", examples=["Basic Example", "RAG Example", "Custom"]
-    )
-    category: Literal["sys", "ctx"] = Field(..., description="Category of Prompt.")
-
-
-#####################################################
-# Database
-#####################################################
-class DatabaseVectorStorage(BaseModel):
-    """Database Vector Storage Tables"""
-
-    database: Optional[str] = Field(default="DEFAULT", description="Name of Database (Alias)")
-    vector_store: Optional[str] = Field(default=None, description="Vector Store Table Name")
-    alias: Optional[str] = Field(default=None, description="Identifiable Alias")
-    model: Optional[str] = Field(default=None, description="Embedding Model")
-    chunk_size: Optional[int] = Field(default=None, description="Chunk Size")
-    chunk_overlap: Optional[int] = Field(default=None, description="Chunk Overlap")
-    distance_metric: DistanceMetrics = Field(default="COSINE", description="Distance Metric")
-    index_type: IndexTypes = Field(default="HNSW", description="Vector Index")
-
-
-class Database(BaseModel):
-    """Database Configuration (sent to oracledb)"""
-
-    user: Optional[str] = Field(default=None, description="Username")
-    password: Optional[str] = Field(default=None, description="Password")
-    dsn: Optional[str] = Field(default=None, description="Connect String")
-    wallet_password: Optional[str] = Field(default=None, description="Wallet Password (for mTLS)")
-    tcp_connect_timeout: int = Field(default=5, description="TCP Timeout in seconds")
-
-
-class DatabaseModel(Database):
-    """Database Object"""
-
-    name: str = Field(default="DEFAULT", description="Name of Database (Alias)")
-    connected: bool = Field(default=False, description="Connection Established")
-    tns_admin: str = Field(default="tns_admin", description="Location of TNS_ADMIN directory")
-    vector_stores: Optional[list[DatabaseVectorStorage]] = Field(
-        default=None, description="Vector Storage (read-only)", readOnly=True
-    )
-    # Do not expose the connection to the endpoint
-    _connection: oracledb.Connection = PrivateAttr(default=None)
-
-    @property
-    def connection(self) -> Optional[oracledb.Connection]:
-        return self._connection
-
-    def set_connection(self, connection: oracledb.Connection) -> None:
-        self._connection = connection
 
 
 #####################################################
@@ -191,6 +165,24 @@ class OracleCloudSettings(BaseModel):
         """Allow arbitrary keys for other values as we don't know what will be supplied"""
 
         extra = "allow"
+
+
+#####################################################
+# Prompt Engineering
+#####################################################
+class PromptModel(BaseModel):
+    """Patch'able Prompt Parameters"""
+
+    prompt: str = Field(..., description="Prompt Text")
+
+
+class Prompt(PromptModel):
+    """Prompt Object"""
+
+    name: str = Field(
+        default="Basic Example", description="Name of Prompt.", examples=["Basic Example", "RAG Example", "Custom"]
+    )
+    category: Literal["sys", "ctx"] = Field(..., description="Category of Prompt.")
 
 
 #####################################################
@@ -227,7 +219,7 @@ class RagSettings(DatabaseVectorStorage):
     )
 
 
-class SettingsModel(BaseModel):
+class Settings(BaseModel):
     """Server Settings"""
 
     client: str = Field(
@@ -307,11 +299,11 @@ class ChatRequest(LanguageParametersModel):
 #####################################################
 # Types
 #####################################################
-DatabaseNameType = DatabaseModel.__annotations__["name"]
-ModelNameType = ModelModel.__annotations__["name"]
+DatabaseNameType = Database.__annotations__["name"]
+ModelNameType = Model.__annotations__["name"]
+ModelTypeType = Model.__annotations__["type"]
 ModelEnabledType = ModelModel.__annotations__["enabled"]
-ModelTypeType = ModelModel.__annotations__["type"]
 OCIProfileType = OracleCloudSettings.__annotations__["profile"]
-PromptNameType = PromptModel.__annotations__["name"]
-PromptCategoryType = PromptModel.__annotations__["category"]
-PromptPromptType = Prompt.__annotations__["prompt"]
+PromptNameType = Prompt.__annotations__["name"]
+PromptCategoryType = Prompt.__annotations__["category"]
+PromptPromptType = PromptModel.__annotations__["prompt"]

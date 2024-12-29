@@ -23,11 +23,11 @@ logger = logging_config.logging.getLogger("server.models")
 # Functions
 #####################################################
 async def apply_filter(
-    models_all: list[schema.ModelModel],
+    models_all: list[schema.Model],
     model_name: Optional[schema.ModelNameType] = None,
     model_type: Optional[schema.ModelTypeType] = None,
-    enabled: Optional[schema.ModelEnabledType] = None,
-) -> list[schema.ModelModel]:
+    only_enabled: Optional[schema.ModelEnabledType] = False,
+) -> list[schema.Model]:
     """Used in direct call from list_models and agents.models"""
     logger.debug("%i models are defined", len(models_all))
     models_all = [
@@ -35,7 +35,7 @@ async def apply_filter(
         for model in models_all
         if (model_name is None or model.name == model_name)
         and (model_type is None or model.type == model_type)
-        and (enabled is None or model.enabled == enabled)
+        and (only_enabled is False or model.enabled == only_enabled)
     ]
     logger.debug("%i models after filtering", len(models_all))
     return models_all

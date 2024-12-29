@@ -37,7 +37,7 @@ def get_oci() -> dict[str, dict]:
         try:
             response = api_call.get(url=OCI_API_ENDPOINT)
             state["oci_config"] = {
-                item["profile"]: {k: v for k, v in item.items() if k != "profile"} for item in response['data']
+                item["profile"]: {k: v for k, v in item.items() if k != "profile"} for item in response["data"]
             }
             logger.info("State created: state['oci_config']")
         except api_call.ApiError as ex:
@@ -62,15 +62,13 @@ def patch_oci(
         try:
             api_call.patch(
                 url=OCI_API_ENDPOINT + "/" + profile,
-                json={
-                    "data": {
-                        "user": user,
-                        "fingerprint": fingerprint,
-                        "tenancy": tenancy,
-                        "region": region,
-                        "key_file": key_file,
-                        "security_token_file": security_token_file,
-                    }
+                payload={
+                    "user": user,
+                    "fingerprint": fingerprint,
+                    "tenancy": tenancy,
+                    "region": region,
+                    "key_file": key_file,
+                    "security_token_file": security_token_file,
                 },
             )
             st.success(f"{profile} OCI Configuration - Updated", icon="✅")

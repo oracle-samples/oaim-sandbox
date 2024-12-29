@@ -5,10 +5,10 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # spell-checker:ignore ollama, minilm, pplx, thenlper, mxbai, nomic
 
 import os
-from common.schema import ModelModel
+from common.schema import Model
 
 
-def main() -> list[ModelModel]:
+def main() -> list[Model]:
     """Define example Model Support"""
     models_list = [
         {
@@ -207,7 +207,7 @@ def main() -> list[ModelModel]:
             raise ValueError(f"Model '{model['name']}' already exists.")
         unique_entries.add(model["name"])
 
-    model_objects = [ModelModel(**model_dict) for model_dict in models_list]
+    model_objects = [Model(**model_dict) for model_dict in models_list]
     return model_objects
 
 if __name__ == "__main__":

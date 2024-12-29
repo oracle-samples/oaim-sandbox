@@ -52,7 +52,7 @@ def patch(category: str, prompt_name: str, prompt: str) -> None:
         try:
             api_call.patch(
                 url=API_ENDPOINT + "/" + category + "/" + prompt_name,
-                json={"data": {"prompt": prompt}},
+                payload={"json": {"prompt": prompt}},
             )
             # Success
             logger.info("Prompt instructions updated for: %s (%s)", prompt_name, category)

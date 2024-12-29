@@ -2,8 +2,8 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-
 # spell-checker:ignore genai
+
 import json
 import oracledb
 
@@ -14,29 +14,31 @@ logger = logging_config.logging.getLogger("server.database")
 
 
 class DbException(Exception):
-    """Custom DB Exception"""
+    """Custom Database Exceptions to be passed to HTTPException"""
 
-    def __init__(self, message):
-        super().__init__(message)
+    def __init__(self, status_code: int, detail: str):
+        self.status_code = status_code
+        self.detail = detail
+        super().__init__(detail)
 
 
-def connect(config: DatabaseModel) -> oracledb.Connection:
+def connect(config: Database) -> oracledb.Connection:
     """Establish a connection to an Oracle Database"""
     logger.info("Connecting to Database: %s", config.dsn)
-    include_fields = set(Database.model_fields.keys())
+    include_fields = set(DatabaseModel.model_fields.keys())
     db_config = config.model_dump(include=include_fields)
     # Check if connection settings are configured
     if any(not db_config[key] for key in ("user", "password", "dsn")):
-        raise DbException("Not all connection details supplied.")
+        raise DbException(status_code=400, detail="Not all connection details supplied.")
 
     # Attempt to Connect
     try:
         conn = oracledb.connect(**db_config)
     except oracledb.DatabaseError as ex:
         if "ORA-01017" in str(ex):
-            raise DbException("Invalid Credentials") from ex
+            raise DbException(status_code=401, detail="Invalid database credentials.") from ex
         else:
-            raise DbException(str(ex)) from ex
+            raise DbException(status_code=500, detail=str(ex)) from ex
     return conn
 
 

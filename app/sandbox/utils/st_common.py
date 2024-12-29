@@ -50,12 +50,12 @@ def is_db_configured() -> bool:
 
 def get_avail_ll_models() -> list:
     """Return a list of available language models"""
-    get_model(model_type="ll", enabled=True)
+    get_model(model_type="ll", only_enabled=True)
     return list(state.ll_model_enabled.keys())
 
 def get_avail_embed_models() -> list:
     """Return a list of available embedding models"""
-    get_model(model_type="embed", enabled=True)
+    get_model(model_type="embed", only_enabled=True)
     return list(state.embed_model_enabled.keys())
 
 

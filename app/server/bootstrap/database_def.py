@@ -5,10 +5,10 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 import os
 import server.databases as databases
-from common.schema import DatabaseModel
+from common.schema import Database
 
 
-def main() -> list[DatabaseModel]:
+def main() -> list[Database]:
     """Define Default Database"""
     database_list = [
         {
@@ -31,7 +31,7 @@ def main() -> list[DatabaseModel]:
     # Validate Configuration and set vector_stores/status
     database_objects = []
     for database_obj in database_list:
-        db = DatabaseModel(**database_obj)
+        db = Database(**database_obj)
         database_objects.append(db)
         try:
             conn = databases.connect(db)

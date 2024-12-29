@@ -55,14 +55,7 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
         try:
             api_call.patch(
                 url=DB_API_ENDPOINT + "/" + name,
-                json={
-                    "data": {
-                        "user": user,
-                        "password": password,
-                        "dsn": dsn,
-                        "wallet_password": wallet_password,
-                    }
-                },
+                payload={"user": user, "password": password, "dsn": dsn, "wallet_password": wallet_password},
             )
             st.success(f"{name} Database Configuration - Updated", icon="✅")
             st_common.clear_state_key("database_config")
@@ -70,7 +63,7 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
             state.database_error = None
         except api_call.ApiError as ex:
             logger.error("Database Update failed: %s", ex)
-            state.database_error = ex
+            state.database_error = str(ex)
             state.database_config[name]["connected"] = False
         st.rerun()
     else:
@@ -132,63 +125,28 @@ def main() -> None:
         st.subheader("Database Vector Storage")
         if state.database_config[name]["vector_stores"]:
             table_col_format = st.columns([0.02, 0.05, 0.1, 0.05, 0.05, 0.05, 0.04])
-            col1, col2, col3, col4, col5, col6, col7 = table_col_format
-            col1.markdown("**<u>&nbsp;</u>**", unsafe_allow_html=True)
-            col2.markdown("**<u>Alias</u>**", unsafe_allow_html=True)
-            col3.markdown("**<u>Model</u>**", unsafe_allow_html=True)
-            col4.markdown("**<u>Chunk Size</u>**", unsafe_allow_html=True)
-            col5.markdown("**<u>Chunk Overlap</u>**", unsafe_allow_html=True)
-            col6.markdown("**<u>Distance Metric</u>**", unsafe_allow_html=True)
-            col7.markdown("**<u>Index Type</u>**", unsafe_allow_html=True)
+            headers = ["", "Alias", "Model", "Chunk Size", "Chunk Overlap", "Distance Metric", "Index Type"]
+
+            # Header row
+            for col, header in zip(table_col_format, headers):
+                col.markdown(f"**<u>{header}</u>**", unsafe_allow_html=True)
+
+            # Vector store rows
             for vs in state.database_config[name]["vector_stores"]:
                 vector_store = vs["vector_store"].lower()
-                col1.button(
-                    "",
-                    icon="🗑️",
-                    key=f"vector_stores_{vector_store}",
-                )
-                col2.text_input(
-                    "Alias",
-                    value=vs["alias"],
-                    label_visibility="collapsed",
-                    key=f"vector_stores_{vector_store}_alias",
-                    disabled=True,
-                )
-                col3.text_input(
-                    "Model",
-                    value=vs["model"],
-                    label_visibility="collapsed",
-                    key=f"vector_stores_{vector_store}_model",
-                    disabled=True,
-                )
-                col4.text_input(
-                    "Chunk Size",
-                    value=vs["chunk_size"],
-                    label_visibility="collapsed",
-                    key=f"vector_stores_{vector_store}_chunk_size",
-                    disabled=True,
-                )
-                col5.text_input(
-                    "Chunk Overlap",
-                    value=vs["chunk_overlap"],
-                    label_visibility="collapsed",
-                    key=f"vector_stores_{vector_store}_chunk_overlap",
-                    disabled=True,
-                )
-                col6.text_input(
-                    "Distance Metric",
-                    value=vs["distance_metric"],
-                    label_visibility="collapsed",
-                    key=f"vector_stores_{vector_store}_distance_metric",
-                    disabled=True,
-                )
-                col7.text_input(
-                    "Index Type",
-                    value=vs["index_type"],
-                    label_visibility="collapsed",
-                    key=f"vector_stores_{vector_store}_index_type",
-                    disabled=True,
-                )
+                fields = ["alias", "model", "chunk_size", "chunk_overlap", "distance_metric", "index_type"]
+
+                # Handle button in col1
+                table_col_format[0].button("", icon="🗑️", key=f"vector_stores_{vector_store}")
+
+                for col, field in zip(table_col_format[1:], fields):  # Starting from col2
+                    col.text_input(
+                        field.capitalize(),
+                        value=vs[field],
+                        label_visibility="collapsed",
+                        key=f"vector_stores_{vector_store}_{field}",
+                        disabled=True,
+                    )
         else:
             st.write("No Vector Stores Found")
 

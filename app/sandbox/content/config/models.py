@@ -33,20 +33,14 @@ if "server" in state:
 ###################################
 # Functions
 ###################################
-def get_model(model_type: str, enabled: bool = None) -> dict[str, dict]:
+def get_model(model_type: str, only_enabled: bool = False) -> dict[str, dict]:
     """Get a dictionary of either all Language/Embed Models or only enabled ones."""
 
-    state_key = f"{model_type}_model_config"
-    params = {"model_type": model_type}
-    logger.debug("Processing state: %s (%s):", state_key, params)
-
-    if enabled is not None:
-        state_key = f"{model_type}_model_enabled"
-        params["enabled"] = enabled
-
+    state_key = f"{model_type}_model_enabled" if only_enabled else f"{model_type}_model_config"
     if state_key not in state or state[state_key] == {}:
         try:
-            response = api_call.get(url=MODEL_API_ENDPOINT, params=params)["data"]
+            api_url = f"{MODEL_API_ENDPOINT}?only_enabled={only_enabled}&model_type={model_type}"
+            response = api_call.get(url=api_url)["data"]
             state[state_key] = {item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response}
             logger.info("State created: state['%s']", state_key)
         except api_call.ApiError as ex:
@@ -69,7 +63,7 @@ def patch_model(model_type: str) -> None:
             try:
                 api_call.patch(
                     url=MODEL_API_ENDPOINT + "/" + model_name,
-                    json={
+                    payload={
                         "enabled": state[f"{model_type}_{model_name}_enabled"],
                         "url": state[f"{model_type}_{model_name}_url"],
                         "api_key": state[f"{model_type}_{model_name}_api_key"],

@@ -51,11 +51,11 @@ def register_endpoints(app: FastAPI) -> None:
     @app.get(
         "/v1/databases",
         description="Get all Databases Configurations",
-        response_model=schema.ResponseList[schema.DatabaseModel],
+        response_model=schema.ResponseList[schema.Database],
     )
-    async def databases_list() -> schema.ResponseList[schema.DatabaseModel]:
+    async def databases_list() -> schema.ResponseList[schema.Database]:
         """List all databases"""
-        return schema.ResponseList[schema.DatabaseModel](
+        return schema.ResponseList[schema.Database](
             data=database_objects,
             msg=f"{len(database_objects)} database(s) found",
         )
@@ -63,15 +63,15 @@ def register_endpoints(app: FastAPI) -> None:
     @app.get(
         "/v1/databases/{name}",
         description="Get single Database Configuration",
-        response_model=schema.Response[schema.DatabaseModel],
+        response_model=schema.Response[schema.Database],
     )
-    async def databases_get(name: schema.DatabaseNameType) -> schema.ResponseList[schema.DatabaseModel]:
+    async def databases_get(name: schema.DatabaseNameType) -> schema.ResponseList[schema.Database]:
         """Get single db object"""
         db = next((db for db in database_objects if db.name == name), None)
         if not db:
             raise HTTPException(status_code=404, detail=f"Database {name} not found")
 
-        return schema.Response[schema.DatabaseModel](
+        return schema.Response[schema.Database](
             data=db,
             msg=f"{name} database found",
         )
@@ -82,21 +82,22 @@ def register_endpoints(app: FastAPI) -> None:
         response_model=schema.Response[schema.DatabaseModel],
     )
     async def databases_update(
-        name: schema.DatabaseNameType, patch: schema.Request[schema.Database]
-    ) -> schema.Response[schema.DatabaseModel]:
+        name: schema.DatabaseNameType, payload: schema.DatabaseModel
+    ) -> schema.Response[schema.Database]:
         """Update Database"""
-        logger.info("Received Database Payload: %s", patch)
+        logger.info("Received Database Payload: %s", payload)
         db = next((db for db in database_objects if db.name == name), None)
         if db:
             try:
-                conn = databases.connect(patch.data)
+                conn = databases.connect(payload)
             except databases.DbException as ex:
                 db.connected = False
-                raise HTTPException(status_code=500, detail=str(ex)) from ex
-            db.user = patch.data.user
-            db.password = patch.data.password
-            db.dsn = patch.data.dsn
-            db.wallet_password = patch.data.wallet_password
+                logger.debug("Raising Exception: %s", str(ex))
+                raise HTTPException(status_code=ex.status_code, detail=ex.detail) from ex
+            db.user = payload.user
+            db.password = payload.password
+            db.dsn = payload.dsn
+            db.wallet_password = payload.wallet_password
             db.connected = True
             db.vector_stores = databases.get_vs(conn)
             db.set_connection(conn)
@@ -105,46 +106,46 @@ def register_endpoints(app: FastAPI) -> None:
                 if other_db.name != name and other_db.connection:
                     other_db.set_connection(databases.disconnect(db.connection))
                     other_db.connected = False
-            return schema.Response[schema.DatabaseModel](data=db, msg=f"{name} updated and set as default")
+            return schema.Response[schema.Database](data=db, msg=f"{name} updated and set as default")
         raise HTTPException(status_code=404, detail=f"Database {name} not found")
 
     #################################################
     # Models
     #################################################
-    @app.get("/v1/models", response_model=schema.ResponseList[schema.ModelModel])
+    @app.get("/v1/models", response_model=schema.ResponseList[schema.Model])
     async def models_list(
         model_type: Optional[schema.ModelTypeType] = Query(None),
-        enabled: Optional[schema.ModelEnabledType] = Query(None),
-    ) -> schema.ResponseList[schema.ModelModel]:
+        only_enabled: bool = False,
+    ) -> schema.ResponseList[schema.Model]:
         """List all models after applying filters if specified"""
-        models_ret = await models.apply_filter(model_objects, model_type=model_type, enabled=enabled)
+        models_ret = await models.apply_filter(model_objects, model_type=model_type, only_enabled=only_enabled)
 
-        return schema.ResponseList[schema.ModelModel](data=models_ret)
+        return schema.ResponseList[schema.Model](data=models_ret)
 
-    @app.get("/v1/models/{name}", response_model=schema.Response[schema.ModelModel])
-    async def models_get(name: schema.ModelNameType) -> schema.Response[schema.ModelModel]:
+    @app.get("/v1/models/{name}", response_model=schema.Response[schema.Model])
+    async def models_get(name: schema.ModelNameType) -> schema.Response[schema.Model]:
         """List a specific model"""
         models_ret = await models.apply_filter(model_objects, model_name=name)
         if not models_ret:
             raise HTTPException(status_code=404, detail=f"Model {name} not found")
 
-        return schema.Response[schema.ModelModel](data=models_ret[0])
+        return schema.Response[schema.Model](data=models_ret[0])
 
-    @app.patch("/v1/models/{name}", response_model=schema.Response[schema.ModelModel])
-    async def models_update(name: schema.ModelNameType, patch: dict[str, Any]) -> schema.Response[schema.ModelModel]:
+    @app.patch("/v1/models/{name}", response_model=schema.Response[schema.Model])
+    async def models_update(name: schema.ModelNameType, payload: schema.ModelModel) -> schema.Response[schema.Model]:
         """Update a model"""
-        logger.debug("Received Model Payload: %s", patch)
+        logger.debug("Received Model Payload: %s", payload)
         model_upd = await models.apply_filter(model_objects, model_name=name)
         if not model_upd:
             raise HTTPException(status_code=404, detail=f"Model {name} not found")
 
-        for key, value in patch.items():
+        for key, value in payload:
             if hasattr(model_upd[0], key):
                 setattr(model_upd[0], key, value)
             else:
                 raise HTTPException(status_code=400, detail=f"Invalid key: {key}")
 
-        return schema.Response[schema.ModelModel](data=model_upd[0])
+        return schema.Response[schema.Model](data=model_upd[0])
 
     #################################################
     # OCI
@@ -157,34 +158,6 @@ def register_endpoints(app: FastAPI) -> None:
         return schema.ResponseList[schema.OracleCloudSettings](
             data=oci_objects, msg=f"{len(oci_objects)} OCI Configurations found"
         )
-
-    @app.patch(
-        "/v1/oci/{profile}",
-        description="Update, Test, Set as Default OCI Configuration",
-        response_model=schema.Response[schema.OracleCloudSettings],
-    )
-    async def oci_update(
-        profile: schema.OCIProfileType, patch: schema.Request[schema.OracleCloudSettings]
-    ) -> schema.Response[schema.OracleCloudSettings]:
-        """Update OCI Configuration"""
-        logger.debug("Received OCI Payload: %s", patch)
-        oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
-        if oci_config:
-            try:
-                namespace = server_oci.get_namespace(patch.data)
-            except server_oci.OciException as ex:
-                raise HTTPException(status_code=500, detail=str(ex)) from ex
-            oci_config.namespace = namespace
-            oci_config.tenancy = patch.data.tenancy
-            oci_config.region = patch.data.region
-            oci_config.user = patch.data.user
-            oci_config.fingerprint = patch.data.fingerprint
-            oci_config.key_file = patch.data.key_file
-            oci_config.security_token_file = patch.data.security_token_file
-            return schema.Response[schema.OracleCloudSettings](
-                data=oci_config, msg=f"{profile} updated and set as default"
-            )
-        raise HTTPException(status_code=404, detail=f"{profile} profile for OCI not found")
 
     @app.get(
         "/v1/oci/compartments/{profile}",
@@ -220,13 +193,41 @@ def register_endpoints(app: FastAPI) -> None:
         objects = server_oci.get_bucket_objects(bucket_name, oci_config)
         return schema.Response[list](data=objects, msg=f"{len(objects)} bucket objects found")
 
+    @app.patch(
+        "/v1/oci/{profile}",
+        description="Update, Test, Set as Default OCI Configuration",
+        response_model=schema.Response[schema.OracleCloudSettings],
+    )
+    async def oci_update(
+        profile: schema.OCIProfileType, payload: schema.OracleCloudSettings
+    ) -> schema.Response[schema.OracleCloudSettings]:
+        """Update OCI Configuration"""
+        logger.debug("Received OCI Payload: %s", payload)
+        oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
+        if oci_config:
+            try:
+                namespace = server_oci.get_namespace(payload)
+            except server_oci.OciException as ex:
+                raise HTTPException(status_code=401, detail=str(ex)) from ex
+            oci_config.namespace = namespace
+            oci_config.tenancy = payload.tenancy
+            oci_config.region = payload.region
+            oci_config.user = payload.user
+            oci_config.fingerprint = payload.fingerprint
+            oci_config.key_file = payload.key_file
+            oci_config.security_token_file = payload.security_token_file
+            return schema.Response[schema.OracleCloudSettings](
+                data=oci_config, msg=f"{profile} updated and set as default"
+            )
+        raise HTTPException(status_code=404, detail=f"{profile} profile for OCI not found")
+
     @app.post(
         "/v1/oci/objects/download/{bucket_name}/{profile}",
         description="Download files from Object Storage",
         response_model=schema.Response[list],
     )
     async def oci_download_objects(
-        profile: schema.OCIProfileType, bucket_name: str, client: str, request: schema.RequestList
+        profile: schema.OCIProfileType, bucket_name: str, client: str, request: list
     ) -> schema.Response[list]:
         """Download files from Object Storage"""
         oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
@@ -283,14 +284,14 @@ def register_endpoints(app: FastAPI) -> None:
         response_model=schema.Response[schema.PromptModel],
     )
     async def prompts_update(
-        category: schema.PromptCategoryType, name: schema.PromptNameType, patch: schema.Request[schema.Prompt]
+        category: schema.PromptCategoryType, name: schema.PromptNameType, payload: schema.Prompt
     ) -> schema.Response[schema.PromptModel]:
         """Update a single Prompt"""
-        logger.debug("Received %s (%s) Prompt Payload: %s", name, category, patch)
+        logger.debug("Received %s (%s) Prompt Payload: %s", name, category, payload)
         for prompt in prompt_objects:
             if prompt.name == name and prompt.category == category:
                 # Update the prompt with the new text
-                prompt.prompt = patch.data.prompt
+                prompt.prompt = payload.data.prompt
                 return schema.Response[schema.PromptModel](data=prompt)
 
         raise HTTPException(status_code=404, detail=f"Prompt {category}:{name} not found")
@@ -298,31 +299,29 @@ def register_endpoints(app: FastAPI) -> None:
     #################################################
     # Settings
     #################################################
-    @app.get("/v1/settings/{client}", response_model=schema.Response[schema.SettingsModel])
-    async def settings_get(client: str) -> schema.Response[schema.SettingsModel]:
+    @app.get("/v1/settings/{client}", response_model=schema.Response[schema.Settings])
+    async def settings_get(client: str) -> schema.Response[schema.Settings]:
         """Get settings for a specific client by name"""
         client_settings = next((settings for settings in settings_objects if settings.client == client), None)
         if not client_settings:
             raise HTTPException(status_code=404, detail="Client not found")
 
-        return schema.Response[schema.SettingsModel](data=client_settings)
+        return schema.Response[schema.Settings](data=client_settings)
 
-    @app.patch("/v1/settings/{client}", response_model=schema.Response[schema.SettingsModel])
-    async def settings_update(
-        client: str, patch: schema.Request[schema.SettingsModel]
-    ) -> schema.Response[schema.SettingsModel]:
+    @app.patch("/v1/settings/{client}", response_model=schema.Response[schema.Settings])
+    async def settings_update(client: str, payload: schema.Settings) -> schema.Response[schema.Settings]:
         """Update a single Client Settings"""
-        logger.debug("Received %s Client Payload: %s", client, patch)
+        logger.debug("Received %s Client Payload: %s", client, payload)
         client_settings = next((settings for settings in settings_objects if settings.client == client), None)
         if client_settings:
             settings_objects.remove(client_settings)
-            settings_objects.append(patch.data)
-            return schema.Response[schema.SettingsModel](data=patch.data, msg=f"Client {client} settings updated")
+            settings_objects.append(payload.data)
+            return schema.Response[schema.Settings](data=payload.data, msg=f"Client {client} settings updated")
 
         raise HTTPException(status_code=404, detail=f"Client {client} settings not found")
 
-    @app.post("/v1/settings/{client}", response_model=schema.Response[schema.SettingsModel])
-    async def settings_create(client: str) -> schema.Response[schema.SettingsModel]:
+    @app.post("/v1/settings/{client}", response_model=schema.Response[schema.Settings])
+    async def settings_create(client: str) -> schema.Response[schema.Settings]:
         """Create new settings for a specific client"""
         logger.debug("Received %s Client create request", client)
         if any(settings.client == client for settings in settings_objects):
@@ -345,7 +344,7 @@ def register_endpoints(app: FastAPI) -> None:
         description="Store Web Files for Embedding.",
         response_model=schema.Response[list],
     )
-    async def store_web_file(client: str, request: schema.RequestList) -> schema.Response[list]:
+    async def store_web_file(client: str, request: list) -> schema.Response[list]:
         """Store contents from a web URL"""
         client_folder = Path(f"/tmp/{client}")
         client_folder.mkdir(parents=True, exist_ok=True)
