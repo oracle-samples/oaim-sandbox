@@ -22,7 +22,7 @@ logger = logging_config.logging.getLogger("server.models")
 #####################################################
 # Functions
 #####################################################
-async def filter(
+async def apply_filter(
     models_all: list[schema.ModelModel],
     model_name: Optional[schema.ModelNameType] = None,
     model_type: Optional[schema.ModelTypeType] = None,
@@ -46,6 +46,7 @@ async def get_key_value(
     model_name: schema.ModelNameType,
     model_key: str,
 ) -> str:
+    """Return a models key value of its configuration"""
     for model in model_objects:
         if model.name == model_name:
             return getattr(model, model_key, None)
@@ -56,7 +57,7 @@ async def get_client(
     model_objects: list[schema.ModelModel],
     model_config: dict,
 ) -> BaseChatModel:
-    # Retrieve model configuration
+    """Retrieve model configuration"""
     logger.info("Model Config: %s", model_config)
     model_name = model_config["model"]
     model_api = await get_key_value(model_objects, model_name, "api")

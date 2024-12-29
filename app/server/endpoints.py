@@ -42,6 +42,7 @@ settings_objects = bootstrap.settings_def.main()
 # Endpoints
 #####################################################
 def register_endpoints(app: FastAPI) -> None:
+    """Called by the server startup to load the endpoints"""
     logger.debug("Registering Server Endpoints")
 
     #################################################
@@ -116,14 +117,14 @@ def register_endpoints(app: FastAPI) -> None:
         enabled: Optional[schema.ModelEnabledType] = Query(None),
     ) -> schema.ResponseList[schema.ModelModel]:
         """List all models after applying filters if specified"""
-        models_ret = await models.filter(model_objects, model_type=model_type, enabled=enabled)
+        models_ret = await models.apply_filter(model_objects, model_type=model_type, enabled=enabled)
 
         return schema.ResponseList[schema.ModelModel](data=models_ret)
 
     @app.get("/v1/models/{name}", response_model=schema.Response[schema.ModelModel])
     async def models_get(name: schema.ModelNameType) -> schema.Response[schema.ModelModel]:
         """List a specific model"""
-        models_ret = await models.filter(model_objects, model_name=name)
+        models_ret = await models.apply_filter(model_objects, model_name=name)
         if not models_ret:
             raise HTTPException(status_code=404, detail=f"Model {name} not found")
 
@@ -133,7 +134,7 @@ def register_endpoints(app: FastAPI) -> None:
     async def models_update(name: schema.ModelNameType, patch: dict[str, Any]) -> schema.Response[schema.ModelModel]:
         """Update a model"""
         logger.debug("Received Model Payload: %s", patch)
-        model_upd = await models.filter(model_objects, model_name=name)
+        model_upd = await models.apply_filter(model_objects, model_name=name)
         if not model_upd:
             raise HTTPException(status_code=404, detail=f"Model {name} not found")
 
@@ -355,15 +356,14 @@ def register_endpoints(app: FastAPI) -> None:
             response = requests.get(url, timeout=60)
             content_type = response.headers.get("Content-Type", "").lower()
 
-            if "application/pdf" in content_type:
+            if "application/pdf" in content_type or "application/octet-stream" in content_type:
                 with open(filename, "wb") as file:
                     file.write(response.content)
             elif "text" in content_type or "html" in content_type:
                 with open(filename, "w", encoding="utf-8") as file:
                     file.write(response.text)
             else:
-                with open(filename, "wb") as file:
-                    file.write(response.content)
+                raise HTTPException(status_code=500, detail=f"Unprocessable content type: {content_type}")
 
         # Return a response that the file was stored successfully
         files = [f for f in os.listdir(client_folder) if os.path.isfile(os.path.join(client_folder, f))]
