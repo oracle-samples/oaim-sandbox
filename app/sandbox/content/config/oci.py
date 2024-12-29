@@ -62,7 +62,7 @@ def patch_oci(
         try:
             api_call.patch(
                 url=OCI_API_ENDPOINT + "/" + profile,
-                body={
+                json={
                     "data": {
                         "user": user,
                         "fingerprint": fingerprint,

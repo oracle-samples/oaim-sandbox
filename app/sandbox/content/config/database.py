@@ -55,7 +55,7 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
         try:
             api_call.patch(
                 url=DB_API_ENDPOINT + "/" + name,
-                body={
+                json={
                     "data": {
                         "user": user,
                         "password": password,

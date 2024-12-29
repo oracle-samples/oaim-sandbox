@@ -4,6 +4,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 """
 # spell-checker:ignore genai, ocids
 
+import os
 from typing import Union
 
 import oci
@@ -149,12 +150,32 @@ def get_bucket_objects(bucket_name: str, config: OracleCloudSettings = None, ret
             bucket_name=bucket_name,
         )
         objects = response.data.objects
-        #TODO(gotsysba) - filter out non-supported objects
+        # TODO(gotsysba) - filter out non-supported objects
         object_names = [object.name for object in objects]
     except oci.exceptions.ServiceError:
         logger.debug("Bucket %s not found.  Will create on upload.", bucket_name)
 
     return object_names
+
+
+def get_object(
+    directory: str, object_name: str, bucket_name: str, config: OracleCloudSettings = None, retries: bool = True
+) -> list:
+    """Download Object Storage Object"""
+    client_type = oci.object_storage.ObjectStorageClient
+    client = init_client(client_type, config, retries)
+
+    file_name = os.path.basename(object_name)
+    file_path = os.path.join(directory, file_name)
+
+    response = client.get_object(namespace_name=config.namespace, bucket_name=bucket_name, object_name=object_name)
+    with open(file_path, "wb") as f:
+        for content in response.data.raw.stream(1024 * 1024, decode_content=False):
+            f.write(content)
+    file_size = os.path.getsize(file_path)
+    logger.info("Downloaded %s to %s (%i bytes)", file_name, file_path, file_size)
+
+    return file_path
 
 
 # def create_bucket(config, namespace, compartment, bucket_name, retries=True):
@@ -175,22 +196,6 @@ def get_bucket_objects(bucket_name: str, config: OracleCloudSettings = None, ret
 #             logger.info("Bucket %s already exists. Ignoring error.", bucket_name)
 #         else:
 #             logger.exception(ex, exc_info=False)
-
-
-# def get_object(config, namespace, bucket_name, directory, object_name, retries=True):
-#     """Download Object Storage Object"""
-#     client = init_client(oci.object_storage.ObjectStorageClient, config, retries)
-#     file_name = os.path.basename(object_name)
-#     file_path = os.path.join(directory, file_name)
-#     response = client.get_object(namespace_name=namespace, bucket_name=bucket_name, object_name=object_name)
-
-#     with open(file_path, "wb") as f:
-#         for content in response.data.raw.stream(1024 * 1024, decode_content=False):
-#             f.write(content)
-#     file_size = os.path.getsize(file_path)
-#     logger.info("Downloaded %s to %s (%i bytes)", file_name, file_path, file_size)
-
-#     return file_path
 
 
 # def put_object(config, namespace, compartment, bucket_name, file_path, retries=True):

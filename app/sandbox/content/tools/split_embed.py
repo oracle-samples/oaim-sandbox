@@ -55,7 +55,7 @@ def get_buckets(compartment: str) -> list:
 @st.cache_data
 def get_bucket_objects(bucket: str) -> list:
     """Get OCI Buckets in selected compartment; function for Streamlit caching"""
-    api_url = f"{OCI_API_ENDPOINT}/bucket/objects/{bucket}/{state.user_settings['oci_profile']}"
+    api_url = f"{OCI_API_ENDPOINT}/objects/{bucket}/{state.user_settings['oci_profile']}"
     response = api_call.get(url=api_url)
     return response
 
@@ -90,20 +90,6 @@ def files_data_editor(files, key):
         disabled=["File"],
         hide_index=True,
     )
-
-
-def upload_files() -> None:
-    """Send local files uploaded to streamlit to the server"""
-    seen_file=set()
-    response=None
-    for file in state["local_file_uploader"]:
-        if file.name not in seen_file:
-            response = api_call.post(
-                url=f"{EMBED_API_ENDPOINT}/local/upload/{state.user_settings['client']}",
-                files={"file": (file.name, file.getvalue(), file.type)},
-            )
-        seen_file.add(file.name)
-    st.write(f"Uploaded files: {response}")
 
 
 def update_chunk_overlap_slider() -> None:
@@ -155,7 +141,7 @@ def main() -> None:
     #############################################################################
     # GUI
     #############################################################################
-    st.header("Embedding Configuration", divider="rainbow")
+    st.header("Embedding Configuration", divider="red")
     embed_request.model = st.selectbox(
         "Embedding models available: ",
         options=available_embed_models,
@@ -252,17 +238,15 @@ def main() -> None:
     ################################################
     # Splitting
     ################################################
-    st.header("Load and Split Documents", divider="rainbow")
+    st.header("Load and Split Documents", divider="red")
     file_source = st.radio("File Source:", file_sources, key="radio_file_source", horizontal=True)
     populate_button_disabled = True
     button_help = None
-    api_endpoint = EMBED_API_ENDPOINT
 
     ######################################
     # Local Source
     ######################################
     if file_source == "Local":
-        api_endpoint = f"{api_endpoint}/local"
         button_help = """
             This button is disabled if no local files have been provided.
         """
@@ -272,81 +256,82 @@ def main() -> None:
             key="local_file_uploader",
             help="Large or many files?  Consider OCI Object Storage or invoking the API directly.",
             accept_multiple_files=True,
-            on_change=upload_files,
         )
         populate_button_disabled = len(embed_files) == 0
 
-    # ######################################
-    # # Web Source
-    # ######################################
-    # if file_source == "Web":
-    #     button_help = """
-    #         This button is disabled if there the URL was unable to be validated.  Please check the URL.
-    #     """
-    #     st.subheader("Web Pages", divider=False)
-    #     web_url = st.text_input("URL:", key="text_input_web_url")
-    #     is_web_accessible, _ = common.functions.is_url_accessible(web_url)
-    #     populate_button_disabled = not (web_url and is_web_accessible)
+    ######################################
+    # Web Source
+    ######################################
+    if file_source == "Web":
+        button_help = """
+            This button is disabled if there the URL was unable to be validated.  Please check the URL.
+        """
+        st.subheader("Web Pages", divider=False)
+        web_url = st.text_input("URL:", key="selected_web_url")
+        is_web_accessible, _ = common.functions.is_url_accessible(web_url)
+        populate_button_disabled = not (web_url and is_web_accessible)
 
     ######################################
     # OCI Source
     ######################################
-    # if file_source == "OCI":
-    #     button_help = """
-    #         This button is disabled if there are no documents from the source bucket split with
-    #         the current split and embed options.  Please Split and Embed to enable Vector Storage.
-    #     """
-    #     st.text(f"OCI namespace: {state.oci_config[state.user_settings['oci_profile']]['namespace']}")
-    #     oci_compartments = get_compartments()
-    #     src_bucket_list = []
-    #     dst_bucket = None
-    #     col2_1, col2_2 = st.columns([0.5, 0.5])
-    #     with col2_1:
-    #         bucket_compartment = st.selectbox(
-    #             "Bucket compartment:",
-    #             list(oci_compartments.keys()),
-    #             index=None,
-    #             placeholder="Select bucket compartment...",
-    #         )
-    #         if bucket_compartment:
-    #             src_bucket_list = get_buckets(oci_compartments[bucket_compartment])
-    #     with col2_2:
-    #         src_bucket = st.selectbox(
-    #             "Source bucket:",
-    #             src_bucket_list,
-    #             index=None,
-    #             placeholder="Select source bucket...",
-    #             disabled=not bucket_compartment,
-    #         )
-    #     if src_bucket:
-    #         dst_bucket = f"{src_bucket}_split_{chunk_size}_{chunk_overlap_size}"
-    #         st.text(f"Destination Bucket: {dst_bucket}")
-    #         src_objects = get_bucket_objects(src_bucket)
-    #         src_files = files_data_frame(src_objects)
-    #     else:
-    #         src_files = pd.DataFrame({"File": [], "Process": []})
+    if file_source == "OCI":
+        button_help = """
+            This button is disabled if there are no documents from the source bucket split with
+            the current split and embed options.  Please Split and Embed to enable Vector Storage.
+        """
+        st.text(f"OCI namespace: {state.oci_config[state.user_settings['oci_profile']]['namespace']}")
+        oci_compartments = get_compartments()["data"]
+        src_bucket_list = []
+        col2_1, col2_2 = st.columns([0.5, 0.5])
+        with col2_1:
+            bucket_compartment = st.selectbox(
+                "Bucket compartment:",
+                list(oci_compartments.keys()),
+                index=None,
+                placeholder="Select bucket compartment...",
+            )
+            if bucket_compartment:
+                src_bucket_list = get_buckets(oci_compartments[bucket_compartment])["data"]
+        with col2_2:
+            src_bucket = st.selectbox(
+                "Source bucket:",
+                src_bucket_list,
+                index=None,
+                placeholder="Select source bucket...",
+                disabled=not bucket_compartment,
+            )
+        src_files = []
+        if src_bucket:
+            src_objects = get_bucket_objects(src_bucket)["data"]
+            src_files = files_data_frame(src_objects)
+        else:
+            src_files = pd.DataFrame({"File": [], "Process": []})
 
-    #     src_files_selected = files_data_editor(src_files, "source")
-    #     if src_files_selected["Process"].sum() == 0:
-    #         oci_load_button_disabled = True
-    #     else:
-    #         oci_load_button_disabled = False
-
-    #     if st.button("Load, Split, and Upload", type="primary", disabled=oci_load_button_disabled):
-    #         process_list = src_files_selected[src_files_selected["Process"]].reset_index(drop=True)
-    #         for index, f in process_list.iterrows():
+        src_files_selected = files_data_editor(src_files, "source")
+        populate_button_disabled = src_files_selected["Process"].sum() == 0
 
     ######################################
     # Populate Vector Store
     ######################################
-    st.text(f"Vector Store: {embed_request.vector_store}")
+    st.header("Populate Vector Store", divider="red")
+    st.markdown(f"##### **Vector Store:** `{embed_request.vector_store}`")
     if not populate_button_disabled:
-        if 'button_populate' in state and state.button_populate is True:
+        if "button_populate" in state and state.button_populate is True:
             state.running = True
         else:
             state.running = False
     else:
         state.running = True
+
+    rate_size, _ = st.columns([0.28, 0.72])
+    rate_limit = rate_size.number_input(
+        "Rate Limit (RPM):",
+        value=None,
+        help="Leave blank for no rate-limiting - Requests Per Minute",
+        step=1,
+        max_value=60,
+        key="selected_rate_limit",
+    )
     if st.button(
         "Populate Vector Store",
         type="primary",
@@ -355,12 +340,45 @@ def main() -> None:
         help=button_help,
     ):
         try:
-            rate_limit = 0
-            url = f"{EMBED_API_ENDPOINT}/{state.user_settings['client']}?rate_limit={rate_limit}"
             placeholder = st.empty()
             with placeholder:
                 st.warning("Populating Vector Store... please be patient.", icon="⚠️")
-            response = api_call.post(url=url, data=embed_request.model_dump_json(), timeout=300)
+
+            # Place files on Server for Embedding
+            if file_source == "Local":
+                # Send local files uploaded to streamlit to the server
+                api_url = f"{EMBED_API_ENDPOINT}/local/store/{state.user_settings['client']}"
+                seen_file = set()
+                for file in state["local_file_uploader"]:
+                    if file.name not in seen_file:
+                        response = api_call.post(
+                            url=api_url,
+                            files={"file": (file.name, file.getvalue(), file.type)},
+                        )
+                    seen_file.add(file.name)
+
+            if file_source == "Web":
+                api_url = f"{EMBED_API_ENDPOINT}/web/store/{state.user_settings['client']}"
+                response = api_call.post(
+                    url=api_url,
+                    json={"data": [web_url]},
+                )
+
+            if file_source == "OCI":
+                # Download OCI Objects for Processing
+                api_url = f"{OCI_API_ENDPOINT}/objects/download/{src_bucket}/{state.user_settings['oci_profile']}"
+                process_list = src_files_selected[src_files_selected["Process"]].reset_index(drop=True)
+                response = api_call.post(
+                    url=api_url,
+                    json={"data": process_list["File"].tolist()},
+                    params={"client": state.user_settings["client"]},
+                )
+
+            # All files are now on Server... Run Embeddings
+            embed_url = f"{EMBED_API_ENDPOINT}/{state.user_settings['client']}"
+            response = api_call.post(
+                url=embed_url, data=embed_request.model_dump_json(), params={"rate_limit": rate_limit}, timeout=300
+            )
             placeholder.empty()
             st.success(f"Vector Store Populated: {response['msg']}", icon="✅")
         except api_call.ApiError as ex:

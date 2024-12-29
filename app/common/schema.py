@@ -41,6 +41,12 @@ class Request(BaseModel, Generic[Payload]):
     data: Payload
 
 
+class RequestList(BaseModel):
+    """Request List request wrapper"""
+
+    data: list[str]
+
+
 #####################################################
 # Models
 #####################################################

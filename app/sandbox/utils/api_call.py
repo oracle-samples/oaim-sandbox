@@ -35,9 +35,10 @@ class ApiError(Exception):
 def send_request(
     method: str,
     url: str,
-    params_or_body: Optional[dict] = None,
     data: Optional[dict] = None,
     files: Optional[dict] = None,
+    json: Optional[dict] = None,
+    params: Optional[dict] = None,
     timeout: int = 60,
     retries: int = 3,
     backoff_factor: float = 2.0,
@@ -56,10 +57,10 @@ def send_request(
                 "url": url,
                 "headers": headers,
                 "timeout": timeout,
-                "params": params_or_body if params_or_body and method == "GET" else None,
-                "json": params_or_body if params_or_body and method in {"POST", "PATCH"} else None,
                 "data": data if data and method == "POST" else None,
                 "files": files if files and method == "POST" else None,
+                "json": json if json and method in {"POST", "PATCH"} else None,
+                "params": params if params else None,
             }
             # Remove keys with None Values
             filtered_args = {k: v for k, v in args.items() if v is not None}
@@ -71,7 +72,7 @@ def send_request(
                     for k, v in filtered_args["files"].items()
                 }
             # Make the request
-            logger.debug("%s Request: %s", method, logger_args)
+            logger.info("%s Request: %s", method, logger_args)
             response = method_map[method](**filtered_args)
             response.raise_for_status()
             logger.debug("%s Response: %s", method, response)
@@ -101,7 +102,7 @@ def get(url: str, params: Optional[dict] = None, retries: int = 3, backoff_facto
     response = send_request(
         method="GET",
         url=url,
-        params_or_body=params,
+        params=params,
         retries=retries,
         backoff_factor=backoff_factor,
     )
@@ -110,9 +111,10 @@ def get(url: str, params: Optional[dict] = None, retries: int = 3, backoff_facto
 
 def post(
     url: str,
-    body: Optional[dict] = None,
     data: Optional[dict] = None,
     files: Optional[dict] = None,
+    json: Optional[dict] = None,
+    params: Optional[dict] = None,
     timeout: int = 60,
     retries: int = 3,
     backoff_factor: float = 2.0,
@@ -121,9 +123,10 @@ def post(
     response = send_request(
         method="POST",
         url=url,
-        params_or_body=body,
         data=data,
         files=files,
+        json=json,
+        params=params,
         timeout=timeout,
         retries=retries,
         backoff_factor=backoff_factor,
@@ -131,12 +134,20 @@ def post(
     return response
 
 
-def patch(url: str, body: dict, timeout: int = 60, retries: int = 3, backoff_factor: float = 2.0) -> dict:
+def patch(
+    url: str,
+    json: dict,
+    params: Optional[dict] = None,
+    timeout: int = 60,
+    retries: int = 3,
+    backoff_factor: float = 2.0,
+) -> dict:
     """PATCH Request"""
     response = send_request(
         method="PATCH",
         url=url,
-        params_or_body=body,
+        json=json,
+        params=params,
         timeout=timeout,
         retries=retries,
         backoff_factor=backoff_factor,

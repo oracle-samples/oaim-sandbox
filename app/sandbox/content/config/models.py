@@ -69,7 +69,7 @@ def patch_model(model_type: str) -> None:
             try:
                 api_call.patch(
                     url=MODEL_API_ENDPOINT + "/" + model_name,
-                    body={
+                    json={
                         "enabled": state[f"{model_type}_{model_name}_enabled"],
                         "url": state[f"{model_type}_{model_name}_url"],
                         "api_key": state[f"{model_type}_{model_name}_api_key"],

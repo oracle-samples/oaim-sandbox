@@ -9,6 +9,7 @@ import os
 import shutil
 from typing import Optional, Any
 from pathlib import Path
+import requests
 
 from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import HumanMessage, AnyMessage, convert_to_openai_messages
@@ -121,6 +122,7 @@ def register_endpoints(app: FastAPI) -> None:
 
     @app.get("/v1/models/{name}", response_model=schema.Response[schema.ModelModel])
     async def models_get(name: schema.ModelNameType) -> schema.Response[schema.ModelModel]:
+        """List a specific model"""
         models_ret = await models.filter(model_objects, model_name=name)
         if not models_ret:
             raise HTTPException(status_code=404, detail=f"Model {name} not found")
@@ -129,6 +131,7 @@ def register_endpoints(app: FastAPI) -> None:
 
     @app.patch("/v1/models/{name}", response_model=schema.Response[schema.ModelModel])
     async def models_update(name: schema.ModelNameType, patch: dict[str, Any]) -> schema.Response[schema.ModelModel]:
+        """Update a model"""
         logger.debug("Received Model Payload: %s", patch)
         model_upd = await models.filter(model_objects, model_name=name)
         if not model_upd:
@@ -150,7 +153,9 @@ def register_endpoints(app: FastAPI) -> None:
     )
     async def oci_list() -> schema.ResponseList[schema.OracleCloudSettings]:
         """List OCI Configuration"""
-        return schema.ResponseList[schema.OracleCloudSettings](data=oci_objects, msg=f"{len(oci_objects)} OCI Configurations found")
+        return schema.ResponseList[schema.OracleCloudSettings](
+            data=oci_objects, msg=f"{len(oci_objects)} OCI Configurations found"
+        )
 
     @app.patch(
         "/v1/oci/{profile}",
@@ -186,6 +191,7 @@ def register_endpoints(app: FastAPI) -> None:
         response_model=schema.Response[dict],
     )
     async def oci_list_compartments(profile: schema.OCIProfileType) -> schema.Response[dict]:
+        """Return a list of compartments"""
         oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
         compartments = server_oci.get_compartments(oci_config)
         return schema.Response[dict](data=compartments, msg=f"{len(compartments)} OCI compartments found")
@@ -196,22 +202,42 @@ def register_endpoints(app: FastAPI) -> None:
         response_model=schema.Response[list],
     )
     async def oci_list_buckets(profile: schema.OCIProfileType, compartment: str) -> schema.Response[list]:
-        # Validate OCID using Pydantic class
+        """Return a list of buckets; Validate OCID using Pydantic class"""
         compartment_obj = schema.OracleResource(ocid=compartment)
         oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
         buckets = server_oci.get_buckets(compartment_obj.ocid, oci_config)
         return schema.Response[list](data=buckets, msg=f"{len(buckets)} OCI buckets found")
 
     @app.get(
-        "/v1/oci/bucket/objects/{bucket_name}/{profile}",
+        "/v1/oci/objects/{bucket_name}/{profile}",
         description="Get OCI Object Storage buckets objects",
         response_model=schema.Response[list],
     )
     async def oci_list_bucket_objects(profile: schema.OCIProfileType, bucket_name: str) -> schema.Response[list]:
-        # Validate OCID using Pydantic class
+        """Return a list of bucket objects; Validate OCID using Pydantic class"""
         oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
         objects = server_oci.get_bucket_objects(bucket_name, oci_config)
         return schema.Response[list](data=objects, msg=f"{len(objects)} bucket objects found")
+
+    @app.post(
+        "/v1/oci/objects/download/{bucket_name}/{profile}",
+        description="Download files from Object Storage",
+        response_model=schema.Response[list],
+    )
+    async def oci_download_objects(
+        profile: schema.OCIProfileType, bucket_name: str, client: str, request: schema.RequestList
+    ) -> schema.Response[list]:
+        """Download files from Object Storage"""
+        oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
+        client_folder = Path(f"/tmp/{client}")
+        client_folder.mkdir(parents=True, exist_ok=True)
+
+        for file in request.data:
+            server_oci.get_object(client_folder, file, bucket_name, oci_config)
+
+        # Return a response that the object was downloaded successfully
+        dir_files = [f for f in os.listdir(client_folder) if os.path.isfile(os.path.join(client_folder, f))]
+        return schema.Response[list](data=dir_files, msg=f"{len(dir_files)} objects downloaded")
 
     #################################################
     # Prompt Engineering
@@ -314,25 +340,55 @@ def register_endpoints(app: FastAPI) -> None:
     # Embedding
     #################################################
     @app.post(
-        "/v1/embed/local/upload/{client}",
-        description="Upload Local Files for Embedding.",
+        "/v1/embed/web/store/{client}",
+        description="Store Web Files for Embedding.",
         response_model=schema.Response[list],
     )
-    async def upload_local_file(client: str, file: UploadFile) -> schema.Response[list]:
-        # Create a folder for the client if it doesn't exist
+    async def store_web_file(client: str, request: schema.RequestList) -> schema.Response[list]:
+        """Store contents from a web URL"""
+        client_folder = Path(f"/tmp/{client}")
+        client_folder.mkdir(parents=True, exist_ok=True)
+
+        # Save the file temporarily
+        for url in request.data:
+            filename = client_folder / os.path.basename(url)
+            response = requests.get(url, timeout=60)
+            content_type = response.headers.get("Content-Type", "").lower()
+
+            if "application/pdf" in content_type:
+                with open(filename, "wb") as file:
+                    file.write(response.content)
+            elif "text" in content_type or "html" in content_type:
+                with open(filename, "w", encoding="utf-8") as file:
+                    file.write(response.text)
+            else:
+                with open(filename, "wb") as file:
+                    file.write(response.content)
+
+        # Return a response that the file was stored successfully
+        files = [f for f in os.listdir(client_folder) if os.path.isfile(os.path.join(client_folder, f))]
+        return schema.Response[list](data=files, msg=f"{len(files)} stored")
+
+    @app.post(
+        "/v1/embed/local/store/{client}",
+        description="Store Local Files for Embedding.",
+        response_model=schema.Response[list],
+    )
+    async def store_local_file(client: str, file: UploadFile) -> schema.Response[list]:
+        """Store contents from a local file uploaded to streamlit"""
         logger.info("Received file: %s", file.filename)
         client_folder = Path(f"/tmp/{client}")
         client_folder.mkdir(parents=True, exist_ok=True)
 
         # Save the file temporarily
-        temp_file_path = client_folder / file.filename
+        filename = client_folder / file.filename
         file_content = await file.read()
-        with temp_file_path.open("wb") as temp_file:
+        with filename.open("wb") as temp_file:
             temp_file.write(file_content)
 
         # Return a response that the file was uploaded successfully
         files = [f for f in os.listdir(client_folder) if os.path.isfile(os.path.join(client_folder, f))]
-        return schema.Response[list](data=files, msg=f"{len(files)} uploaded")
+        return schema.Response[list](data=files, msg=f"{len(files)} stored")
 
     @app.post(
         "/v1/embed/{client}",
@@ -342,6 +398,7 @@ def register_endpoints(app: FastAPI) -> None:
     async def split_embed(
         client: str, request: schema.DatabaseVectorStorage, rate_limit: int = 0
     ) -> schema.Response[list]:
+        """Perform Split and Embed"""
         client_folder = Path(f"/tmp/{client}")
         try:
             files = [str(file) for file in client_folder.iterdir() if file.is_file()]
@@ -374,9 +431,6 @@ def register_endpoints(app: FastAPI) -> None:
         finally:
             shutil.rmtree(client_folder)  # Clean up the temporary directory
 
-    # @app.post("/v1/split/oci", description="Split files in OCI Object Storage.")
-    # @app.post("/v1/split/web", description="Split Web Pages.")
-
     #################################################
     # Chat Completions
     #################################################
@@ -385,6 +439,7 @@ def register_endpoints(app: FastAPI) -> None:
         request: schema.ChatRequest,
         client: str = None,
     ) -> schema.ChatResponse:
+        """Chatbot Completion"""
         thread_id = client_gen_id() if not client else client
         user_settings = next((settings for settings in settings_objects if settings.client == thread_id), None)
         logger.info("User (%s) Settings: %s", thread_id, user_settings)
@@ -448,6 +503,7 @@ def register_endpoints(app: FastAPI) -> None:
         response_model=schema.ResponseList[schema.ChatMessage],
     )
     async def chat_history_get(client: str) -> schema.ResponseList[schema.ChatMessage]:
+        """Return Chat History"""
         agent: CompiledStateGraph = chatbot.chatbot_graph
         try:
             state_snapshot = agent.get_state(
