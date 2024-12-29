@@ -230,7 +230,7 @@ With the embedding model and database configured, you can now split and embed do
 Navigate to the _Split/Embed_ Screen:
 
 1. Change the File Source to `Web`
-1. Enter the URL: `https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/oracle-ai-vector-search-users-guide.pdf`
+1. Enter the URL: `https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/ai-vector-search-users-guide.pdf`
 1. Press Enter
 1. Click _Load, Split, and Populate Vector Store_
 1. Please be patient...
