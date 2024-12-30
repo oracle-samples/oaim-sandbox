@@ -81,6 +81,7 @@ def send_request(
 
 
 def get(url: str, params: Optional[dict] = None, retries: int = 3, backoff_factor: float = 2.0) -> dict:
+    """GET Requests"""
     return send_request("GET", url, params=params, retries=retries, backoff_factor=backoff_factor)
 
 
@@ -92,6 +93,7 @@ def post(
     retries: int = 3,
     backoff_factor: float = 2.0,
 ) -> dict:
+    """POST Requests"""
     return send_request(
         "POST", url, params=params, payload=payload, timeout=timeout, retries=retries, backoff_factor=backoff_factor
     )
@@ -105,6 +107,7 @@ def patch(
     retries: int = 3,
     backoff_factor: float = 2.0,
 ) -> dict:
+    """PATCH Requests"""
     return send_request(
         "PATCH", url, payload=payload, params=params, timeout=timeout, retries=retries, backoff_factor=backoff_factor
     )
