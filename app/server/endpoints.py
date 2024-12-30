@@ -227,7 +227,7 @@ def register_endpoints(app: FastAPI) -> None:
         response_model=schema.Response[list],
     )
     async def oci_download_objects(
-        profile: schema.OCIProfileType, bucket_name: str, client: str, request: list
+        bucket_name: str, profile: schema.OCIProfileType, client: str, request: list
     ) -> schema.Response[list]:
         """Download files from Object Storage"""
         oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
@@ -299,29 +299,29 @@ def register_endpoints(app: FastAPI) -> None:
     #################################################
     # Settings
     #################################################
-    @app.get("/v1/settings/{client}", response_model=schema.Response[schema.Settings])
-    async def settings_get(client: str) -> schema.Response[schema.Settings]:
+    @app.get("/v1/settings", response_model=schema.Response[schema.Settings])
+    async def settings_get(client: str = "server") -> schema.Response[schema.Settings]:
         """Get settings for a specific client by name"""
         client_settings = next((settings for settings in settings_objects if settings.client == client), None)
         if not client_settings:
             raise HTTPException(status_code=404, detail="Client not found")
 
-        return schema.Response[schema.Settings](data=client_settings)
+        return schema.Response[schema.Settings](data=client_settings, msg=f"Client {client} found")
 
-    @app.patch("/v1/settings/{client}", response_model=schema.Response[schema.Settings])
-    async def settings_update(client: str, payload: schema.Settings) -> schema.Response[schema.Settings]:
+    @app.patch("/v1/settings", response_model=schema.Response[schema.Settings])
+    async def settings_update(payload: schema.Settings, client: str = "server") -> schema.Response[schema.Settings]:
         """Update a single Client Settings"""
         logger.debug("Received %s Client Payload: %s", client, payload)
         client_settings = next((settings for settings in settings_objects if settings.client == client), None)
         if client_settings:
             settings_objects.remove(client_settings)
-            settings_objects.append(payload.data)
-            return schema.Response[schema.Settings](data=payload.data, msg=f"Client {client} settings updated")
+            settings_objects.append(payload)
+            return schema.Response[schema.Settings](data=payload, msg=f"Client {client} settings updated")
 
         raise HTTPException(status_code=404, detail=f"Client {client} settings not found")
 
-    @app.post("/v1/settings/{client}", response_model=schema.Response[schema.Settings])
-    async def settings_create(client: str) -> schema.Response[schema.Settings]:
+    @app.post("/v1/settings", response_model=schema.Response[schema.Settings])
+    async def settings_create(client: str = "server") -> schema.Response[schema.Settings]:
         """Create new settings for a specific client"""
         logger.debug("Received %s Client create request", client)
         if any(settings.client == client for settings in settings_objects):
@@ -334,17 +334,17 @@ def register_endpoints(app: FastAPI) -> None:
         settings.client = client
         settings_objects.append(settings)
 
-        return schema.Response(data=settings)
+        return schema.Response(data=settings, msg=f"Client {client} settings created")
 
     #################################################
     # Embedding
     #################################################
     @app.post(
-        "/v1/embed/web/store/{client}",
+        "/v1/embed/web/store",
         description="Store Web Files for Embedding.",
         response_model=schema.Response[list],
     )
-    async def store_web_file(client: str, request: list) -> schema.Response[list]:
+    async def store_web_file(request: list, client: str = "server") -> schema.Response[list]:
         """Store contents from a web URL"""
         client_folder = Path(f"/tmp/{client}")
         client_folder.mkdir(parents=True, exist_ok=True)
@@ -369,11 +369,11 @@ def register_endpoints(app: FastAPI) -> None:
         return schema.Response[list](data=files, msg=f"{len(files)} stored")
 
     @app.post(
-        "/v1/embed/local/store/{client}",
+        "/v1/embed/local/store",
         description="Store Local Files for Embedding.",
         response_model=schema.Response[list],
     )
-    async def store_local_file(client: str, file: UploadFile) -> schema.Response[list]:
+    async def store_local_file(file: UploadFile, client: str = "server") -> schema.Response[list]:
         """Store contents from a local file uploaded to streamlit"""
         logger.info("Received file: %s", file.filename)
         client_folder = Path(f"/tmp/{client}")
@@ -390,12 +390,12 @@ def register_endpoints(app: FastAPI) -> None:
         return schema.Response[list](data=files, msg=f"{len(files)} stored")
 
     @app.post(
-        "/v1/embed/{client}",
+        "/v1/embed",
         description="Split and Embed Corpus.",
         response_model=schema.Response[list],
     )
     async def split_embed(
-        client: str, request: schema.DatabaseVectorStorage, rate_limit: int = 0
+        request: schema.DatabaseVectorStorage, client: str = "server", rate_limit: int = 0
     ) -> schema.Response[list]:
         """Perform Split and Embed"""
         client_folder = Path(f"/tmp/{client}")
@@ -497,11 +497,11 @@ def register_endpoints(app: FastAPI) -> None:
             raise HTTPException(status_code=500, detail="Unexpected error") from ex
 
     @app.get(
-        "/v1/chat/history/{client}",
+        "/v1/chat/history",
         description="Get Chat History",
         response_model=schema.ResponseList[schema.ChatMessage],
     )
-    async def chat_history_get(client: str) -> schema.ResponseList[schema.ChatMessage]:
+    async def chat_history_get(client: str = "server") -> schema.ResponseList[schema.ChatMessage]:
         """Return Chat History"""
         agent: CompiledStateGraph = chatbot.chatbot_graph
         try:

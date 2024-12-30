@@ -51,9 +51,9 @@ def main() -> None:
     if "user_settings" not in state:
         # Create the client in the server and store results in session_state
         try:
-            client_id = client_gen_id()
-            api_endpoint = f"{state.server['url']}:{state.server['port']}/v1/settings/{client_id}"
-            state.user_settings = api_call.post(url=api_endpoint)["data"]
+            api_endpoint = f"{state.server['url']}:{state.server['port']}/v1/settings"
+            api_params = {"client": client_gen_id()}
+            state.user_settings = api_call.post(url=api_endpoint, params=api_params)["data"]
         except api_call.ApiError as ex:
             st.error(ex, icon="🚨")
 

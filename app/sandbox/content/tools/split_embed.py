@@ -366,18 +366,17 @@ def main() -> None:
 
             if file_source == "OCI":
                 # Download OCI Objects for Processing
-                api_url = f"{OCI_API_ENDPOINT}/objects/download/{src_bucket}/{state.user_settings['oci_profile']}"
+                api_url = f"{OCI_API_ENDPOINT}/objects/download/{src_bucket}/{state.user_settings['oci_profile']}/client={state.user_settings["client"]}"
                 process_list = src_files_selected[src_files_selected["Process"]].reset_index(drop=True)
                 response = api_call.post(
                     url=api_url,
                     json={"data": process_list["File"].tolist()},
-                    params={"client": state.user_settings["client"]},
                 )
 
             # All files are now on Server... Run Embeddings
-            embed_url = f"{EMBED_API_ENDPOINT}/{state.user_settings['client']}"
+            embed_url = f"{EMBED_API_ENDPOINT}/{state.user_settings['client']}?rate_limit={rate_limit}"
             response = api_call.post(
-                url=embed_url, data=embed_request.model_dump_json(), params={"rate_limit": rate_limit}, timeout=300
+                url=embed_url, data=embed_request.model_dump_json(), timeout=300
             )
             placeholder.empty()
             st.success(f"Vector Store Populated: {response['msg']}", icon="✅")

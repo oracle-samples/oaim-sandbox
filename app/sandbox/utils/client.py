@@ -37,8 +37,9 @@ class SandboxClient:
             with httpx.Client() as client:
                 return client.request(
                     method=method,
-                    url=f"{self.server_url}/v1/settings/{self.settings['client']}",
-                    json={"data": self.settings},
+                    url=f"{self.server_url}/v1/settings",
+                    params={"client": self.settings['client']},
+                    json=self.settings,
                     headers=self.headers,
                     timeout=self.timeout,
                 )
@@ -60,7 +61,7 @@ class SandboxClient:
         logger.debug("Sending Request: %s", request.model_dump_json())
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                self.server_url + "/v1/chat/completions",
+                url=self.server_url + "/v1/chat/completions",
                 params={"client": self.settings["client"]},
                 json=request.model_dump(),
                 headers=self.headers,
@@ -76,7 +77,8 @@ class SandboxClient:
 
     async def get_history(self) -> ResponseList[ChatMessage]:
         response = httpx.get(
-            self.server_url + "/v1/chat/history/" + self.settings["client"],
+            url=self.server_url + "/v1/chat/history",
+            params={"client": self.settings["client"]},
             headers=self.headers,
             timeout=self.timeout,
         )

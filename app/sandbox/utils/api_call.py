@@ -27,6 +27,7 @@ class ApiError(Exception):
 def send_request(
     method: str,
     url: str,
+    params: Optional[dict] = None,
     payload: Optional[Dict] = None,
     timeout: int = 60,
     retries: int = 3,
@@ -45,7 +46,8 @@ def send_request(
         "url": url,
         "headers": headers,
         "timeout": timeout,
-        "json": payload if method == "PATCH" else None
+        "params": params,
+        "json": payload if method == "PATCH" else None,
     }
     args = {k: v for k, v in args.items() if v is not None}
     logger.info("%s Request: %s", method, args)
@@ -68,8 +70,8 @@ def send_request(
             return response.json()
 
         except requests.exceptions.HTTPError as ex:
-                failure = ex.response.json()['detail']
-                raise ApiError(failure) from ex
+            failure = ex.response.json()["detail"]
+            raise ApiError(failure) from ex
         except requests.exceptions.RequestException as ex:
             logger.error("Attempt %d: Error: %s", attempt + 1, ex)
             if "HTTPConnectionPool" in str(ex):
@@ -77,31 +79,34 @@ def send_request(
                 logger.info("Retrying in %.1f seconds...", sleep_time)
                 time.sleep(sleep_time)
 
-
     raise ApiError("An unexpected error occurred.")
 
 
-def get(url: str, retries: int = 3, backoff_factor: float = 2.0) -> dict:
-    return send_request("GET", url, retries=retries, backoff_factor=backoff_factor)
+def get(url: str, params: Optional[dict] = None, retries: int = 3, backoff_factor: float = 2.0) -> dict:
+    return send_request("GET", url, params=params, retries=retries, backoff_factor=backoff_factor)
 
 
 def post(
     url: str,
+    params: Optional[dict] = None,
     payload: Optional[Dict] = None,
     timeout: int = 60,
     retries: int = 3,
     backoff_factor: float = 2.0,
 ) -> dict:
-    return send_request("POST", url, payload=payload, timeout=timeout, retries=retries, backoff_factor=backoff_factor)
+    return send_request(
+        "POST", url, params=params, payload=payload, timeout=timeout, retries=retries, backoff_factor=backoff_factor
+    )
 
 
 def patch(
     url: str,
+    params: Optional[dict] = None,
     payload: Optional[dict] = None,
     timeout: int = 60,
     retries: int = 3,
     backoff_factor: float = 2.0,
 ) -> dict:
     return send_request(
-        "PATCH", url, payload=payload, timeout=timeout, retries=retries, backoff_factor=backoff_factor
+        "PATCH", url, payload=payload, params=params, timeout=timeout, retries=retries, backoff_factor=backoff_factor
     )

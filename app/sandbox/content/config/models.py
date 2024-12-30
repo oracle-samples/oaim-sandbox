@@ -39,8 +39,8 @@ def get_model(model_type: str, only_enabled: bool = False) -> dict[str, dict]:
     state_key = f"{model_type}_model_enabled" if only_enabled else f"{model_type}_model_config"
     if state_key not in state or state[state_key] == {}:
         try:
-            api_url = f"{MODEL_API_ENDPOINT}?only_enabled={only_enabled}&model_type={model_type}"
-            response = api_call.get(url=api_url)["data"]
+            api_params = {"only_enabled": only_enabled, "model_type": model_type}
+            response = api_call.get(url=MODEL_API_ENDPOINT, params=api_params)["data"]
             state[state_key] = {item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response}
             logger.info("State created: state['%s']", state_key)
         except api_call.ApiError as ex:
