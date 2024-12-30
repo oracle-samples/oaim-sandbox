@@ -227,15 +227,15 @@ def register_endpoints(app: FastAPI) -> None:
         response_model=schema.Response[list],
     )
     async def oci_download_objects(
-        bucket_name: str, profile: schema.OCIProfileType, client: str, request: list
+        bucket_name: str, profile: schema.OCIProfileType, request: list[str], client: str = "server"
     ) -> schema.Response[list]:
         """Download files from Object Storage"""
         oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
         client_folder = Path(f"/tmp/{client}")
         client_folder.mkdir(parents=True, exist_ok=True)
 
-        for file in request.data:
-            server_oci.get_object(client_folder, file, bucket_name, oci_config)
+        for object_name in request:
+            server_oci.get_object(client_folder, object_name, bucket_name, oci_config)
 
         # Return a response that the object was downloaded successfully
         dir_files = [f for f in os.listdir(client_folder) if os.path.isfile(os.path.join(client_folder, f))]
@@ -344,13 +344,13 @@ def register_endpoints(app: FastAPI) -> None:
         description="Store Web Files for Embedding.",
         response_model=schema.Response[list],
     )
-    async def store_web_file(request: list, client: str = "server") -> schema.Response[list]:
+    async def store_web_file(request: list[str], client: str = "server") -> schema.Response[list]:
         """Store contents from a web URL"""
         client_folder = Path(f"/tmp/{client}")
         client_folder.mkdir(parents=True, exist_ok=True)
 
         # Save the file temporarily
-        for url in request.data:
+        for url in request:
             filename = client_folder / os.path.basename(url)
             response = requests.get(url, timeout=60)
             content_type = response.headers.get("Content-Type", "").lower()
@@ -373,17 +373,17 @@ def register_endpoints(app: FastAPI) -> None:
         description="Store Local Files for Embedding.",
         response_model=schema.Response[list],
     )
-    async def store_local_file(file: UploadFile, client: str = "server") -> schema.Response[list]:
+    async def store_local_file(files: list[UploadFile], client: str = "server") -> schema.Response[list]:
         """Store contents from a local file uploaded to streamlit"""
-        logger.info("Received file: %s", file.filename)
         client_folder = Path(f"/tmp/{client}")
         client_folder.mkdir(parents=True, exist_ok=True)
 
         # Save the file temporarily
-        filename = client_folder / file.filename
-        file_content = await file.read()
-        with filename.open("wb") as temp_file:
-            temp_file.write(file_content)
+        for file in files:
+            filename = client_folder / file.filename
+            file_content = await file.read()
+            with filename.open("wb") as temp_file:
+                temp_file.write(file_content)
 
         # Return a response that the file was uploaded successfully
         files = [f for f in os.listdir(client_folder) if os.path.isfile(os.path.join(client_folder, f))]

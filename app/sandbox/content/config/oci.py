@@ -63,12 +63,14 @@ def patch_oci(
             api_call.patch(
                 url=OCI_API_ENDPOINT + "/" + profile,
                 payload={
-                    "user": user,
-                    "fingerprint": fingerprint,
-                    "tenancy": tenancy,
-                    "region": region,
-                    "key_file": key_file,
-                    "security_token_file": security_token_file,
+                    "json": {
+                        "user": user,
+                        "fingerprint": fingerprint,
+                        "tenancy": tenancy,
+                        "region": region,
+                        "key_file": key_file,
+                        "security_token_file": security_token_file,
+                    }
                 },
             )
             st.success(f"{profile} OCI Configuration - Updated", icon="✅")

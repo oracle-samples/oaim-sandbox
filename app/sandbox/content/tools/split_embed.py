@@ -344,39 +344,40 @@ def main() -> None:
             with placeholder:
                 st.warning("Populating Vector Store... please be patient.", icon="⚠️")
 
+            api_url = None
+            api_params = {"client": state.user_settings["client"]}
+            api_payload = []
             # Place files on Server for Embedding
             if file_source == "Local":
-                # Send local files uploaded to streamlit to the server
-                api_url = f"{EMBED_API_ENDPOINT}/local/store/{state.user_settings['client']}"
+                api_url = f"{EMBED_API_ENDPOINT}/local/store"
                 seen_file = set()
-                for file in state["local_file_uploader"]:
-                    if file.name not in seen_file:
-                        response = api_call.post(
-                            url=api_url,
-                            files={"file": (file.name, file.getvalue(), file.type)},
-                        )
-                    seen_file.add(file.name)
+                files = [
+                    ("files", (file.name, file.getvalue(), file.type))
+                    for file in state["local_file_uploader"]
+                    if file.name not in seen_file and not seen_file.add(file.name)
+                ]
+                api_payload = {"files": files}
 
             if file_source == "Web":
-                api_url = f"{EMBED_API_ENDPOINT}/web/store/{state.user_settings['client']}"
-                response = api_call.post(
-                    url=api_url,
-                    json={"data": [web_url]},
-                )
+                api_url = f"{EMBED_API_ENDPOINT}/web/store"
+                api_payload = {"json": [web_url]}
 
             if file_source == "OCI":
                 # Download OCI Objects for Processing
-                api_url = f"{OCI_API_ENDPOINT}/objects/download/{src_bucket}/{state.user_settings['oci_profile']}/client={state.user_settings["client"]}"
+                api_url = f"{OCI_API_ENDPOINT}/objects/download/{src_bucket}/{state.user_settings['oci_profile']}"
                 process_list = src_files_selected[src_files_selected["Process"]].reset_index(drop=True)
-                response = api_call.post(
-                    url=api_url,
-                    json={"data": process_list["File"].tolist()},
-                )
+                api_payload = {"json": process_list["File"].tolist()}
+
+            # Post Files to Server
+            response = api_call.post(url=api_url, params=api_params, payload=api_payload)
 
             # All files are now on Server... Run Embeddings
-            embed_url = f"{EMBED_API_ENDPOINT}/{state.user_settings['client']}?rate_limit={rate_limit}"
+            embed_params = {"client": state.user_settings["client"], "rate_limit": rate_limit}
             response = api_call.post(
-                url=embed_url, data=embed_request.model_dump_json(), timeout=300
+                url=EMBED_API_ENDPOINT,
+                params=embed_params,
+                payload={"json": embed_request.model_dump()},
+                timeout=300,
             )
             placeholder.empty()
             st.success(f"Vector Store Populated: {response['msg']}", icon="✅")

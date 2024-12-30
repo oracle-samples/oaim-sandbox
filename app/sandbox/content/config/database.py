@@ -55,7 +55,14 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
         try:
             api_call.patch(
                 url=DB_API_ENDPOINT + "/" + name,
-                payload={"user": user, "password": password, "dsn": dsn, "wallet_password": wallet_password},
+                payload={
+                    "json": {
+                        "user": user,
+                        "password": password,
+                        "dsn": dsn,
+                        "wallet_password": wallet_password,
+                    }
+                },
             )
             st.success(f"{name} Database Configuration - Updated", icon="✅")
             st_common.clear_state_key("database_config")

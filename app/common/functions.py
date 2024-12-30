@@ -76,7 +76,7 @@ def get_vs_table(
             f'"distance_metric": "{distance_metric}",'
             f'"index_type": "{index_type}"}}'
         )
-        logger.info("Vector Store Table: %s; Comment: %s", store_table, store_comment)
+        logger.debug("Vector Store Table: %s; Comment: %s", store_table, store_comment)
     except TypeError:
         logger.fatal("Not all required values provided to get Vector Store Table name.")
     return store_table, store_comment

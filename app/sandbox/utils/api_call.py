@@ -47,23 +47,21 @@ def send_request(
         "headers": headers,
         "timeout": timeout,
         "params": params,
-        "json": payload if method == "PATCH" else None,
+        "files": payload.get("files") if method == "POST" else None,
+        "json": payload.get("json") if method in ["POST", "PATCH"] else None,
     }
     args = {k: v for k, v in args.items() if v is not None}
-    logger.info("%s Request: %s", method, args)
+    # Avoid logging out binary data in files
+    log_args = args.copy()
+    if log_args.get("files"):
+        log_args["files"] = [
+            (field_name, (f[0], "<binary_data>", f[2]))
+            for field_name, f in log_args["files"]
+        ]
+    logger.info("%s Request: %s", method, log_args)
 
     for attempt in range(retries + 1):
         try:
-            # Unpack payload to use the values as needed
-            # args = {
-            #     "url": url,
-            #     "headers": headers,
-            #     "timeout": timeout,
-            #     "data": payload.get("data") if method == "POST" else None,
-            #     "files": payload.get("files") if payload.get("files") and method == "POST" else None,
-            #     "json": payload.get("json") if method in {"POST", "PATCH"} else None,
-            #     "params": payload.get("params"),
-            # }
             response = method_map[method](**args)
             logger.info("%s Response: %s", method, response)
             response.raise_for_status()
