@@ -247,7 +247,7 @@ def register_endpoints(app: FastAPI) -> None:
     @app.get(
         "/v1/prompts",
         description="Get all Prompt Configurations",
-        response_model=schema.ResponseList[schema.PromptModel],
+        response_model=schema.ResponseList[schema.Prompt],
     )
     async def prompts_list(
         category: Optional[schema.PromptCategoryType] = Query(None),
@@ -259,7 +259,7 @@ def register_endpoints(app: FastAPI) -> None:
             logger.info("Filtering prompts on category: %s", category)
             prompts_all = [prompt for prompt in prompts_all if prompt.category == category]
 
-        return schema.ResponseList[schema.PromptModel](data=prompts_all)
+        return schema.ResponseList[schema.Prompt](data=prompts_all, msg=f"{len(prompts_all)} Prompts found")
 
     @app.get(
         "/v1/prompts/{category}/{name}",
@@ -276,23 +276,23 @@ def register_endpoints(app: FastAPI) -> None:
         if not prompt:
             raise HTTPException(status_code=404, detail=f"Prompt {category}:{name} not found")
 
-        return schema.Response[schema.Prompt](data=prompt)
+        return schema.Response[schema.Prompt](data=prompt, msg=f"Prompt {category}:{name} found")
 
     @app.patch(
         "/v1/prompts/{category}/{name}",
         description="Update Prompt Configuration",
-        response_model=schema.Response[schema.PromptModel],
+        response_model=schema.Response[schema.Prompt],
     )
     async def prompts_update(
-        category: schema.PromptCategoryType, name: schema.PromptNameType, payload: schema.Prompt
-    ) -> schema.Response[schema.PromptModel]:
+        category: schema.PromptCategoryType, name: schema.PromptNameType, payload: schema.PromptModel
+    ) -> schema.Response[schema.Prompt]:
         """Update a single Prompt"""
         logger.debug("Received %s (%s) Prompt Payload: %s", name, category, payload)
         for prompt in prompt_objects:
             if prompt.name == name and prompt.category == category:
                 # Update the prompt with the new text
-                prompt.prompt = payload.data.prompt
-                return schema.Response[schema.PromptModel](data=prompt)
+                prompt.prompt = payload.prompt
+                return schema.Response[schema.Prompt](data=prompt, msg=f"Prompt {category}:{name} updated")
 
         raise HTTPException(status_code=404, detail=f"Prompt {category}:{name} not found")
 

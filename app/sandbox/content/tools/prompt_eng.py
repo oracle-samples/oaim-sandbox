@@ -32,7 +32,7 @@ def get() -> dict[str, dict]:
     """Get a dictionary of all Prompts"""
     if "prompts_config" not in state or state["prompts_config"] == {}:
         try:
-            state["prompts_config"] = api_call.get(url=API_ENDPOINT)
+            state["prompts_config"] = api_call.get(url=API_ENDPOINT)["data"]
             logger.info("State created: state['prompts_config']")
         except api_call.ApiError as ex:
             logger.error("Unable to retrieve prompts: %s", ex)
@@ -52,7 +52,7 @@ def patch(category: str, prompt_name: str, prompt: str) -> None:
         try:
             api_call.patch(
                 url=API_ENDPOINT + "/" + category + "/" + prompt_name,
-                payload={"json": {"prompt": prompt}},
+                payload={"prompt": prompt},
             )
             # Success
             logger.info("Prompt instructions updated for: %s (%s)", prompt_name, category)
