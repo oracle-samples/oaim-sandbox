@@ -107,8 +107,6 @@ async def main() -> None:
         if auto_refresh:
             time.sleep(10)  # Refresh every 10 seconds
             st.rerun()
-    # for message in history:
-    #     st.write(message)
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:

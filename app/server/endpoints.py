@@ -54,7 +54,10 @@ def register_endpoints(app: FastAPI) -> None:
         response_model=schema.ResponseList[schema.Database],
     )
     async def databases_list() -> schema.ResponseList[schema.Database]:
-        """List all databases"""
+        """List all databases without gathering VectorStorage"""
+        for db in database_objects:
+            conn = databases.connect(db)
+            db.vector_stores = databases.get_vs(conn)            
         return schema.ResponseList[schema.Database](
             data=database_objects,
             msg=f"{len(database_objects)} database(s) found",
@@ -62,7 +65,7 @@ def register_endpoints(app: FastAPI) -> None:
 
     @app.get(
         "/v1/databases/{name}",
-        description="Get single Database Configuration",
+        description="Get single Database Configuration and Vector Storage",
         response_model=schema.Response[schema.Database],
     )
     async def databases_get(name: schema.DatabaseNameType) -> schema.ResponseList[schema.Database]:
@@ -71,6 +74,8 @@ def register_endpoints(app: FastAPI) -> None:
         if not db:
             raise HTTPException(status_code=404, detail=f"Database {name} not found")
 
+        conn = databases.connect(db)
+        db.vector_stores = databases.get_vs(conn)
         return schema.Response[schema.Database](
             data=db,
             msg=f"{name} database found",
@@ -108,6 +113,22 @@ def register_endpoints(app: FastAPI) -> None:
                     other_db.connected = False
             return schema.Response[schema.Database](data=db, msg=f"{name} updated and set as default")
         raise HTTPException(status_code=404, detail=f"Database {name} not found")
+
+    @app.post(
+        "/v1/databases/drop_vs",
+        description="Drop Vector Store",
+        response_model=schema.Response[str],
+    )
+    async def database_drop_vs(vs: schema.DatabaseVectorStorage) -> schema.Response[str]:
+        """Drop Vector Storage"""
+        db = next((db for db in database_objects if db.name == vs.database), None)
+        try:
+            conn = databases.connect(db)
+        except databases.DbException as ex:
+            raise HTTPException(status_code=ex.status_code, detail=ex.detail) from ex
+        databases.drop_vs(conn, vs)
+
+        return schema.Response[str](data=vs.vector_store, msg="Vector Store Dropped")
 
     #################################################
     # Models

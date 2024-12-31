@@ -63,7 +63,9 @@ def execute_sql(conn: oracledb.Connection, run_sql: str) -> list:
         if ex.args:
             error_obj = ex.args[0]
             if hasattr(error_obj, "code") and error_obj.code == 955:
-                logger.info("Table Exists")
+                logger.info("Table exists")
+            if hasattr(error_obj, "code") and error_obj.code == 942:
+                logger.info("Table does not exist")
             else:
                 logger.exception("Database error: %s", ex)
                 raise
@@ -91,3 +93,10 @@ def get_vs(conn: oracledb.Connection) -> DatabaseVectorStorage:
         vector_stores.append(DatabaseVectorStorage(vector_store=table_name, **comments_dict))
 
     return vector_stores
+
+
+def drop_vs(conn: oracledb.Connection, vs: DatabaseVectorStorage) -> None:
+    """Drop Vector Storage"""
+    logger.info("Dropping Vector Store: %s", vs.vector_store)
+    sql = f"DROP TABLE {vs.vector_store} PURGE"
+    _ = execute_sql(conn, sql)

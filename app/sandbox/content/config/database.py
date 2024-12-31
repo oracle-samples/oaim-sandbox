@@ -29,7 +29,7 @@ if "server" in state:
 # Functions
 #####################################################
 def get_databases() -> dict[str, dict]:
-    """Get a dictionary of all Databases and store Vector Store Tables"""
+    """Get a dictionary of all Databases and Store Vector Store Tables"""
     if "database_config" not in state or state["database_config"] == {}:
         try:
             response = api_call.get(url=DB_API_ENDPOINT)["data"]
@@ -76,6 +76,15 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
     else:
         st.info(f"{name} Database Configuration - No Changes Detected.", icon="ℹ️")
 
+
+def drop_vs(vs: dict):
+    print(vs)
+    try:
+        api_call.post(url=DB_API_ENDPOINT + "/drop_vs", payload={"json": vs})
+        st.success(f"{vs['vector_store']} - Dropped", icon="✅")
+        st_common.clear_state_key("database_config")
+    except api_call.ApiError as ex:
+        st.error(f"Failed to drop {vs['vector_store']}: {ex}", icon="🚨")
 
 #####################################################
 # MAIN
@@ -142,10 +151,10 @@ def main() -> None:
             for vs in state.database_config[name]["vector_stores"]:
                 vector_store = vs["vector_store"].lower()
                 fields = ["alias", "model", "chunk_size", "chunk_overlap", "distance_metric", "index_type"]
-
                 # Handle button in col1
-                table_col_format[0].button("", icon="🗑️", key=f"vector_stores_{vector_store}")
-
+                table_col_format[0].button(
+                    "", icon="🗑️", key=f"vector_stores_{vector_store}", on_click=drop_vs, args=[vs]
+                )
                 for col, field in zip(table_col_format[1:], fields):  # Starting from col2
                     col.text_input(
                         field.capitalize(),

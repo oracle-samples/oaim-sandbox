@@ -383,6 +383,8 @@ def main() -> None:
             )
             placeholder.empty()
             st.success(f"Vector Store Populated: {response['msg']}", icon="✅")
+            # Delete database_config state to reflect new vector stores
+            st_common.clear_state_key("database_config")
         except api_call.ApiError as ex:
             placeholder.empty()
             st.error(ex, icon="🚨")
