@@ -2,7 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore langchain, docstore, docos, getbuffer, tiktoken, vectorstores, oraclevs
+# spell-checker:ignore langchain, docstore, docos, getbuffer, tiktoken, vectorstores, oraclevs, genai
 
 import json
 import math
@@ -77,7 +77,6 @@ def split_document(
     ##################################
     # Splitters - Start
     ##################################
-    ## Text
     logger.info("Splitting for %s", model)
     chunk_overlap_ceil = math.ceil(chunk_overlap)
     match model:

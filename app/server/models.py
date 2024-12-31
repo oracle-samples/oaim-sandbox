@@ -67,7 +67,7 @@ async def get_client(
     # Determine if configuring an embedding model
     try:
         embedding = model_config["rag_enabled"]
-    except AttributeError:
+    except (AttributeError, KeyError):
         embedding = False
 
     # Model Classes

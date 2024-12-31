@@ -3,7 +3,7 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
 Session States Set:
-- sandbox_client: Stores the SandboxClient
+- user_client: Stores the SandboxClient
 """
 
 # spell-checker:ignore streamlit
@@ -15,6 +15,7 @@ from streamlit import session_state as state
 
 import sandbox.utils.st_common as st_common
 import sandbox.utils.client as client
+from sandbox.content.config.models import get_model
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("content.chatbot")
@@ -33,7 +34,8 @@ async def main() -> None:
     # Sidebar Settings
     #########################################################################
     # Get a list of available language models, if none, then stop
-    available_ll_models = st_common.get_avail_ll_models()
+    get_model(model_type="ll", only_enabled=True)
+    available_ll_models = list(state.ll_model_enabled.keys())
     if not available_ll_models:
         st.error("No language models are configured and/or enabled. Disabling Sandbox.", icon="❌")
         st.stop()
@@ -50,15 +52,15 @@ async def main() -> None:
     # Chatty-Bot Centre
     #########################################################################
     # Establish the SandboxClient
-    if "sandbox_client" not in state:
-        state.sandbox_client = client.SandboxClient(
+    if "user_client" not in state:
+        state.user_client = client.SandboxClient(
             server=state.server,
             settings=state["user_settings"],
             timeout=10,
         )
-    sandbox_client: client.SandboxClient = state.sandbox_client
+    user_client: client.SandboxClient = state.user_client
 
-    history = await sandbox_client.get_history()
+    history = await user_client.get_history()
     if len(history) == 1:
         with st.chat_message("ai"):
             # Do not put this in the history as messages must alternate human/ai
@@ -73,7 +75,7 @@ async def main() -> None:
     if human_request := st.chat_input(f"Ask your question here... (current prompt: {sys_prompt})"):
         st.chat_message("human").write(human_request)
         try:
-            ai_response = await sandbox_client.completions(message=human_request)
+            ai_response = await user_client.completions(message=human_request)
             st.chat_message("ai").write(ai_response.choices[0].message.content)
         except Exception:
             logger.error("Exception:", exc_info=1)
@@ -84,7 +86,7 @@ async def main() -> None:
                 """
             )
             if st.button("Retry", key="reload_chatbot"):
-                st_common.clear_state_key("sandbox_client")
+                st_common.clear_state_key("user_client")
                 st.rerun()
 
 
@@ -99,5 +101,5 @@ if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:
         logger.exception("Unable to contact the server: %s", ex)
         st.error("Unable to contact the server, is it running?", icon="🚨")
         if st.button("Retry", key="reload_chatbot"):
-            st_common.clear_state_key("sandbox_client")
+            st_common.clear_state_key("user_client")
             st.rerun()

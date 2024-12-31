@@ -304,7 +304,7 @@ def register_endpoints(app: FastAPI) -> None:
         """Get settings for a specific client by name"""
         client_settings = next((settings for settings in settings_objects if settings.client == client), None)
         if not client_settings:
-            raise HTTPException(status_code=404, detail="Client not found")
+            raise HTTPException(status_code=404, detail=f"Client {client} not found")
 
         return schema.Response[schema.Settings](data=client_settings, msg=f"Client {client} found")
 
@@ -315,6 +315,7 @@ def register_endpoints(app: FastAPI) -> None:
         client_settings = next((settings for settings in settings_objects if settings.client == client), None)
         if client_settings:
             settings_objects.remove(client_settings)
+            payload.client = client
             settings_objects.append(payload)
             return schema.Response[schema.Settings](data=payload, msg=f"Client {client} settings updated")
 
@@ -325,7 +326,7 @@ def register_endpoints(app: FastAPI) -> None:
         """Create new settings for a specific client"""
         logger.debug("Received %s Client create request", client)
         if any(settings.client == client for settings in settings_objects):
-            raise HTTPException(status_code=400, detail="Client already exists")
+            raise HTTPException(status_code=400, detail=f"Client {client} already exists")
 
         default_settings = next((settings for settings in settings_objects if settings.client == "default"), None)
 

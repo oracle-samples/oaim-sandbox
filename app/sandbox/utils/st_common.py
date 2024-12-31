@@ -48,17 +48,6 @@ def is_db_configured() -> bool:
     get_databases()
     return state.database_config[state.user_settings["rag"]["database"]].get("connected")
 
-def get_avail_ll_models() -> list:
-    """Return a list of available language models"""
-    get_model(model_type="ll", only_enabled=True)
-    return list(state.ll_model_enabled.keys())
-
-def get_avail_embed_models() -> list:
-    """Return a list of available embedding models"""
-    get_model(model_type="embed", only_enabled=True)
-    return list(state.embed_model_enabled.keys())
-
-
 #############################################################################
 # Sidebar
 #############################################################################
@@ -178,7 +167,8 @@ def ll_sidebar() -> None:
 def rag_sidebar() -> None:
     """RAG Sidebar Settings, conditional if Database/Embeddings are configured"""
     st.sidebar.subheader("Retrieval Augmented Generation", divider="red")
-    available_embed_models = get_avail_embed_models()
+    get_model(model_type="embed", only_enabled=True)
+    available_embed_models = list(state.embed_model_enabled.keys())
     if not available_embed_models:
         logger.debug("RAG Disabled (no Embedding Models)")
         st.warning("No embedding models are configured and/or enabled. Disabling RAG.", icon="⚠️")
@@ -277,7 +267,7 @@ def rag_sidebar() -> None:
         def vs_reset() -> None:
             """Reset Vector Store Selections"""
             for key in state["user_settings"]["rag"]:
-                if key in ("model", "chunk_size", "chunk_overlap", "distance_metric", "vector_store", "alias"):
+                if key in ("model", "chunk_size", "chunk_overlap", "distance_metric", "vector_store", "alias", "index_type"):
                     clear_state_key(f"selected_rag_{key}")
                     update_user_settings_state("rag", key)
 
@@ -315,6 +305,8 @@ def rag_sidebar() -> None:
                 filtered = filtered[filtered["chunk_overlap"] == st.session_state["selected_rag_chunk_overlap"]]
             if st.session_state.get("selected_rag_distance_metric"):
                 filtered = filtered[filtered["distance_metric"] == st.session_state["selected_rag_distance_metric"]]
+            if st.session_state.get("selected_rag_index_type"):
+                filtered = filtered[filtered["index_type"] == st.session_state["selected_rag_index_type"]]
             return filtered
 
         # Initialize filtered options
@@ -332,6 +324,9 @@ def rag_sidebar() -> None:
         distance_metric = vs_gen_selectbox(
             "Select Distance Metric:", filtered_df["distance_metric"].unique().tolist(), "selected_rag_distance_metric"
         )
+        index_type = vs_gen_selectbox(
+            "Select Index Type:", filtered_df["index_type"].unique().tolist(), "selected_rag_index_type"
+        )
 
         if all([embed_model, chunk_size, chunk_overlap, distance_metric]):
             vs = filtered_df["vector_store"].iloc[0]
@@ -341,6 +336,7 @@ def rag_sidebar() -> None:
             update_user_settings_state("rag", "chunk_size", chunk_size)
             update_user_settings_state("rag", "chunk_overlap", chunk_overlap)
             update_user_settings_state("rag", "distance_metric", distance_metric)
+            update_user_settings_state("rag", "index_type", index_type)
         else:
             st.error("Please select Embedding options or disable RAG to continue.", icon="❌")
             state.enable_sandbox = False

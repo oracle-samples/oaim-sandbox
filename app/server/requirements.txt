@@ -3,6 +3,7 @@
 
 # spell-checker:disable
 fastapi==0.115.6
+giskard==2.16.0
 langchain-cohere==0.3.4
 langchain-community==0.3.13
 langchain-huggingface==0.1.2

@@ -47,8 +47,8 @@ class DatabaseVectorStorage(BaseModel):
     model: Optional[str] = Field(default=None, description="Embedding Model")
     chunk_size: Optional[int] = Field(default=None, description="Chunk Size")
     chunk_overlap: Optional[int] = Field(default=None, description="Chunk Overlap")
-    distance_metric: DistanceMetrics = Field(default="COSINE", description="Distance Metric")
-    index_type: IndexTypes = Field(default="HNSW", description="Vector Index")
+    distance_metric: Optional[DistanceMetrics] = Field(default=None, description="Distance Metric")
+    index_type: Optional[IndexTypes] = Field(default=None, description="Vector Index")
 
 
 class DatabaseModel(BaseModel):

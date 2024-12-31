@@ -28,7 +28,7 @@ if "server" in state:
 #####################################################
 # Functions
 #####################################################
-def get() -> dict[str, dict]:
+def get_prompts() -> dict[str, dict]:
     """Get a dictionary of all Prompts"""
     if "prompts_config" not in state or state["prompts_config"] == {}:
         try:
@@ -40,7 +40,7 @@ def get() -> dict[str, dict]:
             state["prompts_config"] = {}
 
 
-def patch(category: str, prompt_name: str, prompt: str) -> None:
+def patch_prompt(category: str, prompt_name: str, prompt: str) -> None:
     """Update Prompt Instructions"""
     # Check if the prompt instructions are changed
     configured_prompt = next(
@@ -60,7 +60,7 @@ def patch(category: str, prompt_name: str, prompt: str) -> None:
             st_common.clear_state_key(f"selected_prompt_{category}_name")
             st_common.clear_state_key(f"prompt_{category}_prompt")
             st_common.clear_state_key("prompts_config")
-            get()  # Refresh the Config
+            get_prompts()  # Refresh the Config
         except api_call.ApiError as ex:
             logger.info("Unable to perform prompt update for %s (%s): %s", prompt_name, category, ex)
             st.error(f"Unable to perform prompt update: {ex}", icon="🚨")
@@ -75,7 +75,7 @@ def main():
     """Streamlit GUI"""
     st.header("Prompt Engineering")
     st.write("Select which prompts to use and their instructions.  Currently selected prompts are used.")
-    get()  # Create/Rebuild state
+    get_prompts()  # Create/Rebuild state
 
     st.subheader("System Prompt")
     sys_dict = {item["name"]: item["prompt"] for item in state.prompts_config if item["category"] == "sys"}
@@ -95,7 +95,7 @@ def main():
             key="prompt_sys_prompt",
         )
         if st.button("Save Instructions", key="save_sys_prompt"):
-            patch("sys", selected_prompt_sys_name, prompt_sys_prompt)
+            patch_prompt("sys", selected_prompt_sys_name, prompt_sys_prompt)
 
     st.subheader("Context Prompt")
     ctx_dict = {item["name"]: item["prompt"] for item in state.prompts_config if item["category"] == "ctx"}
@@ -115,7 +115,7 @@ def main():
             key="prompt_ctx_prompt",
         )
         if st.button("Save Instructions", key="save_ctx_prompt"):
-            patch("ctx", selected_prompt_ctx_name, prompt_ctx_prompt)
+            patch_prompt("ctx", selected_prompt_ctx_name, prompt_ctx_prompt)
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:
