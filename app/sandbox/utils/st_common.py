@@ -172,11 +172,11 @@ def rag_sidebar() -> None:
     if not available_embed_models:
         logger.debug("RAG Disabled (no Embedding Models)")
         st.warning("No embedding models are configured and/or enabled. Disabling RAG.", icon="⚠️")
-        db_avail = False
+        disable_rag = True
     else:
-        db_avail = is_db_configured()
+        disable_rag = not is_db_configured()
 
-    if not db_avail:
+    if disable_rag:
         logger.debug("RAG Disabled (Database not configured)")
         st.warning("Database is not configured. Disabling RAG.", icon="⚠️")
         update_user_settings_state("rag", "rag_enabled", False)
@@ -184,12 +184,13 @@ def rag_sidebar() -> None:
         logger.debug("RAG Disabled (Database has no vector stores.)")
         st.warning("Database has no Vector Stores. Disabling RAG.", icon="⚠️")
         update_user_settings_state("rag", "rag_enabled", False)
+        disable_rag = True
 
     rag_enabled = st.sidebar.checkbox(
         "Enable RAG?",
         help=help_text.help_dict["rag"],
         value=state.user_settings["rag"]["rag_enabled"],
-        disabled=not db_avail,
+        disabled=disable_rag,
         key="selected_rag_rag_enabled",
         on_change=update_user_settings_state,
         args=("rag", "rag_enabled"),
