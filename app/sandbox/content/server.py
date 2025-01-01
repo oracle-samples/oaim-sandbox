@@ -83,8 +83,19 @@ async def main() -> None:
     st.button("Restart Server", type="primary", on_click=server_restart)
 
     st.header("Server Configuration", divider="red")
+    st.write("""
+             The API Server maintains its own configuration, independent of the Sandbox.  
+             You can copy the Sandbox settings to the API Server below.
+             """)
     st.json(state.server_settings, expanded=False)
-    st.button("Copy User Settings", type="primary", on_click=copy_user_settings)
+    st.button(
+        "Copy Sandbox Settings",
+        type="primary",
+        on_click=copy_user_settings,
+        help="""
+        Copy your settings, from the ChatBot, by clicking here.
+        """,
+    )
 
     st.header("Server Activity", divider="red")
     if "server_client" not in state:
@@ -95,10 +106,12 @@ async def main() -> None:
         )
     server_client: client.SandboxClient = state.server_client
 
-    auto_refresh = st.toggle("Auto Refresh", value=False, key="selected_auto_refresh")
-    st.button("Refresh", disabled=auto_refresh)
+    auto_refresh = st.toggle("Auto Refresh (every 10sec)", value=False, key="selected_auto_refresh")
+    st.button("Manual Refresh", disabled=auto_refresh)
     with st.container():
         history = await server_client.get_history()
+        if len(history) == 1:
+            st.write("No Server Activity")
         for message in history:
             if message["role"] in ("ai", "assistant"):
                 st.chat_message("ai").json(message, expanded=False)

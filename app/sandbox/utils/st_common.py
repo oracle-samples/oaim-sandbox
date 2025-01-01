@@ -39,8 +39,8 @@ def update_user_settings_state(
     logger.info("Updating user_settings['%s']['%s'] to %s", user_setting, setting_key, widget_value)
     state.user_settings[user_setting][setting_key] = widget_value
 
-    # Destroying SandboxClient
-    clear_state_key("sandbox_client")
+    # Destroying user SandboxClient
+    clear_state_key("user_client")
 
 
 def is_db_configured() -> bool:
@@ -63,7 +63,7 @@ def history_sidebar() -> None:
     if st.sidebar.button("Clear History", disabled=not chat_history_enable):
         # Establish a new thread
         state.user_settings["client"] = client_gen_id()
-        clear_state_key("sandbox_client")
+        clear_state_key("user_client")
 
 
 #####################################################
