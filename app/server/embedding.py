@@ -310,7 +310,7 @@ def populate_vs(
     logger.info("Creating index on: %s", store_table)
     try:
         index_type = vector_store.index_type
-        params = {"idx_name": f"{store_table}_{index_type}_IDX", "idx_type": index_type}
+        params = {"idx_name": f"{store_table}_IDX", "idx_type": index_type}
         LangchainVS.create_index(db_conn, vectorstores, params)
     except Exception as ex:
         logger.error("Unable to create vector index: %s", ex)
