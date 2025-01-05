@@ -8,7 +8,7 @@ from common.schema import Settings
 
 def main() -> list[Settings]:
     """Define example Settings Support"""
-    clients = ["default", "server"]
+    clients = ["default", "server", "testbed"]
     settings_objects = [Settings(client=client) for client in clients]
     return settings_objects
 

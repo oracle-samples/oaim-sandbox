@@ -13,7 +13,7 @@ import streamlit as st
 from streamlit import session_state as state
 
 import oaim_server
-import sandbox.utils.api_call as api_call
+import sandbox.utils.st_common as st_common
 import sandbox.utils.client as client
 import common.logging_config as logging_config
 
@@ -42,20 +42,6 @@ def server_restart() -> None:
     oaim_server.stop_server(state.server["pid"])
     state.server["pid"] = oaim_server.start_server(state.server["port"])
     state.pop("sever_client", None)
-
-
-def copy_user_settings() -> None:
-    api_url = f"{state.server['url']}:{state.server['port']}/v1/settings"
-    try:
-        api_call.patch(
-            url=api_url,
-            params={"client": "server"},
-            payload={"json": state.user_settings},
-        )
-        st.success("Server Settings - Updated", icon="✅")
-    except api_call.ApiError as ex:
-        st.success("Server Settings - Update Failed", icon="❌")
-        logger.error("Server Settings Update failed: %s", ex)
 
 
 #####################################################
@@ -91,10 +77,9 @@ async def main() -> None:
     st.button(
         "Copy Sandbox Settings",
         type="primary",
-        on_click=copy_user_settings,
-        help="""
-        Copy your settings, from the ChatBot, by clicking here.
-        """,
+        on_click=st_common.copy_user_settings,
+        kwargs=dict(new_client="server"),
+        help="Copy your settings, from the ChatBot, by clicking here.",
     )
 
     st.header("Server Activity", divider="red")

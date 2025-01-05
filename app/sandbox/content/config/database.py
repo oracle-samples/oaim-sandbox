@@ -19,11 +19,6 @@ import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("sandbox.config.database")
 
-# Set endpoint if server has been established
-DB_API_ENDPOINT = None
-if "server" in state:
-    DB_API_ENDPOINT = f"{state.server['url']}:{state.server['port']}/v1/databases"
-
 
 #####################################################
 # Functions
@@ -32,7 +27,8 @@ def get_databases() -> dict[str, dict]:
     """Get a dictionary of all Databases and Store Vector Store Tables"""
     if "database_config" not in state or state["database_config"] == {}:
         try:
-            response = api_call.get(url=DB_API_ENDPOINT)["data"]
+            api_url = f"{state.server['url']}:{state.server['port']}/v1/databases"
+            response = api_call.get(url=api_url)["data"]
             state["database_config"] = {
                 item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response
             }
@@ -53,8 +49,9 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
         or not state.database_config[name]["connected"]
     ):
         try:
+            api_url = f"{state.server['url']}:{state.server['port']}/v1/databases/{name}"
             api_call.patch(
-                url=DB_API_ENDPOINT + "/" + name,
+                url=api_url,
                 payload={
                     "json": {
                         "user": user,
@@ -80,11 +77,13 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
 def drop_vs(vs: dict):
     print(vs)
     try:
-        api_call.post(url=DB_API_ENDPOINT + "/drop_vs", payload={"json": vs})
+        api_url = f"{state.server['url']}:{state.server['port']}/v1/databases/drop_vs"
+        api_call.post(url=api_url + "/drop_vs", payload={"json": vs})
         st.success(f"{vs['vector_store']} - Dropped", icon="✅")
         st_common.clear_state_key("database_config")
     except api_call.ApiError as ex:
         st.error(f"Failed to drop {vs['vector_store']}: {ex}", icon="🚨")
+
 
 #####################################################
 # MAIN

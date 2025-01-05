@@ -2,19 +2,24 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore ainvoke, langgraph, modelcfg, jsonable, genai, ocid, docos
+# spell-checker:ignore ainvoke, langgraph, modelcfg, jsonable, genai, ocid, docos, ollama, giskard
 
 import copy
 import os
 import shutil
-from typing import Optional, Any
+import json
+import tempfile
+
+from io import BytesIO
+from datetime import datetime
+from typing import Optional
 from pathlib import Path
+
 import requests
 
 from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import HumanMessage, AnyMessage, convert_to_openai_messages
 from langchain_core.runnables import RunnableConfig
-
 
 import common.logging_config as logging_config
 import common.schema as schema
@@ -25,6 +30,7 @@ import server.models as models
 import server.databases as databases
 import server.oci as server_oci
 import server.embedding as embedding
+import server.testbed as testbed
 
 from fastapi import FastAPI, Query, HTTPException, UploadFile
 
@@ -57,7 +63,7 @@ def register_endpoints(app: FastAPI) -> None:
         """List all databases without gathering VectorStorage"""
         for db in database_objects:
             conn = databases.connect(db)
-            db.vector_stores = databases.get_vs(conn)            
+            db.vector_stores = databases.get_vs(conn)
         return schema.ResponseList[schema.Database](
             data=database_objects,
             msg=f"{len(database_objects)} database(s) found",
@@ -248,11 +254,15 @@ def register_endpoints(app: FastAPI) -> None:
         response_model=schema.Response[list],
     )
     async def oci_download_objects(
-        bucket_name: str, profile: schema.OCIProfileType, request: list[str], client: str = "server"
+        bucket_name: str,
+        profile: schema.OCIProfileType,
+        request: list[str],
+        client: str = "server",
+        directory: str = "tmp",
     ) -> schema.Response[list]:
         """Download files from Object Storage"""
         oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
-        client_folder = Path(f"/tmp/{client}")
+        client_folder = Path(f"/tmp/{client}/{directory}")
         client_folder.mkdir(parents=True, exist_ok=True)
 
         for object_name in request:
@@ -366,9 +376,11 @@ def register_endpoints(app: FastAPI) -> None:
         description="Store Web Files for Embedding.",
         response_model=schema.Response[list],
     )
-    async def store_web_file(request: list[str], client: str = "server") -> schema.Response[list]:
+    async def store_web_file(
+        request: list[str], client: str = "server", directory: str = "tmp"
+    ) -> schema.Response[list]:
         """Store contents from a web URL"""
-        client_folder = Path(f"/tmp/{client}")
+        client_folder = Path(f"/tmp/{client}/{directory}")
         client_folder.mkdir(parents=True, exist_ok=True)
 
         # Save the file temporarily
@@ -395,9 +407,11 @@ def register_endpoints(app: FastAPI) -> None:
         description="Store Local Files for Embedding.",
         response_model=schema.Response[list],
     )
-    async def store_local_file(files: list[UploadFile], client: str = "server") -> schema.Response[list]:
+    async def store_local_file(
+        files: list[UploadFile], client: str = "server", directory: str = "tmp"
+    ) -> schema.Response[list]:
         """Store contents from a local file uploaded to streamlit"""
-        client_folder = Path(f"/tmp/{client}")
+        client_folder = Path(f"/tmp/{client}/{directory}")
         client_folder.mkdir(parents=True, exist_ok=True)
 
         # Save the file temporarily
@@ -417,10 +431,10 @@ def register_endpoints(app: FastAPI) -> None:
         response_model=schema.Response[list],
     )
     async def split_embed(
-        request: schema.DatabaseVectorStorage, client: str = "server", rate_limit: int = 0
+        request: schema.DatabaseVectorStorage, client: str = "server", directory: str = "tmp", rate_limit: int = 0
     ) -> schema.Response[list]:
         """Perform Split and Embed"""
-        client_folder = Path(f"/tmp/{client}")
+        client_folder = Path(f"/tmp/{client}/{directory}")
         try:
             files = [str(file) for file in client_folder.iterdir() if file.is_file()]
             logger.info("Processing Files: %s", files)
@@ -541,3 +555,141 @@ def register_endpoints(app: FastAPI) -> None:
             return schema.ResponseList[schema.ChatMessage](
                 data=[schema.ChatMessage(content="I'm sorry, I have no history of this conversation", role="system")]
             )
+
+    #################################################
+    # Testbed
+    #################################################
+    @app.get(
+        "/v1/testbed/test_sets",
+        description="Get Stored Test Sets.",
+        response_model=schema.ResponseList[schema.TestSets],
+    )
+    async def testbed_get_test_sets() -> schema.ResponseList[schema.TestSets]:
+        db = next((db for db in database_objects if db.name == "DEFAULT"), None)
+        conn = databases.connect(db)
+        test_sets = databases.get_test_sets(conn)
+        return schema.ResponseList[schema.TestSets](
+            data=test_sets,
+            msg=f"{len(test_sets)} test sets(s) found",
+        )
+
+    @app.post(
+        "/v1/testbed/test_sets",
+        description="Load Test Sets.",
+        response_model=schema.Response[schema.TestSets],
+    )
+    async def testbed_load_test_sets(
+        files: list[UploadFile], name: schema.TestSetsNameType
+    ) -> schema.Response[schema.TestSets]:
+        timestamp = datetime.now()
+        db = next((db for db in database_objects if db.name == "DEFAULT"), None)
+        conn = databases.connect(db)
+
+        tests = 0
+        for file in files:
+            file_content = await file.read()
+            for line in file_content.splitlines():
+                json_data = json.loads(line.decode("utf-8"))
+                json_string = json.dumps(json_data, ensure_ascii=False)
+                sql = f"""
+                    INSERT INTO test_sets (name, date_loaded, test_set)
+                    VALUES ('{name}', TO_TIMESTAMP('{timestamp}', 'YYYY-MM-DD HH24:MI:SS.FF'), q'[{json_string}]')
+                    """
+                databases.execute_sql(conn, sql)
+                tests += 1
+        conn.commit()
+        test_sets = databases.get_test_sets(conn)
+        logger.debug("Looking for %s and %s in %s", name, timestamp, test_sets)
+        test_set = [entry for entry in test_sets if entry.name == name and entry.date_loaded == str(timestamp)]
+        return schema.Response[schema.TestSets](
+            data=test_set[0],
+            msg="Test Set loaded into database",
+        )
+
+    @app.post(
+        "/v1/testbed/generate_qa",
+        description="Generate Q&A Test Set.",
+        response_model=schema.Response[schema.TestSets],
+    )
+    async def testbed_generate_qa(
+        files: list[UploadFile],
+        name: schema.TestSetsNameType,
+        ll_model: schema.ModelNameType = None,
+        embed_model: schema.ModelNameType = None,
+        questions: int = 0,
+    ) -> schema.Response[schema.TestSets]:
+        """Retrieve contents from a local file uploaded and generate Q&A"""
+        # Setup Models
+        giskard_ll_model = await models.apply_filter(
+            model_objects,
+            model_name=ll_model,
+            model_type="ll",
+            only_enabled=True,
+        )
+        giskard_embed_model = await models.apply_filter(
+            model_objects,
+            model_name=embed_model,
+            model_type="embed",
+            only_enabled=True,
+        )
+
+        # Load and Split
+        with tempfile.TemporaryDirectory() as temp_dir:
+            for file in files:
+                try:
+                    # Read file content
+                    file_content = await file.read()
+                    filename = f"{temp_dir}/{file.filename}"
+                    logger.info("Writing Q&A File to: %s", filename)
+
+                    # Save file locally
+                    with open(filename, "wb") as temp_file:
+                        temp_file.write(file_content)
+
+                    # Process file for knowledge base
+                    text_nodes = testbed.load_and_split(filename)
+                    test_set = testbed.build_knowledge_base(
+                        text_nodes, questions, giskard_ll_model[0], giskard_embed_model[0]
+                    )
+                    logger.info("Test Set Generated")
+
+                    # Save test set
+                    test_set_filename = f"{temp_dir}/{name}.jsonl"
+                    test_set.save(test_set_filename)
+
+                    # Store tests in database
+                    with open(test_set_filename, "rb") as file:
+                        upload_file = UploadFile(file=file, filename=f"{name}.jsonl")
+                        results = await testbed_load_test_sets(files=[upload_file], name=name)
+
+                    return results
+                except Exception as e:
+                    logger.error("Error processing file: %s", str(e))
+                    raise
+
+        return results
+
+    # @app.post(
+    #     "/v1/testbed/evaluate",
+    #     description="Evaluate Q&A Test Set.",
+    #     response_model=schema.Response[list],
+    # )
+    # async def testbed_evaluate_qa(
+    #     test_set_id: int
+    # ) -> schema.Response[list]:
+    #     # Get testbed settings
+    #     testbed_settings = next((settings for settings in settings_objects if settings.client == "testbed"), None)
+    #     # Change Disable History
+    #     testbed_settings.ll_model.chat_history = False
+
+    #     def get_answer(question: str):
+    #         request = schema.ChatRequest(
+    #             model=testbed_settings.ll_model.model,
+    #             messages=[HumanMessage(content=question)],
+    #         )
+    #         ai_response = chat_post(request, "testbed")
+    #         return ai_response.choices[0].message.content
+
+    #     qa_test = testbed.load_qa_test(test_set)
+    #     report = evaluate(get_answer, testset=qa_test)
+    #     print(report)

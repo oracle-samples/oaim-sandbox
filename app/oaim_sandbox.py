@@ -78,8 +78,8 @@ def main() -> None:
         "": [chatbot],
     }
     if not state.disabled["tests"]:
-        test_framework = st.Page("sandbox/content/test_framework.py", title="Test Framework", icon="🧪")
-        navigation[""].append(test_framework)
+        testbed = st.Page("sandbox/content/testbed.py", title="Testbed", icon="🧪")
+        navigation[""].append(testbed)
     if not state.disabled["api"]:
         api_server = st.Page("sandbox/content/server.py", title="API Server", icon="📡")
         navigation[""].append(api_server)

@@ -4,6 +4,8 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 """
 # spell-checker:ignore streamlit, selectbox, mult, iloc
 
+from io import BytesIO
+from typing import Union
 import pandas as pd
 
 import streamlit as st
@@ -11,6 +13,7 @@ from streamlit import session_state as state
 
 from sandbox.content.config.models import get_model
 from sandbox.content.config.database import get_databases
+import sandbox.utils.api_call as api_call
 
 from common.functions import client_gen_id
 import common.help_text as help_text
@@ -20,7 +23,39 @@ logger = logging_config.logging.getLogger("sandbox.utils.st_common")
 
 
 #############################################################################
-# Helpers
+# Common Helpers
+#############################################################################
+def local_file_payload(uploaded_files: Union[BytesIO, list[BytesIO]]) -> list:
+    # If it's a single file, convert it to a list for consistent processing
+    if isinstance(uploaded_files, BytesIO):
+        uploaded_files = [uploaded_files]
+
+    # Ensure we are not processing duplicates
+    seen_file = set()
+    files = [
+        ("files", (file.name, file.getvalue(), file.type))
+        for file in uploaded_files
+        if file.name not in seen_file and not seen_file.add(file.name)
+    ]
+    return files
+
+def copy_user_settings(new_client: str) -> None:
+    logger.info("Copying user settings to: %s", new_client)
+    api_url = f"{state.server['url']}:{state.server['port']}/v1/settings"
+    try:
+        api_call.patch(
+            url=api_url,
+            params={"client": new_client},
+            payload={"json": state.user_settings},
+        )
+        st.success(f"Settings for {new_client} - Updated", icon="✅")
+        clear_state_key(f"{new_client}_settings")
+    except api_call.ApiError as ex:
+        st.success(f"Settings for {new_client} - Update Failed", icon="❌")
+        logger.error("%s Settings Update failed: %s", new_client, ex)
+
+#############################################################################
+# State Helpers
 #############################################################################
 def clear_state_key(state_key: str) -> None:
     """Generic clear key from state, handles if key isn't in state"""

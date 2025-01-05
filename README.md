@@ -15,7 +15,7 @@ The **Oracle AI Microservices Sandbox** provides a streamlined environment where
 - [Storing Embedded Documents into the Oracle Database](https://oracle-samples.github.io/oaim-sandbox/sandbox/tools/split_embed)
 - [Modifying System Prompts (Prompt Engineering)](https://oracle-samples.github.io/oaim-sandbox/sandbox/tools/prompt_eng)
 - [Experimenting with **LLM** Parameters](https://oracle-samples.github.io/oaim-sandbox/sandbox/chatbot)
-- [Testing Framework on auto-generated or existing Q&A datasets](https://oracle-samples.github.io/oaim-sandbox/sandbox/test_framework)
+- [Testbed for auto-generated or existing Q&A datasets](https://oracle-samples.github.io/oaim-sandbox/sandbox/testbed)
 
 ## Getting Started
 

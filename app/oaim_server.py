@@ -2,10 +2,16 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore fastapi, laddr, checkpointer, langgraph, oaim
-# pylint: disable=redefined-outer-name
+# spell-checker:ignore fastapi, laddr, checkpointer, langgraph, oaim, litellm
+# pylint: disable=redefined-outer-name,wrong-import-position
 
 import os
+# Set OS Environment (Don't move their position)
+os.environ["LITELLM_LOCAL_MODEL_COST_MAP"] = "True"
+os.environ["GSK_DISABLE_SENTRY"] = "true"
+os.environ["GSK_DISABLE_ANALYTICS"] = "true"
+os.environ["USER_AGENT"] = "OAIM-SANDBOX"
+
 import queue
 import secrets
 import socket

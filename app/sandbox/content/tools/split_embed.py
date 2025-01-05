@@ -121,13 +121,13 @@ def main() -> None:
     db_avail = st_common.is_db_configured()
     if not db_avail:
         logger.debug("Embedding Disabled (Database not configured)")
-        st.warning("Database is not configured. Disabling Embedding.", icon="⚠️")
+        st.error("Database is not configured. Disabling Embedding.", icon="🛑")
 
     get_model(model_type="embed", only_enabled=True)
     available_embed_models = list(state.embed_model_enabled.keys())
     if not available_embed_models:
         logger.debug("Embedding Disabled (no Embedding Models)")
-        st.warning("No embedding models are configured and/or enabled. Disabling Embedding.", icon="⚠️")
+        st.error("No embedding models are configured and/or enabled. Disabling Embedding.", icon="🛑")
 
     if not db_avail or not available_embed_models:
         st.stop()
@@ -347,17 +347,12 @@ def main() -> None:
                 st.warning("Populating Vector Store... please be patient.", icon="⚠️")
 
             api_url = None
-            api_params = {"client": state.user_settings["client"]}
+            api_params = {"client": state.user_settings["client"], "directory": "split_embed"}
             api_payload = []
             # Place files on Server for Embedding
             if file_source == "Local":
                 api_url = f"{EMBED_API_ENDPOINT}/local/store"
-                seen_file = set()
-                files = [
-                    ("files", (file.name, file.getvalue(), file.type))
-                    for file in state["local_file_uploader"]
-                    if file.name not in seen_file and not seen_file.add(file.name)
-                ]
+                files = st_common.local_file_payload(state["local_file_uploader"])
                 api_payload = {"files": files}
 
             if file_source == "Web":
@@ -374,7 +369,11 @@ def main() -> None:
             response = api_call.post(url=api_url, params=api_params, payload=api_payload)
 
             # All files are now on Server... Run Embeddings
-            embed_params = {"client": state.user_settings["client"], "rate_limit": rate_limit}
+            embed_params = {
+                "client": state.user_settings["client"],
+                "directory": "split_embed",
+                "rate_limit": rate_limit,
+            }
             response = api_call.post(
                 url=EMBED_API_ENDPOINT,
                 params=embed_params,

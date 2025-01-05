@@ -1,5 +1,5 @@
 +++
-title = '🧪 Test Framework'
+title = '🧪 Testbed'
 weight = 30
 +++
 <!--

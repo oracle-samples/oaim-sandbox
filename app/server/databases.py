@@ -7,7 +7,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 import json
 import oracledb
 
-from common.schema import Database, DatabaseModel, DatabaseVectorStorage
+from common.schema import Database, DatabaseModel, DatabaseVectorStorage, TestSets
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("server.database")
@@ -49,6 +49,7 @@ def disconnect(conn: oracledb.Connection) -> None:
 
 def execute_sql(conn: oracledb.Connection, run_sql: str) -> list:
     """Execute SQL against Oracle Database"""
+    logger.debug("SQL: %s", run_sql)
     try:
         # Use context manager to ensure the cursor is closed properly
         with conn.cursor() as cursor:
@@ -57,7 +58,6 @@ def execute_sql(conn: oracledb.Connection, run_sql: str) -> list:
                 rows = cursor.fetchall()
             else:
                 rows = None  # No rows to fetch
-            logger.debug("SQL Executed: %s", run_sql)
             return rows
     except oracledb.DatabaseError as ex:
         if ex.args:
@@ -100,3 +100,38 @@ def drop_vs(conn: oracledb.Connection, vs: DatabaseVectorStorage) -> None:
     logger.info("Dropping Vector Store: %s", vs.vector_store)
     sql = f"DROP TABLE {vs.vector_store} PURGE"
     _ = execute_sql(conn, sql)
+
+
+def create_test_set(conn: oracledb.Connection) -> None:
+    logger.info("Creating Test Set Table")
+    table_sql = """
+            CREATE TABLE IF NOT EXISTS test_sets (
+                id          RAW(16) DEFAULT SYS_GUID() PRIMARY KEY,
+                name        VARCHAR2(255) NOT NULL,
+                date_loaded TIMESTAMP (6) WITH TIME ZONE NOT NULL,
+                test_set    JSON
+            )
+        """
+    index_sql = """
+            CREATE INDEX IF NOT EXISTS test_sets_idx ON test_sets (name, date_loaded)
+        """
+    _ = execute_sql(conn, table_sql)
+    _ = execute_sql(conn, index_sql)
+
+
+def get_test_sets(conn: oracledb.Connection) -> TestSets:
+    logger.info("Getting Test Set Tables")
+    test_sets = []
+    sql = """
+        SELECT name, to_char(date_loaded, 'YYYY-MM-DD HH24:MI:SS.FF'), count(*) as test_count 
+        FROM test_sets
+        GROUP BY name, date_loaded
+      """
+    results = execute_sql(conn, sql)
+    try:
+        for name, date_loaded, test_count in results:
+            test_sets.append(TestSets(name=name, date_loaded=date_loaded, test_count=test_count))
+    except TypeError:
+        create_test_set(conn)
+
+    return test_sets

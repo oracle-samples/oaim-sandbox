@@ -63,7 +63,7 @@ def send_request(
     for attempt in range(retries + 1):
         try:
             response = method_map[method](**args)
-            logger.info("%s Response: %s", method, response)
+            logger.info("%s Response: %s", method, response.json())
             response.raise_for_status()
             return response.json()
 

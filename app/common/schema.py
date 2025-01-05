@@ -297,6 +297,16 @@ class ChatRequest(LanguageParametersModel):
 
 
 #####################################################
+# Testbed
+#####################################################
+class TestSets(BaseModel):
+    """TestSets"""
+
+    name: str = Field(description="Name of TestSet")
+    date_loaded: str = Field(description="Date Test Set Loaded")
+    test_count: int = Field(description="Number of Tests")
+
+#####################################################
 # Types
 #####################################################
 DatabaseNameType = Database.__annotations__["name"]
@@ -307,3 +317,4 @@ OCIProfileType = OracleCloudSettings.__annotations__["profile"]
 PromptNameType = Prompt.__annotations__["name"]
 PromptCategoryType = Prompt.__annotations__["category"]
 PromptPromptType = PromptModel.__annotations__["prompt"]
+TestSetsNameType = TestSets.__annotations__["name"]
