@@ -215,6 +215,9 @@ def main():
     ###################################
     if test_set_timestamp and test_set_name:
         st.header("Q&A Evaluation")
+        for item in state.db_test_sets:
+            if item['name'] == test_set_name and item['date_loaded'] == test_set_timestamp:
+                st.write(item['test_set'])
 
     #     test_set_edited = pd.DataFrame(state.test_set).drop_duplicates(subset=["question"])
     #     st.write(test_set_edited)
