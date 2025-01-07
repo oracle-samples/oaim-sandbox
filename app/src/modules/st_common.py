@@ -334,15 +334,15 @@ aims:
 
 def get_yaml_env(session_state_json,provider):
 
-    OLLAMA_MODEL="llama3.1"
+    OLLAMA_MODEL=["llama3.1","llama3.2"]
 
     instr_context=session_state_json["lm_instr_config"][session_state_json["lm_instr_prompt"]]["prompt"]
     vector_table,_= utilities.get_vs_table(session_state_json["rag_params"]["model"],session_state_json["rag_params"]["chunk_size"],session_state_json["rag_params"]["chunk_overlap"],session_state_json["rag_params"]["distance_metric"])
     
     logger.info("ll_model selected: %s",session_state_json["ll_model"])
-    logger.info(session_state_json["ll_model"] != OLLAMA_MODEL)
+    logger.info(session_state_json["ll_model"] not in OLLAMA_MODEL)
 
-    if session_state_json["ll_model"] != OLLAMA_MODEL:
+    if session_state_json["ll_model"] not in OLLAMA_MODEL:
         env_vars_LLM= f"""
     export OPENAI_CHAT_MODEL={session_state_json["ll_model"]}
     export OPENAI_EMBEDDING_MODEL={session_state_json["rag_params"]["model"]}
@@ -386,7 +386,7 @@ def get_yaml_env(session_state_json,provider):
     export DB_USERNAME=\"{session_state_json["db_config"]["user"]}\"
     export DB_PASSWORD=\"{session_state_json["db_config"]["password"]}\"
     export DISTANCE_TYPE={session_state_json["rag_params"]["distance_metric"]}
-    export OLLAMA_BASE_URL=\"{session_state_json["ll_model_config"][OLLAMA_MODEL]["url"]}\"
+    export OLLAMA_BASE_URL=\"{session_state_json["ll_model_config"][session_state_json["ll_model"]]["url"]}\"
     export CONTEXT_INSTR=\"{instr_context}\"
     export TOP_K={session_state_json.get("rag_params", {}).get("top_k",4)}  
 
