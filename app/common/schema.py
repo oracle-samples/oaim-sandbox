@@ -304,7 +304,7 @@ class TestSets(BaseModel):
 
     name: str = Field(description="Name of TestSet")
     date_loaded: str = Field(description="Date Test Set Loaded")
-    test_count: int = Field(description="Number of Tests")
+    test_set: dict = Field(description="Test Set Data")
 
 #####################################################
 # Types
@@ -318,3 +318,4 @@ PromptNameType = Prompt.__annotations__["name"]
 PromptCategoryType = Prompt.__annotations__["category"]
 PromptPromptType = PromptModel.__annotations__["prompt"]
 TestSetsNameType = TestSets.__annotations__["name"]
+TestSetDateType = TestSets.__annotations__["date_loaded"]

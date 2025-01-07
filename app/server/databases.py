@@ -119,18 +119,20 @@ def create_test_set(conn: oracledb.Connection) -> None:
     _ = execute_sql(conn, index_sql)
 
 
-def get_test_sets(conn: oracledb.Connection) -> TestSets:
-    logger.info("Getting Test Set Tables")
+def get_test_set(conn: oracledb.Connection, date_loaded: str = "%", name: str = "%") -> TestSets:
+    logger.info("Getting Test Set")
     test_sets = []
-    sql = """
-        SELECT name, to_char(date_loaded, 'YYYY-MM-DD HH24:MI:SS.FF'), count(*) as test_count 
-        FROM test_sets
-        GROUP BY name, date_loaded
+    sql = f"""
+        SELECT name, to_char(date_loaded, 'YYYY-MM-DD HH24:MI:SS.FF') as date_loaded, test_set
+          FROM test_sets
+         WHERE to_char(date_loaded, 'YYYY-MM-DD HH24:MI:SS.FF') like '{date_loaded}'
+           AND name like '{name}'
+        ORDER BY date_loaded desc
       """
     results = execute_sql(conn, sql)
     try:
-        for name, date_loaded, test_count in results:
-            test_sets.append(TestSets(name=name, date_loaded=date_loaded, test_count=test_count))
+        for name, date_loaded, test_set in results:
+            test_sets.append(TestSets(name=name, date_loaded=date_loaded, test_set=test_set))
     except TypeError:
         create_test_set(conn)
 

@@ -56,7 +56,7 @@ async def main() -> None:
         state.user_client = client.SandboxClient(
             server=state.server,
             settings=state["user_settings"],
-            timeout=10,
+            timeout=600,
         )
     user_client: client.SandboxClient = state.user_client
 

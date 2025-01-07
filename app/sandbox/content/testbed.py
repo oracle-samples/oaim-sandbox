@@ -102,25 +102,39 @@ def main():
     ###################################
     # Load/Generate Test Set
     ###################################
-    button_text, api_url = None, None
+    button_load_disabled = True
+    button_text, api_url, test_set_name, test_set_source, test_set_timestamp = None, None, None, None, None
     api_params = {}
     if not state.selected_generate_test:
         st.header("Run Existing Q&A Test Dataset")
         button_text = "Load Q&A"
         api_url = f"{API_ENDPOINT}/test_sets"
-        test_set_source = st.radio("Test Set Source:", test_set_sources, key="radio_test_source", horizontal=True)
+        test_set_source = st.radio(
+            "Test Set Source:", test_set_sources, key="radio_test_source", horizontal=True, on_change=reset_test_set
+        )
         if test_set_source == "Local":
-            st.file_uploader(
+            test_upload_file = st.file_uploader(
                 "Select a local, existing Q&A pair testing dataset:",
                 key=f"uploader_{state.test_uploader_key}",
                 accept_multiple_files=True,
                 type=["jsonl", "json"],
             )
+            button_load_disabled = len(test_upload_file) == 0
+        else:
+            test_list = [f"{item['name']} - {item['date_loaded']}" for item in state.db_test_sets]
+            db_test_set = st.selectbox(
+                "Test Set:",
+                options=test_list,
+                key="selected_test_set_name",
+            )
+            button_load_disabled = db_test_set is None
+            test_set_name, rest = db_test_set.split(" - ", 1)
+            test_set_timestamp = rest.split(";")[0]
     if state.selected_generate_test:
         st.header("Q&A Test Dataset Generation")
         button_text = "Generate Q&A"
         api_url = f"{API_ENDPOINT}/generate_qa"
-        st.file_uploader(
+        test_upload_file = st.file_uploader(
             (
                 "Select a local PDF file to build a temporary Knowledge Base. "
                 "It will be used to generate a synthetic Q&A pair testing dataset."
@@ -129,6 +143,7 @@ def main():
             accept_multiple_files=False,
             type="pdf",
         )
+        button_load_disabled = test_upload_file is None
         col_left, col_center, col_right = st.columns([0.2, 0.35, 0.35])
         test_gen_questions = col_left.number_input(
             "Number of Q&A:",
@@ -153,15 +168,24 @@ def main():
         )
         api_params = {"ll_model": test_gen_llm, "embed_model": test_gen_embed, "questions": test_gen_questions}
 
-    test_set_name = st.text_input(
-        "Test Set Name (Required):",
-        max_chars=20,
-        key="selected_test_set_name",
-        placeholder="Press Enter to set.",
-    )
-    button_load_disabled = state[f"uploader_{state.test_uploader_key}"] is None or test_set_name == ""
+    if test_set_source != "Database":
+        test_set_name = st.text_input(
+            "Test Set Name (Required):",
+            max_chars=20,
+            key="selected_test_set_name",
+            placeholder="Press Enter to set.",
+        )
+
+    button_load_disabled = button_load_disabled or test_set_name == ""
     col_left, col_center, _ = st.columns([0.2, 0.35, 0.35])
-    if col_left.button(button_text, key="load_tests", disabled=button_load_disabled):
+    if not button_load_disabled:
+        if "load_tests" in state and state.load_tests is True:
+            state.running = True
+        else:
+            state.running = False
+    else:
+        state.running = True
+    if col_left.button(button_text, key="load_tests", disabled=state.running):
         placeholder = st.empty()
         with placeholder:
             st.info("Processing Q&A... please be patient.", icon="⚠️")
@@ -170,55 +194,21 @@ def main():
         api_payload = {"files": files}
         try:
             response = api_call.post(url=api_url, params=api_params, payload=api_payload)
-            test_timestamp = response["data"]["date_loaded"]
-            test_count = response["data"]["test_count"]
-            placeholder.empty()
-            st.success(f"{test_count} Tests Loaded.", icon="✅")
+            test_set_timestamp = response["data"][0]["date_loaded"]
+            st.success(f"{len(response['data'])} Tests Loaded.", icon="✅")
             st_common.clear_state_key("db_test_sets")
         except Exception as ex:
             logger.error("Exception: %s", ex)
             st.error("Test Sets not compatible.", icon="🚨")
-
+        placeholder.empty()
     col_center.button("Reset", key="reset_test_framework", type="primary", on_click=reset_test_set)
 
     ###################################
-    # Create Test Set
+    # Show/Edit Q&A Tests
     ###################################
+    if test_set_timestamp and test_set_name:
+        st.header("Q&A Evaluation")
 
-    # if not test_qa_gen_button_disabled:
-    #     if "button_generate" in state and state.button_generate is True:
-    #         state.running = True
-    #     else:
-    #         state.running = False
-    # else:
-    #     state.running = True
-
-    # if col_left.button("Generate Q&A", type="primary", key="button_generate", disabled=state.running):
-    #     placeholder = st.empty()
-    #     with placeholder:
-    #         st.warning("Starting Q&A generation... please be patient.", icon="⚠️")
-
-    #     # Send file to server
-    #     api_url = f"{EMBED_API_ENDPOINT}/local/store"
-    #     api_params = {"client": state.user_settings["client"], "directory": "testbed"}
-    #     files = st_common.local_file_payload(state[f"uploader_{state.test_uploader_key}"])
-    #     api_payload = {"files": files}
-    #     _ = api_call.post(url=api_url, params=api_params, payload=api_payload)
-
-    #     # Generate Q&A
-    #     api_url = f"{API_ENDPOINT}/generate_qa"
-    #     api_params["ll_model"] = test_qa_llm
-    #     api_params["embed_model"] = test_qa_embed
-    #     api_params["questions"] = test_qa_count
-    #     test_set_data = api_call.post(url=api_url, params=api_params)
-    #     state.test_set = test_set_data["data"]
-    #     placeholder.empty()
-    #     st.success("Q&A Test Dataset Generated", icon="✅")
-
-    # ###################################
-    # # Show/Edit Q&A Tests
-    # ###################################
-    # if state.test_set:
     #     test_set_edited = pd.DataFrame(state.test_set).drop_duplicates(subset=["question"])
     #     st.write(test_set_edited)
     #     download_test_set(test_set_edited)

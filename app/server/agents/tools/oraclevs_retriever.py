@@ -24,9 +24,9 @@ def oraclevs_tool(
     state: Annotated[dict, InjectedState],
     config: RunnableConfig,
 ) -> list[dict]:
-    """Oracle Vector Search Tool"""
+    """Search and return information using retrieval augmented generation (RAG)"""
+    logger.info("Initializing OracleVS Tool")
     try:
-        #print(config["configurable"])
         db_conn = config["configurable"]["db_conn"]
         embed_client = config["configurable"]["embed_client"]
         rag_settings = config["metadata"]["rag_settings"]

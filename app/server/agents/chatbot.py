@@ -23,7 +23,7 @@ from server.agents.tools import oraclevs_retriever
 from common.schema import ChatResponse, ChatUsage, ChatChoices, ChatMessage
 from common import logging_config
 
-logger = logging_config.logging.getLogger("server.agents.chat")
+logger = logging_config.logging.getLogger("server.agents.chatbot")
 
 
 #############################################################################
@@ -42,6 +42,7 @@ class AgentState(MessagesState):
 #############################################################################
 def format_response(state: AgentState) -> ChatResponse:
     """Format the response to be OpenAI Compatible"""
+    logger.info("Formatting Response to OpenAI compatible")
     logger.debug("Formatting Response of message: %s", state["messages"][1])
     ai_metadata = state["messages"][1]
     ai_message = state["messages"][-1]
@@ -206,8 +207,7 @@ workflow = StateGraph(AgentState)
 
 # Define the nodes we will cycle between
 workflow.add_node("agent", agent)
-retrieve = ToolNode(tools)
-workflow.add_node("retrieve", retrieve)
+workflow.add_node("retrieve", ToolNode(tools))
 workflow.add_node("rewrite", rewrite)
 workflow.add_node("generate", generate)
 workflow.add_node("respond", format_response)

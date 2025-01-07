@@ -10,7 +10,6 @@ import shutil
 import json
 import tempfile
 
-from io import BytesIO
 from datetime import datetime
 from typing import Optional
 from pathlib import Path
@@ -477,7 +476,7 @@ def register_endpoints(app: FastAPI) -> None:
         """Chatbot Completion"""
         thread_id = client_gen_id() if not client else client
         user_settings = next((settings for settings in settings_objects if settings.client == thread_id), None)
-        logger.info("User (%s) Settings: %s", thread_id, user_settings)
+        logger.debug("User (%s) Settings: %s", thread_id, user_settings)
         # Establish LL Model Params
         ll_client = await models.get_client(model_objects, request.model_dump())
         try:
@@ -564,28 +563,30 @@ def register_endpoints(app: FastAPI) -> None:
         description="Get Stored Test Sets.",
         response_model=schema.ResponseList[schema.TestSets],
     )
-    async def testbed_get_test_sets() -> schema.ResponseList[schema.TestSets]:
+    async def testbed_get_test_set(
+        timestamp: Optional[schema.TestSetDateType] = "%",
+        name: Optional[schema.TestSetsNameType] = "%",
+    ) -> schema.Response[schema.TestSets]:
         db = next((db for db in database_objects if db.name == "DEFAULT"), None)
         conn = databases.connect(db)
-        test_sets = databases.get_test_sets(conn)
+        test_sets = databases.get_test_set(conn=conn, date_loaded=timestamp, name=name)
         return schema.ResponseList[schema.TestSets](
             data=test_sets,
-            msg=f"{len(test_sets)} test sets(s) found",
+            msg="Test set found",
         )
 
     @app.post(
         "/v1/testbed/test_sets",
         description="Load Test Sets.",
-        response_model=schema.Response[schema.TestSets],
+        response_model=schema.ResponseList[schema.TestSets],
     )
     async def testbed_load_test_sets(
         files: list[UploadFile], name: schema.TestSetsNameType
-    ) -> schema.Response[schema.TestSets]:
+    ) -> schema.ResponseList[schema.TestSets]:
         timestamp = datetime.now()
         db = next((db for db in database_objects if db.name == "DEFAULT"), None)
         conn = databases.connect(db)
 
-        tests = 0
         for file in files:
             file_content = await file.read()
             for line in file_content.splitlines():
@@ -596,14 +597,11 @@ def register_endpoints(app: FastAPI) -> None:
                     VALUES ('{name}', TO_TIMESTAMP('{timestamp}', 'YYYY-MM-DD HH24:MI:SS.FF'), q'[{json_string}]')
                     """
                 databases.execute_sql(conn, sql)
-                tests += 1
         conn.commit()
-        test_sets = databases.get_test_sets(conn)
-        logger.debug("Looking for %s and %s in %s", name, timestamp, test_sets)
-        test_set = [entry for entry in test_sets if entry.name == name and entry.date_loaded == str(timestamp)]
-        return schema.Response[schema.TestSets](
-            data=test_set[0],
-            msg="Test Set loaded into database",
+        test_sets = databases.get_test_set(conn=conn, date_loaded=timestamp, name=name)
+        return schema.ResponseList[schema.TestSets](
+            data=test_sets,
+            msg="Test Set(s) loaded into database",
         )
 
     @app.post(

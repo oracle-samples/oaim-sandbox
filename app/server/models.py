@@ -58,7 +58,7 @@ async def get_client(
     model_config: dict,
 ) -> BaseChatModel:
     """Retrieve model configuration"""
-    logger.info("Model Config: %s", model_config)
+    logger.debug("Model Config: %s", model_config)
     model_name = model_config["model"]
     model_api = await get_key_value(model_objects, model_name, "api")
     model_api_key = await get_key_value(model_objects, model_name, "api_key")
@@ -111,9 +111,9 @@ async def get_client(
         }
 
     try:
-        logger.info("Searching for %s in %s", model_api, model_classes)
+        logger.debug("Searching for %s in %s", model_api, model_classes)
         client = model_classes[model_api]()
-        logger.info("Model Client: %s", client)
+        logger.debug("Model Client: %s", client)
         return client
     except (UnboundLocalError, KeyError):
         logger.error("Unable to find client; expect trouble!")
