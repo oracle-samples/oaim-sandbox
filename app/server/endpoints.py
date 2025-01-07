@@ -587,17 +587,22 @@ def register_endpoints(app: FastAPI) -> None:
         db = next((db for db in database_objects if db.name == "DEFAULT"), None)
         conn = databases.connect(db)
 
-        for file in files:
-            file_content = await file.read()
-            for line in file_content.splitlines():
-                json_data = json.loads(line.decode("utf-8"))
-                json_string = json.dumps(json_data, ensure_ascii=False)
-                sql = f"""
-                    INSERT INTO test_sets (name, date_loaded, test_set)
-                    VALUES ('{name}', TO_TIMESTAMP('{timestamp}', 'YYYY-MM-DD HH24:MI:SS.FF'), q'[{json_string}]')
-                    """
-                databases.execute_sql(conn, sql)
-        conn.commit()
+        try:
+            for file in files:
+                file_content = await file.read()
+                for line in file_content.splitlines():
+                    json_data = json.loads(line.decode("utf-8"))
+                    json_string = json.dumps(json_data, ensure_ascii=False)
+                    sql = f"""
+                        INSERT INTO test_sets (name, date_loaded, test_set)
+                        VALUES ('{name}', TO_TIMESTAMP('{timestamp}', 'YYYY-MM-DD HH24:MI:SS.FF'), q'~{json_string}~')
+                        """
+                    databases.execute_sql(conn, sql)
+            conn.commit()
+            logger.info("Test Set %s - %s Inserted", name, timestamp)
+        except Exception as ex:
+            logger.error("An exception occurred: %s", ex)
+            raise HTTPException(status_code=500, detail="Unexpected error") from ex
         test_sets = databases.get_test_set(conn=conn, date_loaded=timestamp, name=name)
         return schema.ResponseList[schema.TestSets](
             data=test_sets,
@@ -607,7 +612,7 @@ def register_endpoints(app: FastAPI) -> None:
     @app.post(
         "/v1/testbed/generate_qa",
         description="Generate Q&A Test Set.",
-        response_model=schema.Response[schema.TestSets],
+        response_model=schema.ResponseList[schema.TestSets],
     )
     async def testbed_generate_qa(
         files: list[UploadFile],
@@ -615,7 +620,7 @@ def register_endpoints(app: FastAPI) -> None:
         ll_model: schema.ModelNameType = None,
         embed_model: schema.ModelNameType = None,
         questions: int = 0,
-    ) -> schema.Response[schema.TestSets]:
+    ) -> schema.ResponseList[schema.TestSets]:
         """Retrieve contents from a local file uploaded and generate Q&A"""
         # Setup Models
         giskard_ll_model = await models.apply_filter(

@@ -68,6 +68,7 @@ def execute_sql(conn: oracledb.Connection, run_sql: str) -> list:
                 logger.info("Table does not exist")
             else:
                 logger.exception("Database error: %s", ex)
+                logger.info("Failed SQL: %s", run_sql)
                 raise
         else:
             logger.exception("Database error: %s", ex)
@@ -119,8 +120,8 @@ def create_test_set(conn: oracledb.Connection) -> None:
     _ = execute_sql(conn, index_sql)
 
 
-def get_test_set(conn: oracledb.Connection, date_loaded: str = "%", name: str = "%") -> TestSets:
-    logger.info("Getting Test Set")
+def get_test_set(conn: oracledb.Connection, date_loaded: str = "%", name: str = "%") -> list:
+    logger.info("Getting Test Set; Name: %s - Date Loaded: %s", name, date_loaded)
     test_sets = []
     sql = f"""
         SELECT name, to_char(date_loaded, 'YYYY-MM-DD HH24:MI:SS.FF') as date_loaded, test_set
@@ -133,7 +134,8 @@ def get_test_set(conn: oracledb.Connection, date_loaded: str = "%", name: str = 
     try:
         for name, date_loaded, test_set in results:
             test_sets.append(TestSets(name=name, date_loaded=date_loaded, test_set=test_set))
-    except TypeError:
+    except TypeError as ex:
+        logger.exception("Exception raised: %s", ex)
         create_test_set(conn)
 
     return test_sets

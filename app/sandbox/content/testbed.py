@@ -121,7 +121,14 @@ def main():
             )
             button_load_disabled = len(test_upload_file) == 0
         else:
-            test_list = [f"{item['name']} - {item['date_loaded']}" for item in state.db_test_sets]
+            # Keep Order but ensure uniqueness
+            seen = set()
+            test_list = []
+            for item in state.db_test_sets:
+                key = f"{item['name']} - {item['date_loaded']}"
+                if key not in seen:
+                    test_list.append(key)
+                    seen.add(key)
             db_test_set = st.selectbox(
                 "Test Set:",
                 options=test_list,
