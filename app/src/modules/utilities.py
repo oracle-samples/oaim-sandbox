@@ -216,6 +216,37 @@ def execute_sql(conn, run_sql):
     finally:
         cursor.close()
 
+def check_index(conn, index):
+    """Execute SQL against Oracle Database to check the presence of an index"""
+
+    run_sql=f"SELECT index_name FROM all_indexes WHERE index_name = '{index}'"
+    logger.info(run_sql)
+    result = False
+    try:
+        cursor = conn.cursor()
+        cursor.execute(run_sql)
+        result = cursor.fetchone()
+        logger.info("Check index via SQL Executed")
+        logger.info(run_sql)
+        return result
+        
+    except oracledb.DatabaseError as ex:
+        if ex.args and len(ex.args) > 0:
+            error_obj = ex.args[0]
+            if (
+                # ORA-00955: name is already used by an existing object
+                hasattr(error_obj, "code") and error_obj.code == 955
+            ):
+                logger.info("Table Exists")
+        else:
+            logger.exception(ex, exc_info=False)
+            raise
+    finally:
+        logger.info("check_index finally")
+        logger.info(result)
+        cursor.close()
+        return result
+
 
 ###############################################################################
 # Vector Storage
@@ -306,15 +337,41 @@ def populate_vs(
     logger.info("Total Unique Chunks: %i", len(unique_chunks))
 
     # Need to consider this, it duplicates from_documents
-    logger.info("Dropping table %s", store_table)
-    LangchainVS.drop_table_purge(db_conn, store_table)
+    #logger.info("Dropping table %s", store_table)
+    #LangchainVS.drop_table_purge(db_conn, store_table)
 
-    vectorstore = OracleVS(
+    try:
+        vectorstore_back = OracleVS(
+            client=db_conn,
+            embedding_function=model_name,
+            table_name=store_table,
+            distance_strategy=distance_metric,
+        )
+    except Exception as ex:
+        logger.error("Unable to open existing vector table: %s", ex)
+    
+    #check if index exists before drop
+    index_exists= False
+    try:
+        index_exists=check_index(db_conn, f"{store_table}_HNSW_IDX")     
+        logger.info("Check in-memory index if exists")
+        logger.info(index_exists)
+    except Exception as ex:
+        logger.error("Check in-memory index if exists: %s", ex)
+        index_exists=True
+    
+    LangchainVS.drop_index_if_exists(db_conn, f"{store_table}_HNSW_IDX")
+
+
+    try:
+        vectorstore = OracleVS(
         client=db_conn,
         embedding_function=model_name,
-        table_name=store_table,
+        table_name=store_table+"_TEMP",
         distance_strategy=distance_metric,
-    )
+        )
+    except Exception as ex:
+        logger.error("Unable to open temp vector table: %s", ex)
 
     # Batch Size does not have a measurable impact on performance
     # but does eliminate issues with timeouts
@@ -328,23 +385,38 @@ def populate_vs(
             len(unique_chunks),
             rate_limit,
         )
+        logger.info(unique_chunks[i])
         OracleVS.add_documents(vectorstore, documents=batch)
         if rate_limit > 0:
             interval = 60 / rate_limit
             logger.info("Rate Limiting: sleeping for %i seconds", interval)
             time.sleep(interval)
 
-    # Build the Index
-    logger.info("Creating index on: %s", store_table)
-    try:
-        params = {"idx_name": f"{store_table}_HNSW_IDX", "idx_type": "HNSW"}
-        LangchainVS.create_index(db_conn, vectorstore, params)
-    except Exception as ex:
-        logger.error("Unable to create vector index: %s", ex)
+    mergesql = f"INSERT INTO {store_table}(ID,TEXT,METADATA,EMBEDDING) SELECT ID, TEXT, METADATA, EMBEDDING FROM {store_table}_TEMP WHERE ID NOT IN (SELECT ID FROM {store_table} )"    
+    logger.info("MERGE with this command \n%s",mergesql)
+
+    execute_sql(db_conn, mergesql)
+    db_conn.commit()
+
+    if (index_exists):
+        # Build the Index
+        logger.info("Creating index on: %s", store_table)
+        try:
+            params = {"idx_name": f"{store_table}_HNSW_IDX", "idx_type": "HNSW"}
+            #params = {"idx_name": f"{store_table}_IVF_IDX", "idx_type": "IVF"}
+      
+            LangchainVS.create_index(db_conn, vectorstore_back, params)
+       
+        except Exception as ex:
+            logger.error("Unable to create vector index: %s", ex)
 
     # Comment the VS table
     comment = f"COMMENT ON TABLE {store_table} IS 'GENAI: {store_comment}'"
     execute_sql(db_conn, comment)
+
+    dropsql= f"DROP TABLE {store_table}_TEMP CASCADE CONSTRAINTS"
+    execute_sql(db_conn, dropsql)
+
     db_conn.close()
 
 
