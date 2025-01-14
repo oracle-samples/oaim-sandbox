@@ -4,9 +4,11 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 """
 # spell-checker:ignore streamlit, selectbox, mult, iloc
 
+import os
 from io import BytesIO
 from typing import Union
 import pandas as pd
+from bs4 import BeautifulSoup
 
 import streamlit as st
 from streamlit import session_state as state
@@ -39,6 +41,7 @@ def local_file_payload(uploaded_files: Union[BytesIO, list[BytesIO]]) -> list:
     ]
     return files
 
+
 def copy_user_settings(new_client: str) -> None:
     logger.info("Copying user settings to: %s", new_client)
     api_url = f"{state.server['url']}:{state.server['port']}/v1/settings"
@@ -53,6 +56,7 @@ def copy_user_settings(new_client: str) -> None:
     except api_call.ApiError as ex:
         st.success(f"Settings for {new_client} - Update Failed", icon="❌")
         logger.error("%s Settings Update failed: %s", new_client, ex)
+
 
 #############################################################################
 # State Helpers
@@ -82,6 +86,7 @@ def is_db_configured() -> bool:
     """Verify that a database is configured"""
     get_databases()
     return state.database_config[state.user_settings["rag"]["database"]].get("connected")
+
 
 #############################################################################
 # Sidebar
@@ -303,7 +308,15 @@ def rag_sidebar() -> None:
         def vs_reset() -> None:
             """Reset Vector Store Selections"""
             for key in state["user_settings"]["rag"]:
-                if key in ("model", "chunk_size", "chunk_overlap", "distance_metric", "vector_store", "alias", "index_type"):
+                if key in (
+                    "model",
+                    "chunk_size",
+                    "chunk_overlap",
+                    "distance_metric",
+                    "vector_store",
+                    "alias",
+                    "index_type",
+                ):
                     clear_state_key(f"selected_rag_{key}")
                     update_user_settings_state("rag", key)
 

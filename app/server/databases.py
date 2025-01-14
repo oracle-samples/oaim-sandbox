@@ -5,9 +5,10 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # spell-checker:ignore genai
 
 import json
+from typing import Any
 import oracledb
 
-from common.schema import Database, DatabaseModel, DatabaseVectorStorage, TestSets
+from common.schema import Database, DatabaseModel, DatabaseVectorStorage
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("server.database")
@@ -47,17 +48,24 @@ def disconnect(conn: oracledb.Connection) -> None:
     return conn.close()
 
 
-def execute_sql(conn: oracledb.Connection, run_sql: str) -> list:
+def execute_sql(conn: oracledb.Connection, run_sql: str, binds: dict = None) -> list:
     """Execute SQL against Oracle Database"""
-    logger.debug("SQL: %s", run_sql)
+    logger.debug("SQL: %s with binds %s", run_sql, binds)
     try:
         # Use context manager to ensure the cursor is closed properly
         with conn.cursor() as cursor:
-            cursor.execute(run_sql)
+            rows = None
+            cursor.callproc("dbms_output.enable")
+            status_var = cursor.var(int)
+            text_var = cursor.var(str)
+            cursor.execute(run_sql, binds)
             if cursor.description:  # Check if the query returns rows
                 rows = cursor.fetchall()
             else:
-                rows = None  # No rows to fetch
+                cursor.callproc("dbms_output.get_line", (text_var, status_var))
+                if status_var.getvalue() == 0:
+                    logger.info("Returning DBMS_OUTPUT.")
+                    rows = text_var.getvalue()
             return rows
     except oracledb.DatabaseError as ex:
         if ex.args:
@@ -101,41 +109,3 @@ def drop_vs(conn: oracledb.Connection, vs: DatabaseVectorStorage) -> None:
     logger.info("Dropping Vector Store: %s", vs.vector_store)
     sql = f"DROP TABLE {vs.vector_store} PURGE"
     _ = execute_sql(conn, sql)
-
-
-def create_test_set(conn: oracledb.Connection) -> None:
-    logger.info("Creating Test Set Table")
-    table_sql = """
-            CREATE TABLE IF NOT EXISTS test_sets (
-                id          RAW(16) DEFAULT SYS_GUID() PRIMARY KEY,
-                name        VARCHAR2(255) NOT NULL,
-                date_loaded TIMESTAMP (6) WITH TIME ZONE NOT NULL,
-                test_set    JSON
-            )
-        """
-    index_sql = """
-            CREATE INDEX IF NOT EXISTS test_sets_idx ON test_sets (name, date_loaded)
-        """
-    _ = execute_sql(conn, table_sql)
-    _ = execute_sql(conn, index_sql)
-
-
-def get_test_set(conn: oracledb.Connection, date_loaded: str = "%", name: str = "%") -> list:
-    logger.info("Getting Test Set; Name: %s - Date Loaded: %s", name, date_loaded)
-    test_sets = []
-    sql = f"""
-        SELECT name, to_char(date_loaded, 'YYYY-MM-DD HH24:MI:SS.FF') as date_loaded, test_set
-          FROM test_sets
-         WHERE to_char(date_loaded, 'YYYY-MM-DD HH24:MI:SS.FF') like '{date_loaded}'
-           AND name like '{name}'
-        ORDER BY date_loaded desc
-      """
-    results = execute_sql(conn, sql)
-    try:
-        for name, date_loaded, test_set in results:
-            test_sets.append(TestSets(name=name, date_loaded=date_loaded, test_set=test_set))
-    except TypeError as ex:
-        logger.exception("Exception raised: %s", ex)
-        create_test_set(conn)
-
-    return test_sets

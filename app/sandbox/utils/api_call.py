@@ -53,11 +53,14 @@ def send_request(
     args = {k: v for k, v in args.items() if v is not None}
     # Avoid logging out binary data in files
     log_args = args.copy()
-    if log_args.get("files"):
-        log_args["files"] = [
-            (field_name, (f[0], "<binary_data>", f[2]))
-            for field_name, f in log_args["files"]
-        ]
+    try:
+        if log_args.get("files"):
+            log_args["files"] = [
+                (field_name, (f[0], "<binary_data>", f[2]))
+                for field_name, f in log_args["files"]
+            ]
+    except (ValueError, IndexError):
+        pass
     logger.info("%s Request: %s", method, log_args)
 
     for attempt in range(retries + 1):

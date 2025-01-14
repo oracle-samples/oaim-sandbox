@@ -2,7 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore ollama, hnsw, mult, ocid
+# spell-checker:ignore ollama, hnsw, mult, ocid, testset
 
 from typing import TypeVar, Generic, Optional, Literal, Union
 from pydantic import BaseModel, Field, PrivateAttr
@@ -301,10 +301,13 @@ class ChatRequest(LanguageParametersModel):
 #####################################################
 class TestSets(BaseModel):
     """TestSets"""
-
+    tid: str = Field(description="Test ID")
     name: str = Field(description="Name of TestSet")
-    date_loaded: str = Field(description="Date Test Set Loaded")
-    test_set: dict = Field(description="Test Set Data")
+    created: str = Field(description="Date TestSet Loaded")
+
+class TestSetQA(BaseModel):
+    """TestSet Q&A"""
+    qa_data: list = Field(description="TestSet Q&A Data")
 
 #####################################################
 # Types
@@ -317,5 +320,6 @@ OCIProfileType = OracleCloudSettings.__annotations__["profile"]
 PromptNameType = Prompt.__annotations__["name"]
 PromptCategoryType = Prompt.__annotations__["category"]
 PromptPromptType = PromptModel.__annotations__["prompt"]
+TestSetsIdType = TestSets.__annotations__["tid"]
 TestSetsNameType = TestSets.__annotations__["name"]
-TestSetDateType = TestSets.__annotations__["date_loaded"]
+TestSetDateType = TestSets.__annotations__["created"]

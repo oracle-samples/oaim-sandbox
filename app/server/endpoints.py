@@ -2,13 +2,14 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore ainvoke, langgraph, modelcfg, jsonable, genai, ocid, docos, ollama, giskard
+# spell-checker:ignore ainvoke, langgraph, modelcfg, jsonable, genai, ocid, docos, ollama, giskard, testsets, testset
 
 import copy
 import os
 import shutil
-import json
 import tempfile
+import json
+import asyncio
 
 from datetime import datetime
 from typing import Optional
@@ -17,8 +18,9 @@ from pathlib import Path
 import requests
 
 from langgraph.graph.state import CompiledStateGraph
-from langchain_core.messages import HumanMessage, AnyMessage, convert_to_openai_messages
+from langchain_core.messages import HumanMessage, AnyMessage, convert_to_openai_messages, ChatMessage
 from langchain_core.runnables import RunnableConfig
+from giskard.rag import evaluate, QATestset
 
 import common.logging_config as logging_config
 import common.schema as schema
@@ -126,11 +128,7 @@ def register_endpoints(app: FastAPI) -> None:
     )
     async def database_drop_vs(vs: schema.DatabaseVectorStorage) -> schema.Response[str]:
         """Drop Vector Storage"""
-        db = next((db for db in database_objects if db.name == vs.database), None)
-        try:
-            conn = databases.connect(db)
-        except databases.DbException as ex:
-            raise HTTPException(status_code=ex.status_code, detail=ex.detail) from ex
+        conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
         databases.drop_vs(conn, vs)
 
         return schema.Response[str](data=vs.vector_store, msg="Vector Store Dropped")
@@ -559,60 +557,62 @@ def register_endpoints(app: FastAPI) -> None:
     # Testbed
     #################################################
     @app.get(
-        "/v1/testbed/test_sets",
-        description="Get Stored Test Sets.",
+        "/v1/testbed/testsets",
+        description="Get Stored TestSets.",
         response_model=schema.ResponseList[schema.TestSets],
     )
-    async def testbed_get_test_set(
-        timestamp: Optional[schema.TestSetDateType] = "%",
-        name: Optional[schema.TestSetsNameType] = "%",
-    ) -> schema.Response[schema.TestSets]:
-        db = next((db for db in database_objects if db.name == "DEFAULT"), None)
-        conn = databases.connect(db)
-        test_sets = databases.get_test_set(conn=conn, date_loaded=timestamp, name=name)
+    async def testbed_get_testsets() -> schema.Response[schema.TestSets]:
+        """Get a list of stored TestSets, create TestSet objects if they don't exist"""
+        db_conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
+        testsets = testbed.get_testsets(conn=db_conn)
         return schema.ResponseList[schema.TestSets](
-            data=test_sets,
-            msg="Test set found",
+            data=testsets,
+            msg=f"{len(testsets)} TestSet(s) found",
+        )
+
+    @app.get(
+        "/v1/testbed/testset_qa",
+        description="Get Stored TestSets Q&A.",
+        response_model=schema.Response[schema.TestSetQA],
+    )
+    async def testbed_get_testset_qa(tid: schema.TestSetsIdType) -> schema.Response[schema.TestSetQA]:
+        """Get TestSet Q&A"""
+        db_conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
+        testset_qa = testbed.get_testset_qa(conn=db_conn, tid=tid.upper())
+        return schema.Response[schema.TestSetQA](
+            data=testset_qa,
+            msg="TestSet Q&A found",
         )
 
     @app.post(
-        "/v1/testbed/test_sets",
-        description="Load Test Sets.",
-        response_model=schema.ResponseList[schema.TestSets],
+        "/v1/testbed/testset_load",
+        description="Upsert TestSets.",
+        response_model=schema.Response[schema.TestSetQA],
     )
-    async def testbed_load_test_sets(
-        files: list[UploadFile], name: schema.TestSetsNameType
-    ) -> schema.ResponseList[schema.TestSets]:
-        timestamp = datetime.now()
-        db = next((db for db in database_objects if db.name == "DEFAULT"), None)
-        conn = databases.connect(db)
-
+    async def testbed_upsert_testsets(
+        files: list[UploadFile],
+        name: schema.TestSetsNameType,
+        tid: Optional[schema.TestSetsIdType] = None
+    ) -> schema.Response[schema.TestSetQA]:
+        created = datetime.now().isoformat()
+        db_conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
         try:
             for file in files:
                 file_content = await file.read()
-                for line in file_content.splitlines():
-                    json_data = json.loads(line.decode("utf-8"))
-                    json_string = json.dumps(json_data, ensure_ascii=False)
-                    sql = f"""
-                        INSERT INTO test_sets (name, date_loaded, test_set)
-                        VALUES ('{name}', TO_TIMESTAMP('{timestamp}', 'YYYY-MM-DD HH24:MI:SS.FF'), q'~{json_string}~')
-                        """
-                    databases.execute_sql(conn, sql)
-            conn.commit()
-            logger.info("Test Set %s - %s Inserted", name, timestamp)
+                content = testbed.jsonl_to_json_content(file_content)
+                db_id = testbed.upsert_qa(db_conn, name, created, content, tid)
+            db_conn.commit()
         except Exception as ex:
             logger.error("An exception occurred: %s", ex)
             raise HTTPException(status_code=500, detail="Unexpected error") from ex
-        test_sets = databases.get_test_set(conn=conn, date_loaded=timestamp, name=name)
-        return schema.ResponseList[schema.TestSets](
-            data=test_sets,
-            msg="Test Set(s) loaded into database",
-        )
+        
+        testset_qa = await testbed_get_testset_qa(tid=db_id)
+        return testset_qa
 
     @app.post(
-        "/v1/testbed/generate_qa",
+        "/v1/testbed/testset_generate",
         description="Generate Q&A Test Set.",
-        response_model=schema.ResponseList[schema.TestSets],
+        response_model=schema.Response[schema.TestSetQA],
     )
     async def testbed_generate_qa(
         files: list[UploadFile],
@@ -620,7 +620,7 @@ def register_endpoints(app: FastAPI) -> None:
         ll_model: schema.ModelNameType = None,
         embed_model: schema.ModelNameType = None,
         questions: int = 0,
-    ) -> schema.ResponseList[schema.TestSets]:
+    ) -> schema.Response[schema.TestSetQA]:
         """Retrieve contents from a local file uploaded and generate Q&A"""
         # Setup Models
         giskard_ll_model = await models.apply_filter(
@@ -635,17 +635,14 @@ def register_endpoints(app: FastAPI) -> None:
             model_type="embed",
             only_enabled=True,
         )
-
-        # Load and Split
         with tempfile.TemporaryDirectory() as temp_dir:
+            full_testsets = f"{temp_dir}/{name}_full.jsonl"
             for file in files:
                 try:
-                    # Read file content
+                    # Read and save file content
                     file_content = await file.read()
                     filename = f"{temp_dir}/{file.filename}"
                     logger.info("Writing Q&A File to: %s", filename)
-
-                    # Save file locally
                     with open(filename, "wb") as temp_file:
                         temp_file.write(file_content)
 
@@ -654,45 +651,62 @@ def register_endpoints(app: FastAPI) -> None:
                     test_set = testbed.build_knowledge_base(
                         text_nodes, questions, giskard_ll_model[0], giskard_embed_model[0]
                     )
-                    logger.info("Test Set Generated")
-
                     # Save test set
                     test_set_filename = f"{temp_dir}/{name}.jsonl"
                     test_set.save(test_set_filename)
-
-                    # Store tests in database
-                    with open(test_set_filename, "rb") as file:
-                        upload_file = UploadFile(file=file, filename=f"{name}.jsonl")
-                        results = await testbed_load_test_sets(files=[upload_file], name=name)
-
-                    return results
-                except Exception as e:
-                    logger.error("Error processing file: %s", str(e))
+                    with (
+                        open(test_set_filename, "r", encoding="utf-8") as source,
+                        open(full_testsets, "a", encoding="utf-8") as destination,
+                    ):
+                        destination.write(source.read())
+                except Exception as ex:
+                    logger.error("Error processing file: %s", str(ex))
                     raise
 
-        return results
+            # Store tests in database
+            with open(full_testsets, "rb") as file:
+                upload_file = UploadFile(file=file, filename=f"{name}.jsonl")
+                testset_qa = await testbed_upsert_testsets(files=[upload_file], name=name)
+
+        return testset_qa
 
     # @app.post(
     #     "/v1/testbed/evaluate",
     #     description="Evaluate Q&A Test Set.",
     #     response_model=schema.Response[list],
     # )
-    # async def testbed_evaluate_qa(
-    #     test_set_id: int
+    # def testbed_evaluate_qa(
+    #     name: schema.TestSetsNameType,
+    #     created: Optional[schema.TestSetDateType] = None,
     # ) -> schema.Response[list]:
     #     # Get testbed settings
+    #     evaluated = datetime.now().isoformat()
     #     testbed_settings = next((settings for settings in settings_objects if settings.client == "testbed"), None)
+    #     conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
     #     # Change Disable History
     #     testbed_settings.ll_model.chat_history = False
 
     #     def get_answer(question: str):
     #         request = schema.ChatRequest(
     #             model=testbed_settings.ll_model.model,
-    #             messages=[HumanMessage(content=question)],
+    #             messages=[ChatMessage(role="human", content=question)],
     #         )
-    #         ai_response = chat_post(request, "testbed")
+    #         ai_response = asyncio.run(chat_post(request, "testbed"))
     #         return ai_response.choices[0].message.content
 
-    #     qa_test = testbed.load_qa_test(test_set)
-    #     report = evaluate(get_answer, testset=qa_test)
-    #     print(report)
+    #     testset = testbed.get_testsets(conn=conn, name=name, created=created)
+    #     qa_test = "\n".join(json.dumps(item.qa_data) for item in testset)
+    #     with open("/tmp/output.txt", "w") as file:
+    #         file.write(qa_test)
+    #     loaded_testset = QATestset.load("/tmp/output.txt")
+    #     report = evaluate(get_answer, testset=loaded_testset)
+    #     #report = evaluate(get_answer, testset=loaded_testset)
+    #     report_df = report.to_pandas()
+    #     json_report = report_df.to_json()
+    #     testbed.insert_evaluation(conn, testset.tid, evaluated, testbed_settings, json_report)
+    #     print(json_report)
+
+    #     return schema.Response[list](
+    #         data=[json_report],
+    #         msg="Test Set(s) loaded into database",
+    #     )
