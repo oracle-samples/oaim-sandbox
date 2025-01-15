@@ -89,6 +89,7 @@ def main():
             key="text_input_region",
         )
         key_file = st.text_input("Key File:", value=state.oci_config["key_file"], key="text_input_key_file")
+        compartment_id = st.text_input("Compartment ID:", value=state.oci_config["compartment_id"], key="text_input_compartment_id")
 
         if st.form_submit_button(label="Save"):
             print("I'm Here!")

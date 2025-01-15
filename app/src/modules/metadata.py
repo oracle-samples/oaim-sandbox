@@ -17,6 +17,8 @@ from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_openai import OpenAIEmbeddings
 from langchain_ollama import OllamaEmbeddings
 from langchain_cohere import CohereEmbeddings
+from langchain_community.embeddings.oci_generative_ai import OCIGenAIEmbeddings
+
 from langchain.retrievers.document_compressors import CohereRerank
 
 logger = logging_config.logging.getLogger("modules.metadata")
@@ -87,6 +89,21 @@ def ll_models():
     """Define example Language Model Support"""
     # Lists are in [user, default, min, max] format
     ll_models_dict = {
+
+        "cohere.command-r-plus-08-2024": {
+            "enabled": os.getenv("OCI_PROFILE") is not None,
+            "api": "CohereOCI",
+            "url": "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
+            "api_key": os.environ.get("OCI_PROFILE", default=""),
+            "openai_compat": False,
+            "context_length": 131072 ,
+            "temperature": [0.3, 0.3, 0.0, 1.0],
+            "top_p": [1.0, 1.0, 0.0, 1.0],
+            "max_tokens": [100, 100, 1, 4096],
+            "frequency_penalty": [0.0, 0.0, -1.0, 1.0],
+            "presence_penalty": [0.0, 0.0, -2.0, 2.0],
+        },
+
         "command-r": {
             "enabled": os.getenv("COHERE_API_KEY") is not None,
             "api": "Cohere",
@@ -278,6 +295,15 @@ def embedding_models():
             "openai_compat": True,
             "chunk_max": 8191,
             "dimensions": 1536,
+        },
+        "cohere.embed-multilingual-v3.0":{
+            "enabled": os.getenv("OCI_PROFILE") is not None,
+            "api": OCIGenAIEmbeddings,
+            "url": "https://inference.generativeai.us-chicago-1.oci.oraclecloud.com",
+            "api_key": os.environ.get("OCI_PROFILE", default=""),
+            "openai_compat": False,
+            "chunk_max": 512,
+            "dimensions": 1024,
         },
         "embed-english-v3.0": {
             "enabled": os.getenv("COHERE_API_KEY") is not None,

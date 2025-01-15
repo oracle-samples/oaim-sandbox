@@ -44,3 +44,4 @@ temp/tools.ipynb
 temp/tools.py
 temp/json-dual.sql
 env.sh
+temp/oci_genai.py
