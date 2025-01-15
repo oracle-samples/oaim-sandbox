@@ -19,7 +19,7 @@ from langgraph.prebuilt import tools_condition, ToolNode
 
 from pydantic import BaseModel, Field
 
-from server.agents.tools import oraclevs_retriever
+from server.agents.tools.oraclevs_retriever import oraclevs_tool
 from common.schema import ChatResponse, ChatUsage, ChatChoices, ChatMessage
 from common import logging_config
 
@@ -88,6 +88,8 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["gener
     model = config["configurable"].get("ll_client", None)
 
     # LLM with tool and validation
+    if config["metadata"]["rag_settings"].rag_enabled:
+        model = model.bind_tools(tools, tool_choice="oraclevs_tool")    
     llm_with_tool = model.with_structured_output(Grade)
 
     # Prompt
@@ -189,9 +191,10 @@ def agent(state: AgentState, config: RunnableConfig) -> AgentState:
     model = config["configurable"].get("ll_client", None)
 
     # Bind the retriever if RAG is enabled
+    logger.info("RAG Enabled? %s", config["metadata"]["rag_settings"].rag_enabled)
     if config["metadata"]["rag_settings"].rag_enabled:
         logger.info("Binding agent to RAG tools")
-        model = model.bind_tools(tools)
+        model = model.bind_tools(tools, tool_choice="oraclevs_tool")
 
     response = model.invoke(messages)
     return {"messages": [response]}
@@ -201,7 +204,7 @@ def agent(state: AgentState, config: RunnableConfig) -> AgentState:
 # GRAPH
 #############################################################################
 # Setup Tools
-tools = [oraclevs_retriever.oraclevs_tool]
+tools = [oraclevs_tool]
 
 workflow = StateGraph(AgentState)
 

@@ -67,7 +67,7 @@ class SandboxClient:
                 headers=self.headers,
                 timeout=self.timeout,
             )
-            response_data = response.model_dump_json()
+            response_data = response.json()
             logger.debug("Response Received: %s", response_data)
             if response.status_code == 200:
                 return ChatResponse.model_validate(response_data)
