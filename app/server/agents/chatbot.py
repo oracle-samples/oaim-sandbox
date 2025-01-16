@@ -76,7 +76,7 @@ def format_response(state: AgentState) -> ChatResponse:
 
 # def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["generate", "rewrite"]:
 def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["generate", "agent"]:
-    """Determines whether the retrieved documents are:wq! relevant to the question."""
+    """Determines whether the retrieved documents are relevant to the question."""
     logger.info("Grading RAG Response")
 
     # Data model
@@ -133,8 +133,8 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["gener
         my_messages = list(chatbot_graph.get_state(config))
         state["messages"] = state["messages"][:-2]
         config["metadata"]["rag_settings"].rag_enabled = False
-        return {"messages": [state["messages"]]}
-        #return "agent"
+        #return {"messages": [state["messages"]]}
+        return "agent"
         # return "rewrite"
 
 
@@ -199,9 +199,9 @@ def agent(state: AgentState, config: RunnableConfig) -> AgentState:
     logger.info("Calling Chatbot Agent")
     # If user decided for no history, only take the last message
     use_history = config["metadata"]["use_history"]
-
     # TODO: Remove tool calls that will blow-up the context window before sending
     messages = state["messages"] if use_history else state["messages"][-1:]
+    print(messages)
 
     model = config["configurable"].get("ll_client", None)
 
