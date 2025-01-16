@@ -122,6 +122,7 @@ def get_ll_model(model, ll_models_config=None, giskarded=False):
     elif llm_api == "ChatOllama":
         client = ChatOllama(model=model,base_url=lm_params["url"], model_kwargs=common_params)
     elif llm_api == "CohereOCI":
+        state.oci_config["tenancy_ocid"] 
         client = ChatOCIGenAI(
             model_id=model,
             service_endpoint=lm_params["url"],
@@ -415,6 +416,10 @@ def populate_vs(
 
     execute_sql(db_conn, mergesql)
     db_conn.commit()
+    #NOTE: In this release, index is automatically created without user control. This part of code helps the future release
+    #to re-create an index or leave without an existing vectorstore.
+    #for this reason the index_exists is set to True to recreate in any case the index.
+    index_exists=True
 
     if (index_exists):
         # Build the Index
