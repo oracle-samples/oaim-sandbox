@@ -8,7 +8,7 @@ from datetime import datetime, timezone
 import json
 from typing import Literal
 
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import RemoveMessage
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import PromptTemplate
 from langchain_core.runnables import RunnableConfig
@@ -74,7 +74,8 @@ def format_response(state: AgentState) -> ChatResponse:
     return response
 
 
-def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["generate", "rewrite"]:
+# def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["generate", "rewrite"]:
+def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["generate", "agent"]:
     """Determines whether the retrieved documents are:wq! relevant to the question."""
     logger.info("Grading RAG Response")
 
@@ -89,22 +90,23 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["gener
 
     # LLM with tool and validation
     if config["metadata"]["rag_settings"].rag_enabled:
-        model = model.bind_tools(tools, tool_choice="oraclevs_tool")    
+        model = model.bind_tools(tools, tool_choice="oraclevs_tool")
     llm_with_tool = model.with_structured_output(Grade)
 
     # Prompt
     grade_template = """
-    You are a Grader assessing relevance of a retrieved document to a user question.
-    Here is the retrieved document:
+    You are a Grader assessing relevance of retrieved documents to user input.
+    Here are the retrieved document:
     -------
     {context}
     -------
-    Here is the user question:
+    Here is the user input:
     -------
     {question}
     -------
-    If the document contains keyword(s) or semantic meaning related to the user question,
-    grade it as relevant. Give a binary score 'yes' or 'no' score to indicate whether the
+    If the documents contain keyword(s) or semantic meaning related to the user input,
+    grade it as relevant. If the user input is a generic greeting, give a binary score of 'no'
+    otherwise give a binary score 'yes' or 'no' score to indicate whether the
     document is relevant to the question.
     """
 
@@ -127,47 +129,58 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["gener
     if score == "yes":
         return "generate"
     else:
-        return "rewrite"
+        logger.info("Removing Tools Call Messages")
+        my_messages = list(chatbot_graph.get_state(config))
+        state["messages"] = state["messages"][:-2]
+        config["metadata"]["rag_settings"].rag_enabled = False
+        return {"messages": [state["messages"]]}
+        #return "agent"
+        # return "rewrite"
 
 
-def rewrite(state: AgentState, config: RunnableConfig):
-    """Transform the query to produce a better question."""
-    logger.info("Attempting to rewrite query after failed Grade")
-    question = state["messages"][0].content
+# def rewrite(state: AgentState, config: RunnableConfig):
+#     """Transform the query to produce a better question."""
+#     logger.info("Attempting to rewrite query after failed Grade")
+#     question = state["messages"][0].content
 
-    # Formulate a new message
-    rewrite_message = f"""
-    Look at the input and try to reason about the underlying semantic intent or meaning.
-    Here is the initial question:
-    -------
-    {question}
-    -------
-    Formulate an improved question:
-    """
-    # Send rewrite request
-    model = config["configurable"].get("ll_client", None)
-    response = model.invoke([SystemMessage(content=rewrite_message)])
-    return {"messages": [response]}
+#     # Formulate a new message
+#     rewrite_message = f"""
+#     Look at the input and history then try to reason about the underlying semantic intent or meaning.
+#     Here is the initial question:
+#     -------
+#     {question}
+#     -------
+#     Formulate an improved question:
+#     """
+#     # Send rewrite request
+#     model = config["configurable"].get("ll_client", None)
+#     response = model.invoke([SystemMessage(content=rewrite_message)])
+#     return {"messages": [response]}
 
 
-def generate(state: AgentState, config: RunnableConfig):
-    """Generate answer when RAG enabled"""
-    logger.info("Generating Response")
+def generate(state: AgentState, config: RunnableConfig) -> None:
+    """Generate answer when RAG enabled; modify state with response"""
+    logger.info("Generating RAG Response")
+
     messages = state["messages"]
+    # Retrieve the Human Question
     question = messages[0].content
-    # result will be a str, convert for processing
-    context = json.loads(messages[-1].content)
-    chunks = "\n\n".join([doc["page_content"] for doc in context])
+    # Extract the RAG Documents and format
+    rag_context = json.loads(messages[-1].content)
+    chunks = "\n\n".join([doc["page_content"] for doc in rag_context])
     logger.debug("Generate Chunks: %s", chunks)
 
+    # Generate prompt with RAG context
     generate_template = "SystemMessage(content='{sys_prompt}\n {context}'), HumanMessage(content='{question}')"
     prompt_template = PromptTemplate(
         template=generate_template,
         input_variables=["sys_prompt", "context", "question"],
     )
+
     # Chain and Run
     llm = config["configurable"].get("ll_client", None)
     generate_chain = prompt_template | llm | StrOutputParser()
+
     response = generate_chain.invoke(
         {
             "sys_prompt": config["metadata"]["sys_prompt"].prompt,
@@ -175,7 +188,7 @@ def generate(state: AgentState, config: RunnableConfig):
             "question": question,
         }
     )
-    return {"messages": [response]}
+    return {"messages": ("assistant", response)}
 
 
 def agent(state: AgentState, config: RunnableConfig) -> AgentState:
@@ -186,6 +199,8 @@ def agent(state: AgentState, config: RunnableConfig) -> AgentState:
     logger.info("Calling Chatbot Agent")
     # If user decided for no history, only take the last message
     use_history = config["metadata"]["use_history"]
+
+    # TODO: Remove tool calls that will blow-up the context window before sending
     messages = state["messages"] if use_history else state["messages"][-1:]
 
     model = config["configurable"].get("ll_client", None)
@@ -211,7 +226,7 @@ workflow = StateGraph(AgentState)
 # Define the nodes we will cycle between
 workflow.add_node("agent", agent)
 workflow.add_node("retrieve", ToolNode(tools))
-workflow.add_node("rewrite", rewrite)
+# workflow.add_node("rewrite", rewrite)
 workflow.add_node("generate", generate)
 workflow.add_node("respond", format_response)
 
@@ -227,7 +242,7 @@ workflow.add_conditional_edges("retrieve", grade_documents)
 
 # Generate the Output
 workflow.add_edge("generate", "respond")
-workflow.add_edge("rewrite", "agent")
+# workflow.add_edge("rewrite", "agent")
 workflow.add_edge("respond", END)
 
 # Compile

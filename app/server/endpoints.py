@@ -590,9 +590,7 @@ def register_endpoints(app: FastAPI) -> None:
         response_model=schema.Response[schema.TestSetQA],
     )
     async def testbed_upsert_testsets(
-        files: list[UploadFile],
-        name: schema.TestSetsNameType,
-        tid: Optional[schema.TestSetsIdType] = None
+        files: list[UploadFile], name: schema.TestSetsNameType, tid: Optional[schema.TestSetsIdType] = None
     ) -> schema.Response[schema.TestSetQA]:
         created = datetime.now().isoformat()
         db_conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
@@ -605,7 +603,7 @@ def register_endpoints(app: FastAPI) -> None:
         except Exception as ex:
             logger.error("An exception occurred: %s", ex)
             raise HTTPException(status_code=500, detail="Unexpected error") from ex
-        
+
         testset_qa = await testbed_get_testset_qa(tid=db_id)
         return testset_qa
 
@@ -670,43 +668,48 @@ def register_endpoints(app: FastAPI) -> None:
 
         return testset_qa
 
-    # @app.post(
-    #     "/v1/testbed/evaluate",
-    #     description="Evaluate Q&A Test Set.",
-    #     response_model=schema.Response[list],
-    # )
-    # def testbed_evaluate_qa(
-    #     name: schema.TestSetsNameType,
-    #     created: Optional[schema.TestSetDateType] = None,
-    # ) -> schema.Response[list]:
-    #     # Get testbed settings
-    #     evaluated = datetime.now().isoformat()
-    #     testbed_settings = next((settings for settings in settings_objects if settings.client == "testbed"), None)
-    #     conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
-    #     # Change Disable History
-    #     testbed_settings.ll_model.chat_history = False
+    @app.post(
+        "/v1/testbed/evaluate",
+        description="Evaluate Q&A Test Set.",
+        response_model=schema.Response[str],
+    )
+    def testbed_evaluate_qa(tid: schema.TestSetsIdType) -> schema.Response[str]:
+        # Get testbed settings
+        evaluated = datetime.now().isoformat()
+        testbed_settings = next((settings for settings in settings_objects if settings.client == "testbed"), None)
+        db_conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
+        # Change Disable History
+        testbed_settings.ll_model.chat_history = False
 
-    #     def get_answer(question: str):
-    #         request = schema.ChatRequest(
-    #             model=testbed_settings.ll_model.model,
-    #             messages=[ChatMessage(role="human", content=question)],
-    #         )
-    #         ai_response = asyncio.run(chat_post(request, "testbed"))
-    #         return ai_response.choices[0].message.content
+        def get_answer(question: str):
+            request = schema.ChatRequest(
+                model=testbed_settings.ll_model.model,
+                messages=[ChatMessage(role="human", content=question)],
+            )
+            ai_response = asyncio.run(chat_post(request, "testbed"))
+            return ai_response.choices[0].message.content
 
-    #     testset = testbed.get_testsets(conn=conn, name=name, created=created)
-    #     qa_test = "\n".join(json.dumps(item.qa_data) for item in testset)
-    #     with open("/tmp/output.txt", "w") as file:
-    #         file.write(qa_test)
-    #     loaded_testset = QATestset.load("/tmp/output.txt")
-    #     report = evaluate(get_answer, testset=loaded_testset)
-    #     #report = evaluate(get_answer, testset=loaded_testset)
-    #     report_df = report.to_pandas()
-    #     json_report = report_df.to_json()
-    #     testbed.insert_evaluation(conn, testset.tid, evaluated, testbed_settings, json_report)
-    #     print(json_report)
+        testset = testbed.get_testset_qa(conn=db_conn, tid=tid.upper())
+        print(testset.qa_data)
+        qa_test = "\n".join(json.dumps(item) for item in testset.qa_data)
+        with open("/tmp/output.txt", "w", encoding="utf-8") as file:
+            file.write(qa_test)
+        loaded_testset = QATestset.load("/tmp/output.txt")
+        report = evaluate(get_answer, testset=loaded_testset)
+        with tempfile.TemporaryDirectory() as temp_dir:
+            report.save(temp_dir)
+            report_data = testbed.process_report("save", temp_dir)
 
-    #     return schema.Response[list](
-    #         data=[json_report],
-    #         msg="Test Set(s) loaded into database",
-    #     )
+        testbed.insert_evaluation(
+            db_conn,
+            tid,
+            evaluated,
+            testbed_settings.model_dump_json(),
+            report_data
+        )
+        db_conn.commit()
+
+        return schema.Response[str](
+            data=report.to_html(),
+            msg="Evaluation Completed",
+        )

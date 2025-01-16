@@ -72,7 +72,7 @@ def oraclevs_tool(
         )
 
     documents_dict = [vars(doc) for doc in documents]
-    logger.info("Found Documents: %s", documents_dict)
+    logger.debug("Found Documents: %s", documents_dict)
     return documents_dict
 
 oraclevs_retriever: BaseTool = tool(oraclevs_tool)

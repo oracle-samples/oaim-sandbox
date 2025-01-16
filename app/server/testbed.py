@@ -4,8 +4,9 @@ Licensed under the Universal Permissive License v 1.0 as shown at http://oss.ora
 """
 # spell-checker:ignore giskard testset, ollama, testsets
 
+import os
 import json
-from numpy import byte
+import tempfile
 import pandas as pd
 
 from pypdf import PdfReader
@@ -14,7 +15,7 @@ from llama_index.core import Document
 from llama_index.core.node_parser import SentenceSplitter
 
 from giskard.llm import set_llm_model, set_embedding_model
-from giskard.rag import generate_testset, KnowledgeBase, QATestset
+from giskard.rag import generate_testset, KnowledgeBase
 from giskard.rag.question_generators import simple_questions, complex_questions
 
 import server.databases as databases
@@ -66,10 +67,15 @@ def create_testset_objects(conn: Connection) -> None:
         """
     evaluation_tbl = """
             CREATE TABLE IF NOT EXISTS evaluation (
-                tid       RAW(16) DEFAULT SYS_GUID(),
-                evaluated TIMESTAMP(9) WITH LOCAL TIME ZONE,
-                settings  JSON,
-                report    JSON,
+                tid                 RAW(16) DEFAULT SYS_GUID(),
+                evaluated           TIMESTAMP(9) WITH LOCAL TIME ZONE,
+                settings            JSON,
+                testset_jsonl       JSON,
+                report_details      JSON,
+                knowledge_base      JSON,
+                knowledge_base_meta JSON,
+                agent_answer        JSON,
+                metrics_results     JSON,
                 CONSTRAINT evaluation_fk FOREIGN KEY (tid) REFERENCES testsets(tid) ON DELETE CASCADE
             )
         """
@@ -84,6 +90,7 @@ def create_testset_objects(conn: Connection) -> None:
 def get_testsets(conn: Connection) -> list:
     """Get list of TestSets"""
     logger.info("Getting TestSets")
+    testsets = []
     sql = "SELECT tid, name, to_char(created) FROM testsets"
     results = databases.execute_sql(conn, sql)
     try:
@@ -152,18 +159,33 @@ def upsert_qa(
     return databases.execute_sql(conn, plsql, binds)
 
 
-# def insert_evaluation(conn, tid, evaluated, settings, report):
-#     logger.info("Insert evaluation; TID: %s", tid)
-#     binds = {"tid": tid, "evaluated": evaluated, "settings": settings, "report": report}
-#     plsql = """
-#         DECLARE
-#             l_evaluated TESTSETS.CREATED%TYPE := TO_TIMESTAMP(:evaluated ,'YYYY-MM-DD"T"HH24:MI:SS.FF');
-#         BEGIN
-#             INSERT INTO evaluation (tid, evaluated, settings, report) VALUES (:tid, :evaluated, :settings, :report)
-#         END;
-#     """
-#     logger.debug("Insert PLSQL: %s", plsql)
-#     databases.execute_sql(conn, plsql, binds)
+def insert_evaluation(conn, tid, evaluated, settings, report_data):
+    logger.info("Insert evaluation; TID: %s", tid)
+    binds = {
+        "tid": tid,
+        "evaluated": evaluated,
+        "settings": settings,
+        "testset_jsonl": report_data["testset_jsonl"],
+        "report_details": report_data["report_details"],
+        "knowledge_base": report_data["knowledge_base"],
+        "knowledge_base_meta": report_data["knowledge_base_meta"],
+        "metrics_results": report_data["metrics_results"],
+    }
+    plsql = """
+        DECLARE
+            l_evaluated EVALUATION.EVALUATED%TYPE := TO_TIMESTAMP(:evaluated ,'YYYY-MM-DD"T"HH24:MI:SS.FF');
+        BEGIN
+            INSERT INTO evaluation (
+                tid, evaluated, settings, testset_jsonl, report_details,
+                knowledge_base, knowledge_base_meta, metrics_results
+            VALUES (
+                :tid, l_evaluated, :settings, :testset_jsonl, :report_details, 
+                :knowledge_base, :knowledge_base_meta, :metrics_results
+            );
+        END;
+    """
+    logger.debug("Insert PLSQL: %s", plsql)
+    databases.execute_sql(conn, plsql, binds)
 
 
 def load_and_split(eval_file, chunk_size=2048):
@@ -222,3 +244,24 @@ def build_knowledge_base(text_nodes: str, questions: int, ll_model: schema.Model
     logger.info("Test Set from Knowledge Base Generated")
 
     return testset
+
+
+def process_report(action, temp_dir):
+    files = {
+        "testset.jsonl": "testset_jsonl",
+        "report_details.json": "report_details",
+        "knowledge_base.jsonl": "knowledge_base",
+        "knowledge_base_meta.json": "knowledge_base_meta",
+        "metrics_results.json": "metrics_results",
+    }
+    if action == "save":
+        logger.info("Saved Evaluation Report")
+        data = {}
+        for file_name, var_name in files.items():
+            file_path = os.path.join(temp_dir, file_name)
+            with open(file_path, "r", encoding="utf-8") as file:
+                data[var_name] = json.load(file)
+    if action == "load":
+        pass
+
+    return data

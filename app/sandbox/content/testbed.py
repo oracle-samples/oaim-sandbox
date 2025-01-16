@@ -61,7 +61,7 @@ def qa_update_db() -> None:
 
     qa_file = BytesIO(json_data.encode("utf-8"))
     api_payload = {"files": [("files", ("data.json", qa_file, "application/json"))]}
-    _ = api_call.post(url=api_url, params=api_params, payload=api_payload)
+    _ = api_call.post(url=api_url, params=api_params, payload=api_payload, timeout=120)
     st_common.clear_state_key("testbed_db_testsets")
     get_testbed_db_testsets.clear()
     state.testbed_db_testsets = get_testbed_db_testsets()
@@ -190,7 +190,7 @@ def main():
     ###################################
     button_load_disabled = True
     button_text, api_url, testset_source = None, None, None
-    api_params = {}
+    api_params = {"timeout": 3600}
     if not state.selected_generate_test:
         st.subheader("Run Existing Q&A Test Set", divider="red")
         button_text = "Load Q&A"
@@ -326,6 +326,7 @@ def main():
             key="selected_new_testset_name",
             value=state.testbed["testset_name"],
             help="Update your Test Set a name to easily identify it later.",
+            on_change=qa_update_db,
         )
         qa_update_gui(state.testbed_qa)
         testbed_qa_df = pd.DataFrame(state.testbed_qa)
@@ -336,30 +337,36 @@ def main():
             mime="application/json",
             on_click=qa_update_db,
         )
-    #     ###################################
-    #     # Evaluator
-    #     ###################################
-    #     st.subheader("Q&A Evaluation", divider="red")
-    #     st.info("Use the sidebar settings for evaluation parameters", icon="⬅️")
-    #     st_common.ll_sidebar()
-    #     st_common.rag_sidebar()
-    #     if st.button(
-    #         "Start Evaluation",
-    #         type="primary",
-    #         key="evaluate_button",
-    #         help="Evaluation will automatically save the TestSet to the Database",
-    #         on_click=qa_update_db,
-    #     ):
-    #         placeholder = st.empty()
-    #         with placeholder:
-    #             st.warning("Starting Q&A evaluation... please be patient.", icon="⚠️")
-    #             st_common.copy_user_settings(new_client="testbed")
-    #             api_url = f"{API_ENDPOINT}/evaluate"
-    #             api_params = {
-    #                 "name": state.selected_new_testset_name,
-    #                 "created": state.testbed["testset_created"],
-    #             }
-    #             evaluate = api_call.post(url=api_url, params=api_params, timeout=600)
+        ###################################
+        # Evaluator
+        ###################################
+        st.subheader("Q&A Evaluation", divider="red")
+        st.info("Use the sidebar settings for evaluation parameters", icon="⬅️")
+        st_common.ll_sidebar()
+        st_common.rag_sidebar()
+        if st.button(
+            "Start Evaluation",
+            type="primary",
+            key="evaluate_button",
+            help="Evaluation will automatically save the TestSet to the Database",
+            on_click=qa_update_db,
+        ):
+            st_common.copy_user_settings(new_client="testbed")
+            placeholder = st.empty()
+            with placeholder:
+                st.warning("Starting Q&A evaluation... please be patient.", icon="⚠️")
+            api_url = f"{API_ENDPOINT}/evaluate"
+            api_params = {"tid": state.testbed["testset_id"]}
+            evaluate = api_call.post(url=api_url, params=api_params, timeout=1200)
+            st.success("Evaluation Complete!", icon="✅")
+            placeholder.empty()
+
+        ###################################
+        # Results
+        ###################################
+        if evaluate:
+            st.subheader("Results", divider="red")
+            results = evaluate["data"][0]
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:

@@ -6,9 +6,10 @@ Session States Set:
 - user_client: Stores the SandboxClient
 """
 
-# spell-checker:ignore streamlit
+# spell-checker:ignore streamlit, oraclevs
 import asyncio
 import inspect
+import json
 
 import streamlit as st
 from streamlit import session_state as state
@@ -22,7 +23,24 @@ logger = logging_config.logging.getLogger("content.chatbot")
 #############################################################################
 # Functions
 #############################################################################
+def show_rag_refs(context):
+    """When RAG Content Found, show the references"""
+    st.markdown("**References:**")
+    ref_src = set()
+    ref_cols = st.columns([3, 3, 3])
+    # Create a button in each column
+    for i, ref_col in enumerate(ref_cols):
+        with ref_col.popover(f"Reference: {i + 1}"):
+            chunk = context[i]
+            ref_src.add(chunk['metadata']["filename"])
+            st.subheader("Reference Text", divider="red")
+            st.markdown(chunk["page_content"])
+            st.subheader("Metadata", divider="red")
+            st.markdown(f"File:  {chunk['metadata']['source']}")
+            st.markdown(f"Chunk: {chunk['metadata']['page']}")
 
+    for link in ref_src:
+        st.markdown("- " + link)
 
 #############################################################################
 # MAIN
@@ -61,13 +79,20 @@ async def main() -> None:
     user_client: client.SandboxClient = state.user_client
 
     history = await user_client.get_history()
-    if len(history) == 1:
-        with st.chat_message("ai"):
-            # Do not put this in the history as messages must alternate human/ai
-            st.write("Hello, how can I help you?")
+    st.chat_message("ai").write("Hello, how can I help you?")
+    rag_refs = []
     for message in history:
+        logger.info("Process message for: %s", message["role"])
+        if not message["content"]:
+            continue
+        if message["role"] == "tool" and message["name"] == "oraclevs_tool":
+            rag_refs = json.loads(message["content"])
         if message["role"] in ("ai", "assistant"):
-            st.chat_message("ai").write(message["content"])
+            with st.chat_message("ai"):
+                st.write(message["content"])
+                if rag_refs:
+                    show_rag_refs(rag_refs)
+                    rag_refs = []
         elif message["role"] in ("human", "user"):
             st.chat_message("human").write(message["content"])
 
@@ -75,8 +100,8 @@ async def main() -> None:
     if human_request := st.chat_input(f"Ask your question here... (current prompt: {sys_prompt})"):
         st.chat_message("human").write(human_request)
         try:
-            ai_response = await user_client.completions(message=human_request)
-            st.chat_message("ai").write(ai_response.choices[0].message.content)
+            _ = await user_client.completions(message=human_request)
+            st.rerun()
         except Exception:
             logger.error("Exception:", exc_info=1)
             st.chat_message("ai").write(

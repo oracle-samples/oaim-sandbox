@@ -309,6 +309,12 @@ class TestSetQA(BaseModel):
     """TestSet Q&A"""
     qa_data: list = Field(description="TestSet Q&A Data")
 
+class Evaluations(BaseModel):
+    """TestSets"""
+    tid: str = Field(description="Test ID")
+    evaluated: str = Field(description="Date of Evaluation")
+    settings: list = Field(description="Settings for Evaluation")
+    report: list = Field(description="Evaluation Report")
 #####################################################
 # Types
 #####################################################
