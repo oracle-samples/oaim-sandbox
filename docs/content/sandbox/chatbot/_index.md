@@ -11,13 +11,48 @@ Differently from a common LLM playgrounds, that help to test an LLM on the infor
 
 ![Chatbot](images/chatbot.png)
 
-The playground could be used with or without the vector stores available, to proof that the pure LLMs configured to be used as completion LLM are aware or not about information you are looking for. Infact:
+The playground could be used with or without the vector stores available, to proof that the pure LLMs configured to be used as completion LLM are aware or not about information you are looking for.
 
-even the information which a company would provide through the chatbot are public, it is not said that the public LLM services have been yet trained on these information and a RAG approach is still needed.
+You can, first of all:
 
-Clicking on the RAG check box you can quickly turn on/off the knowledge base behind the chatbot:
+- **Enable History and Context**: in this way any further question & answer provided will be re-sent in the context to help the LLM to answer with a better grounded info, if it's checked;
+- **Clear History**: this button clear the context to better understand the LLM behaviour after a long conversation;
+
+## Chat Model
+Depending on the configuration done in the **Configuration**/**Models** page, you can choose one of the **Chat model** enlisted. For each of them you can modify the most important hyper-parameters:
+- Temperature
+- Maximum Tokens
+- Top P
+- Frequency penalty
+- Presence penalty
+To understand each of them, refers for example on this document: [Concepts for Generative AI](https://docs.oracle.com/en-us/iaas/Content/generative-ai/concepts.htm).
+
+## RAG params
+
+Clicking on the **RAG** check box you can quickly turn on/off the knowledge base behind the chatbot, exploiting the Retrieval Augentened Generation pattern implemented into the Sandbox. 
 
 ![Playground](images/playground.png)
 
-As you can see, all the most important parameters related to the LLM chosen could be modified to test the agent behaviour. The Similarity search reflects the two options available on the **Oracle DB 23ai**: **Similarity search** and **Maximal Marginal Relevance**.
+Then you can set:
 
+- **Enable Re-Ranking**: *under development*;
+- **Search Type**: the Search Type reflects the two options available on the **Oracle DB 23ai**: 
+    - **Similarity search**
+    - **Maximal Marginal Relevance**.
+- **Top K**: define the number of nearest chunks found comparing the embedding vector derived by the question with the vectors associated in the vector store with each chunk. Take in consideration that a large number of chunk could fill the maximum context size accepted by the LLM becoming useless the exciding text part.
+
+To search one of the vectorstore table created into the DB and use it for the RAG, you could use one or the combination of more than one parameter to filter the desired vectorstore: 
+
+- **Embedding Alias**
+- **Embedding Model**
+- **Chunk Size**
+- **Chunk Overlap**
+- **Distance Strategy**
+
+Until this message will not disappear:
+
+![Rag Error message](images/ragmessage.png)
+
+it means that the final vectorstore is not yet selected.
+
+The **Reset RAG** button allows you to restart the selection of another vectorestore table.
