@@ -16,4 +16,3 @@ There are three options available:
 - **Basic Example** : it is automatically paired with the no-rag, pure LLM chatbot configuration; 
 - **RAG Example** : it is automatically paired with the RAG checkbox set to True;
 - **Custom** : it's applied to any RAG/no-RAG configuration.
-
