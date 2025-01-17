@@ -78,7 +78,7 @@ def drop_vs(vs: dict):
     """Drop a Vector Storage Table"""
     try:
         api_url = f"{state.server['url']}:{state.server['port']}/v1/databases/drop_vs"
-        api_call.post(url=api_url + "/drop_vs", payload={"json": vs})
+        api_call.post(url=api_url, payload={"json": vs})
         st.success(f"{vs['vector_store']} - Dropped", icon="✅")
         st_common.clear_state_key("database_config")
     except api_call.ApiError as ex:
@@ -139,8 +139,8 @@ def main() -> None:
     if state.database_config[name]["connected"]:
         st.subheader("Database Vector Storage")
         if state.database_config[name]["vector_stores"]:
-            table_col_format = st.columns([0.02, 0.05, 0.1, 0.05, 0.05, 0.05, 0.04])
-            headers = ["", "Alias", "Model", "Chunk Size", "Chunk Overlap", "Distance Metric", "Index Type"]
+            table_col_format = st.columns([2, 5, 10, 5, 5, 5, 3])
+            headers = ["\u200B", "Alias", "Model", "Chunk: Size", "Overlap", "Distance Metric", "Index"]
 
             # Header row
             for col, header in zip(table_col_format, headers):

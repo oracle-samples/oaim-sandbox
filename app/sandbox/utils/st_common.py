@@ -4,11 +4,9 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 """
 # spell-checker:ignore streamlit, selectbox, mult, iloc
 
-import os
 from io import BytesIO
 from typing import Union
 import pandas as pd
-from bs4 import BeautifulSoup
 
 import streamlit as st
 from streamlit import session_state as state
@@ -58,6 +56,14 @@ def copy_user_settings(new_client: str) -> None:
     except api_call.ApiError as ex:
         st.success(f"Settings for {new_client} - Update Failed", icon="❌")
         logger.error("%s Settings Update failed: %s", new_client, ex)
+
+
+def switch_prompt(prompt_type: str, prompt_name: str) -> None:
+    """Auto Switch Prompts when not set to Custom"""
+    current_prompt = state["user_settings"]["prompts"][prompt_type]
+    if current_prompt != "Custom" and current_prompt != prompt_name:
+        state.user_settings["prompts"][prompt_type] = prompt_name
+        st.info(f"Prompt Engineering - {prompt_name} Prompt has been set.", icon="ℹ️")
 
 
 #############################################################################
@@ -222,10 +228,12 @@ def rag_sidebar() -> None:
         logger.debug("RAG Disabled (Database not configured)")
         st.warning("Database is not configured. Disabling RAG.", icon="⚠️")
         update_user_settings_state("rag", "rag_enabled", False)
+        switch_prompt("sys", "Basic Example")
     elif not state.database_config[state.user_settings["rag"]["database"]].get("vector_stores"):
         logger.debug("RAG Disabled (Database has no vector stores.)")
         st.warning("Database has no Vector Stores. Disabling RAG.", icon="⚠️")
         update_user_settings_state("rag", "rag_enabled", False)
+        switch_prompt("sys", "Basic Example")
         disable_rag = True
 
     rag_enabled = st.sidebar.checkbox(
@@ -239,6 +247,7 @@ def rag_sidebar() -> None:
     )
 
     if rag_enabled:
+        switch_prompt("sys", "RAG Example")
         ##########################
         # Search
         ##########################
@@ -394,3 +403,5 @@ def rag_sidebar() -> None:
 
         # Reset button
         st.sidebar.button("Reset", type="primary", on_click=vs_reset)
+    else:
+        switch_prompt("sys", "Basic Example")
