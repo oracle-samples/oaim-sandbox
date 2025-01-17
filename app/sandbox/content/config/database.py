@@ -75,6 +75,7 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
 
 
 def drop_vs(vs: dict):
+    """Drop a Vector Storage Table"""
     try:
         api_url = f"{state.server['url']}:{state.server['port']}/v1/databases/drop_vs"
         api_call.post(url=api_url + "/drop_vs", payload={"json": vs})

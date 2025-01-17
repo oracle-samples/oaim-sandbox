@@ -70,7 +70,7 @@ async def main() -> None:
 
     st.header("Server Configuration", divider="red")
     st.write("""
-             The API Server maintains its own configuration, independent of the Sandbox.  
+             The API Server maintains its own configuration, independent of the Sandbox.
              You can copy the Sandbox settings to the API Server below.
              """)
     st.json(state.server_settings, expanded=False)

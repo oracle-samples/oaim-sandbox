@@ -80,7 +80,6 @@ def document_formatter(message) -> str:
 #############################################################################
 def respond(state: AgentState) -> ChatResponse:
     """Respond in OpenAI Compatible return"""
-    logger.info(">-- respond")
     logger.info("Formatting Response to OpenAI compatible")
 
     ai_message = state["messages"][-1]
@@ -88,7 +87,7 @@ def respond(state: AgentState) -> ChatResponse:
         ai_metadata = ai_message
     else:
         ai_metadata = state["messages"][1]
-    logger.info("Formatting Response of message: %s", repr(ai_message))
+    logger.debug("Formatting Response of message: %s", repr(ai_message))
 
     openai_response = ChatResponse(
         id=ai_message.id,
@@ -113,14 +112,11 @@ def respond(state: AgentState) -> ChatResponse:
             )
         ],
     )
-
-    logger.info("<-- respond")
     return {"final_response": openai_response}
 
 
 def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["vs_delete", "generate_rag"]:
     """Determines whether the retrieved documents are relevant to the question."""
-    logger.info(">-- grade_documents")
     logger.info("Grading RAG Response")
 
     # Data model
@@ -138,7 +134,6 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["vs_de
     context = document_formatter(state["messages"][-1].content)
     if "I think you found a bug!" in context or "Please fix your mistakes" in context:
         logger.exception("Found a bug: %s", context)
-        logger.info("<-- grade_documents (exception; vs_delete)")
         return "vs_delete"
 
     # Prompt
@@ -167,11 +162,9 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["vs_de
     score = scored_result.binary_score
     logger.info("Grading Decision: RAG Relevant: %s", score)
     if score == "yes":
-        logger.info("<-- grade_documents (generate_rag)")
         return "generate_rag"
     else:
         # RAG not relevant, remove documents from state then get response
-        logger.info("<-- grade_documents (vs_delete)")
         return "vs_delete"
 
 
@@ -180,15 +173,12 @@ def vs_delete(state: AgentState, config: RunnableConfig):
     Delete documents from last vs_retrieve as they are not relevant to the question
     Disable RAG on this session to generate non-RAG completion
     """
-    logger.info(">-- vs_delete")
     config["metadata"]["rag_settings"].rag_enabled = False
     state["messages"][-1].content = "[]"
-    logger.info("<-- vs_delete")
 
 
 def generate_rag(state: AgentState, config: RunnableConfig) -> None:
     """Generate answer when RAG enabled; modify state with response"""
-    logger.info(">-- generate_rag")
     logger.info("Generating RAG Response")
 
     # Extract the context and question for the completion
@@ -214,13 +204,11 @@ def generate_rag(state: AgentState, config: RunnableConfig) -> None:
             "question": question,
         }
     )
-    logger.info("<-- generate_rag")
     return {"messages": ("assistant", response)}
 
 
 def agent(state: AgentState, config: RunnableConfig) -> AgentState:
     """Invokes the agent model; response will either be a tool call or completion"""
-    logger.info(">-- agent")
     use_rag = config["metadata"]["rag_settings"].rag_enabled
     logger.info("Starting Agent with RAG: %s", use_rag)
 
@@ -235,12 +223,11 @@ def agent(state: AgentState, config: RunnableConfig) -> AgentState:
     # This response will either make a tool call or provide a completion
     if config["metadata"]["sys_prompt"].prompt:
         messages.insert(0, SystemMessage(content=config["metadata"]["sys_prompt"].prompt))
-    logger.info("Invoking on: %s", messages)
+    logger.debug("Invoking on: %s", messages)
 
     # Invoke Chain
     response = model.invoke(messages)
 
-    logger.info("<-- agent")
     return {"messages": [response], "cleaned_messages": messages}
 
 

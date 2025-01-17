@@ -28,6 +28,7 @@ logger = logging_config.logging.getLogger("sandbox.utils.st_common")
 # Common Helpers
 #############################################################################
 def local_file_payload(uploaded_files: Union[BytesIO, list[BytesIO]]) -> list:
+    """Upload Single file from Streamlit to the Server"""
     # If it's a single file, convert it to a list for consistent processing
     if isinstance(uploaded_files, BytesIO):
         uploaded_files = [uploaded_files]
@@ -43,6 +44,7 @@ def local_file_payload(uploaded_files: Union[BytesIO, list[BytesIO]]) -> list:
 
 
 def copy_user_settings(new_client: str) -> None:
+    """Copy User Setting to a new client (e.g. the Server)"""
     logger.info("Copying user settings to: %s", new_client)
     api_url = f"{state.server['url']}:{state.server['port']}/v1/settings"
     try:

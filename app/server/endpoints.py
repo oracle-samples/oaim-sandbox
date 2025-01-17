@@ -592,6 +592,7 @@ def register_endpoints(app: FastAPI) -> None:
     async def testbed_upsert_testsets(
         files: list[UploadFile], name: schema.TestSetsNameType, tid: Optional[schema.TestSetsIdType] = None
     ) -> schema.Response[schema.TestSetQA]:
+        """Update stored TestSet data"""
         created = datetime.now().isoformat()
         db_conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
         try:
@@ -674,7 +675,7 @@ def register_endpoints(app: FastAPI) -> None:
         response_model=schema.Response[str],
     )
     def testbed_evaluate_qa(tid: schema.TestSetsIdType) -> schema.Response[str]:
-        # Get testbed settings
+        """Run evaluate against a testset"""
         evaluated = datetime.now().isoformat()
         testbed_settings = next((settings for settings in settings_objects if settings.client == "testbed"), None)
         db_conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
@@ -682,6 +683,7 @@ def register_endpoints(app: FastAPI) -> None:
         testbed_settings.ll_model.chat_history = False
 
         def get_answer(question: str):
+            """Submit question against the chatbot"""
             request = schema.ChatRequest(
                 model=testbed_settings.ll_model.model,
                 messages=[ChatMessage(role="human", content=question)],

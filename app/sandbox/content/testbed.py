@@ -46,6 +46,7 @@ def reset_testset(cache: bool = False) -> None:
 
 @st.cache_data
 def get_testbed_db_testsets() -> dict:
+    """Get Database TestSets; this is cached"""
     return api_call.get(url=f"{API_ENDPOINT}/testsets")["data"]
 
 
@@ -69,6 +70,7 @@ def qa_update_db() -> None:
 
 @st.fragment()
 def update_record(direction: int = 0) -> None:
+    """Update streamlit state with user changes"""
     state.testbed_qa[state.testbed["qa_index"]]["question"] = state[f"selected_q_{state.testbed['qa_index']}"]
     state.testbed_qa[state.testbed["qa_index"]]["reference_answer"] = state[f"selected_a_{state.testbed['qa_index']}"]
     state.testbed["qa_index"] += direction
@@ -364,9 +366,9 @@ def main():
         ###################################
         # Results
         ###################################
-        if evaluate:
-            st.subheader("Results", divider="red")
-            results = evaluate["data"][0]
+        # if evaluate:
+        #     st.subheader("Results", divider="red")
+        #     results = evaluate["data"][0]
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:

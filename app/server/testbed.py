@@ -120,6 +120,7 @@ def upsert_qa(
     json_data: json,
     tid: schema.TestSetsIdType = None,
 ) -> schema.TestSetsIdType:
+    """Upsert Q&A"""
     logger.info("Upsert TestSet: %s - %s", name, created)
     binds = {"name": name, "created": created, "json_array": json_data, "tid": tid}
     plsql = """
@@ -160,6 +161,7 @@ def upsert_qa(
 
 
 def insert_evaluation(conn, tid, evaluated, settings, report_data):
+    """Insert Evaluation Data"""
     logger.info("Insert evaluation; TID: %s", tid)
     binds = {
         "tid": tid,
@@ -179,7 +181,7 @@ def insert_evaluation(conn, tid, evaluated, settings, report_data):
                 tid, evaluated, settings, testset_jsonl, report_details,
                 knowledge_base, knowledge_base_meta, metrics_results
             VALUES (
-                :tid, l_evaluated, :settings, :testset_jsonl, :report_details, 
+                :tid, l_evaluated, :settings, :testset_jsonl, :report_details,
                 :knowledge_base, :knowledge_base_meta, :metrics_results
             );
         END;
@@ -247,6 +249,7 @@ def build_knowledge_base(text_nodes: str, questions: int, ll_model: schema.Model
 
 
 def process_report(action, temp_dir):
+    """Process an evaluate report"""
     files = {
         "testset.jsonl": "testset_jsonl",
         "report_details.json": "report_details",

@@ -20,6 +20,8 @@ from sandbox.content.config.models import get_model
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("content.chatbot")
+
+
 #############################################################################
 # Functions
 #############################################################################
@@ -32,7 +34,7 @@ def show_rag_refs(context):
     for i, ref_col in enumerate(ref_cols):
         with ref_col.popover(f"Reference: {i + 1}"):
             chunk = context[i]
-            ref_src.add(chunk['metadata']["filename"])
+            ref_src.add(chunk["metadata"]["filename"])
             st.subheader("Reference Text", divider="red")
             st.markdown(chunk["page_content"])
             st.subheader("Metadata", divider="red")
@@ -41,6 +43,7 @@ def show_rag_refs(context):
 
     for link in ref_src:
         st.markdown("- " + link)
+
 
 #############################################################################
 # MAIN
@@ -82,7 +85,6 @@ async def main() -> None:
     st.chat_message("ai").write("Hello, how can I help you?")
     rag_refs = []
     for message in history:
-        logger.info("Process message for: %s", message["role"])
         if not message["content"]:
             continue
         if message["role"] == "tool" and message["name"] == "oraclevs_tool":
