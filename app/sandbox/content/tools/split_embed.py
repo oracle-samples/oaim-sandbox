@@ -144,6 +144,7 @@ def main() -> None:
     # GUI
     #############################################################################
     st.header("Embedding Configuration", divider="red")
+    populate_button_disabled = True  # Disable the populate button
     embed_request.model = st.selectbox(
         "Embedding models available: ",
         options=available_embed_models,
@@ -219,6 +220,8 @@ def main() -> None:
     )
     # Create a text input widget
     embed_alias_size, _ = st.columns([0.5, 0.5])
+    embed_alias_invalid = False
+    embed_request.vector_store = None
     embed_request.alias = embed_alias_size.text_input(
         "Embedding Alias:",
         max_chars=20,
@@ -233,16 +236,18 @@ def main() -> None:
         st.error(
             "Invalid Alias! It must start with a letter and only contain alphanumeric characters and underscores."
         )
-    embed_request.vector_store, _ = common.functions.get_vs_table(
-        **embed_request.model_dump(exclude={"database", "vector_store"})
-    )
+        embed_alias_invalid = True
+
+    if not embed_alias_invalid:
+        embed_request.vector_store, _ = common.functions.get_vs_table(
+            **embed_request.model_dump(exclude={"database", "vector_store"})
+        )
 
     ################################################
     # Splitting
     ################################################
     st.header("Load and Split Documents", divider="red")
     file_source = st.radio("File Source:", file_sources, key="radio_file_source", horizontal=True)
-    populate_button_disabled = True
     button_help = None
 
     ######################################
@@ -317,7 +322,7 @@ def main() -> None:
     ######################################
     st.header("Populate Vector Store", divider="red")
     st.markdown(f"##### **Vector Store:** `{embed_request.vector_store}`")
-    if not populate_button_disabled:
+    if not populate_button_disabled and embed_request.vector_store:
         if "button_populate" in state and state.button_populate is True:
             state.running = True
         else:
