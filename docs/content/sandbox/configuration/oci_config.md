@@ -8,9 +8,7 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
 
-When using the split/embed functionality of the Sandbox, you have 3 source options to for uploading the documents to be vectorized:
-
-![Load and Split Options](images/load-and-split-options.png)
+When using the split/embed functionality of the Sandbox, you can use the OCI Object storage. In this page we provide how to configure the OAIM Sandbox to use it.
 
 ## Configuration
 
