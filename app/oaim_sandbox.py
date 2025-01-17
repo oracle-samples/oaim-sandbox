@@ -48,13 +48,13 @@ def main() -> None:
     st.logo("sandbox/media/logo_light.png")
 
     # Setup Settings State
-    if "user_settings" not in state or "server_settings" not in state:
-        api_endpoint = f"{state.server['url']}:{state.server['port']}/v1/settings"
-        # Create the client in the server and store results in session_state
+    api_endpoint = f"{state.server['url']}:{state.server['port']}/v1/settings"
+    if "user_settings" not in state:
         try:
             state.user_settings = api_call.post(url=api_endpoint, params={"client": client_gen_id()})["data"]
         except api_call.ApiError as ex:
             st.error(ex, icon="🚨")
+    if "server_settings" not in state:
         try:
             state.server_settings = api_call.get(url=api_endpoint, params={"client": "server"})["data"]
         except api_call.ApiError as ex:
