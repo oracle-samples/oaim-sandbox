@@ -122,7 +122,7 @@ def get_ll_model(model, ll_models_config=None, giskarded=False):
     elif llm_api == "ChatOllama":
         client = ChatOllama(model=model,base_url=lm_params["url"], model_kwargs=common_params)
     elif llm_api == "CohereOCI":
-        state.oci_config["tenancy_ocid"] 
+        #state.oci_config["tenancy_ocid"] 
         client = ChatOCIGenAI(
             model_id=model,
             service_endpoint=lm_params["url"],
