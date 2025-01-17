@@ -457,6 +457,8 @@ def register_endpoints(app: FastAPI) -> None:
             )
             return_files = list({doc.metadata["filename"] for doc in split_docos if "filename" in doc.metadata})
             return schema.Response[list](data=return_files, msg=f"{len(split_docos)} chunks embedded.")
+        except ValueError as ex:
+            raise HTTPException(status_code=500, detail=str(ex)) from ex
         except Exception as ex:
             logger.error("An exception occurred: %s", ex)
             raise HTTPException(status_code=500, detail="Unexpected error") from ex

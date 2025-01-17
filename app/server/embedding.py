@@ -109,7 +109,7 @@ def split_document(
     ##################################
     # Splitters - End
     ##################################
-    match extension:
+    match extension.lower():
         case "pdf":
             doc_split = text_splitter.split_documents(document)
         case "html":
@@ -151,7 +151,7 @@ def load_and_split_documents(
         stat = os.stat(file)
         extension = os.path.splitext(file)[1][1:]
         logger.info("Loading %s (%i bytes)", name, stat.st_size)
-        match extension:
+        match extension.lower():
             case "pdf":
                 loader = document_loaders.PyPDFLoader(file)
             case "html":
@@ -161,7 +161,7 @@ def load_and_split_documents(
             case "csv":
                 loader = document_loaders.CSVLoader(file)
             case _:
-                logger.error("Un-supported file extension: %s", extension)
+                raise ValueError(f"{extension} is not a supported file extension")
 
         loaded_doc = loader.load()
         logger.info("Loaded Pages: %i", len(loaded_doc))
