@@ -8,6 +8,12 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
 
-{{% notice style="default" title="10-Sept-2024: Documentation In-Progress..." icon="pen" %}}
-Thank you for your patience as we work on updating the documentation. Please check back soon for the latest updates.
-{{% /notice %}}
+An important key factor that influences the quality of answers depends from the prompt provided to the LLM, that includes the context information. To customize and test the effect, it’s available the **Prompts** voice of menu that offers pre-configured prompt templates that could be customized and associated to the RAG system.
+
+![Prompt](images/prompt.png)
+
+There are three options available:
+- **Basic Example** : it is automatically paired with the no-rag, pure LLM chatbot configuration; 
+- **RAG Example** : it is automatically paired with the RAG checkbox set to True;
+- **Custom** : it's applied to any RAG/no-RAG configuration.
+
