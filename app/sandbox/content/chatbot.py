@@ -89,7 +89,7 @@ async def main() -> None:
             rag_refs = json.loads(message["content"])
         if message["role"] in ("ai", "assistant"):
             with st.chat_message("ai"):
-                st.write(message["content"])
+                st.markdown(message["content"])
                 if rag_refs:
                     show_rag_refs(rag_refs)
                     rag_refs = []

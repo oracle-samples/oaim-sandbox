@@ -700,13 +700,7 @@ def register_endpoints(app: FastAPI) -> None:
             report.save(temp_dir)
             report_data = testbed.process_report("save", temp_dir)
 
-        testbed.insert_evaluation(
-            db_conn,
-            tid,
-            evaluated,
-            testbed_settings.model_dump_json(),
-            report_data
-        )
+        testbed.insert_evaluation(db_conn, tid, evaluated, testbed_settings.model_dump_json(), report_data)
         db_conn.commit()
 
         return schema.Response[str](

@@ -5,7 +5,6 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # spell-checker:ignore genai
 
 import json
-from typing import Any
 import oracledb
 
 from common.schema import Database, DatabaseModel, DatabaseVectorStorage

@@ -6,6 +6,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 from typing import Annotated
 
+from langchain_core.prompts import PromptTemplate
 from langchain_core.tools import BaseTool, tool
 from langchain_core.documents.base import Document
 from langchain_core.runnables import RunnableConfig
@@ -59,21 +60,56 @@ def oraclevs_tool(
                 retriever = vectorstore.as_retriever(search_type="mmr", search_kwargs=search_kwargs)
             else:
                 raise ValueError(f"Unsupported search_type: {search_type}")
-            logger.info("Invoking retriever on: %s", {state["messages"][-2].content})
-            documents = retriever.invoke(state["messages"][-2].content)
+
+            # Take our contextualization prompt and reword the question
+            # before doing the vector search
+            history = state["cleaned_messages"]
+            if config["metadata"]["ctx_prompt"].prompt:
+                retrieve_question = history.pop().content
+                model = config["configurable"].get("ll_client", None)
+                ctx_template = """
+                    {ctx_prompt}
+                    Here is the chat history:
+                    -------
+                    {history}
+                    -------
+                    Here is the user input/question:
+                    -------
+                    {question}
+                """
+                rephrase = PromptTemplate(
+                    template=ctx_template,
+                    input_variables=["ctx_prompt", "history", "question"],
+                )
+                chain = rephrase | model
+                result = chain.invoke(
+                    {
+                        "ctx_prompt": config["metadata"]["ctx_prompt"].prompt,
+                        "history": history,
+                        "question": retrieve_question,
+                    }
+                )
+                print(result)
+                if result.content != retrieve_question:
+                    logger.info(
+                        "Replacing User Question: %s with contextual one: %s", retrieve_question, result.content
+                    )
+                    retrieve_question = result.content
+
+            logger.info("Invoking retriever on: %s", retrieve_question)
+            documents = retriever.invoke(retrieve_question)
         except Exception as ex:
             logger.exception("Failed to perform Oracle Vector Store retrieval")
             raise ex
     except (AttributeError, KeyError, TypeError) as ex:
         documents = Document(
-            id="DocumentException",
-            page_content="I'm sorry, I think you found a bug!",
-            metadata={"source": f"{ex}"}
+            id="DocumentException", page_content="I'm sorry, I think you found a bug!", metadata={"source": f"{ex}"}
         )
 
     documents_dict = [vars(doc) for doc in documents]
     logger.debug("Found Documents: %s", documents_dict)
     return documents_dict
+
 
 oraclevs_retriever: BaseTool = tool(oraclevs_tool)
 oraclevs_retriever.name = "oraclevs_retriever"

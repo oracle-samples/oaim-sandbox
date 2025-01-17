@@ -245,5 +245,6 @@ def main() -> list[Model]:
     model_objects = [Model(**model_dict) for model_dict in models_list]
     return model_objects
 
+
 if __name__ == "__main__":
     main()
