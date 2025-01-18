@@ -4,10 +4,9 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 """
 # spell-checker:ignore genai
 
-import json
 import oracledb
 
-from common.schema import Database, DatabaseModel, DatabaseVectorStorage
+from common.schema import Database, DatabaseModel
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("server.database")
@@ -84,27 +83,3 @@ def execute_sql(conn: oracledb.Connection, run_sql: str, binds: dict = None) -> 
     except oracledb.InterfaceError as ex:
         logger.exception("Interface error: %s", ex)
         raise
-
-
-def get_vs(conn: oracledb.Connection) -> DatabaseVectorStorage:
-    """Retrieve Vector Storage Tables"""
-    logger.info("Looking for Vector Storage Tables")
-    vector_stores = []
-    sql = """SELECT ut.table_name,
-                    REPLACE(utc.comments, 'GENAI: ', '') AS comments
-                FROM all_tab_comments utc, all_tables ut
-                WHERE utc.table_name = ut.table_name
-                AND utc.comments LIKE 'GENAI:%'"""
-    results = execute_sql(conn, sql)
-    for table_name, comments in results:
-        comments_dict = json.loads(comments)
-        vector_stores.append(DatabaseVectorStorage(vector_store=table_name, **comments_dict))
-
-    return vector_stores
-
-
-def drop_vs(conn: oracledb.Connection, vs: DatabaseVectorStorage) -> None:
-    """Drop Vector Storage"""
-    logger.info("Dropping Vector Store: %s", vs.vector_store)
-    sql = f"DROP TABLE {vs.vector_store} PURGE"
-    _ = execute_sql(conn, sql)

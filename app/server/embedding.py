@@ -5,6 +5,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # spell-checker:ignore langchain, docstore, docos, getbuffer, tiktoken, vectorstores, oraclevs, genai
 
 import json
+import copy
 import math
 import os
 import time
@@ -31,6 +32,29 @@ import common.schema as schema
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("server.embedding")
+
+
+def drop_vs(conn: oracledb.Connection, vs: schema.DatabaseVectorStorage) -> None:
+    """Drop Vector Storage"""
+    logger.info("Dropping Vector Store: %s", vs.vector_store)
+    LangchainVS.drop_table_purge(conn, vs.vector_store)
+
+
+def get_vs(conn: oracledb.Connection) -> schema.DatabaseVectorStorage:
+    """Retrieve Vector Storage Tables"""
+    logger.info("Looking for Vector Storage Tables")
+    vector_stores = []
+    sql = """SELECT ut.table_name,
+                    REPLACE(utc.comments, 'GENAI: ', '') AS comments
+                FROM all_tab_comments utc, all_tables ut
+                WHERE utc.table_name = ut.table_name
+                AND utc.comments LIKE 'GENAI:%'"""
+    results = databases.execute_sql(conn, sql)
+    for table_name, comments in results:
+        comments_dict = json.loads(comments)
+        vector_stores.append(schema.DatabaseVectorStorage(vector_store=table_name, **comments_dict))
+
+    return vector_stores
 
 
 def doc_to_json(document: LangchainDocument, file: str, output_dir: str = None) -> List:
@@ -236,8 +260,9 @@ def populate_vs(
     rate_limit: int = 0,
 ) -> None:
     """Populate the Vector Storage"""
-    _, store_comment = common.functions.get_vs_table(**vector_store.model_dump(exclude={"database", "vector_store"}))
-    store_table = vector_store.vector_store
+    # Copy our vector storage object so can process a tmp one
+    vector_store_tmp = copy.copy(vector_store)
+    vector_store_tmp.vector_store = f"{vector_store.vector_store}_TMP"
 
     def json_to_doc(file: str):
         """Creates a list of LangchainDocument from a JSON file. Returns the list of documents."""
@@ -277,14 +302,13 @@ def populate_vs(
             unique_chunks.append(chunk)
     logger.info("Total Unique Chunks: %i", len(unique_chunks))
 
-    # Need to consider this, it duplicates from_documents
-    logger.info("Dropping table %s", store_table)
-    LangchainVS.drop_table_purge(db_conn, store_table)
-
-    vectorstores = OracleVS(
+    # Creates a TEMP Vector Store Table; which may already exist
+    # This is to allow re-using an existing VS; will merge this over later
+    drop_vs(conn=db_conn, vs=vector_store_tmp)
+    vs_tmp = OracleVS(
         client=db_conn,
         embedding_function=embed_client,
-        table_name=store_table,
+        table_name=vector_store_tmp.vector_store,
         distance_strategy=vector_store.distance_metric,
     )
 
@@ -300,21 +324,42 @@ def populate_vs(
             len(unique_chunks),
             rate_limit,
         )
-        OracleVS.add_documents(vectorstores, documents=batch)
+        OracleVS.add_documents(vs_tmp, documents=batch)
         if rate_limit > 0:
             interval = 60 / rate_limit
             logger.info("Rate Limiting: sleeping for %i seconds", interval)
             time.sleep(interval)
 
+    # Create our real vector storage if doesn't exist
+    vs_real = OracleVS(
+        client=db_conn,
+        embedding_function=embed_client,
+        table_name=vector_store.vector_store,
+        distance_strategy=vector_store.distance_metric,
+    )
+    vector_store_idx = f"{vector_store.vector_store}_IDX"
+    if vector_store.index_type == "HNSW":
+        LangchainVS.drop_index_if_exists(db_conn, vector_store_idx)
+
+    # Perform the Merge
+    merge_sql = f"""
+        INSERT INTO {vector_store.vector_store} SELECT * FROM {vector_store_tmp.vector_store} src 
+         WHERE NOT EXISTS (SELECT 1 FROM {vector_store.vector_store} tgt WHERE tgt.ID = src.ID)
+    """
+    logger.info("Merging %s into %s", vector_store_tmp.vector_store, vector_store.vector_store)
+    databases.execute_sql(db_conn, merge_sql)
+    drop_vs(conn=db_conn, vs=vector_store_tmp)
+
     # Build the Index
-    logger.info("Creating index on: %s", store_table)
+    logger.info("Creating index on: %s", vector_store.vector_store)
     try:
         index_type = vector_store.index_type
-        params = {"idx_name": f"{store_table}_IDX", "idx_type": index_type}
-        LangchainVS.create_index(db_conn, vectorstores, params)
+        params = {"idx_name": vector_store_idx, "idx_type": index_type}
+        LangchainVS.create_index(db_conn, vs_real, params)
     except Exception as ex:
         logger.error("Unable to create vector index: %s", ex)
 
     # Comment the VS table
-    comment = f"COMMENT ON TABLE {store_table} IS 'GENAI: {store_comment}'"
+    _, store_comment = common.functions.get_vs_table(**vector_store.model_dump(exclude={"database", "vector_store"}))
+    comment = f"COMMENT ON TABLE {vector_store.vector_store} IS 'GENAI: {store_comment}'"
     databases.execute_sql(db_conn, comment)

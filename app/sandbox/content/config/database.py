@@ -78,7 +78,7 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
 def drop_vs(vs: dict):
     """Drop a Vector Storage Table"""
     try:
-        api_url = f"{state.server['url']}:{state.server['port']}/v1/databases/drop_vs"
+        api_url = f"{state.server['url']}:{state.server['port']}/v1/embed/drop_vs"
         api_call.post(url=api_url, payload={"json": vs})
         st.success(f"{vs['vector_store']} - Dropped", icon="✅")
         st_common.clear_state_key("database_config")

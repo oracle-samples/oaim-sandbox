@@ -5,6 +5,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 import os
 import server.databases as databases
+import server.embedding as embedding
 from common.schema import Database
 
 
@@ -39,7 +40,7 @@ def main() -> list[Database]:
         except databases.DbException:
             db.connected = False
             continue
-        db.vector_stores = databases.get_vs(conn)
+        db.vector_stores = embedding.get_vs(conn)
         if not db.connection and len(database_objects) > 1:
             db.set_connection = databases.disconnect(conn)
         else:

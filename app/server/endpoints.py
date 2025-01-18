@@ -64,7 +64,7 @@ def register_endpoints(app: FastAPI) -> None:
         """List all databases without gathering VectorStorage"""
         for db in database_objects:
             conn = databases.connect(db)
-            db.vector_stores = databases.get_vs(conn)
+            db.vector_stores = embedding.get_vs(conn)
         return schema.ResponseList[schema.Database](
             data=database_objects,
             msg=f"{len(database_objects)} database(s) found",
@@ -82,7 +82,7 @@ def register_endpoints(app: FastAPI) -> None:
             raise HTTPException(status_code=404, detail=f"Database {name} not found")
 
         conn = databases.connect(db)
-        db.vector_stores = databases.get_vs(conn)
+        db.vector_stores = embedding.get_vs(conn)
         return schema.Response[schema.Database](
             data=db,
             msg=f"{name} database found",
@@ -111,7 +111,7 @@ def register_endpoints(app: FastAPI) -> None:
             db.dsn = payload.dsn
             db.wallet_password = payload.wallet_password
             db.connected = True
-            db.vector_stores = databases.get_vs(conn)
+            db.vector_stores = embedding.get_vs(conn)
             db.set_connection(conn)
             # Unset and disconnect other databases
             for other_db in database_objects:
@@ -120,18 +120,6 @@ def register_endpoints(app: FastAPI) -> None:
                     other_db.connected = False
             return schema.Response[schema.Database](data=db, msg=f"{name} updated and set as default")
         raise HTTPException(status_code=404, detail=f"Database {name} not found")
-
-    @app.post(
-        "/v1/databases/drop_vs",
-        description="Drop Vector Store",
-        response_model=schema.Response[str],
-    )
-    async def database_drop_vs(vs: schema.DatabaseVectorStorage) -> schema.Response[str]:
-        """Drop Vector Storage"""
-        conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
-        databases.drop_vs(conn, vs)
-
-        return schema.Response[str](data=vs.vector_store, msg="Vector Store Dropped")
 
     #################################################
     # Models
@@ -368,6 +356,18 @@ def register_endpoints(app: FastAPI) -> None:
     #################################################
     # Embedding
     #################################################
+    @app.post(
+        "/v1/embed/drop_vs",
+        description="Drop Vector Store",
+        response_model=schema.Response[str],
+    )
+    async def embed_drop_vs(vs: schema.DatabaseVectorStorage) -> schema.Response[str]:
+        """Drop Vector Storage"""
+        conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
+        embedding.drop_vs(conn, vs)
+
+        return schema.Response[str](data=vs.vector_store, msg="Vector Store Dropped")
+    
     @app.post(
         "/v1/embed/web/store",
         description="Store Web Files for Embedding.",

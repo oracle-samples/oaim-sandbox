@@ -321,7 +321,13 @@ def main() -> None:
     # Populate Vector Store
     ######################################
     st.header("Populate Vector Store", divider="red")
+    existing_vs = state["database_config"][state["user_settings"]["rag"]["database"]]["vector_stores"]
+    vs_msg = f"{embed_request.vector_store}, will be created."
+    if any(d.get('vector_store') == embed_request.vector_store for d in existing_vs):
+        vs_msg = f"{embed_request.vector_store} exists, new chunks will be added."
     st.markdown(f"##### **Vector Store:** `{embed_request.vector_store}`")
+    st.caption(f"{vs_msg}")
+
     if not populate_button_disabled and embed_request.vector_store:
         if "button_populate" in state and state.button_populate is True:
             state.running = True
