@@ -40,6 +40,7 @@ def get_databases() -> dict[str, dict]:
 
 def patch_database(name: str, user: str, password: str, dsn: str, wallet_password: str) -> None:
     """Update Database"""
+    get_databases()
     # Check if the database configuration is changed, or if not CONNECTED
     if (
         state.database_config[name]["user"] != user
@@ -65,11 +66,11 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
             st_common.clear_state_key("database_config")
             st_common.clear_state_key("database_error")
             state.database_error = None
+            get_databases() # Refresh the Config
         except api_call.ApiError as ex:
             logger.error("Database Update failed: %s", ex)
             state.database_error = str(ex)
             state.database_config[name]["connected"] = False
-        st.rerun()
     else:
         st.info(f"{name} Database Configuration - No Changes Detected.", icon="ℹ️")
 
@@ -90,7 +91,7 @@ def drop_vs(vs: dict):
 #####################################################
 def main() -> None:
     """Streamlit GUI"""
-    st.header("Database")
+    st.header("Database", divider="red")
     st.write("Configure the database used for vector storage.")
     try:
         get_databases()  # Create/Rebuild state
@@ -140,7 +141,7 @@ def main() -> None:
         st.subheader("Database Vector Storage")
         if state.database_config[name]["vector_stores"]:
             table_col_format = st.columns([2, 5, 10, 5, 5, 5, 3])
-            headers = ["\u200B", "Alias", "Model", "Chunk: Size", "Overlap", "Distance Metric", "Index"]
+            headers = ["\u200b", "Alias", "Model", "Chunk: Size", "Overlap", "Distance Metric", "Index"]
 
             # Header row
             for col, header in zip(table_col_format, headers):
@@ -152,7 +153,12 @@ def main() -> None:
                 fields = ["alias", "model", "chunk_size", "chunk_overlap", "distance_metric", "index_type"]
                 # Handle button in col1
                 table_col_format[0].button(
-                    "", icon="🗑️", key=f"vector_stores_{vector_store}", on_click=drop_vs, args=[vs]
+                    "",
+                    icon="🗑️",
+                    key=f"vector_stores_{vector_store}",
+                    on_click=drop_vs,
+                    args=[vs],
+                    help="Drop Vector Storage Table",
                 )
                 for col, field in zip(table_col_format[1:], fields):  # Starting from col2
                     col.text_input(

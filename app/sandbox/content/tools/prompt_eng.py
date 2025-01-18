@@ -32,7 +32,8 @@ def get_prompts() -> dict[str, dict]:
     """Get a dictionary of all Prompts"""
     if "prompts_config" not in state or state["prompts_config"] == {}:
         try:
-            state["prompts_config"] = api_call.get(url=API_ENDPOINT)["data"]
+            api_url = f"{state.server['url']}:{state.server['port']}/v1/prompts"
+            state["prompts_config"] = api_call.get(url=api_url)["data"]
             logger.info("State created: state['prompts_config']")
         except api_call.ApiError as ex:
             logger.error("Unable to retrieve prompts: %s", ex)
@@ -40,32 +41,34 @@ def get_prompts() -> dict[str, dict]:
             state["prompts_config"] = {}
 
 
-def patch_prompt(category: str, prompt_name: str, prompt: str) -> None:
+def patch_prompt(category: str, name: str, prompt: str) -> None:
     """Update Prompt Instructions"""
+    if "prompts_config" not in state:
+        get_prompts()
+
     # Check if the prompt instructions are changed
     configured_prompt = next(
-        item["prompt"]
-        for item in state["prompts_config"]
-        if item["name"] == prompt_name and item["category"] == category
+        item["prompt"] for item in state["prompts_config"] if item["name"] == name and item["category"] == category
     )
     if configured_prompt != prompt:
         try:
+            api_url = f"{state.server['url']}:{state.server['port']}/v1/prompts/{category}/{name}"
             api_call.patch(
-                url=API_ENDPOINT + "/" + category + "/" + prompt_name,
+                url=api_url,
                 payload={"json": {"prompt": prompt}},
             )
             # Success
-            logger.info("Prompt instructions updated for: %s (%s)", prompt_name, category)
-            st.success(f"{prompt_name} Instructions - Updated", icon="✅")
+            logger.info("Prompt instructions updated for: %s (%s)", name, category)
+            st.success(f"{name} ({category}) Prompt Instructions - Updated", icon="✅")
             st_common.clear_state_key(f"selected_prompt_{category}_name")
             st_common.clear_state_key(f"prompt_{category}_prompt")
             st_common.clear_state_key("prompts_config")
             get_prompts()  # Refresh the Config
         except api_call.ApiError as ex:
-            logger.info("Unable to perform prompt update for %s (%s): %s", prompt_name, category, ex)
+            logger.info("Unable to perform prompt update for %s (%s): %s", name, category, ex)
             st.error(f"Unable to perform prompt update: {ex}", icon="🚨")
     else:
-        st.info("Prompt Instructions - No Changes Detected.", icon="ℹ️")
+        st.info(f"{name} ({category}) Prompt Instructions - No Changes Detected.", icon="ℹ️")
 
 
 #############################################################################

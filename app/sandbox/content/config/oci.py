@@ -22,11 +22,6 @@ import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("config.oci")
 
-# Set endpoint if server has been established
-OCI_API_ENDPOINT = None
-if "server" in state:
-    OCI_API_ENDPOINT = f"{state.server['url']}:{state.server['port']}/v1/oci"
-
 
 #####################################################
 # Functions
@@ -35,21 +30,31 @@ def get_oci() -> dict[str, dict]:
     """Get a dictionary of all OCI Configurations"""
     if "oci_config" not in state or state["oci_config"] == {}:
         try:
-            response = api_call.get(url=OCI_API_ENDPOINT)
+            api_url = f"{state.server['url']}:{state.server['port']}/v1/oci"
+            response = api_call.get(url=api_url)
             state["oci_config"] = {
-                item["profile"]: {k: v for k, v in item.items() if k != "profile"} for item in response["data"]
+                item["profile"]: {k: v if v is not None else None for k, v in item.items() if k != "profile"} 
+                for item in response["data"]
             }
             logger.info("State created: state['oci_config']")
+            print(state['oci_config'])
         except api_call.ApiError as ex:
             st.error(f"Unable to retrieve oci_configuration: {ex}", icon="🚨")
             state["oci_config"] = {}
 
 
 def patch_oci(
-    profile: str, user: str, fingerprint: str, tenancy: str, region: str, key_file: str, security_token_file: str
+    profile: str,
+    fingerprint: str,
+    tenancy: str,
+    region: str,
+    key_file: str,
+    user: str = None,
+    security_token_file: str = None,
 ) -> None:
     """Update OCI"""
-    # Check if the oci configuration is changed
+    get_oci()
+
     if (
         state.oci_config[profile]["user"] != user
         or state.oci_config[profile]["fingerprint"] != fingerprint
@@ -60,8 +65,9 @@ def patch_oci(
         or not state.oci_config[profile]["namespace"]
     ):
         try:
+            api_url = f"{state.server['url']}:{state.server['port']}/v1/oci/{profile}"
             api_call.patch(
-                url=OCI_API_ENDPOINT + "/" + profile,
+                url=api_url,
                 payload={
                     "json": {
                         "user": user,
@@ -76,11 +82,14 @@ def patch_oci(
             st.success(f"{profile} OCI Configuration - Updated", icon="✅")
             st_common.clear_state_key("oci_config")
             st_common.clear_state_key("oci_error")
+            get_oci() # Refresh the Config
         except api_call.ApiError as ex:
             logger.error("OCI Update failed: %s", ex)
             state.oci_error = ex
-            state.oci_config[profile]["namespace"] = None
-        st.rerun()
+            try:
+                state.oci_config[profile]["namespace"] = None
+            except AttributeError:
+                pass
     else:
         st.info(f"{profile} OCI Configuration - No Changes Detected.", icon="ℹ️")
 
@@ -90,7 +99,7 @@ def patch_oci(
 #####################################################
 def main() -> None:
     """Streamlit GUI"""
-    st.header("Oracle Cloud Infrastructure")
+    st.header("Oracle Cloud Infrastructure", divider="red")
     st.write("Configure OCI for Object Storage Access.")
     try:
         get_oci()  # Create/Rebuild state
@@ -147,7 +156,7 @@ def main() -> None:
             if not (fingerprint and tenancy and region and key_file and (user or security_token_file)):
                 st.error("All fields are required.", icon="❌")
                 st.stop()
-            patch_oci(profile, user, fingerprint, tenancy, region, key_file, security_token_file)
+            patch_oci(profile, fingerprint, tenancy, region, key_file, user, security_token_file)
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:

@@ -45,6 +45,7 @@ def get_model(model_type: str, only_enabled: bool = False) -> dict[str, dict]:
 def patch_model(model_type: str) -> None:
     """Update Model Configuration for either Language Models or Embed Models"""
     state_key = f"{model_type}_model_config"
+    get_model(model_type)
 
     model_changes = 0
     for model_name, _ in state[state_key].items():
@@ -67,7 +68,7 @@ def patch_model(model_type: str) -> None:
                     },
                 )
                 # Success
-                st.success(f"{model_name} Model Configuration - Updated", icon="✅")
+                st.success(f"{model_name} ({model_type}) Model Configuration - Updated", icon="✅")
                 st_common.clear_state_key(f"{model_type}_{model_name}_enabled")
                 st_common.clear_state_key(f"{model_type}_{model_name}_url")
                 st_common.clear_state_key(f"{model_type}_{model_name}_api_key")
@@ -76,7 +77,7 @@ def patch_model(model_type: str) -> None:
                 break
 
     if model_changes == 0:
-        st.info("Model Configuration - No Changes Detected.", icon="ℹ️")
+        st.info(f"Model Configuration - No Changes Detected.", icon="ℹ️")
     else:
         st_common.clear_state_key(state_key)
         get_model(model_type)
@@ -97,7 +98,7 @@ def main() -> None:
         """,
     )
 
-    st.header("Models")
+    st.header("Models", divider="red")
     st.write("Update model configuration parameters.")
 
     st.subheader("Language Models")

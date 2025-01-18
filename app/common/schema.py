@@ -160,6 +160,8 @@ class OracleCloudSettings(BaseModel):
 
     profile: str = Field(default="default", description="Config File Profile")
     namespace: Optional[str] = Field(default=None, description="Object Store Namespace", readOnly=True)
+    user: Optional[str] = Field(default=None, description="Optional if using Auth Token")
+    security_token_file: Optional[str] = Field(default=None, description="Security Key File for Auth Token")
 
     class Config(object):
         """Allow arbitrary keys for other values as we don't know what will be supplied"""
@@ -301,20 +303,27 @@ class ChatRequest(LanguageParametersModel):
 #####################################################
 class TestSets(BaseModel):
     """TestSets"""
+
     tid: str = Field(description="Test ID")
     name: str = Field(description="Name of TestSet")
     created: str = Field(description="Date TestSet Loaded")
 
+
 class TestSetQA(BaseModel):
     """TestSet Q&A"""
+
     qa_data: list = Field(description="TestSet Q&A Data")
+
 
 class Evaluations(BaseModel):
     """TestSets"""
+
     tid: str = Field(description="Test ID")
     evaluated: str = Field(description="Date of Evaluation")
     settings: list = Field(description="Settings for Evaluation")
     report: list = Field(description="Evaluation Report")
+
+
 #####################################################
 # Types
 #####################################################
