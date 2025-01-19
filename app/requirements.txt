@@ -13,6 +13,5 @@
 ### source .venv/bin/activate
 ### pip3 install --upgrade pip wheel setuptools
 ### pip3 install -r requirements.txt
-python_version == "3.11.*"
 -r server/requirements.txt
 -r sandbox/requirements.txt

@@ -63,8 +63,12 @@ def register_endpoints(app: FastAPI) -> None:
     async def databases_list() -> schema.ResponseList[schema.Database]:
         """List all databases without gathering VectorStorage"""
         for db in database_objects:
-            conn = databases.connect(db)
-            db.vector_stores = embedding.get_vs(conn)
+            logger.info("Checking database: %s", db)
+            try:
+                db_conn = databases.connect(db)
+            except databases.DbException:
+                continue
+            db.vector_stores = embedding.get_vs(db_conn)
         return schema.ResponseList[schema.Database](
             data=database_objects,
             msg=f"{len(database_objects)} database(s) found",

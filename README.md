@@ -50,19 +50,14 @@ To run the application on bare-metal; download the [source](https://github.com/o
 
    ```bash
    pip3 install -r app/requirements.txt
-   ```
-
-1. Exit from your shell and run again:
-
-   ```bash
    source .venv/bin/activate
    ```
 
 1. Start Streamlit:
 
    ```bash
-   cd app/src
-   streamlit run oaim-sandbox.py --server.port 8501
+   cd app
+   streamlit run oaim_sandbox.py --server.port 8501
    ```
 
 1. Navigate to `http://localhost:8501`.

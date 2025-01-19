@@ -2,7 +2,6 @@
 ## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
 # spell-checker:disable
-python_version == "3.11.*"
 bokeh==3.6.2
 evaluate==0.4.3
 fastapi==0.115.6
@@ -10,11 +9,11 @@ faiss-cpu==1.9.0.post1
 giskard==2.16.0
 IPython==8.31.0
 langchain-cohere==0.3.4
-langchain-community==0.3.13
+langchain-community==0.3.14
 langchain-huggingface==0.1.2
 langchain-ollama==0.2.2
-langchain-openai==0.2.14
-langgraph==0.2.60
+langchain-openai==0.3.0
+langgraph==0.2.64
 litellm==1.56.8
 llama_index==0.12.9
 lxml==5.3.0 

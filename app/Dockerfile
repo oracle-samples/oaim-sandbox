@@ -3,41 +3,49 @@
 ##################################################
 # Base
 ##################################################
-FROM container-registry.oracle.com/os/oraclelinux:9-slim AS pyenv
+FROM container-registry.oracle.com/os/oraclelinux:8-slim AS pyenv
+
 ENV TOKENIZERS_PARALLELISM=true \
     RUNUSER=oracleaim
 
 # Combine related commands into a single RUN layer to minimize image layers
 RUN microdnf -y update && \
     microdnf -y install python3.11 python3.11-pip && \
-    python3.11 -m venv --symlinks --upgrade-deps /opt/venv && \
+    python3.11 -m venv --symlinks --upgrade-deps /opt/.venv && \
     groupadd $RUNUSER && \
     useradd -u 10001 -g $RUNUSER -md /app $RUNUSER && \
     install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/.oci
 
 # Use the virtual environment for pip installations
-COPY ./requirements.txt /opt/requirements.txt
-RUN source /opt/venv/bin/activate && \
-    pip install --upgrade pip wheel setuptools && \
-    pip install -r /opt/requirements.txt
+RUN source /opt/.venv/bin/activate && \
+    pip install --upgrade pip wheel setuptools
 
 # Clean up package manager caches to reduce image size
 RUN microdnf clean all
 
 ##################################################
-# Server
+# Application
 ##################################################
-FROM pyenv AS oaim_sandbox
+FROM pyenv AS oaim_application
+ARG IMAGE_TYPE
+ENV PATH=/opt/.venv/bin:$PATH
 
-# Argument and environment setup
-ARG ENVIRONMENT
-ENV PATH=/opt/venv/bin:$PATH
-
-# Copy application and common files with proper ownership
+# Copy application files
 COPY --chown=$RUNUSER:$RUNUSER . /app/
-COPY --chown=$RUNUSER:$RUNUSER ../common /app/
+RUN chmod +x /app/entrypoint.sh
 
-# Copy the OCI directory if it exists
+RUN if [ "$IMAGE_TYPE" = "server" ]; then \
+        rm -rf /app/sandbox; \
+        pip3 install -r /app/server/requirements.txt; \
+    elif [ "$IMAGE_TYPE" = "sandbox" ]; then \
+        rm -rf /app/server; \
+        rm -rf /app/.oci/*; \
+        pip3 install -r /app/sandbox/requirements.txt; \
+    else \
+        pip3 install -r /app/requirements.txt; \
+    fi
+
+# Remove the OCI file if not development; update the key path if so
 ENV ENVIRONMENT=${ENVIRONMENT}
 RUN if [ -d "/app/.oci" ] && [ "$ENVIRONMENT" != "development" ]; then \
         rm -rf /app/.oci; \
@@ -49,4 +57,4 @@ RUN if [ -d "/app/.oci" ] && [ "$ENVIRONMENT" != "development" ]; then \
 USER $RUNUSER
 WORKDIR /app/
 
-ENTRYPOINT ["uvicorn", "oaim_server:app"]
+ENTRYPOINT ["/app/entrypoint.sh"]
