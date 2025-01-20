@@ -6,6 +6,9 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # pylint: disable=redefined-outer-name,wrong-import-position
 
 import os
+from httpx import Auth
+import uvicorn
+
 # Set OS Environment (Don't move their position)
 os.environ["LITELLM_LOCAL_MODEL_COST_MAP"] = "True"
 os.environ["GSK_DISABLE_SENTRY"] = "true"
@@ -26,7 +29,7 @@ import common.logging_config as logging_config
 # Endpoints
 from server.endpoints import register_endpoints
 
-from fastapi import FastAPI, HTTPException, Depends, status
+from fastapi import FastAPI, HTTPException, Depends, status, APIRouter
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 
@@ -130,7 +133,15 @@ def verify_key(
 _ = os.getenv("API_SERVER_KEY") or generate_auth_key()
 logger.info("Auth Key: %s", os.getenv("API_SERVER_KEY"))
 
-app = FastAPI(title="Oracle AI Microservices Server", dependencies=[Depends(verify_key)])
-
+app = FastAPI(title="Oracle AI Microservices Server", docs_url="/v1/docs", openapi_url="/v1/openapi.json")
+noauth = APIRouter()
+auth = APIRouter(dependencies=[Depends(verify_key)])
 # Register Endpoints
-register_endpoints(app)
+register_endpoints(noauth, auth)
+app.include_router(noauth)
+app.include_router(auth)
+
+if __name__ == "__main__":
+    port = os.getenv("API_SERVER_PORT", "8000")
+    logger.info("API Server Using port: %i", int(port))
+    uvicorn.run(app, host="0.0.0.0", port=int(port), log_level="info")

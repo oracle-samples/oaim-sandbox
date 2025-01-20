@@ -1,9 +1,11 @@
 ## Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 ## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
-##################################################
-# Base - All-In-One
-##################################################
-FROM container-registry.oracle.com/os/oraclelinux:8-slim AS all_in_one_pyenv
+#############################################################
+# Base - Web GUI
+# Build from the app/ directory:
+#  podman build -f sandbox/Dockerfile -t oaim-sandbox:0.1.0 .
+#############################################################
+FROM container-registry.oracle.com/os/oraclelinux:8-slim AS sandbox_pyenv
 
 ENV TOKENIZERS_PARALLELISM=true \
     RUNUSER=oracleaim
@@ -19,28 +21,20 @@ RUN microdnf -y update && \
     install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/tmp
 
 # Avoid re-installs of python modules if the reqs haven't changed
-COPY ./requirements.txt /opt/requirements.txt
 COPY ./sandbox/requirements.txt /opt/sandbox/requirements.txt
-COPY ./server/requirements.txt /opt/server/requirements.txt
 # Use the virtual environment for pip installations
 RUN source /opt/.venv/bin/activate && \
     pip install --upgrade pip wheel setuptools && \
-    pip install -r /opt/requirements.txt
+    pip install -r /opt/sandbox/requirements.txt
 
 ##################################################
 # Application
 ##################################################
-FROM all_in_one_pyenv AS oaim_application
+FROM sandbox_pyenv AS oaim_sandbox
 ENV PATH=/opt/.venv/bin:$PATH
 
-COPY --chown=$RUNUSER:$RUNUSER . /app/
-# Remove the OCI file if not development; update the key path if so
-ENV ENVIRONMENT=${ENVIRONMENT}
-RUN if [ -d "/app/.oci" ] && [ "$ENVIRONMENT" != "development" ]; then \
-        rm -rf /app/.oci; \
-    else \
-        sed -i 's|/.*/\(.*\.pem\)|/app/.oci/\1|g' /app/.oci/config; \
-    fi
+COPY --chown=$RUNUSER:$RUNUSER . /app
+RUN rm -rf /app/server /app/.oci
 
 # Set user and working directory
 USER $RUNUSER

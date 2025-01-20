@@ -33,7 +33,7 @@ import server.oci as server_oci
 import server.embedding as embedding
 import server.testbed as testbed
 
-from fastapi import FastAPI, Query, HTTPException, UploadFile
+from fastapi import FastAPI, Query, HTTPException, UploadFile, Response
 
 logger = logging_config.logging.getLogger("server.endpoints")
 
@@ -48,14 +48,25 @@ settings_objects = bootstrap.settings_def.main()
 #####################################################
 # Endpoints
 #####################################################
-def register_endpoints(app: FastAPI) -> None:
+def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     """Called by the server startup to load the endpoints"""
-    logger.debug("Registering Server Endpoints")
+    #################################################
+    # Kubernetes
+    #################################################
+    @noauth.get("/v1/liveness")
+    async def liveness_probe(response: Response):
+        response.status_code = 200
+        return {"status": "alive"}
+
+    @noauth.get("/v1/readiness")
+    async def readiness_probe(response: Response):
+        response.status_code = 200
+        return {"status": "ready"}
 
     #################################################
     # Database
     #################################################
-    @app.get(
+    @auth.get(
         "/v1/databases",
         description="Get all Databases Configurations",
         response_model=schema.ResponseList[schema.Database],
@@ -74,7 +85,7 @@ def register_endpoints(app: FastAPI) -> None:
             msg=f"{len(database_objects)} database(s) found",
         )
 
-    @app.get(
+    @auth.get(
         "/v1/databases/{name}",
         description="Get single Database Configuration and Vector Storage",
         response_model=schema.Response[schema.Database],
@@ -92,7 +103,7 @@ def register_endpoints(app: FastAPI) -> None:
             msg=f"{name} database found",
         )
 
-    @app.patch(
+    @auth.patch(
         "/v1/databases/{name}",
         description="Update, Test, Set as Default Database Configuration",
         response_model=schema.Response[schema.DatabaseModel],
@@ -128,7 +139,7 @@ def register_endpoints(app: FastAPI) -> None:
     #################################################
     # Models
     #################################################
-    @app.get("/v1/models", response_model=schema.ResponseList[schema.Model])
+    @auth.get("/v1/models", response_model=schema.ResponseList[schema.Model])
     async def models_list(
         model_type: Optional[schema.ModelTypeType] = Query(None),
         only_enabled: bool = False,
@@ -138,7 +149,7 @@ def register_endpoints(app: FastAPI) -> None:
 
         return schema.ResponseList[schema.Model](data=models_ret)
 
-    @app.get("/v1/models/{name}", response_model=schema.Response[schema.Model])
+    @auth.get("/v1/models/{name}", response_model=schema.Response[schema.Model])
     async def models_get(name: schema.ModelNameType) -> schema.Response[schema.Model]:
         """List a specific model"""
         models_ret = await models.apply_filter(model_objects, model_name=name)
@@ -147,7 +158,7 @@ def register_endpoints(app: FastAPI) -> None:
 
         return schema.Response[schema.Model](data=models_ret[0])
 
-    @app.patch("/v1/models/{name}", response_model=schema.Response[schema.Model])
+    @auth.patch("/v1/models/{name}", response_model=schema.Response[schema.Model])
     async def models_update(name: schema.ModelNameType, payload: schema.ModelModel) -> schema.Response[schema.Model]:
         """Update a model"""
         logger.debug("Received Model Payload: %s", payload)
@@ -166,7 +177,7 @@ def register_endpoints(app: FastAPI) -> None:
     #################################################
     # OCI
     #################################################
-    @app.get(
+    @auth.get(
         "/v1/oci", description="View OCI Configuration", response_model=schema.ResponseList[schema.OracleCloudSettings]
     )
     async def oci_list() -> schema.ResponseList[schema.OracleCloudSettings]:
@@ -175,7 +186,7 @@ def register_endpoints(app: FastAPI) -> None:
             data=oci_objects, msg=f"{len(oci_objects)} OCI Configurations found"
         )
 
-    @app.get(
+    @auth.get(
         "/v1/oci/compartments/{profile}",
         description="Get OCI Compartments",
         response_model=schema.Response[dict],
@@ -186,7 +197,7 @@ def register_endpoints(app: FastAPI) -> None:
         compartments = server_oci.get_compartments(oci_config)
         return schema.Response[dict](data=compartments, msg=f"{len(compartments)} OCI compartments found")
 
-    @app.get(
+    @auth.get(
         "/v1/oci/buckets/{compartment}/{profile}",
         description="Get OCI Object Storage buckets in Compartment OCID",
         response_model=schema.Response[list],
@@ -198,7 +209,7 @@ def register_endpoints(app: FastAPI) -> None:
         buckets = server_oci.get_buckets(compartment_obj.ocid, oci_config)
         return schema.Response[list](data=buckets, msg=f"{len(buckets)} OCI buckets found")
 
-    @app.get(
+    @auth.get(
         "/v1/oci/objects/{bucket_name}/{profile}",
         description="Get OCI Object Storage buckets objects",
         response_model=schema.Response[list],
@@ -209,7 +220,7 @@ def register_endpoints(app: FastAPI) -> None:
         objects = server_oci.get_bucket_objects(bucket_name, oci_config)
         return schema.Response[list](data=objects, msg=f"{len(objects)} bucket objects found")
 
-    @app.patch(
+    @auth.patch(
         "/v1/oci/{profile}",
         description="Update, Test, Set as Default OCI Configuration",
         response_model=schema.Response[schema.OracleCloudSettings],
@@ -237,7 +248,7 @@ def register_endpoints(app: FastAPI) -> None:
             )
         raise HTTPException(status_code=404, detail=f"{profile} profile for OCI not found")
 
-    @app.post(
+    @auth.post(
         "/v1/oci/objects/download/{bucket_name}/{profile}",
         description="Download files from Object Storage",
         response_model=schema.Response[list],
@@ -264,7 +275,7 @@ def register_endpoints(app: FastAPI) -> None:
     #################################################
     # Prompt Engineering
     #################################################
-    @app.get(
+    @auth.get(
         "/v1/prompts",
         description="Get all Prompt Configurations",
         response_model=schema.ResponseList[schema.Prompt],
@@ -281,7 +292,7 @@ def register_endpoints(app: FastAPI) -> None:
 
         return schema.ResponseList[schema.Prompt](data=prompts_all, msg=f"{len(prompts_all)} Prompts found")
 
-    @app.get(
+    @auth.get(
         "/v1/prompts/{category}/{name}",
         description="Get single Prompt Configuration",
         response_model=schema.Response[schema.Prompt],
@@ -298,7 +309,7 @@ def register_endpoints(app: FastAPI) -> None:
 
         return schema.Response[schema.Prompt](data=prompt, msg=f"Prompt {category}:{name} found")
 
-    @app.patch(
+    @auth.patch(
         "/v1/prompts/{category}/{name}",
         description="Update Prompt Configuration",
         response_model=schema.Response[schema.Prompt],
@@ -319,7 +330,7 @@ def register_endpoints(app: FastAPI) -> None:
     #################################################
     # Settings
     #################################################
-    @app.get("/v1/settings", response_model=schema.Response[schema.Settings])
+    @auth.get("/v1/settings", response_model=schema.Response[schema.Settings])
     async def settings_get(client: str = "server") -> schema.Response[schema.Settings]:
         """Get settings for a specific client by name"""
         client_settings = next((settings for settings in settings_objects if settings.client == client), None)
@@ -328,7 +339,7 @@ def register_endpoints(app: FastAPI) -> None:
 
         return schema.Response[schema.Settings](data=client_settings, msg=f"Client {client} found")
 
-    @app.patch("/v1/settings", response_model=schema.Response[schema.Settings])
+    @auth.patch("/v1/settings", response_model=schema.Response[schema.Settings])
     async def settings_update(payload: schema.Settings, client: str = "server") -> schema.Response[schema.Settings]:
         """Update a single Client Settings"""
         logger.debug("Received %s Client Payload: %s", client, payload)
@@ -341,7 +352,7 @@ def register_endpoints(app: FastAPI) -> None:
 
         raise HTTPException(status_code=404, detail=f"Client {client} settings not found")
 
-    @app.post("/v1/settings", response_model=schema.Response[schema.Settings])
+    @auth.post("/v1/settings", response_model=schema.Response[schema.Settings])
     async def settings_create(client: str = "server") -> schema.Response[schema.Settings]:
         """Create new settings for a specific client"""
         logger.debug("Received %s Client create request", client)
@@ -360,7 +371,7 @@ def register_endpoints(app: FastAPI) -> None:
     #################################################
     # Embedding
     #################################################
-    @app.post(
+    @auth.post(
         "/v1/embed/drop_vs",
         description="Drop Vector Store",
         response_model=schema.Response[str],
@@ -371,8 +382,8 @@ def register_endpoints(app: FastAPI) -> None:
         embedding.drop_vs(conn, vs)
 
         return schema.Response[str](data=vs.vector_store, msg="Vector Store Dropped")
-    
-    @app.post(
+
+    @auth.post(
         "/v1/embed/web/store",
         description="Store Web Files for Embedding.",
         response_model=schema.Response[list],
@@ -403,7 +414,7 @@ def register_endpoints(app: FastAPI) -> None:
         files = [f for f in os.listdir(client_folder) if os.path.isfile(os.path.join(client_folder, f))]
         return schema.Response[list](data=files, msg=f"{len(files)} stored")
 
-    @app.post(
+    @auth.post(
         "/v1/embed/local/store",
         description="Store Local Files for Embedding.",
         response_model=schema.Response[list],
@@ -426,7 +437,7 @@ def register_endpoints(app: FastAPI) -> None:
         files = [f for f in os.listdir(client_folder) if os.path.isfile(os.path.join(client_folder, f))]
         return schema.Response[list](data=files, msg=f"{len(files)} stored")
 
-    @app.post(
+    @auth.post(
         "/v1/embed",
         description="Split and Embed Corpus.",
         response_model=schema.Response[list],
@@ -472,7 +483,7 @@ def register_endpoints(app: FastAPI) -> None:
     #################################################
     # Chat Completions
     #################################################
-    @app.post("/v1/chat/completions", description="Submit a message for completion.")
+    @auth.post("/v1/chat/completions", description="Submit a message for completion.")
     async def chat_post(
         request: schema.ChatRequest,
         client: str = None,
@@ -535,7 +546,7 @@ def register_endpoints(app: FastAPI) -> None:
             logger.error("An exception occurred: %s", ex)
             raise HTTPException(status_code=500, detail="Unexpected error") from ex
 
-    @app.get(
+    @auth.get(
         "/v1/chat/history",
         description="Get Chat History",
         response_model=schema.ResponseList[schema.ChatMessage],
@@ -562,7 +573,7 @@ def register_endpoints(app: FastAPI) -> None:
     #################################################
     # Testbed
     #################################################
-    @app.get(
+    @auth.get(
         "/v1/testbed/testsets",
         description="Get Stored TestSets.",
         response_model=schema.ResponseList[schema.TestSets],
@@ -576,7 +587,7 @@ def register_endpoints(app: FastAPI) -> None:
             msg=f"{len(testsets)} TestSet(s) found",
         )
 
-    @app.get(
+    @auth.get(
         "/v1/testbed/testset_qa",
         description="Get Stored TestSets Q&A.",
         response_model=schema.Response[schema.TestSetQA],
@@ -590,7 +601,7 @@ def register_endpoints(app: FastAPI) -> None:
             msg="TestSet Q&A found",
         )
 
-    @app.post(
+    @auth.post(
         "/v1/testbed/testset_load",
         description="Upsert TestSets.",
         response_model=schema.Response[schema.TestSetQA],
@@ -614,7 +625,7 @@ def register_endpoints(app: FastAPI) -> None:
         testset_qa = await testbed_get_testset_qa(tid=db_id)
         return testset_qa
 
-    @app.post(
+    @auth.post(
         "/v1/testbed/testset_generate",
         description="Generate Q&A Test Set.",
         response_model=schema.Response[schema.TestSetQA],
@@ -675,7 +686,7 @@ def register_endpoints(app: FastAPI) -> None:
 
         return testset_qa
 
-    @app.post(
+    @auth.post(
         "/v1/testbed/evaluate",
         description="Evaluate Q&A Test Set.",
         response_model=schema.Response[str],
@@ -715,3 +726,5 @@ def register_endpoints(app: FastAPI) -> None:
             data=report.to_html(),
             msg="Evaluation Completed",
         )
+
+    logger.info("Endpoints Loaded.")

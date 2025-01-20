@@ -1,0 +1,91 @@
+replicaCount: 1
+image:
+  repository: localhost/oaim-server
+  tag: "latest"
+imagePullPolicy: IfNotPresent
+imagePullSecrets: []
+  # - name: regcred
+
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/upstream-vhost: "localhost"
+  tls: []
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  targetMemoryUtilizationPercentage: 80
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+serviceAccount:
+  create: false
+
+service:
+  http:
+    type: "ClusterIP"
+    port: 8000
+
+server:
+  # -- OAIM API Key; if nether the apiKey nor the secretName is set
+  # then a secret will be created with random key
+  apiKey: ""
+  # -- The OAIM  Helm chart supports storing the API Key in a secret.
+  # The secret needs to contain one key with its value set
+  secretName: ""
+  # -- Name of the admin role key in the secret, overrides the default key name "admin"
+  secretKey: ""
+
+# -- Oracle Cloud Infrastructure Configuration
+oci:
+  region: ""
+
+# -- Database Configuration
+database:
+  enabled: false
+  ocid: ""
+  mtlsWallet: ""
+  authN:
+    secretName: ""
+    usernameKey: ""
+    passwordKey: ""
+
+# -- Model Configuration
+models:
+  openAI:
+    secretName: ""
+    secretKey: ""
+  perplexity:
+    secretName: ""
+    secretKey: ""
+  cohere:
+    secretName: ""
+    secretKey: ""
+
+# -- Additional volumes on the output Deployment definition.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# -- Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true

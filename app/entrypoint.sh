@@ -2,6 +2,10 @@
 ## Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 ## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
+export TEMP="/app/tmp"
+export NUMBA_CACHE_DIR="/app/tmp"
+export MPLCONFIGDIR="/app/tmp"
+
 if [ -d /app/server ] && [ -d /app/sandbox ]; then
     echo "Starting Application (Sandbox and Server)"
     exec streamlit run ./oaim_sandbox.py
@@ -9,7 +13,7 @@ fi
 
 if [ -d /app/server ] && [ ! -d /app/sandbox ]; then
     echo "Starting Server"
-    exec uvicorn oaim_server:app
+    python ./oaim_server.py
 fi
 
 if [ ! -d /app/server ] && [ -d /app/sandbox ]; then
