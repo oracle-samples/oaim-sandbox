@@ -101,7 +101,7 @@ spec:
             {{- end }}
             {{- end }}
             - name: API_SERVER_PORT
-              value: 8000
+              value: "8000"
             - name: API_SERVER_KEY
               valueFrom:
                 secretKeyRef:
