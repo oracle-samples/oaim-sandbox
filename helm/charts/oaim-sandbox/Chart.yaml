@@ -3,7 +3,7 @@
 
 apiVersion: v2
 name: oaim-sandbox
-description: A Helm chart Oracle AI Microservice Sandbox
+description: A Helm chart Oracle AI Microservice Sandbox - GUI Sandbox
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
@@ -11,13 +11,3 @@ maintainers:
   - name: Oracle
     email: obaas_ww@oracle.com
     url: https://github.com/oracle-samples/oaim-sandbox
-
-dependencies:
-  - name: oaim-server
-    version: 0.1.0
-    repository: file://charts/oaim-server
-    condition: oaim-server.enabled
-  - name: oaim-sandbox
-    version: 0.1.0
-    repository: file://charts/oaim-sandbox
-    condition: oaim-sandbox.enabled

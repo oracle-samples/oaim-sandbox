@@ -6,16 +6,31 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "oaim-sandbox.name" -}}
+{{- define "release.name" -}}
+{{ .Release.Name }}
+{{- end }}
+
+{{- define "chart.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
+
+{{/*
+Define the ServiceName of the API Server for Sandbox Access.
+*/}}
+{{- define "oaim-server.serviceName" -}}
+{{ include "release.name" . }}-oaim-server-http
+{{- end -}}
+
+{{- define "oaim-server.serviceUrl" -}}
+http://{{ include "oaim-server.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local
+{{- end -}}
 
 {{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "oaim-sandbox.fullname" -}}
+{{- define "oaim.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -31,16 +46,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "oaim-sandbox.chart" -}}
+{{- define "oaim.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "oaim-sandbox.labels" -}}
-helm.sh/chart: {{ include "oaim-sandbox.chart" . }}
-{{ include "oaim-sandbox.selectorLabels" . }}
+{{- define "oaim.labels" -}}
+helm.sh/chart: {{ include "oaim.chart" . }}
+{{ include "oaim.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -50,17 +65,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "oaim-sandbox.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "oaim-sandbox.name" . }}
-app.kubernetes.io/instance: {{ .Release.Name }}
+{{- define "oaim.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "chart.name" . }}
+app.kubernetes.io/instance: {{ include "release.name" . }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "oaim-sandbox.serviceAccountName" -}}
+{{- define "oaim.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "oaim-sandbox.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "oaim.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
@@ -77,27 +92,5 @@ Set the path based on baseUrlPath
 {{- printf "/%s" $baseUrlPath -}}
 {{- else -}}
 {{- $baseUrlPath -}}
-{{- end -}}
-{{- end -}}
-
-{{/*
-Set default value for mtlsWallet if not defined
-*/}}
-{{- define "getMtlsWallet" -}}
-{{- if .Values.oaimSandbox.database.mtlsWallet -}}
-  {{- .Values.oaimSandbox.database.mtlsWallet -}}
-{{- else -}}
-  {{- dict -}}  # Return an empty dictionary if mtlsWallet is not defined
-{{- end -}}
-{{- end -}}
-
-{{/*
-Set default value for tnsAdmin if not defined
-*/}}
-{{- define "getTnsAdmin" -}}
-{{- if .Values.oaimSandbox.database.tnsAdmin -}}
-  {{- .Values.oaimSandbox.database.tnsAdmin -}}
-{{- else -}}
-  {{- dict -}}  # Return an empty dictionary if tnsAdmin is not defined
 {{- end -}}
 {{- end -}}

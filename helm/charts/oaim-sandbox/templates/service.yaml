@@ -4,13 +4,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "oaim-server.serviceName" . }}
+  name: {{ include "oaim.fullname" . }}-http
   labels: 
     {{- include "oaim.labels" . | nindent 4 }}
 spec:
   type: {{ .Values.service.http.type }}
   ports:
-    - port: 8000
+    - port: 8501
       targetPort: http
       protocol: TCP
       name: http

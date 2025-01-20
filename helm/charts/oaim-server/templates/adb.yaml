@@ -5,17 +5,17 @@
 apiVersion: database.oracle.com/v1alpha1
 kind: AutonomousDatabase
 metadata:
-  name: {{ include "oaim-server.fullname" . }}-adb
+  name: {{ include "oaim.fullname" . }}-adb
   labels: 
-    {{- include "oaim-server.labels" . | nindent 4 }}
+    {{- include "oaim.labels" . | nindent 4 }}
 spec:
   details:
     autonomousDatabaseOCID: {{ .Values.database.ocid }}
     wallet:
-      name: {{ include "oaim-server.fullname" . }}-adb-tns-admin-{{ .Release.Revision }}
+      name: {{ include "oaim.fullname" . }}-adb-tns-admin-{{ .Release.Revision }}
       password:
         k8sSecret:
-          name: {{ include "oaim-server.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}
+          name: {{ include "oaim.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}
   ociConfig:
-    configMapName: {{ include "oaim-server.fullname" . }}-oci-region
+    configMapName: {{ include "oaim.fullname" . }}-oci-region
 {{ end }}

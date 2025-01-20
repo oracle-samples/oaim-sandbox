@@ -4,9 +4,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ .Chart.Name }}-streamlit-config
-  labels:
-    app.kubernetes.io/name: {{ .Chart.Name }}
+  name: {{ include "oaim.fullname" . }}-st-config
+  labels: 
+    {{- include "oaim.labels" . | nindent 4 }}
 data:
   config.toml: |
     [global]
@@ -14,11 +14,11 @@ data:
 
     [browser]
     gatherUsageStats = false
-    serverAddress = "127.0.0.1"
+    serverAddress = "0.0.0.0"
 
     [server]
-    port = "{{ .Values.service.http.port }}"
-    cookieSecret = "{{ .Chart.Name }}-cookie"
+    port = "8501"
+    cookieSecret = "{{ randAlphaNum 32 | b64enc }}"
     headless = true
     fileWatcherType = "none"
     {{- $path := include "getPath" . }}
@@ -28,14 +28,3 @@ data:
 
     [client]
     toolbarMode = "minimal"
----
-{{- if .Values.oaimSandbox.database.region }}
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Values.oaimSandbox.database.name | lower }}-oci-region
-  labels:
-    app.kubernetes.io/name: {{ .Chart.Name }}
-data:
-  region: {{ .Values.oaimSandbox.database.region | lower }}
-{{- end }}

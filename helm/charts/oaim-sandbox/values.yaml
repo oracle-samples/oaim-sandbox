@@ -1,6 +1,6 @@
 replicaCount: 1
 image:
-  repository: localhost/oaim-server
+  repository: localhost/oaim-sandbox
   tag: "latest"
 imagePullPolicy: IfNotPresent
 imagePullSecrets: []
@@ -40,43 +40,17 @@ service:
   http:
     type: "ClusterIP"
 
-server:
+sandbox:
   api:
-    # -- OAIM API Key; if nether the apiKey nor the secretName is set
-    # then a secret will be created with random key
-    apiKey: ""
-    # -- The OAIM  Helm chart supports storing the API Key in a secret.
-    # The secret needs to contain one key with its value set
-    secretName: ""
-    # -- Name of the admin role key in the secret, overrides the default key name "admin"
-    secretKey: ""
-
-# -- Oracle Cloud Infrastructure Configuration
-oci:
-  region: ""
-
-# -- Database Configuration
-database:
-  enabled: false
-  ocid: ""
-  mtlsWallet: ""
-  authN:
-    secretName: ""
-    usernameKey: ""
-    passwordKey: ""
-
-# -- Model Configuration
-models:
-  openAI:
+    # -- OAIM API Key; provide the secretName and secretKey which 
+    # contains the servers API Key
     secretName: ""
     secretKey: ""
-  perplexity:
-    secretName: ""
-    secretKey: ""
-  cohere:
-    secretName: ""
-    secretKey: ""
-
+  features:
+    disableTools: "false"
+    disableTests: "false"
+    disableAdmin: "false"
+    disableApi: "false"
 # -- Additional volumes on the output Deployment definition.
 volumes: []
 # - name: foo

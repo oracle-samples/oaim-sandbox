@@ -4,16 +4,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "oaim-server.fullname" . }}
+  name: {{ include "oaim.fullname" . }}
   labels:
-    {{- include "oaim-server.labels" . | nindent 4 }}
+    {{- include "oaim.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "oaim-server.selectorLabels" . | nindent 6 }}
+      {{- include "oaim.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -21,7 +21,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "oaim-server.labels" . | nindent 8 }}
+        {{- include "oaim.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -30,7 +30,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "oaim-server.serviceAccountName" . }}
+      serviceAccountName: {{ include "oaim.serviceAccountName" . }}
       securityContext:
         fsGroup: 10001
       containers:
@@ -46,7 +46,7 @@ spec:
           imagePullPolicy: {{ .Values.imagePullPolicy | default "IfNotPresent" }}
           ports:
             - name: http
-              containerPort: {{ .Values.service.http.port }}
+              containerPort: 8000
               protocol: TCP
           livenessProbe:
             httpGet:
@@ -101,15 +101,15 @@ spec:
             {{- end }}
             {{- end }}
             - name: API_SERVER_PORT
-              value: {{ .Values.service.http.port | quote }}
+              value: 8000
             - name: API_SERVER_KEY
               valueFrom:
                 secretKeyRef:
-              {{- if and .Values.server.secretName .Values.server.secretKey }}
-                  name: {{ .Values.server.secretName }}
-                  key: {{ .Values.server.secretKey }}
+              {{- if and .Values.server.api.secretName .Values.server.api.secretKey }}
+                  name: {{ .Values.server.api.secretName }}
+                  key: {{ .Values.server.api.secretKey }}
               {{- else }}
-                  name: {{ include "oaim-server.fullname" . }}-api-key
+                  name: {{ include "release.name" . }}-api-key
                   key: "apiKey"
               {{- end }}
             {{- with .Values }}
@@ -157,7 +157,7 @@ spec:
             {{- if $tnsAdmin.secretName }}
             secretName: {{ $tnsAdmin.secretName | quote }}
             {{ else }}
-            secretName: {{ include "oaim-server.fullname" . }}-adb-tns-admin-{{ .Release.Revision }}
+            secretName: {{ include "oaim.fullname" . }}-adb-tns-admin-{{ .Release.Revision }}
             {{- end }}
         {{- end }}
       {{- with .Values.volumes }}
