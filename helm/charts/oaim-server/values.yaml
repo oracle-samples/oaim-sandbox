@@ -76,6 +76,12 @@ models:
   cohere:
     secretName: ""
     secretKey: ""
+  ollama:
+    # -- e.g http://ollama.ollama.svc.cluster.local:11434
+    urlPort: ""
+  huggingface:
+    # -- e.g http://hf.hf.svc.cluster.local:8080
+    urlPort: ""
 
 # -- Additional volumes on the output Deployment definition.
 volumes: []
