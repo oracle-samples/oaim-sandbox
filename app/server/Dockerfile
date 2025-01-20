@@ -17,21 +17,27 @@ RUN microdnf -y update && \
     python3.11 -m venv --symlinks --upgrade-deps /opt/.venv && \
     groupadd $RUNUSER && \
     useradd -u 10001 -g $RUNUSER -md /app $RUNUSER && \
-    install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/.oci \
-    install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/tmp
+    install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/.oci && \
+    install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/tmp && \
+    mkdir -p /opt/sandbox && \
+    touch /opt/sandbox/requirements.txt
 
 # Avoid re-installs of python modules if the reqs haven't changed
+COPY ./requirements.txt /opt/requirements.txt
 COPY ./server/requirements.txt /opt/server/requirements.txt
 # Use the virtual environment for pip installations
 RUN source /opt/.venv/bin/activate && \
     pip install --upgrade pip wheel setuptools && \
-    pip install -r /opt/server/requirements.txt
+    pip install -r /opt/requirements.txt
 
 ##################################################
 # Application
 ##################################################
 FROM server_pyenv AS oaim_server
 ENV PATH=/opt/.venv/bin:$PATH
+ENV TEMP=/app/tmp
+ENV NUMBA_CACHE_DIR=/app/tmp
+ENV MPLCONFIGDIR=/app/tmp
 
 COPY --chown=$RUNUSER:$RUNUSER . /app
 RUN rm -rf /app/sandbox /app/.streamlit /app/oaim_sandbox.py

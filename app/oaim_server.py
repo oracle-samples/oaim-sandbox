@@ -2,7 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore fastapi, laddr, checkpointer, langgraph, oaim, litellm
+# spell-checker:ignore fastapi, laddr, checkpointer, langgraph, oaim, litellm, noauth
 # pylint: disable=redefined-outer-name,wrong-import-position
 
 import os
@@ -113,6 +113,7 @@ def stop_server(pid: int) -> None:
 ##########################################
 def generate_auth_key(length: int = 32) -> None:
     """Generates a URL-safe, base64-encoded random string with the given length"""
+    logger.info("API_SERVER_KEY not set; generating")
     os.environ["API_SERVER_KEY"] = secrets.token_urlsafe(length)
 
 
