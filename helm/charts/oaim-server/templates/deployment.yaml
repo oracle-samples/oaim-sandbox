@@ -105,13 +105,8 @@ spec:
             - name: API_SERVER_KEY
               valueFrom:
                 secretKeyRef:
-              {{- if and .Values.server.api.secretName .Values.server.api.secretKey }}
-                  name: {{ .Values.server.api.secretName }}
-                  key: {{ .Values.server.api.secretKey }}
-              {{- else }}
-                  name: {{ include "release.name" . }}-api-key
-                  key: "apiKey"
-              {{- end }}
+                  name: {{ .Values.global.api.secretName | default (printf "%s-api-key" (include "release.name" .)) }}
+                  key: {{ .Values.global.api.secretKey | default "apiKey" }}
             {{- with .Values }}
             {{- if .models }}
             {{- if and .models.openAI .models.openAI.secretName }}

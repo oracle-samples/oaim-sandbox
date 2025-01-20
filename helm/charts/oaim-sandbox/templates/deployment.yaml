@@ -96,13 +96,8 @@ spec:
             - name: API_SERVER_KEY
               valueFrom:
                 secretKeyRef:
-              {{- if and .Values.sandbox.api.secretName .Values.sandbox.api.secretKey }}
-                  name: {{ .Values.sandbox.api.secretName }}
-                  key: {{ .Values.sandbox.api.secretKey }}
-              {{- else }}
-                  name: {{ include "release.name" . }}-api-key
-                  key: "apiKey"
-              {{- end }}
+                  name: {{ .Values.global.api.secretName | default (printf "%s-api-key" (include "release.name" .)) }}
+                  key: {{ .Values.global.api.secretKey | default "apiKey" }}
           volumeMounts:
             - name: tmp
               mountPath: "/app/tmp"

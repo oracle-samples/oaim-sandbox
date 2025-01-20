@@ -68,9 +68,9 @@ To run the application on bare-metal; download the [source](https://github.com/o
 
 To run the application in a container; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the top-level directory:
 
-1. Build the image.
+1. Build the all-in-one image.
 
-   From the `app/` directory, build Image:
+   From the `app/` directory, build image:
 
    ```bash
    podman build -t oaim-sandbox .
