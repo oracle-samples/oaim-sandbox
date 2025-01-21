@@ -90,7 +90,7 @@ async def get_client(
             "ChatOllama": lambda: ChatOllama(model=model_name, base_url=model_url, model_kwargs=ll_common_params),
             "ChatPerplexity": ChatPerplexity(
                 model=model_name,
-                api_key=model_api_key,
+                pplx_api_key=model_api_key,
                 temperature=ll_common_params["temperature"],
                 model_kwargs={k: v for k, v in ll_common_params.items() if k != "temperature"},
             ),

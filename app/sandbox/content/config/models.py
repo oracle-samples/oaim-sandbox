@@ -23,6 +23,7 @@ import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("config.models")
 
+
 ###################################
 # Functions
 ###################################
@@ -32,7 +33,7 @@ def get_model(model_type: str, only_enabled: bool = False) -> dict[str, dict]:
     state_key = f"{model_type}_model_enabled" if only_enabled else f"{model_type}_model_config"
     if state_key not in state or state[state_key] == {}:
         try:
-            api_url=f"{state.server['url']}:{state.server['port']}/v1/models"
+            api_url = f"{state.server['url']}:{state.server['port']}/v1/models"
             api_params = {"only_enabled": only_enabled, "model_type": model_type}
             response = api_call.get(url=api_url, params=api_params)["data"]
             state[state_key] = {item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response}
@@ -49,7 +50,7 @@ def patch_model(model_type: str) -> None:
     get_model(model_type)
 
     model_changes = 0
-    for model_name, _ in state[state_key].items():
+    for model_name, _ in state[state_config_key].items():
         if (
             state[state_config_key][model_name]["enabled"] != state[f"{model_type}_{model_name}_enabled"]
             or state[state_config_key][model_name]["url"] != state[f"{model_type}_{model_name}_url"]
@@ -57,7 +58,7 @@ def patch_model(model_type: str) -> None:
         ):
             model_changes += 1
             try:
-                api_url=f"{state.server['url']}:{state.server['port']}/v1/models/{model_name}"
+                api_url = f"{state.server['url']}:{state.server['port']}/v1/models/{model_name}"
                 api_call.patch(
                     url=api_url,
                     payload={
@@ -78,7 +79,7 @@ def patch_model(model_type: str) -> None:
                 break
 
     if model_changes == 0:
-        st.info(f"Model Configuration - No Changes Detected.", icon="ℹ️")
+        st.info("Model Configuration - No Changes Detected.", icon="ℹ️")
     else:
         st_common.clear_state_key(state_config_key)
         st_common.clear_state_key(state_enabled_key)
