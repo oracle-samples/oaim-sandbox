@@ -1,7 +1,19 @@
 ## Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 ## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
-{{- if .Values.database.ocid }}
+{{- if .Values.adb.ocid }}
+{{- $mtlsWallet := include "getMtlsWallet" . | fromJson }}
+{{- if not $mtlsWallet.secretName }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "oaim.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}
+  labels:
+    app.kubernetes.io/name: {{ .Chart.Name }}
+stringData:
+  {{ include "oaim.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}: {{ randAlphaNum 16 | quote }}
+{{- end }}
+---
 apiVersion: database.oracle.com/v1alpha1
 kind: AutonomousDatabase
 metadata:
@@ -10,7 +22,7 @@ metadata:
     {{- include "oaim.labels" . | nindent 4 }}
 spec:
   details:
-    autonomousDatabaseOCID: {{ .Values.database.ocid }}
+    autonomousDatabaseOCID: {{ .Values.adb.ocid }}
     wallet:
       name: {{ include "oaim.fullname" . }}-adb-tns-admin-{{ .Release.Revision }}
       password:

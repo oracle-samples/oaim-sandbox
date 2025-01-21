@@ -69,25 +69,11 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- end }}
           env:
-            {{- if eq .Values.sandbox.features.disableOci "true" }}
-            - name: DISABLE_OCI
-              value: "true"
+            {{- range $key, $value := .Values.sandbox.features }}
+            {{- if ne $value "false" }}
+            - name: {{ snakecase $key | upper }}
+              value: {{ $value | quote }}
             {{- end }}
-            {{- if eq .Values.sandbox.features.disableTools "true" }}
-            - name: DISABLE_TOOLS
-              value: "true"
-            {{- end }}
-            {{- if eq .Values.sandbox.features.disableTests "true" }}
-            - name: DISABLE_TESTS
-              value: "true"
-            {{- end }}
-            {{- if eq .Values.sandbox.features.disableAdmin "true" }}
-            - name: DISABLE_ADMIN
-              value: "true"
-            {{- end }}
-            {{- if eq .Values.sandbox.features.disableAPI "true" }}
-            - name: DISABLE_API
-              value: "true"
             {{- end }}
             - name: API_SERVER_URL
               value: {{ include "oaim-server.serviceUrl" . }}

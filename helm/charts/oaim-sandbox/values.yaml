@@ -41,16 +41,15 @@ service:
     type: "ClusterIP"
 
 sandbox:
-  api:
-    # -- OAIM API Key; provide the secretName and secretKey which 
-    # contains the servers API Key
-    secretName: ""
-    secretKey: ""
   features:
-    disableTools: "false"
-    disableTests: "false"
-    disableAdmin: "false"
+    disableTestbed: "false"
     disableApi: "false"
+    disableTools: "false"
+    disableDbCfg: "false"
+    disableModelCfg: "false"
+    disableOciCfg: "false"
+    disableSettings: "false"
+
 # -- Additional volumes on the output Deployment definition.
 volumes: []
 # - name: foo

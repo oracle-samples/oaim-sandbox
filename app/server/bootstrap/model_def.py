@@ -24,18 +24,6 @@ def main() -> list[Model]:
             "max_completion_tokens": 4096,
         },
         {
-            "name": "gpt-3.5-turbo",
-            "enabled": os.getenv("OPENAI_API_KEY") is not None,
-            "type": "ll",
-            "api": "OpenAI",
-            "api_key": os.environ.get("OPENAI_API_KEY", default=""),
-            "openai_compat": True,
-            "url": "https://api.openai.com",
-            "context_length": 4191,
-            "temperature": 1.0,
-            "max_completion_tokens": 4096,
-        },
-        {
             "name": "gpt-4o-mini",
             "enabled": os.getenv("OPENAI_API_KEY") is not None,
             "type": "ll",

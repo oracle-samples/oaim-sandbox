@@ -4,6 +4,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 """
 # spell-checker:ignore streamlit, selectbox, mult, iloc
 
+import os
 from io import BytesIO
 from typing import Union
 import pandas as pd
@@ -94,6 +95,15 @@ def is_db_configured() -> bool:
     """Verify that a database is configured"""
     get_databases()
     return state.database_config[state.user_settings["rag"]["database"]].get("connected")
+
+
+def set_server_state() -> None:
+    """initialize Streamlit Session State"""
+    if "server" not in state:
+        logger.info("Initializing state.server")
+        state.server = {"url": os.getenv("API_SERVER_URL", "http://localhost")}
+        state.server["port"] = int(os.getenv("API_SERVER_PORT", "8000"))
+        state.server["key"] = os.getenv("API_SERVER_KEY")
 
 
 #############################################################################

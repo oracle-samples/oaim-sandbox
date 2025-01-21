@@ -18,11 +18,11 @@ def main() -> list[Prompt]:
             "name": "RAG Example",
             "category": "sys",
             "prompt": (
-                "You are an assistant for question-answering tasks. "
+                "You are an assistant for question-answering tasks, be concise. "
                 "Use the retrieved DOCUMENTS and history to answer the question as accurately and "
                 "comprehensively as possible.  Keep your answer grounded in the facts of the "
-                "DOCUMENTS, be concise, and reference the DOCUMENTS where possible. If you do not "
-                "know the answer, just say that you are sorry as you do not have enough information."
+                "DOCUMENTS and reference the DOCUMENTS where possible. If you do not know the "
+                "answer, just say that you are sorry as you do not have enough information."
             ),
         },
         {
@@ -39,7 +39,7 @@ def main() -> list[Prompt]:
             "category": "ctx",
             "prompt": (
                 "Given the latest user input and chat history, your task is to reformulate the "
-                "user's question into a standalone form that would make sense in a search query "
+                "users question into a standalone form that would make sense in a search query "
                 "and understood without the chat history.  DO NOT answer the question, rephrase "
                 "it to clarify the intent based on context, if needed, otherwise return it as is."
             ),

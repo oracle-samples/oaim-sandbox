@@ -52,39 +52,41 @@ spec:
             httpGet:
               path: {{ include "getPath" . }}v1/liveness
               port: http
-            initialDelaySeconds: 60
-            periodSeconds: 20
-            timeoutSeconds: 1
+            initialDelaySeconds: 15
+            periodSeconds: 90
+            timeoutSeconds: 30
             failureThreshold: 3
           readinessProbe:
             httpGet:
               path: {{ include "getPath" . }}v1/readiness
               port: http
             initialDelaySeconds: 30
-            periodSeconds: 15
-            timeoutSeconds: 1
+            periodSeconds: 90
+            timeoutSeconds: 30
             failureThreshold: 3
           {{- if .Values.resources }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- end }}
           env:
-            {{- if .Values.database.enabled }}
+            {{- if .Values.adb.enabled }}
+            - name: TNS_ADMIN
+              value: /app/tns_admin
             - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.database.authN.secretName | quote }}
-                  key: {{ .Values.database.authN.usernameKey | quote }}
+                  name: {{ .Values.adb.authN.secretName | quote }}
+                  key: {{ .Values.adb.authN.usernameKey | quote }}
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.database.authN.secretName | quote }}
-                  key: {{ .Values.database.authN.passwordKey | quote }}
+                  name: {{ .Values.adb.authN.secretName | quote }}
+                  key: {{ .Values.adb.authN.passwordKey | quote }}
             - name: DB_DSN
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.database.authN.secretName | quote }}
-                  key: {{ .Values.database.authN.serviceKey | quote }}
+                  name: {{ .Values.adb.authN.secretName | quote }}
+                  key: {{ .Values.adb.authN.serviceKey | quote }}
             {{- $mtlsWallet := include "getMtlsWallet" . | fromJson }}
             {{- if $mtlsWallet.secretName }}
             - name: DB_WALLET_PASSWORD
@@ -96,8 +98,8 @@ spec:
             - name: DB_WALLET_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: default-db-wallet-pass-{{ .Release.Revision }}
-                  key: default-db-wallet-pass-{{ .Release.Revision }}
+                  name: {{ include "oaim.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}
+                  key: {{ include "oaim.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}
             {{- end }}
             {{- end }}
             - name: API_SERVER_PORT
@@ -143,7 +145,7 @@ spec:
           volumeMounts:
             - name: tmp
               mountPath: "/app/tmp"
-            {{- if .Values.database.enabled }}
+            {{- if .Values.adb.enabled }}
             - name: tns-admin
               mountPath: /app/tns_admin
             {{- end }}
@@ -153,7 +155,7 @@ spec:
       volumes:
         - name: tmp
           emptyDir: {}
-        {{- if .Values.database.enabled }}
+        {{- if .Values.adb.enabled }}
         - name: tns-admin
           secret:
             {{- $tnsAdmin := include "getTnsAdmin" . | fromJson }}

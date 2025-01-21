@@ -3,7 +3,8 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
 # spell-checker:ignore genai, hnsw
-
+import os
+from pathlib import Path
 from uuid import uuid4
 from typing import Tuple
 import math
@@ -15,6 +16,15 @@ import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("common.functions")
 
+#############################################################################
+# General
+#############################################################################
+def get_temp_directory() -> str:
+    directory = Path("/app/tmp")
+    if directory.exists() and directory.is_dir():
+        return "/app/tmp"
+    else:
+        return "/tmp"
 
 #############################################################################
 # CLIENT

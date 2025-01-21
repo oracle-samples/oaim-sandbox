@@ -304,7 +304,7 @@ def populate_vs(
 
     # Creates a TEMP Vector Store Table; which may already exist
     # This is to allow re-using an existing VS; will merge this over later
-    drop_vs(conn=db_conn, vs=vector_store_tmp)
+    # drop_vs(conn=db_conn, vs=vector_store_tmp) -- THIS SEEMS TO HANG
     vs_tmp = OracleVS(
         client=db_conn,
         embedding_function=embed_client,

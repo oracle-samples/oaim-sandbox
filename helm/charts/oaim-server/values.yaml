@@ -44,8 +44,8 @@ service:
 oci:
   region: ""
 
-# -- Database Configuration
-database:
+# -- Oracle Autonomous Database Configuration
+adb:
   enabled: false
   ocid: ""
   mtlsWallet: ""
@@ -53,6 +53,7 @@ database:
     secretName: ""
     usernameKey: ""
     passwordKey: ""
+    serviceKey: ""
 
 # -- Model Configuration
 models:

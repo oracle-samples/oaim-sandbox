@@ -37,7 +37,9 @@ ENV PATH=/opt/.venv/bin:$PATH
 ENV TEMP=/app/tmp
 
 COPY --chown=$RUNUSER:$RUNUSER . /app
-RUN rm -rf /app/server /app/.oci
+RUN rm -rf /app/server && \ 
+    rm -rf /app/.oci && \
+    rm -rf /app/sandbox/content/server_aio.py
 
 # Set user and working directory
 USER $RUNUSER

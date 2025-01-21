@@ -24,7 +24,7 @@ from giskard.rag import evaluate, QATestset
 
 import common.logging_config as logging_config
 import common.schema as schema
-from common.functions import client_gen_id
+from common.functions import client_gen_id, get_temp_directory
 import server.agents.chatbot as chatbot
 import server.bootstrap as bootstrap  # __init__.py imports scripts
 import server.models as models
@@ -258,13 +258,14 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         profile: schema.OCIProfileType,
         request: list[str],
         client: str = "server",
-        directory: str = "tmp",
+        directory: str = "docs",
     ) -> schema.Response[list]:
         """Download files from Object Storage"""
-        oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
-        client_folder = Path(f"/tmp/{client}/{directory}")
+        temp_directory = get_temp_directory()
+        client_folder = Path(temp_directory) / client / directory
         client_folder.mkdir(parents=True, exist_ok=True)
 
+        oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
         for object_name in request:
             server_oci.get_object(client_folder, object_name, bucket_name, oci_config)
 
@@ -389,10 +390,11 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         response_model=schema.Response[list],
     )
     async def store_web_file(
-        request: list[str], client: str = "server", directory: str = "tmp"
+        request: list[str], client: str = "server", directory: str = "docs"
     ) -> schema.Response[list]:
         """Store contents from a web URL"""
-        client_folder = Path(f"/tmp/{client}/{directory}")
+        temp_directory = get_temp_directory()
+        client_folder = Path(temp_directory) / client / directory
         client_folder.mkdir(parents=True, exist_ok=True)
 
         # Save the file temporarily
@@ -420,10 +422,11 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         response_model=schema.Response[list],
     )
     async def store_local_file(
-        files: list[UploadFile], client: str = "server", directory: str = "tmp"
+        files: list[UploadFile], client: str = "server", directory: str = "docs"
     ) -> schema.Response[list]:
         """Store contents from a local file uploaded to streamlit"""
-        client_folder = Path(f"/tmp/{client}/{directory}")
+        temp_directory = get_temp_directory()
+        client_folder = Path(temp_directory) / client / directory
         client_folder.mkdir(parents=True, exist_ok=True)
 
         # Save the file temporarily
@@ -443,10 +446,11 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         response_model=schema.Response[list],
     )
     async def split_embed(
-        request: schema.DatabaseVectorStorage, client: str = "server", directory: str = "tmp", rate_limit: int = 0
+        request: schema.DatabaseVectorStorage, client: str = "server", directory: str = "docs", rate_limit: int = 0
     ) -> schema.Response[list]:
         """Perform Split and Embed"""
-        client_folder = Path(f"/tmp/{client}/{directory}")
+        temp_directory = get_temp_directory()
+        client_folder = Path(temp_directory) / client / directory
         try:
             files = [str(file) for file in client_folder.iterdir() if file.is_file()]
             logger.info("Processing Files: %s", files)
@@ -491,9 +495,19 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         """Chatbot Completion"""
         thread_id = client_gen_id() if not client else client
         user_settings = next((settings for settings in settings_objects if settings.client == thread_id), None)
-        logger.debug("User (%s) Settings: %s", thread_id, user_settings)
-        # Establish LL Model Params
-        ll_client = await models.get_client(model_objects, request.model_dump())
+        logger.info("User (%s) Settings: %s", thread_id, user_settings)
+        logger.info("User (%s) Request: %s", thread_id, request.model_dump())
+        # Establish LL Model Params (if the request specs a model, otherwise override from settings)
+        model = request.model_dump()
+        if not model["model"]:
+            model = user_settings.ll_model.model_dump()
+        logger.info("User (%s) Model: %s", thread_id, model)
+        try:
+            ll_client = await models.get_client(model_objects, model)
+        except Exception as ex:
+            logger.error("An exception occurred: %s", ex)
+            raise HTTPException(status_code=500, detail="Unexpected error") from ex        
+    
         try:
             user_sys_prompt = getattr(user_settings.prompts, "sys", "Basic Example")
             sys_prompt = next(
@@ -535,7 +549,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
                 },
             ),
         }
-
+        logger.info("Completion Kwargs: %s", kwargs)
         agent: CompiledStateGraph = chatbot.chatbot_graph
         try:
             # invoke from langchain_core.language_models.BaseChatModel
@@ -709,11 +723,11 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             return ai_response.choices[0].message.content
 
         testset = testbed.get_testset_qa(conn=db_conn, tid=tid.upper())
-        print(testset.qa_data)
         qa_test = "\n".join(json.dumps(item) for item in testset.qa_data)
-        with open("/tmp/output.txt", "w", encoding="utf-8") as file:
+        temp_directory = get_temp_directory()
+        with open(f"/{temp_directory}/output.txt", "w", encoding="utf-8") as file:
             file.write(qa_test)
-        loaded_testset = QATestset.load("/tmp/output.txt")
+        loaded_testset = QATestset.load(f"/{temp_directory}/output.txt")
         report = evaluate(get_answer, testset=loaded_testset)
         with tempfile.TemporaryDirectory() as temp_dir:
             report.save(temp_dir)

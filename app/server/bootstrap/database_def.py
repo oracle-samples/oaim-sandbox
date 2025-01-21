@@ -21,6 +21,8 @@ def main() -> list[Database]:
             "tns_admin": os.environ.get("TNS_ADMIN", default="tns_admin"),
         },
     ]
+    if "wallet_password" in database_list[0] and database_list[0]["wallet_password"]:
+        database_list[0]["wallet_location"] = database_list[0]["tns_admin"]
 
     # Check for Duplicates
     unique_entries = set()

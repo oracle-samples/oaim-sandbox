@@ -58,8 +58,8 @@ class DatabaseModel(BaseModel):
     password: Optional[str] = Field(default=None, description="Password")
     dsn: Optional[str] = Field(default=None, description="Connect String")
     wallet_password: Optional[str] = Field(default=None, description="Wallet Password (for mTLS)")
+    wallet_location: Optional[str] = Field(default=None, description="Wallet Location (for mTLS)")
     tcp_connect_timeout: int = Field(default=5, description="TCP Timeout in seconds")
-
 
 class Database(DatabaseModel):
     """Database Object"""
@@ -294,7 +294,7 @@ class ChatRequest(LanguageParametersModel):
     Do not change as this has to remain OpenAI Compatible
     """
 
-    model: str = Field(description="The model to use for chat completions.")
+    model: Optional[str] = Field(default=None, description="The model to use for chat completions.")
     messages: list[ChatMessage] = Field(description="A list of messages comprising the conversation so far.")
 
 
