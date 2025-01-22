@@ -13,7 +13,7 @@
 ### source .venv/bin/activate
 ### pip3 install --upgrade pip wheel setuptools
 ### pip3 install -r requirements.txt
-langchain-core==0.3.30
+langchain-core==0.3.31
 httpx==0.27.2
 oracledb>=2.0.0
 -r server/requirements.txt

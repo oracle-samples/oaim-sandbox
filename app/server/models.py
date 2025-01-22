@@ -77,7 +77,8 @@ async def get_client(
         ll_common_params = {}
         for key in ["temperature", "max_completion_tokens", "top_p", "frequency_penalty", "presence_penalty"]:
             try:
-                ll_common_params[key] = getattr(model_config, key, None) or await get_key_value(
+                logger.debug("--> Setting: %s; was sent %s", key, model_config[key])
+                ll_common_params[key] = model_config[key] or await get_key_value(
                     model_objects, model_name, key
                 )
             except KeyError:
@@ -88,7 +89,7 @@ async def get_client(
             "OpenAI": lambda: ChatOpenAI(model=model_name, api_key=model_api_key, **ll_common_params),
             "Cohere": lambda: ChatCohere(model=model_name, cohere_api_key=model_api_key, **ll_common_params),
             "ChatOllama": lambda: ChatOllama(model=model_name, base_url=model_url, model_kwargs=ll_common_params),
-            "ChatPerplexity": ChatPerplexity(
+            "ChatPerplexity": lambda: ChatPerplexity(
                 model=model_name,
                 pplx_api_key=model_api_key,
                 temperature=ll_common_params["temperature"],

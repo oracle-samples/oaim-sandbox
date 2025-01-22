@@ -2,7 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore ainvoke, langgraph, modelcfg, jsonable, genai, ocid, docos, ollama, giskard, testsets, testset
+# spell-checker:ignore ainvoke, langgraph, modelcfg, jsonable, genai, ocid, docos, ollama, giskard, testsets, testset, noauth
 
 import copy
 import os
@@ -50,6 +50,7 @@ settings_objects = bootstrap.settings_def.main()
 #####################################################
 def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     """Called by the server startup to load the endpoints"""
+
     #################################################
     # Kubernetes
     #################################################
@@ -495,19 +496,19 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         """Chatbot Completion"""
         thread_id = client_gen_id() if not client else client
         user_settings = next((settings for settings in settings_objects if settings.client == thread_id), None)
-        logger.info("User (%s) Settings: %s", thread_id, user_settings)
-        logger.info("User (%s) Request: %s", thread_id, request.model_dump())
+        logger.debug("Settings: %s", user_settings)
+        logger.debug("Request: %s", request.model_dump())
         # Establish LL Model Params (if the request specs a model, otherwise override from settings)
         model = request.model_dump()
         if not model["model"]:
             model = user_settings.ll_model.model_dump()
-        logger.info("User (%s) Model: %s", thread_id, model)
+        logger.debug("Model: %s", model)
         try:
             ll_client = await models.get_client(model_objects, model)
         except Exception as ex:
-            logger.error("An exception occurred: %s", ex)
-            raise HTTPException(status_code=500, detail="Unexpected error") from ex        
-    
+            logger.error("An exception initializing model: %s", ex)
+            raise HTTPException(status_code=500, detail="Unexpected error") from ex
+
         try:
             user_sys_prompt = getattr(user_settings.prompts, "sys", "Basic Example")
             sys_prompt = next(
@@ -516,7 +517,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             )
         except AttributeError as ex:
             # Settings not on server-side
-            logger.error("An exception occurred: %s", ex)
+            logger.error("A settings exception occurred: %s", ex)
             raise HTTPException(status_code=500, detail="Unexpected error") from ex
 
         embed_client, ctx_prompt, db_conn = None, None, None
@@ -542,6 +543,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
                     "db_conn": db_conn,
                 },
                 metadata={
+                    "model_name": model["model"],
                     "use_history": user_settings.ll_model.chat_history,
                     "rag_settings": user_settings.rag,
                     "sys_prompt": sys_prompt,
@@ -557,7 +559,8 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             response = agent.invoke(**kwargs)["final_response"]
             return response
         except Exception as ex:
-            logger.error("An exception occurred: %s", ex)
+            logger.error("An invoke exception occurred: %s", ex)
+            #TODO: gotsysdba - If a message is returned; attempt to format and return (this might be done in the agent instead)
             raise HTTPException(status_code=500, detail="Unexpected error") from ex
 
     @auth.get(

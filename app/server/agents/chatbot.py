@@ -78,25 +78,25 @@ def document_formatter(message) -> str:
 #############################################################################
 # NODES and EDGES
 #############################################################################
-def respond(state: AgentState) -> ChatResponse:
+def respond(state: AgentState, config: RunnableConfig) -> ChatResponse:
     """Respond in OpenAI Compatible return"""
-    logger.info("Formatting Response to OpenAI compatible")
-
     ai_message = state["messages"][-1]
+    logger.debug("Formatting Response to OpenAI compatible message: %s", repr(ai_message))
+    model_name = config["metadata"]["model_name"]
     if "model" in ai_message.response_metadata:
         ai_metadata = ai_message
     else:
         ai_metadata = state["messages"][1]
-    logger.debug("Formatting Response of message: %s", repr(ai_message))
+        logger.debug("Using Metadata from: %s", repr(ai_metadata))
 
     openai_response = ChatResponse(
         id=ai_message.id,
         created=int(datetime.now(timezone.utc).timestamp()),
-        model=ai_metadata.response_metadata["model_name"],
+        model=model_name,
         usage=ChatUsage(
-            prompt_tokens=ai_metadata.response_metadata["token_usage"]["prompt_tokens"],
-            completion_tokens=ai_metadata.response_metadata["token_usage"]["completion_tokens"],
-            total_tokens=ai_metadata.response_metadata["token_usage"]["total_tokens"],
+            prompt_tokens=ai_metadata.response_metadata.get("token_usage", {}).get("prompt_tokens", -1),
+            completion_tokens=ai_metadata.response_metadata.get("token_usage", {}).get("completion_tokens", -1),
+            total_tokens=ai_metadata.response_metadata.get("token_usage", {}).get("total_tokens", -1),
         ),
         choices=[
             ChatChoices(
@@ -107,7 +107,7 @@ def respond(state: AgentState) -> ChatResponse:
                     additional_kwargs=ai_metadata.additional_kwargs,
                     response_metadata=ai_metadata.response_metadata,
                 ),
-                finish_reason=ai_metadata.response_metadata["finish_reason"],
+                finish_reason=ai_metadata.response_metadata.get("finish_reason", "stop"),
                 logprobs=None,
             )
         ],
@@ -215,8 +215,13 @@ def agent(state: AgentState, config: RunnableConfig) -> AgentState:
     model = config["configurable"].get("ll_client", None)
     # Bind the retriever to the model if RAG is enabled
     if use_rag:
+        logger.debug("Binding model to oraclevs_tool")
         # tool_choice will force a vector search when RAG enabled
-        model = model.bind_tools(tools, tool_choice="oraclevs_tool")
+        try:
+            model = model.bind_tools(tools, tool_choice="oraclevs_tool")
+        except Exception:
+            #TODO: Fallback to non-tool call :(
+            logger.exception("Model doesn't support tools (as of now)")
 
     messages = get_messages(state, config)
 
