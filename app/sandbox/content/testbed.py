@@ -2,14 +2,14 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-
 # spell-checker:ignore streamlit, selectbox, testset, testsets
+
 import random
 import string
 import inspect
 import json
 from io import BytesIO
-
+import plotly.graph_objects as go
 import pandas as pd
 
 import streamlit as st
@@ -40,9 +40,89 @@ def reset_testset(cache: bool = False) -> None:
     st_common.clear_state_key("selected_testset_name")
     st_common.clear_state_key("testbed_qa")
     st_common.clear_state_key("testbed_db_testsets")
+    st_common.clear_state_key("testbed_evaluations")
     if cache:
         get_testbed_db_testsets.clear()
 
+
+@st.fragment()
+def download_file(label, data, file_name, mime):
+    """Download HTML Report - Here as a fragment to prevent a page-reload"""
+    st.download_button(label=label, data=data, file_name=file_name, mime=mime)
+
+@st.dialog("Evaluation Report", width="large")
+def evaluation_report(eid = None, report = None):
+    def create_gauge(value):
+        """Create the GUI Gauge"""
+        fig = go.Figure(
+            go.Indicator(
+                mode="gauge+number",
+                value=value,
+                title={"text": "Overall Correctness Score", "font": {"size": 42}},
+                # Add the '%' suffix here
+                number={"suffix": "%"},
+                gauge={
+                    "axis": {"range": [None, 100]},
+                    "bar": {"color": "blue"},
+                    "steps": [
+                        {"range": [0, 30], "color": "red"},
+                        {"range": [30, 70], "color": "yellow"},
+                        {"range": [70, 100], "color": "green"},
+                    ],
+                    "threshold": {
+                        "line": {"color": "blue", "width": 4},
+                        "thickness": 0.75,
+                        "value": 95,
+                    },
+                },
+            )
+        )
+        return fig
+
+    # Get the Report
+    if eid:
+        api_url = f"{API_ENDPOINT}/evaluation"
+        api_params = {"eid": eid}
+        report = api_call.get(url=api_url, params=api_params)["data"]
+
+    # Settings
+    st.subheader("Evaluation Settings")
+    ll_settings = pd.DataFrame(report["settings"]["ll_model"], index=[0])
+    ll_settings.drop(["stream", "chat_history"], axis=1, inplace=True)
+    ll_settings_reversed = ll_settings.iloc[:, ::-1]
+    st.dataframe(ll_settings_reversed, hide_index=True)
+    if report["settings"]["rag"]["rag_enabled"]:
+        embed_settings = pd.DataFrame(report["settings"]["rag"], index=[0])
+        st.dataframe(embed_settings, hide_index=True)
+    else:
+        st.markdown("**Evaluated without RAG**")
+
+    # Show the Gauge
+    gauge_fig = create_gauge(report["correctness"] * 100)
+    # Display gauge
+    st.plotly_chart(gauge_fig)
+
+    # Correctness by Topic
+    st.subheader("Correctness By Topic")
+    by_topic = pd.DataFrame(report["correct_by_topic"])
+    by_topic["correctness"] = by_topic["correctness"] * 100
+    by_topic.rename(columns={"correctness": "Correctness %"}, inplace=True)
+    st.dataframe(by_topic)
+
+    # Failures
+    st.subheader("Failures")
+    failures = pd.DataFrame(report["failures"])
+    failures.drop(["conversation_history", "metadata", "correctness"], axis=1, inplace=True)
+    st.dataframe(failures, hide_index=True)
+
+    # Full Report
+    st.subheader("Full Report")
+    full_report = pd.DataFrame(report["report"])
+    full_report.drop(["conversation_history", "metadata", "correctness"], axis=1, inplace=True)
+    st.dataframe(full_report, hide_index=True)
+
+    # Download Button
+    download_file("Download Report", report["html_report"], "evaluation_report.html", "text/html")
 
 @st.cache_data
 def get_testbed_db_testsets() -> dict:
@@ -264,7 +344,7 @@ def main():
         api_params = {"ll_model": test_gen_llm, "embed_model": test_gen_embed, "questions": test_gen_questions}
 
     # Process Q&A Request
-    button_load_disabled = button_load_disabled or state.testbed["testset_id"] == ""
+    button_load_disabled = button_load_disabled or state.testbed["testset_id"] == "" or "testbed_qa" in state
     col_left, col_center, _ = st.columns([3, 3, 4])
     if not button_load_disabled:
         if "load_tests" in state and state.load_tests is True:
@@ -273,6 +353,8 @@ def main():
             state.running = False
     else:
         state.running = True
+
+    # Load TestSets (and Evaluations if from DB)
     if col_left.button(button_text, key="load_tests", use_container_width=True, disabled=state.running):
         placeholder = st.empty()
         with placeholder:
@@ -304,9 +386,17 @@ def main():
                 ),
                 None,
             )
+            # Retrieve TestSet Data
             response = api_call.get(url=api_url, params={"tid": state.testbed["testset_id"]})
-        state.testbed_qa = response["data"]["qa_data"]
-        st.success(f"{len(state.testbed_qa)} Tests Loaded.", icon="✅")
+            # Retrieve Evaluations
+            api_url = f"{API_ENDPOINT}/evaluations"
+            state.testbed_evaluations = api_call.get(url=api_url, params={"tid": state.testbed["testset_id"]})
+        try:
+            state.testbed_qa = response["data"]["qa_data"]
+            st.success(f"{len(state.testbed_qa)} Tests Loaded.", icon="✅")
+        except UnboundLocalError as ex:
+            logger.exception("Failed to load Tests: %s", ex)
+            st.error("Unable to process Tests", icon="🚨")
         placeholder.empty()
     col_center.button(
         "Reset",
@@ -342,6 +432,15 @@ def main():
         ###################################
         # Evaluator
         ###################################
+        if "testbed_evaluations" in state:
+            st.subheader(f"Previous Evaluations for {state.testbed['testset_name']}", divider="red")
+            for evaluation in state.testbed_evaluations["data"]:
+                eval_label = (
+                    f"ℹ️ **Evaluated:** {evaluation['evaluated']} -- **Correctness:** {evaluation['correctness']}"
+                )
+                if st.button(eval_label):
+                    evaluation_report(eid=evaluation["eid"])
+
         st.subheader("Q&A Evaluation", divider="red")
         st.info("Use the sidebar settings for evaluation parameters", icon="⬅️")
         st_common.ll_sidebar()
@@ -363,12 +462,11 @@ def main():
             st.success("Evaluation Complete!", icon="✅")
             placeholder.empty()
 
-        ###################################
-        # Results
-        ###################################
-        # if evaluate:
-        #     st.subheader("Results", divider="red")
-        #     results = evaluate["data"][0]
+            ###################################
+            # Results
+            ###################################
+            if evaluate:
+                evaluation_report(report=evaluate['data'])
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:

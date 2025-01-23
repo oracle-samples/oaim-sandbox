@@ -6,7 +6,6 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 from typing import Optional
 
-from langchain_community.chat_models import ChatPerplexity
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_cohere import ChatCohere, CohereEmbeddings
 from langchain_ollama import ChatOllama, OllamaEmbeddings
@@ -89,12 +88,7 @@ async def get_client(
             "OpenAI": lambda: ChatOpenAI(model=model_name, api_key=model_api_key, **ll_common_params),
             "Cohere": lambda: ChatCohere(model=model_name, cohere_api_key=model_api_key, **ll_common_params),
             "ChatOllama": lambda: ChatOllama(model=model_name, base_url=model_url, model_kwargs=ll_common_params),
-            "ChatPerplexity": lambda: ChatPerplexity(
-                model=model_name,
-                pplx_api_key=model_api_key,
-                temperature=ll_common_params["temperature"],
-                model_kwargs={k: v for k, v in ll_common_params.items() if k != "temperature"},
-            ),
+            "Perplexity": lambda: ChatOpenAI(model=model_name, base_url=model_url, api_key=model_api_key, **ll_common_params),
             "GenericOpenAI": lambda: ChatOpenAI(
                 model=model_name, base_url=model_url, api_key=model_api_key, **ll_common_params
             ),

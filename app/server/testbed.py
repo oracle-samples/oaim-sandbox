@@ -4,10 +4,10 @@ Licensed under the Universal Permissive License v 1.0 as shown at http://oss.ora
 """
 # spell-checker:ignore giskard testset, ollama, testsets
 
-import os
 import json
-import tempfile
 import pandas as pd
+import pickle
+from bs4 import BeautifulSoup
 
 from pypdf import PdfReader
 from oracledb import Connection
@@ -47,7 +47,7 @@ def jsonl_to_json_content(content: str) -> json:
         raise ValueError("Invalid JSONL content") from ex
 
 
-def create_testset_objects(conn: Connection) -> None:
+def create_testset_objects(db_conn: Connection) -> None:
     """Create table to store Q&A from TestSets"""
     testsets_tbl = """
             CREATE TABLE IF NOT EXISTS testsets (
@@ -66,55 +66,72 @@ def create_testset_objects(conn: Connection) -> None:
             )
         """
     evaluation_tbl = """
-            CREATE TABLE IF NOT EXISTS evaluation (
+            CREATE TABLE IF NOT EXISTS evaluations (
+                eid                 RAW(16) DEFAULT SYS_GUID(),
                 tid                 RAW(16) DEFAULT SYS_GUID(),
                 evaluated           TIMESTAMP(9) WITH LOCAL TIME ZONE,
+                correctness         NUMBER DEFAULT 0,
                 settings            JSON,
-                testset_jsonl       JSON,
-                report_details      JSON,
-                knowledge_base      JSON,
-                knowledge_base_meta JSON,
-                agent_answer        JSON,
-                metrics_results     JSON,
-                CONSTRAINT evaluation_fk FOREIGN KEY (tid) REFERENCES testsets(tid) ON DELETE CASCADE
+                rag_report          BLOB,
+                CONSTRAINT evaluations_pk PRIMARY KEY (eid),
+                CONSTRAINT evaluations_fk FOREIGN KEY (tid) REFERENCES testsets(tid) ON DELETE CASCADE,
+                CONSTRAINT evaluations_uq UNIQUE (eid, evaluated)
             )
         """
     logger.info("Creating testsets Table")
-    _ = databases.execute_sql(conn, testsets_tbl)
+    _ = databases.execute_sql(db_conn, testsets_tbl)
     logger.info("Creating testset_qa Table")
-    _ = databases.execute_sql(conn, testset_qa_tbl)
-    logger.info("Creating evaluation Table")
-    _ = databases.execute_sql(conn, evaluation_tbl)
+    _ = databases.execute_sql(db_conn, testset_qa_tbl)
+    logger.info("Creating evaluations Table")
+    _ = databases.execute_sql(db_conn, evaluation_tbl)
 
 
-def get_testsets(conn: Connection) -> list:
+def get_testsets(db_conn: Connection) -> list:
     """Get list of TestSets"""
-    logger.info("Getting TestSets")
+    logger.info("Getting All TestSets")
     testsets = []
     sql = "SELECT tid, name, to_char(created) FROM testsets"
-    results = databases.execute_sql(conn, sql)
+    results = databases.execute_sql(db_conn, sql)
     try:
         testsets = [schema.TestSets(tid=tid.hex(), name=name, created=created) for tid, name, created in results]
     except TypeError:
-        create_testset_objects(conn)
+        create_testset_objects(db_conn)
 
     return testsets
 
 
-def get_testset_qa(conn: Connection, tid: schema.TestSetsIdType) -> list:
+def get_testset_qa(db_conn: Connection, tid: schema.TestSetsIdType) -> list:
     """Get list of TestSet Q&A"""
     logger.info("Getting TestSet Q&A for TID: %s", tid)
     binds = {"tid": tid}
     sql = "SELECT qa_data FROM testset_qa where tid=:tid"
-    results = databases.execute_sql(conn, sql, binds)
+    results = databases.execute_sql(db_conn, sql, binds)
     qa_data = [qa_data[0] for qa_data in results]
     testset_qa = schema.TestSetQA(qa_data=qa_data)
 
     return testset_qa
 
 
+def get_evaluations(db_conn: Connection, tid: schema.TestSetsIdType) -> list:
+    """Get list of Evaluations for a TID"""
+    logger.info("Getting Evaluations for: %s", tid)
+    evaluations = []
+    binds = {"tid": tid}
+    sql = "SELECT eid, to_char(evaluated), correctness FROM evaluations WHERE tid=:tid"
+    results = databases.execute_sql(db_conn, sql, binds)
+    try:
+        evaluations = [
+            schema.Evaluation(eid=eid.hex(), evaluated=evaluated, correctness=correctness)
+            for eid, evaluated, correctness in results
+        ]
+    except TypeError:
+        create_testset_objects(db_conn)
+
+    return evaluations
+
+
 def upsert_qa(
-    conn: Connection,
+    db_conn: Connection,
     name: schema.TestSetsNameType,
     created: schema.TestSetDateType,
     json_data: json,
@@ -122,6 +139,11 @@ def upsert_qa(
 ) -> schema.TestSetsIdType:
     """Upsert Q&A"""
     logger.info("Upsert TestSet: %s - %s", name, created)
+    parsed_data = json.loads(json_data)
+    # Handle single QA
+    if not isinstance(parsed_data, list):
+        parsed_data = [parsed_data]
+    json_data = json.dumps(parsed_data) if isinstance(parsed_data, list) else json_data
     binds = {"name": name, "created": created, "json_array": json_data, "tid": tid}
     plsql = """
         DECLARE
@@ -146,7 +168,7 @@ def upsert_qa(
             EXCEPTION WHEN NO_DATA_FOUND THEN
                 INSERT INTO TESTSETS (name, created) VALUES (l_name, l_created)
                 RETURNING tid INTO l_tid;
-            END;
+            END;    
             FOR i IN 0 .. l_qa_array.get_size - 1
             LOOP
                 l_qa_obj := TREAT(l_qa_array.get(i) AS json_object_t);
@@ -157,37 +179,34 @@ def upsert_qa(
         END;
     """
     logger.debug("Upsert PLSQL: %s", plsql)
-    return databases.execute_sql(conn, plsql, binds)
+    return databases.execute_sql(db_conn, plsql, binds)
 
 
-def insert_evaluation(conn, tid, evaluated, settings, report_data):
+def insert_evaluation(db_conn, tid, evaluated, correctness, settings, rag_report):
     """Insert Evaluation Data"""
     logger.info("Insert evaluation; TID: %s", tid)
     binds = {
         "tid": tid,
         "evaluated": evaluated,
+        "correctness": correctness,
         "settings": settings,
-        "testset_jsonl": report_data["testset_jsonl"],
-        "report_details": report_data["report_details"],
-        "knowledge_base": report_data["knowledge_base"],
-        "knowledge_base_meta": report_data["knowledge_base_meta"],
-        "metrics_results": report_data["metrics_results"],
+        "rag_report": rag_report,
     }
     plsql = """
         DECLARE
-            l_evaluated EVALUATION.EVALUATED%TYPE := TO_TIMESTAMP(:evaluated ,'YYYY-MM-DD"T"HH24:MI:SS.FF');
+            l_eid      EVALUATIONS.EID%TYPE;
+            l_evaluated evaluations.evaluated%TYPE := TO_TIMESTAMP(:evaluated ,'YYYY-MM-DD"T"HH24:MI:SS.FF');
         BEGIN
-            INSERT INTO evaluation (
-                tid, evaluated, settings, testset_jsonl, report_details,
-                knowledge_base, knowledge_base_meta, metrics_results
+            INSERT INTO evaluations (
+                tid, evaluated, correctness, settings, rag_report)
             VALUES (
-                :tid, l_evaluated, :settings, :testset_jsonl, :report_details,
-                :knowledge_base, :knowledge_base_meta, :metrics_results
-            );
+                :tid, l_evaluated, :correctness, :settings, :rag_report)
+            RETURNING eid INTO l_eid;
+            DBMS_OUTPUT.PUT_LINE(l_eid);
         END;
     """
     logger.debug("Insert PLSQL: %s", plsql)
-    databases.execute_sql(conn, plsql, binds)
+    return databases.execute_sql(db_conn, plsql, binds)
 
 
 def load_and_split(eval_file, chunk_size=2048):
@@ -248,23 +267,52 @@ def build_knowledge_base(text_nodes: str, questions: int, ll_model: schema.Model
     return testset
 
 
-def process_report(action, temp_dir):
+def process_report(db_conn, eid) -> schema.EvaluationReport:
     """Process an evaluate report"""
-    files = {
-        "testset.jsonl": "testset_jsonl",
-        "report_details.json": "report_details",
-        "knowledge_base.jsonl": "knowledge_base",
-        "knowledge_base_meta.json": "knowledge_base_meta",
-        "metrics_results.json": "metrics_results",
-    }
-    if action == "save":
-        logger.info("Saved Evaluation Report")
-        data = {}
-        for file_name, var_name in files.items():
-            file_path = os.path.join(temp_dir, file_name)
-            with open(file_path, "r", encoding="utf-8") as file:
-                data[var_name] = json.load(file)
-    if action == "load":
-        pass
 
-    return data
+    def clean(orig_html):
+        soup = BeautifulSoup(orig_html, "html.parser")
+        titles_to_remove = [
+            "GENERATOR",
+            "RETRIEVER",
+            "REWRITER",
+            "ROUTING",
+            "KNOWLEDGE_BASE",
+            "KNOWLEDGE BASE OVERVIEW",
+        ]
+        for title in titles_to_remove:
+            component_cards = soup.find_all("div", class_="component-card")
+            for card in component_cards:
+                title_element = card.find("div", class_="component-title")
+                if title_element and title in title_element.text.strip().upper():
+                    card.decompose()
+
+        return soup.prettify()
+
+    # Main
+    binds = {"eid": eid}
+    sql = """
+        SELECT eid, to_char(evaluated), correctness, settings, rag_report 
+          FROM evaluations WHERE eid=:eid
+        """
+    results = databases.execute_sql(db_conn, sql, binds)
+    pickled_report = results[0][4].read()
+
+    report = pickle.loads(pickled_report)
+    full_report = report.to_pandas()
+    html_report = report.to_html()
+    by_topic = report.correctness_by_topic()
+    failures = report.failures
+
+    evaluation = schema.EvaluationReport(
+        eid=results[0][0].hex(),
+        evaluated=results[0][1],
+        correctness=results[0][2],
+        settings=results[0][3],
+        report=full_report.to_dict(),
+        correct_by_topic=by_topic.to_dict(),
+        failures=failures.to_dict(),
+        html_report=clean(html_report),
+    )
+
+    return evaluation

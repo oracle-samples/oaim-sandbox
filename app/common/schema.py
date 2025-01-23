@@ -3,7 +3,6 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
 # spell-checker:ignore ollama, hnsw, mult, ocid, testset
-
 from typing import TypeVar, Generic, Optional, Literal, Union
 from pydantic import BaseModel, Field, PrivateAttr
 
@@ -61,6 +60,7 @@ class DatabaseModel(BaseModel):
     wallet_location: Optional[str] = Field(default=None, description="Wallet Location (for mTLS)")
     tcp_connect_timeout: int = Field(default=5, description="TCP Timeout in seconds")
 
+
 class Database(DatabaseModel):
     """Database Object"""
 
@@ -87,38 +87,12 @@ class Database(DatabaseModel):
 class LanguageParametersModel(BaseModel):
     """Language Model Parameters (also used by settings.py)"""
 
-    frequency_penalty: Optional[float] = Field(
-        description=help_text.help_dict["frequency_penalty"],
-        default=0.0,
-        ge=-2.0,
-        le=2.0,
-    )
-    max_completion_tokens: Optional[int] = Field(
-        description=help_text.help_dict["max_completion_tokens"],
-        default=None,
-    )
-    presence_penalty: Optional[float] = Field(
-        description=help_text.help_dict["presence_penalty"],
-        default=0.0,
-        ge=-2.0,
-        le=2.0,
-    )
-    stream: Optional[bool] = Field(
-        description="If set, partial message deltas will be sent.",
-        default=False,
-    )
-    temperature: Optional[float] = Field(
-        description=help_text.help_dict["temperature"],
-        default=1.0,
-        ge=0.0,
-        le=2.0,
-    )
-    top_p: Optional[float] = Field(
-        description=help_text.help_dict["top_p"],
-        default=1.0,
-        ge=0.0,
-        le=1.0,
-    )
+    frequency_penalty: Optional[float] = Field(description=help_text.help_dict["frequency_penalty"], default=0.0)
+    max_completion_tokens: Optional[int] = Field(description=help_text.help_dict["max_completion_tokens"], default=256)
+    presence_penalty: Optional[float] = Field(description=help_text.help_dict["presence_penalty"], default=0.0)
+    stream: Optional[bool] = Field(description="If set, partial message deltas will be sent.", default=False)
+    temperature: Optional[float] = Field(description=help_text.help_dict["temperature"], default=1.0)
+    top_p: Optional[float] = Field(description=help_text.help_dict["top_p"], default=1.0)
 
 
 class EmbeddingParametersModel(BaseModel):
@@ -315,14 +289,21 @@ class TestSetQA(BaseModel):
     qa_data: list = Field(description="TestSet Q&A Data")
 
 
-class Evaluations(BaseModel):
-    """TestSets"""
-
-    tid: str = Field(description="Test ID")
+class Evaluation(BaseModel):
+    """Evaluation"""
+    eid: str = Field(description="Evaluation ID")
     evaluated: str = Field(description="Date of Evaluation")
-    settings: list = Field(description="Settings for Evaluation")
-    report: list = Field(description="Evaluation Report")
+    correctness: int = Field(description="Correctness")
 
+
+class EvaluationReport(Evaluation):
+    """Evaluation Report"""
+
+    settings: Settings = Field(description="Settings for Evaluation")
+    report: dict = Field(description="Full Report")
+    correct_by_topic: dict = Field(description="Correctness by Topic")
+    failures: dict = Field(description="Failures")
+    html_report: str = Field(description="HTML Report")
 
 #####################################################
 # Types

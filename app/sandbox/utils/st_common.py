@@ -136,6 +136,7 @@ def ll_sidebar() -> None:
         defaults = {
             "model": default_ll_model,
             "temperature": state.ll_model_enabled[default_ll_model]["temperature"],
+            "frequency_penalty": state.ll_model_enabled[default_ll_model]["frequency_penalty"],
             "max_completion_tokens": state.ll_model_enabled[default_ll_model]["max_completion_tokens"],
         }
         state.user_settings["ll_model"].update(defaults)
@@ -195,12 +196,14 @@ def ll_sidebar() -> None:
     )
 
     # Frequency Penalty
+    frequency_penalty = state.ll_model_enabled[selected_model]["frequency_penalty"]
+    user_frequency_penalty = state.user_settings["ll_model"]["frequency_penalty"]
     st.sidebar.slider(
-        "Frequency penalty (Default: 0.0):",
+        f"Frequency penalty (Default: {frequency_penalty}):",
         help=help_text.help_dict["frequency_penalty"],
-        value=state.user_settings["ll_model"]["frequency_penalty"],
-        min_value=-1.0,
-        max_value=1.0,
+        value=user_frequency_penalty if user_frequency_penalty is not None else frequency_penalty,
+        min_value=-2.0,
+        max_value=2.0,
         key="selected_ll_model_frequency_penalty",
         on_change=update_user_settings_state,
         args=("ll_model", "frequency_penalty"),

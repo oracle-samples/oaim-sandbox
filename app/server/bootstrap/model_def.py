@@ -22,6 +22,7 @@ def main() -> list[Model]:
             "context_length": 127072,
             "temperature": 0.3,
             "max_completion_tokens": 4096,
+            "frequency_penalty": 0.0
         },
         {
             "name": "gpt-4o-mini",
@@ -34,6 +35,7 @@ def main() -> list[Model]:
             "context_length": 127072,
             "temperature": 1.0,
             "max_completion_tokens": 4096,
+            "frequency_penalty": 0.0
         },
         {
             "name": "gpt-4",
@@ -46,6 +48,7 @@ def main() -> list[Model]:
             "context_length": 127072,
             "temperature": 1.0,
             "max_completion_tokens": 8191,
+            "frequency_penalty": 0.0
         },
         {
             "name": "gpt-4o",
@@ -58,42 +61,20 @@ def main() -> list[Model]:
             "context_length": 127072,
             "temperature": 1.0,
             "max_completion_tokens": 8191,
+            "frequency_penalty": 0.0
         },
         {
-            "name": "llama-3.1-sonar-small-128k-online",
+            "name": "sonar",
             "enabled": os.getenv("PPLX_API_KEY") is not None,
             "type": "ll",
-            "api": "ChatPerplexity",
+            "api": "Perplexity",
             "api_key": os.environ.get("PPLX_API_KEY", default=""),
-            "openai_compat": False,
+            "openai_compat": True,
             "url": "https://api.perplexity.ai",
             "context_length": 127072,
             "temperature": 0.2,
             "max_completion_tokens": 28000,
-        },
-        {
-            "name": "llama-3.1-sonar-large-128k-online",
-            "enabled": os.getenv("PPLX_API_KEY") is not None,
-            "type": "ll",
-            "api": "ChatPerplexity",
-            "api_key": os.environ.get("PPLX_API_KEY", default=""),
-            "openai_compat": False,
-            "url": "https://api.perplexity.ai",
-            "context_length": 127072,
-            "temperature": 0.2,
-            "max_completion_tokens": 28000,
-        },
-        {
-            "name": "llama-3.1-sonar-huge-128k-online",
-            "enabled": os.getenv("PPLX_API_KEY") is not None,
-            "type": "ll",
-            "api": "ChatPerplexity",
-            "api_key": os.environ.get("PPLX_API_KEY", default=""),
-            "openai_compat": False,
-            "url": "https://api.perplexity.ai",
-            "context_length": 127072,
-            "temperature": 0.2,
-            "max_completion_tokens": 28000,
+            "frequency_penalty": 1.0
         },
         {
             "name": "llama3.2",
@@ -106,6 +87,7 @@ def main() -> list[Model]:
             "context_length": 131072,
             "temperature": 1.0,
             "max_completion_tokens": 2048,
+            "frequency_penalty": 0.0
         },
         {
             "name": "llama3.3",
@@ -118,6 +100,7 @@ def main() -> list[Model]:
             "context_length": 131072,
             "temperature": 1.0,
             "max_completion_tokens": 2048,
+            "frequency_penalty": 0.0
         },
         {
             "name": "llama3.1",
@@ -130,6 +113,7 @@ def main() -> list[Model]:
             "context_length": 131072,
             "temperature": 1.0,
             "max_completion_tokens": 2048,
+            "frequency_penalty": 0.0
         },
         {
             "name": "thenlper/gte-base",

@@ -55,10 +55,7 @@ def send_request(
     log_args = args.copy()
     try:
         if log_args.get("files"):
-            log_args["files"] = [
-                (field_name, (f[0], "<binary_data>", f[2]))
-                for field_name, f in log_args["files"]
-            ]
+            log_args["files"] = [(field_name, (f[0], "<binary_data>", f[2])) for field_name, f in log_args["files"]]
     except (ValueError, IndexError):
         pass
     logger.info("%s Request: %s", method, log_args)
@@ -79,6 +76,8 @@ def send_request(
                 sleep_time = backoff_factor * (2**attempt)
                 logger.info("Retrying in %.1f seconds...", sleep_time)
                 time.sleep(sleep_time)
+            if "Expecting value" in str(ex):
+                raise ApiError("You've found a bug!  Please raise an issue.") from ex
 
     raise ApiError("An unexpected error occurred.")
 

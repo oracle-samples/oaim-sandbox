@@ -219,9 +219,9 @@ def agent(state: AgentState, config: RunnableConfig) -> AgentState:
         # tool_choice will force a vector search when RAG enabled
         try:
             model = model.bind_tools(tools, tool_choice="oraclevs_tool")
-        except Exception:
+        except Exception as ex:
             #TODO: Fallback to non-tool call :(
-            logger.exception("Model doesn't support tools (as of now)")
+            logger.exception("Model doesn't support tools (as of now): %s", ex)
 
     messages = get_messages(state, config)
 

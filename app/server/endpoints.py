@@ -10,6 +10,8 @@ import shutil
 import tempfile
 import json
 import asyncio
+import pickle
+
 
 from datetime import datetime
 from typing import Optional
@@ -43,6 +45,13 @@ model_objects = bootstrap.model_def.main()
 oci_objects = bootstrap.oci_def.main()
 prompt_objects = bootstrap.prompt_eng_def.main()
 settings_objects = bootstrap.settings_def.main()
+
+
+#####################################################
+# Helpers
+#####################################################
+def get_db_conn(db_name: str = "DEFAULT"):
+    return next((db.connection for db in database_objects if db.name == db_name), None)
 
 
 #####################################################
@@ -97,8 +106,8 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         if not db:
             raise HTTPException(status_code=404, detail=f"Database {name} not found")
 
-        conn = databases.connect(db)
-        db.vector_stores = embedding.get_vs(conn)
+        db_conn = databases.connect(db)
+        db.vector_stores = embedding.get_vs(db_conn)
         return schema.Response[schema.Database](
             data=db,
             msg=f"{name} database found",
@@ -117,7 +126,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         db = next((db for db in database_objects if db.name == name), None)
         if db:
             try:
-                conn = databases.connect(payload)
+                db_conn = databases.connect(payload)
             except databases.DbException as ex:
                 db.connected = False
                 logger.debug("Raising Exception: %s", str(ex))
@@ -127,8 +136,8 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             db.dsn = payload.dsn
             db.wallet_password = payload.wallet_password
             db.connected = True
-            db.vector_stores = embedding.get_vs(conn)
-            db.set_connection(conn)
+            db.vector_stores = embedding.get_vs(db_conn)
+            db.set_connection(db_conn)
             # Unset and disconnect other databases
             for other_db in database_objects:
                 if other_db.name != name and other_db.connection:
@@ -380,8 +389,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     )
     async def embed_drop_vs(vs: schema.DatabaseVectorStorage) -> schema.Response[str]:
         """Drop Vector Storage"""
-        conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
-        embedding.drop_vs(conn, vs)
+        embedding.drop_vs(get_db_conn(), vs)
 
         return schema.Response[str](data=vs.vector_store, msg="Vector Store Dropped")
 
@@ -466,11 +474,10 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
                 write_json=False,
                 output_dir=None,
             )
-            db = next((db for db in database_objects if db.name == request.database), None)
             embed_client = await models.get_client(model_objects, {"model": request.model, "rag_enabled": True})
             embedding.populate_vs(
                 vector_store=request,
-                db_conn=db.connection,
+                db_conn=get_db_conn(),
                 embed_client=embed_client,
                 input_data=split_docos,
                 rate_limit=rate_limit,
@@ -520,12 +527,11 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             logger.error("A settings exception occurred: %s", ex)
             raise HTTPException(status_code=500, detail="Unexpected error") from ex
 
-        embed_client, ctx_prompt, db_conn = None, None, None
+        embed_client, ctx_prompt, user_db = None, None, None
         if user_settings.rag.rag_enabled:
             rag_config = user_settings.rag
             embed_client = await models.get_client(model_objects, rag_config.model_dump())
             user_db = getattr(rag_config, "database", "DEFAULT")
-            db_conn = next((settings.connection for settings in database_objects if settings.name == user_db), None)
 
             user_ctx_prompt = getattr(user_settings.prompts, "ctx", "Basic Example")
             ctx_prompt = next(
@@ -540,7 +546,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
                     "thread_id": thread_id,
                     "ll_client": ll_client,
                     "embed_client": embed_client,
-                    "db_conn": db_conn,
+                    "db_conn": get_db_conn(db_name=user_db),
                 },
                 metadata={
                     "model_name": model["model"],
@@ -560,7 +566,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             return response
         except Exception as ex:
             logger.error("An invoke exception occurred: %s", ex)
-            #TODO: gotsysdba - If a message is returned; attempt to format and return (this might be done in the agent instead)
+            # TODO: gotsysdba - If a message is returned; attempt to format and return (this might be done in the agent instead)
             raise HTTPException(status_code=500, detail="Unexpected error") from ex
 
     @auth.get(
@@ -597,11 +603,36 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     )
     async def testbed_get_testsets() -> schema.Response[schema.TestSets]:
         """Get a list of stored TestSets, create TestSet objects if they don't exist"""
-        db_conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
-        testsets = testbed.get_testsets(conn=db_conn)
+        testsets = testbed.get_testsets(db_conn=get_db_conn())
         return schema.ResponseList[schema.TestSets](
             data=testsets,
             msg=f"{len(testsets)} TestSet(s) found",
+        )
+
+    @auth.get(
+        "/v1/testbed/evaluations",
+        description="Get Stored Evaluations.",
+        response_model=schema.ResponseList[schema.Evaluation],
+    )
+    async def testbed_get_evaluations(tid: schema.TestSetsIdType) -> schema.ResponseList[schema.Evaluation]:
+        """Get Evaluations"""
+        evaluations = testbed.get_evaluations(db_conn=get_db_conn(), tid=tid.upper())
+        return schema.ResponseList[schema.Evaluation](
+            data=evaluations,
+            msg=f"{len(evaluations)} Evaluation(s) found.",
+        )
+
+    @auth.get(
+        "/v1/testbed/evaluation",
+        description="Get Stored Single Evaluation.",
+        response_model=schema.Response[schema.EvaluationReport],
+    )
+    async def testbed_get_evaluation(eid: schema.TestSetsIdType) -> schema.Response[schema.EvaluationReport]:
+        """Get Evaluations"""
+        evaluation = testbed.process_report(db_conn=get_db_conn(), eid=eid.upper())
+        return schema.Response[schema.EvaluationReport](
+            data=evaluation,
+            msg="Evaluation found.",
         )
 
     @auth.get(
@@ -611,8 +642,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     )
     async def testbed_get_testset_qa(tid: schema.TestSetsIdType) -> schema.Response[schema.TestSetQA]:
         """Get TestSet Q&A"""
-        db_conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
-        testset_qa = testbed.get_testset_qa(conn=db_conn, tid=tid.upper())
+        testset_qa = testbed.get_testset_qa(db_conn=get_db_conn(), tid=tid.upper())
         return schema.Response[schema.TestSetQA](
             data=testset_qa,
             msg="TestSet Q&A found",
@@ -628,7 +658,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     ) -> schema.Response[schema.TestSetQA]:
         """Update stored TestSet data"""
         created = datetime.now().isoformat()
-        db_conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
+        db_conn = get_db_conn()
         try:
             for file in files:
                 file_content = await file.read()
@@ -706,13 +736,12 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.post(
         "/v1/testbed/evaluate",
         description="Evaluate Q&A Test Set.",
-        response_model=schema.Response[str],
+        response_model=schema.Response[schema.EvaluationReport],
     )
-    def testbed_evaluate_qa(tid: schema.TestSetsIdType) -> schema.Response[str]:
+    def testbed_evaluate_qa(tid: schema.TestSetsIdType) -> schema.Response[schema.EvaluationReport]:
         """Run evaluate against a testset"""
         evaluated = datetime.now().isoformat()
         testbed_settings = next((settings for settings in settings_objects if settings.client == "testbed"), None)
-        db_conn = next((db.connection for db in database_objects if db.name == "DEFAULT"), None)
         # Change Disable History
         testbed_settings.ll_model.chat_history = False
 
@@ -725,22 +754,27 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             ai_response = asyncio.run(chat_post(request, "testbed"))
             return ai_response.choices[0].message.content
 
-        testset = testbed.get_testset_qa(conn=db_conn, tid=tid.upper())
+        db_conn = get_db_conn()
+        testset = testbed.get_testset_qa(db_conn=db_conn, tid=tid.upper())
         qa_test = "\n".join(json.dumps(item) for item in testset.qa_data)
         temp_directory = get_temp_directory()
-        with open(f"/{temp_directory}/output.txt", "w", encoding="utf-8") as file:
+        with open(f"/{temp_directory}/{tid}_output.txt", "w", encoding="utf-8") as file:
             file.write(qa_test)
-        loaded_testset = QATestset.load(f"/{temp_directory}/output.txt")
+        loaded_testset = QATestset.load(f"/{temp_directory}/{tid}_output.txt")
         report = evaluate(get_answer, testset=loaded_testset)
-        with tempfile.TemporaryDirectory() as temp_dir:
-            report.save(temp_dir)
-            report_data = testbed.process_report("save", temp_dir)
 
-        testbed.insert_evaluation(db_conn, tid, evaluated, testbed_settings.model_dump_json(), report_data)
+        eid = testbed.insert_evaluation(
+            db_conn=db_conn,
+            tid=tid,
+            evaluated=evaluated,
+            correctness=report.correctness,
+            settings=testbed_settings.model_dump_json(),
+            rag_report=pickle.dumps(report),
+        )
         db_conn.commit()
 
-        return schema.Response[str](
-            data=report.to_html(),
+        return schema.Response[schema.EvaluationReport](
+            data=testbed.process_report(db_conn=db_conn, eid=eid),
             msg="Evaluation Completed",
         )
 
