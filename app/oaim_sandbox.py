@@ -19,7 +19,12 @@ import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("oaim_sandbox")
 
-
+# Start the server if it's local and not running
+try:
+    import oaim_server
+    oaim_server.start_server()
+except ImportError:
+    state.remote_server = True
 #############################################################################
 # MAIN
 #############################################################################
@@ -48,16 +53,21 @@ def main() -> None:
 
     # Setup Settings State
     api_endpoint = f"{state.server['url']}:{state.server['port']}/v1/settings"
+    api_down = True
     if "user_settings" not in state:
         try:
             state.user_settings = api_call.post(url=api_endpoint, params={"client": client_gen_id()})
-        except api_call.ApiError as ex:
-            st.error(ex, icon="🚨")
+            api_down = False
+        except api_call.ApiError:
+            st.error("Unable to contact the API Server... trying again...", icon="🚨")
     if "server_settings" not in state:
         try:
             state.server_settings = api_call.get(url=api_endpoint, params={"client": "server"})
-        except api_call.ApiError as ex:
-            st.error(ex, icon="🚨")
+            api_down = False
+        except api_call.ApiError:
+            st.error("Unable to contact the API Server.  Stopping.", icon="🚨")
+    if api_down:
+        st.stop()
 
     # Enable/Disable Functionality
     state.disabled = {}
@@ -79,11 +89,7 @@ def main() -> None:
         testbed = st.Page("sandbox/content/testbed.py", title="Testbed", icon="🧪")
         navigation[""].append(testbed)
     if not state.disabled["api"]:
-        # Use the All-In-One page if it exists; the Dockerfile for Sandbox will remove it
-        if os.path.isfile("sandbox/content/server_aio.py"):
-            api_server = st.Page("sandbox/content/server_aio.py", title="API Server", icon="📡")
-        else:
-            api_server = st.Page("sandbox/content/server_ms.py", title="API Server", icon="📡")
+        api_server = st.Page("sandbox/content/server.py", title="API Server", icon="📡")
         navigation[""].append(api_server)
 
     # Tools

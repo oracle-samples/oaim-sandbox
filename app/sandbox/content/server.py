@@ -43,6 +43,7 @@ def copy_user_settings(new_client: ClientIdType) -> None:
         st.success(f"Settings for {new_client} - Update Failed", icon="❌")
         logger.error("%s Settings Update failed: %s", new_client, ex)
 
+
 def server_restart() -> None:
     """Restart the server process when button pressed"""
     logger.info("Restarting the API Server")
@@ -63,6 +64,8 @@ async def main() -> None:
     st_common.set_server_state()
     st.header("API Server")
     st.write("Access the Sandbox with your own client.")
+    if "remote_server" not in state:
+        state.remote_server = False
     left, right = st.columns([0.2, 0.8])
     left.number_input(
         "API Server Port:",
@@ -70,14 +73,17 @@ async def main() -> None:
         key="user_server_port",
         min_value=1,
         max_value=65535,
+        disabled=not state.remote_server
     )
     right.text_input(
         "API Server Key:",
         value=state.server["key"],
         key="user_server_key",
         type="password",
+        disabled=not state.remote_server
     )
-    st.button("Restart Server", type="primary", on_click=server_restart)
+    if state.remote_server:
+        st.button("Restart Server", type="primary", on_click=server_restart)
 
     st.header("Server Configuration", divider="red")
     st.write("""

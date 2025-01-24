@@ -38,8 +38,8 @@ ENV TEMP=/app/tmp
 
 COPY --chown=$RUNUSER:$RUNUSER . /app
 RUN rm -rf /app/server && \ 
-    rm -rf /app/.oci && \
-    rm -rf /app/sandbox/content/server_aio.py
+    rm -rf /app/oaim_server.py && \
+    rm -rf /app/.oci
 
 # Set user and working directory
 USER $RUNUSER
