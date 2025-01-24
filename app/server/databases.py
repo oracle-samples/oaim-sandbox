@@ -6,7 +6,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 import oracledb
 
-from common.schema import Database, DatabaseModel
+from common.schema import Database, DatabaseAuth
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("server.database")
@@ -24,7 +24,7 @@ class DbException(Exception):
 def connect(config: Database) -> oracledb.Connection:
     """Establish a connection to an Oracle Database"""
     logger.info("Connecting to Database: %s", config.dsn)
-    include_fields = set(DatabaseModel.model_fields.keys())
+    include_fields = set(DatabaseAuth.model_fields.keys())
     db_config = config.model_dump(include=include_fields)
     # Check if connection settings are configured
     if any(not db_config[key] for key in ("user", "password", "dsn")):

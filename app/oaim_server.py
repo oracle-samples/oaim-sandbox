@@ -6,8 +6,6 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # pylint: disable=redefined-outer-name,wrong-import-position
 
 import os
-from httpx import Auth
-import uvicorn
 
 # Set OS Environment (Don't move their position)
 os.environ["LITELLM_LOCAL_MODEL_COST_MAP"] = "True"
@@ -22,6 +20,7 @@ import subprocess
 import threading
 from typing import Annotated
 
+import uvicorn
 import psutil
 
 import common.logging_config as logging_config

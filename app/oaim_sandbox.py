@@ -13,8 +13,7 @@ import streamlit as st
 from streamlit import session_state as state
 
 from sandbox.utils import api_call
-from sandbox.utils.st_common import set_server_state
-from common.functions import client_gen_id
+from sandbox.utils.st_common import set_server_state, client_gen_id
 
 import common.logging_config as logging_config
 
@@ -81,7 +80,7 @@ def main() -> None:
         navigation[""].append(testbed)
     if not state.disabled["api"]:
         # Use the All-In-One page if it exists; the Dockerfile for Sandbox will remove it
-        if os.path.isfile('sandbox/content/server_aio.py'):
+        if os.path.isfile("sandbox/content/server_aio.py"):
             api_server = st.Page("sandbox/content/server_aio.py", title="API Server", icon="📡")
         else:
             api_server = st.Page("sandbox/content/server_ms.py", title="API Server", icon="📡")

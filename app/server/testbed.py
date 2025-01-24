@@ -5,8 +5,8 @@ Licensed under the Universal Permissive License v 1.0 as shown at http://oss.ora
 # spell-checker:ignore giskard testset, ollama, testsets
 
 import json
-import pandas as pd
 import pickle
+import pandas as pd
 from bs4 import BeautifulSoup
 
 from pypdf import PdfReader
@@ -15,11 +15,20 @@ from llama_index.core import Document
 from llama_index.core.node_parser import SentenceSplitter
 
 from giskard.llm import set_llm_model, set_embedding_model
-from giskard.rag import generate_testset, KnowledgeBase
+from giskard.rag import generate_testset, KnowledgeBase, QATestset
 from giskard.rag.question_generators import simple_questions, complex_questions
 
 import server.databases as databases
-import common.schema as schema
+from common.schema import (
+    TestSetsIdType,
+    TestSetsNameType,
+    TestSetDateType,
+    TestSets,
+    TestSetQA,
+    Evaluation,
+    EvaluationReport,
+    Model,
+)
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("server.testbed")
@@ -93,26 +102,26 @@ def get_testsets(db_conn: Connection) -> list:
     sql = "SELECT tid, name, to_char(created) FROM testsets"
     results = databases.execute_sql(db_conn, sql)
     try:
-        testsets = [schema.TestSets(tid=tid.hex(), name=name, created=created) for tid, name, created in results]
+        testsets = [TestSets(tid=tid.hex(), name=name, created=created) for tid, name, created in results]
     except TypeError:
         create_testset_objects(db_conn)
 
     return testsets
 
 
-def get_testset_qa(db_conn: Connection, tid: schema.TestSetsIdType) -> list:
+def get_testset_qa(db_conn: Connection, tid: TestSetsIdType) -> list:
     """Get list of TestSet Q&A"""
     logger.info("Getting TestSet Q&A for TID: %s", tid)
     binds = {"tid": tid}
     sql = "SELECT qa_data FROM testset_qa where tid=:tid"
     results = databases.execute_sql(db_conn, sql, binds)
     qa_data = [qa_data[0] for qa_data in results]
-    testset_qa = schema.TestSetQA(qa_data=qa_data)
+    testset_qa = TestSetQA(qa_data=qa_data)
 
     return testset_qa
 
 
-def get_evaluations(db_conn: Connection, tid: schema.TestSetsIdType) -> list:
+def get_evaluations(db_conn: Connection, tid: TestSetsIdType) -> list:
     """Get list of Evaluations for a TID"""
     logger.info("Getting Evaluations for: %s", tid)
     evaluations = []
@@ -121,7 +130,7 @@ def get_evaluations(db_conn: Connection, tid: schema.TestSetsIdType) -> list:
     results = databases.execute_sql(db_conn, sql, binds)
     try:
         evaluations = [
-            schema.Evaluation(eid=eid.hex(), evaluated=evaluated, correctness=correctness)
+            Evaluation(eid=eid.hex(), evaluated=evaluated, correctness=correctness)
             for eid, evaluated, correctness in results
         ]
     except TypeError:
@@ -132,11 +141,11 @@ def get_evaluations(db_conn: Connection, tid: schema.TestSetsIdType) -> list:
 
 def upsert_qa(
     db_conn: Connection,
-    name: schema.TestSetsNameType,
-    created: schema.TestSetDateType,
+    name: TestSetsNameType,
+    created: TestSetDateType,
     json_data: json,
-    tid: schema.TestSetsIdType = None,
-) -> schema.TestSetsIdType:
+    tid: TestSetsIdType = None,
+) -> TestSetsIdType:
     """Upsert Q&A"""
     logger.info("Upsert TestSet: %s - %s", name, created)
     parsed_data = json.loads(json_data)
@@ -223,7 +232,7 @@ def load_and_split(eval_file, chunk_size=2048):
     return text_nodes
 
 
-def build_knowledge_base(text_nodes: str, questions: int, ll_model: schema.Model, embed_model: schema.Model):
+def build_knowledge_base(text_nodes: str, questions: int, ll_model: Model, embed_model: Model) -> QATestset:
     """Establish a temporary Knowledge Base"""
 
     def configure_and_set_model(client_model):
@@ -267,7 +276,7 @@ def build_knowledge_base(text_nodes: str, questions: int, ll_model: schema.Model
     return testset
 
 
-def process_report(db_conn, eid) -> schema.EvaluationReport:
+def process_report(db_conn: Connection, eid: TestSetsIdType) -> EvaluationReport:
     """Process an evaluate report"""
 
     def clean(orig_html):
@@ -304,7 +313,7 @@ def process_report(db_conn, eid) -> schema.EvaluationReport:
     by_topic = report.correctness_by_topic()
     failures = report.failures
 
-    evaluation = schema.EvaluationReport(
+    evaluation = EvaluationReport(
         eid=results[0][0].hex(),
         evaluated=results[0][1],
         correctness=results[0][2],

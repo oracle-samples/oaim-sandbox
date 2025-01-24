@@ -7,6 +7,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 import os
 from io import BytesIO
 from typing import Union
+from uuid import uuid4
 import pandas as pd
 
 import streamlit as st
@@ -16,9 +17,9 @@ from sandbox.content.config.models import get_model
 from sandbox.content.config.database import get_databases
 import sandbox.utils.api_call as api_call
 
-from common.functions import client_gen_id
 import common.help_text as help_text
 import common.logging_config as logging_config
+from common.schema import ClientIdType, PromptPromptType, PromptNameType
 
 logger = logging_config.logging.getLogger("sandbox.utils.st_common")
 
@@ -26,6 +27,12 @@ logger = logging_config.logging.getLogger("sandbox.utils.st_common")
 #############################################################################
 # Common Helpers
 #############################################################################
+def client_gen_id() -> ClientIdType:
+    """Generate a new client ID; can be used to clear history"""
+    logger.info("Creating new client identifier")
+    return str(uuid4())
+
+
 def local_file_payload(uploaded_files: Union[BytesIO, list[BytesIO]]) -> list:
     """Upload Single file from Streamlit to the Server"""
     # If it's a single file, convert it to a list for consistent processing
@@ -42,7 +49,7 @@ def local_file_payload(uploaded_files: Union[BytesIO, list[BytesIO]]) -> list:
     return files
 
 
-def copy_user_settings(new_client: str) -> None:
+def copy_user_settings(new_client: ClientIdType) -> None:
     """Copy User Setting to a new client (e.g. the Server)"""
     logger.info("Copying user settings to: %s", new_client)
     api_url = f"{state.server['url']}:{state.server['port']}/v1/settings"
@@ -59,7 +66,7 @@ def copy_user_settings(new_client: str) -> None:
         logger.error("%s Settings Update failed: %s", new_client, ex)
 
 
-def switch_prompt(prompt_type: str, prompt_name: str) -> None:
+def switch_prompt(prompt_type: PromptPromptType, prompt_name: PromptNameType) -> None:
     """Auto Switch Prompts when not set to Custom"""
     current_prompt = state["user_settings"]["prompts"][prompt_type]
     if current_prompt != "Custom" and current_prompt != prompt_name:

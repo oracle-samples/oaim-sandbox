@@ -9,7 +9,7 @@ import copy
 import math
 import os
 import time
-from typing import List, Union
+from typing import Union
 
 import bs4
 import oracledb
@@ -27,20 +27,20 @@ from langchain_text_splitters import HTMLSectionSplitter, CharacterTextSplitter
 import server.databases as databases
 
 import common.functions
-import common.schema as schema
+from common.schema import DatabaseVectorStorage
 
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("server.embedding")
 
 
-def drop_vs(conn: oracledb.Connection, vs: schema.DatabaseVectorStorage) -> None:
+def drop_vs(conn: oracledb.Connection, vs: DatabaseVectorStorage) -> None:
     """Drop Vector Storage"""
     logger.info("Dropping Vector Store: %s", vs.vector_store)
     LangchainVS.drop_table_purge(conn, vs.vector_store)
 
 
-def get_vs(conn: oracledb.Connection) -> schema.DatabaseVectorStorage:
+def get_vs(conn: oracledb.Connection) -> DatabaseVectorStorage:
     """Retrieve Vector Storage Tables"""
     logger.info("Looking for Vector Storage Tables")
     vector_stores = []
@@ -52,12 +52,12 @@ def get_vs(conn: oracledb.Connection) -> schema.DatabaseVectorStorage:
     results = databases.execute_sql(conn, sql)
     for table_name, comments in results:
         comments_dict = json.loads(comments)
-        vector_stores.append(schema.DatabaseVectorStorage(vector_store=table_name, **comments_dict))
+        vector_stores.append(DatabaseVectorStorage(vector_store=table_name, **comments_dict))
 
     return vector_stores
 
 
-def doc_to_json(document: LangchainDocument, file: str, output_dir: str = None) -> List:
+def doc_to_json(document: LangchainDocument, file: str, output_dir: str = None) -> list:
     """Creates a JSON file of the Document.  Returns the json file destination"""
     src_file_name = os.path.basename(file)
     dst_file_name = "_" + os.path.splitext(src_file_name)[0] + ".json"
@@ -74,7 +74,7 @@ def doc_to_json(document: LangchainDocument, file: str, output_dir: str = None) 
     return dst_file_path
 
 
-def process_metadata(idx, chunk):
+def process_metadata(idx: int, chunk: str) -> str:
     """Add Metadata to Split Document"""
     filename = os.path.basename(chunk.metadata["source"])
     file = os.path.splitext(filename)[0]
@@ -92,9 +92,9 @@ def split_document(
     model: str,
     chunk_size: int,
     chunk_overlap: int,
-    document: List[LangchainDocument],
+    document: list[LangchainDocument],
     extension: str,
-) -> List[LangchainDocument]:
+) -> list[LangchainDocument]:
     """
     Split documents into chunks of size `chunk_size` characters and return a list of documents.
     """
@@ -156,13 +156,13 @@ def split_document(
 # Documents
 ##########################################
 def load_and_split_documents(
-    src_files: List,
+    src_files: list,
     model: str,
     chunk_size: int,
     chunk_overlap: int,
     write_json: bool = False,
     output_dir: str = None,
-) -> List[LangchainDocument]:
+) -> list[LangchainDocument]:
     """
     Loads file into a Langchain Document.  Calls the Splitter (split_document) function
     Returns the list of the chunks in a LangchainDocument.
@@ -215,7 +215,7 @@ def load_and_split_url(
     url: str,
     chunk_size: int,
     chunk_overlap: int,
-) -> List[LangchainDocument]:
+) -> list[LangchainDocument]:
     """
     Loads URL into a Langchain Document.  Calls the Splitter (split_document) function
     Returns the list of the chunks in a LangchainDocument.
@@ -253,10 +253,10 @@ def load_and_split_url(
 # Vector Store
 ##########################################
 def populate_vs(
-    vector_store: schema.DatabaseVectorStorage,
+    vector_store: DatabaseVectorStorage,
     db_conn: oracledb.Connection,
     embed_client: BaseChatModel,
-    input_data: Union[List["LangchainDocument"], List] = None,
+    input_data: Union[list["LangchainDocument"], list] = None,
     rate_limit: int = 0,
 ) -> None:
     """Populate the Vector Storage"""

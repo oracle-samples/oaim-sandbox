@@ -3,38 +3,36 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
 # spell-checker:ignore genai, hnsw
-import os
-from pathlib import Path
-from uuid import uuid4
+
 from typing import Tuple
 import math
 import re
+from pathlib import Path
 
 import requests
 
 import common.logging_config as logging_config
+from common.schema import ClientIdType
 
 logger = logging_config.logging.getLogger("common.functions")
+
 
 #############################################################################
 # General
 #############################################################################
-def get_temp_directory() -> str:
-    directory = Path("/app/tmp")
-    if directory.exists() and directory.is_dir():
-        return "/app/tmp"
+def get_temp_directory(client: ClientIdType, function: str) -> Path:
+    """Return the path to store temporary files"""
+    if Path("/app/tmp").exists() and Path("/app/tmp").is_dir():
+        client_folder = Path("/app/tmp") / client / function
     else:
-        return "/tmp"
+        client_folder = Path("/tmp") / client / function
+    client_folder.mkdir(parents=True, exist_ok=True)
+    return client_folder
+
 
 #############################################################################
 # CLIENT
 #############################################################################
-def client_gen_id() -> str:
-    """Generate a new client ID; can be used to clear history"""
-    logger.info("Creating new client identifier")
-    return str(uuid4())
-
-
 def is_url_accessible(url: str) -> Tuple[bool, str]:
     """Check if the URL is accessible."""
     if not url:

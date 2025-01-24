@@ -3,7 +3,8 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
 # spell-checker:ignore ollama, hnsw, mult, ocid, testset
-from typing import TypeVar, Generic, Optional, Literal, Union
+
+from typing import Optional, Literal, Union
 from pydantic import BaseModel, Field, PrivateAttr
 
 import common.help_text as help_text
@@ -12,26 +13,11 @@ from langchain_core.messages import ChatMessage
 import oracledb
 
 #####################################################
-# Standardized Classes
+# Literals
 #####################################################
 Statuses = Literal["NOT_CONFIGURED", "UNVERIFIED", "NOT_AUTHORIZED", "UNREACHABLE", "VALID", "CONNECTED"]
 DistanceMetrics = Literal["COSINE", "EUCLIDEAN_DISTANCE", "DOT_PRODUCT"]
 IndexTypes = Literal["HNSW", "IVF"]
-Payload = TypeVar("Payload", bound=BaseModel)
-
-
-class Response(BaseModel, Generic[Payload]):
-    """Generic response wrapper"""
-
-    data: Payload
-    msg: str = ""
-
-
-class ResponseList(BaseModel, Generic[Payload]):
-    """Generic response wrapper"""
-
-    data: list[Payload]
-    msg: str = ""
 
 
 #####################################################
@@ -50,7 +36,7 @@ class DatabaseVectorStorage(BaseModel):
     index_type: Optional[IndexTypes] = Field(default=None, description="Vector Index")
 
 
-class DatabaseModel(BaseModel):
+class DatabaseAuth(BaseModel):
     """Patch'able Database Configuration (sent to oracledb)"""
 
     user: Optional[str] = Field(default=None, description="Username")
@@ -61,7 +47,7 @@ class DatabaseModel(BaseModel):
     tcp_connect_timeout: int = Field(default=5, description="TCP Timeout in seconds")
 
 
-class Database(DatabaseModel):
+class Database(DatabaseAuth):
     """Database Object"""
 
     name: str = Field(default="DEFAULT", description="Name of Database (Alias)")
@@ -84,7 +70,7 @@ class Database(DatabaseModel):
 #####################################################
 # Models
 #####################################################
-class LanguageParametersModel(BaseModel):
+class LanguageModelParameters(BaseModel):
     """Language Model Parameters (also used by settings.py)"""
 
     frequency_penalty: Optional[float] = Field(description=help_text.help_dict["frequency_penalty"], default=0.0)
@@ -95,14 +81,14 @@ class LanguageParametersModel(BaseModel):
     top_p: Optional[float] = Field(description=help_text.help_dict["top_p"], default=1.0)
 
 
-class EmbeddingParametersModel(BaseModel):
+class EmbeddingModelParameters(BaseModel):
     """Embedding Model Parameters (also used by settings.py)"""
 
     context_length: Optional[int] = Field(default=None, description="The context window for Language Model.")
     max_chunk_size: Optional[int] = Field(default=None, description="Max Chunk Size for Embedding Models.")
 
 
-class ModelModel(BaseModel):
+class ModelAccess(BaseModel):
     """Patch'able Model Parameters"""
 
     enabled: Optional[bool] = Field(default=False, description="Model is available for use.")
@@ -110,7 +96,7 @@ class ModelModel(BaseModel):
     api_key: Optional[str] = Field(default="", description="Model API Key.")
 
 
-class Model(ModelModel, LanguageParametersModel, EmbeddingParametersModel):
+class Model(ModelAccess, LanguageModelParameters, EmbeddingModelParameters):
     """Model Object"""
 
     name: str = Field(..., description="The model to use")
@@ -146,13 +132,13 @@ class OracleCloudSettings(BaseModel):
 #####################################################
 # Prompt Engineering
 #####################################################
-class PromptModel(BaseModel):
+class PromptText(BaseModel):
     """Patch'able Prompt Parameters"""
 
     prompt: str = Field(..., description="Prompt Text")
 
 
-class Prompt(PromptModel):
+class Prompt(PromptText):
     """Prompt Object"""
 
     name: str = Field(
@@ -164,7 +150,7 @@ class Prompt(PromptModel):
 #####################################################
 # Settings
 #####################################################
-class LargeLanguageSettings(LanguageParametersModel):
+class LargeLanguageSettings(LanguageModelParameters):
     """Store Large Language Settings"""
 
     model: Optional[str] = Field(default=None, description="Model Name")
@@ -262,9 +248,9 @@ class ChatResponse(BaseModel):
     usage: Optional[ChatUsage] = Field(default=None, description="Usage statistics for the completion request.")
 
 
-class ChatRequest(LanguageParametersModel):
+class ChatRequest(LanguageModelParameters):
     """
-    Request Body (inherits LanguageParametersModel)
+    Request Body (inherits LanguageModelParameters)
     Do not change as this has to remain OpenAI Compatible
     """
 
@@ -291,6 +277,7 @@ class TestSetQA(BaseModel):
 
 class Evaluation(BaseModel):
     """Evaluation"""
+
     eid: str = Field(description="Evaluation ID")
     evaluated: str = Field(description="Date of Evaluation")
     correctness: int = Field(description="Correctness")
@@ -305,17 +292,19 @@ class EvaluationReport(Evaluation):
     failures: dict = Field(description="Failures")
     html_report: str = Field(description="HTML Report")
 
+
 #####################################################
 # Types
 #####################################################
+ClientIdType = Settings.__annotations__["client"]
 DatabaseNameType = Database.__annotations__["name"]
 ModelNameType = Model.__annotations__["name"]
 ModelTypeType = Model.__annotations__["type"]
-ModelEnabledType = ModelModel.__annotations__["enabled"]
+ModelEnabledType = ModelAccess.__annotations__["enabled"]
 OCIProfileType = OracleCloudSettings.__annotations__["profile"]
 PromptNameType = Prompt.__annotations__["name"]
 PromptCategoryType = Prompt.__annotations__["category"]
-PromptPromptType = PromptModel.__annotations__["prompt"]
+PromptPromptType = PromptText.__annotations__["prompt"]
 TestSetsIdType = TestSets.__annotations__["tid"]
 TestSetsNameType = TestSets.__annotations__["name"]
 TestSetDateType = TestSets.__annotations__["created"]
