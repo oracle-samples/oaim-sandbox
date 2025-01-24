@@ -7,7 +7,7 @@ import httpx
 
 from langchain_core.messages import ChatMessage
 
-from common.schema import ChatRequest, ChatResponse, ResponseList
+from common.schema import ChatRequest, ChatResponse
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("utils.client")
@@ -32,20 +32,21 @@ class SandboxClient:
         self.timeout = timeout
 
         self.headers = {"Authorization": f"Bearer {server['key']}", "Content-Type": "application/json"}
+
         def settings_request(method):
             """Send Settings to Server"""
             with httpx.Client() as client:
                 return client.request(
                     method=method,
                     url=f"{self.server_url}/v1/settings",
-                    params={"client": self.settings['client']},
+                    params={"client": self.settings["client"]},
                     json=self.settings,
                     headers=self.headers,
                     timeout=self.timeout,
                 )
 
         response = settings_request("PATCH")
-        if response.status_code != 200:
+        if response.status_code != 204:
             logger.error("Error updating settings with PATCH: %i - %s", response.status_code, response.text)
             # Retry with POST if PATCH fails
             response = settings_request("POST")
@@ -75,7 +76,7 @@ class SandboxClient:
             error_msg = response_data["detail"][0].get("msg", response.text)
             return f"Error: {response.status_code} - {error_msg}"
 
-    async def get_history(self) -> ResponseList[ChatMessage]:
+    async def get_history(self) -> list[ChatMessage]:
         response = httpx.get(
             url=self.server_url + "/v1/chat/history",
             params={"client": self.settings["client"]},
@@ -85,7 +86,7 @@ class SandboxClient:
         response_data = response.json()
         logger.debug("Response Received: %s", response_data)
         if response.status_code == 200:
-            return response_data["data"]
+            return response_data
 
         error_msg = response_data["detail"][0].get("msg", response.text)
         return f"Error: {response.status_code} - {error_msg}"

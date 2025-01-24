@@ -13,7 +13,7 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 
 import common.logging_config as logging_config
-import common.schema as schema
+from common.schema import ModelNameType, ModelTypeType, ModelEnabledType, Model, ModelAccess
 
 logger = logging_config.logging.getLogger("server.models")
 
@@ -22,11 +22,11 @@ logger = logging_config.logging.getLogger("server.models")
 # Functions
 #####################################################
 async def apply_filter(
-    models_all: list[schema.Model],
-    model_name: Optional[schema.ModelNameType] = None,
-    model_type: Optional[schema.ModelTypeType] = None,
-    only_enabled: Optional[schema.ModelEnabledType] = False,
-) -> list[schema.Model]:
+    models_all: list[Model],
+    model_name: Optional[ModelNameType] = None,
+    model_type: Optional[ModelTypeType] = None,
+    only_enabled: Optional[ModelEnabledType] = False,
+) -> list[Model]:
     """Used in direct call from list_models and agents.models"""
     logger.debug("%i models are defined", len(models_all))
     models_all = [
@@ -41,8 +41,8 @@ async def apply_filter(
 
 
 async def get_key_value(
-    model_objects: list[schema.ModelModel],
-    model_name: schema.ModelNameType,
+    model_objects: list[ModelAccess],
+    model_name: ModelNameType,
     model_key: str,
 ) -> str:
     """Return a models key value of its configuration"""
@@ -53,7 +53,7 @@ async def get_key_value(
 
 
 async def get_client(
-    model_objects: list[schema.ModelModel],
+    model_objects: list[ModelAccess],
     model_config: dict,
 ) -> BaseChatModel:
     """Retrieve model configuration"""
@@ -77,9 +77,7 @@ async def get_client(
         for key in ["temperature", "max_completion_tokens", "top_p", "frequency_penalty", "presence_penalty"]:
             try:
                 logger.debug("--> Setting: %s; was sent %s", key, model_config[key])
-                ll_common_params[key] = model_config[key] or await get_key_value(
-                    model_objects, model_name, key
-                )
+                ll_common_params[key] = model_config[key] or await get_key_value(model_objects, model_name, key)
             except KeyError:
                 # Mainly for embeddings
                 continue
@@ -88,7 +86,9 @@ async def get_client(
             "OpenAI": lambda: ChatOpenAI(model=model_name, api_key=model_api_key, **ll_common_params),
             "Cohere": lambda: ChatCohere(model=model_name, cohere_api_key=model_api_key, **ll_common_params),
             "ChatOllama": lambda: ChatOllama(model=model_name, base_url=model_url, model_kwargs=ll_common_params),
-            "Perplexity": lambda: ChatOpenAI(model=model_name, base_url=model_url, api_key=model_api_key, **ll_common_params),
+            "Perplexity": lambda: ChatOpenAI(
+                model=model_name, base_url=model_url, api_key=model_api_key, **ll_common_params
+            ),
             "GenericOpenAI": lambda: ChatOpenAI(
                 model=model_name, base_url=model_url, api_key=model_api_key, **ll_common_params
             ),

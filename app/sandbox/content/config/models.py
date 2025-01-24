@@ -13,6 +13,7 @@ Session States Set:
 """
 
 import inspect
+import time
 import streamlit as st
 from streamlit import session_state as state
 
@@ -35,7 +36,7 @@ def get_model(model_type: str, only_enabled: bool = False) -> dict[str, dict]:
         try:
             api_url = f"{state.server['url']}:{state.server['port']}/v1/models"
             api_params = {"only_enabled": only_enabled, "model_type": model_type}
-            response = api_call.get(url=api_url, params=api_params)["data"]
+            response = api_call.get(url=api_url, params=api_params)
             state[state_key] = {item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response}
             logger.info("State created: state['%s']", state_key)
         except api_call.ApiError as ex:
@@ -83,7 +84,8 @@ def patch_model(model_type: str) -> None:
     else:
         st_common.clear_state_key(state_config_key)
         st_common.clear_state_key(state_enabled_key)
-        get_model(model_type)
+        time.sleep(2) # So user can see updates
+        st.rerun()
 
 
 #############################################################################

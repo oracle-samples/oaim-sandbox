@@ -50,12 +50,12 @@ def main() -> None:
     api_endpoint = f"{state.server['url']}:{state.server['port']}/v1/settings"
     if "user_settings" not in state:
         try:
-            state.user_settings = api_call.post(url=api_endpoint, params={"client": client_gen_id()})["data"]
+            state.user_settings = api_call.post(url=api_endpoint, params={"client": client_gen_id()})
         except api_call.ApiError as ex:
             st.error(ex, icon="🚨")
     if "server_settings" not in state:
         try:
-            state.server_settings = api_call.get(url=api_endpoint, params={"client": "server"})["data"]
+            state.server_settings = api_call.get(url=api_endpoint, params={"client": "server"})
         except api_call.ApiError as ex:
             st.error(ex, icon="🚨")
 

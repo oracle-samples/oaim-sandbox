@@ -48,24 +48,6 @@ def local_file_payload(uploaded_files: Union[BytesIO, list[BytesIO]]) -> list:
     ]
     return files
 
-
-def copy_user_settings(new_client: ClientIdType) -> None:
-    """Copy User Setting to a new client (e.g. the Server)"""
-    logger.info("Copying user settings to: %s", new_client)
-    api_url = f"{state.server['url']}:{state.server['port']}/v1/settings"
-    try:
-        api_call.patch(
-            url=api_url,
-            params={"client": new_client},
-            payload={"json": state.user_settings},
-        )
-        st.success(f"Settings for {new_client} - Updated", icon="✅")
-        clear_state_key(f"{new_client}_settings")
-    except api_call.ApiError as ex:
-        st.success(f"Settings for {new_client} - Update Failed", icon="❌")
-        logger.error("%s Settings Update failed: %s", new_client, ex)
-
-
 def switch_prompt(prompt_type: PromptPromptType, prompt_name: PromptNameType) -> None:
     """Auto Switch Prompts when not set to Custom"""
     current_prompt = state["user_settings"]["prompts"][prompt_type]
@@ -73,6 +55,16 @@ def switch_prompt(prompt_type: PromptPromptType, prompt_name: PromptNameType) ->
         state.user_settings["prompts"][prompt_type] = prompt_name
         st.info(f"Prompt Engineering - {prompt_name} Prompt has been set.", icon="ℹ️")
 
+def patch_settings() -> None:
+    api_url = f"{state.server['url']}:{state.server['port']}/v1/settings"
+    try:
+        api_call.patch(
+            url=api_url,
+            params={"client": state.user_settings["client"]},
+            payload={"json": state.user_settings},
+        )
+    except api_call.ApiError as ex:
+        logger.error("%s Settings Update failed: %s", state.user_settings["client"], ex)
 
 #############################################################################
 # State Helpers
@@ -83,17 +75,17 @@ def clear_state_key(state_key: str) -> None:
     logger.debug("State cleared: %s", state_key)
 
 
-def update_user_settings_state(
-    user_setting: str,
-    setting_key: str,
+def update_user_settings(
+    user_setting: str = None,
+    setting_key: str = None,
     setting_value: str = None,
 ) -> None:
     """Update user chat parameters"""
-    widget_key = f"selected_{user_setting}_{setting_key}"
-    widget_value = state.get(widget_key, setting_value)
-    logger.info("Updating user_settings['%s']['%s'] to %s", user_setting, setting_key, widget_value)
-    state.user_settings[user_setting][setting_key] = widget_value
-
+    if user_setting and setting_key:
+        widget_key = f"selected_{user_setting}_{setting_key}"
+        widget_value = state.get(widget_key, setting_value)
+        logger.info("Updating user_settings['%s']['%s'] to %s", user_setting, setting_key, widget_value)
+        state.user_settings[user_setting][setting_key] = widget_value
     # Destroying user SandboxClient
     clear_state_key("user_client")
 
@@ -122,7 +114,7 @@ def history_sidebar() -> None:
         "Enable History and Context?",
         value=True,
         key="selected_ll_model_chat_history",
-        on_change=update_user_settings_state,
+        on_change=update_user_settings,
         args=("ll_model", "chat_history"),
     )
     if st.sidebar.button("Clear History", disabled=not chat_history_enable):
@@ -154,7 +146,7 @@ def ll_sidebar() -> None:
         options=list(state.ll_model_enabled.keys()),
         index=ll_idx,
         key="selected_ll_model_model",
-        on_change=update_user_settings_state,
+        on_change=update_user_settings,
         args=("ll_model", "model"),
     )
 
@@ -168,7 +160,7 @@ def ll_sidebar() -> None:
         min_value=0.0,
         max_value=2.0,
         key="selected_ll_model_temperature",
-        on_change=update_user_settings_state,
+        on_change=update_user_settings,
         args=("ll_model", "temperature"),
     )
 
@@ -186,7 +178,7 @@ def ll_sidebar() -> None:
         min_value=1,
         max_value=max_completion_tokens,
         key="selected_ll_model_max_completion_tokens",
-        on_change=update_user_settings_state,
+        on_change=update_user_settings,
         args=("ll_model", "max_completion_tokens"),
     )
 
@@ -198,7 +190,7 @@ def ll_sidebar() -> None:
         min_value=0.0,
         max_value=1.0,
         key="selected_ll_model_top_p",
-        on_change=update_user_settings_state,
+        on_change=update_user_settings,
         args=("ll_model", "top_p"),
     )
 
@@ -212,7 +204,7 @@ def ll_sidebar() -> None:
         min_value=-2.0,
         max_value=2.0,
         key="selected_ll_model_frequency_penalty",
-        on_change=update_user_settings_state,
+        on_change=update_user_settings,
         args=("ll_model", "frequency_penalty"),
     )
 
@@ -224,7 +216,7 @@ def ll_sidebar() -> None:
         min_value=-2.0,
         max_value=2.0,
         key="selected_ll_model_presence_penalty",
-        on_change=update_user_settings_state,
+        on_change=update_user_settings,
         args=("ll_model", "presence_penalty"),
     )
 
@@ -247,12 +239,12 @@ def rag_sidebar() -> None:
     if disable_rag:
         logger.debug("RAG Disabled (Database not configured)")
         st.warning("Database is not configured. Disabling RAG.", icon="⚠️")
-        update_user_settings_state("rag", "rag_enabled", False)
+        update_user_settings("rag", "rag_enabled", False)
         switch_prompt("sys", "Basic Example")
     elif not state.database_config[state.user_settings["rag"]["database"]].get("vector_stores"):
         logger.debug("RAG Disabled (Database has no vector stores.)")
         st.warning("Database has no Vector Stores. Disabling RAG.", icon="⚠️")
-        update_user_settings_state("rag", "rag_enabled", False)
+        update_user_settings("rag", "rag_enabled", False)
         switch_prompt("sys", "Basic Example")
         disable_rag = True
 
@@ -262,7 +254,7 @@ def rag_sidebar() -> None:
         value=state.user_settings["rag"]["rag_enabled"],
         disabled=disable_rag,
         key="selected_rag_rag_enabled",
-        on_change=update_user_settings_state,
+        on_change=update_user_settings,
         args=("rag", "rag_enabled"),
     )
 
@@ -280,7 +272,7 @@ def rag_sidebar() -> None:
             rag_search_type_list,
             index=rag_search_type_list.index(state.user_settings["rag"]["search_type"]),
             key="selected_rag_search_type",
-            on_change=update_user_settings_state,
+            on_change=update_user_settings,
             args=("rag", "search_type"),
         )
         st.sidebar.number_input(
@@ -291,7 +283,7 @@ def rag_sidebar() -> None:
             max_value=10000,
             step=1,
             key="selected_rag_top_k",
-            on_change=update_user_settings_state,
+            on_change=update_user_settings,
             args=("rag", "top_k"),
         )
         if rag_search_type == "Similarity Score Threshold":
@@ -302,7 +294,7 @@ def rag_sidebar() -> None:
                 min_value=0.0,
                 max_value=1.0,
                 step=0.1,
-                on_change=update_user_settings_state,
+                on_change=update_user_settings,
                 args=("rag", "score_threshold"),
             )
         if rag_search_type == "Maximal Marginal Relevance":
@@ -314,7 +306,7 @@ def rag_sidebar() -> None:
                 max_value=10000,
                 step=1,
                 key="selected_rag_fetch_k",
-                on_change=update_user_settings_state,
+                on_change=update_user_settings,
                 args=("rag", "fetch_k"),
             )
             st.sidebar.slider(
@@ -325,7 +317,7 @@ def rag_sidebar() -> None:
                 max_value=1.0,
                 step=0.1,
                 key="selected_rag_lambda_mult",
-                on_change=update_user_settings_state,
+                on_change=update_user_settings,
                 args=("rag", "lambda_mult"),
             )
 
@@ -349,7 +341,7 @@ def rag_sidebar() -> None:
                     "index_type",
                 ):
                     clear_state_key(f"selected_rag_{key}")
-                    update_user_settings_state("rag", key)
+                    update_user_settings("rag", key)
 
         def vs_gen_selectbox(label, options, key):
             """Handle selectbox with auto-setting for a single unique value"""
@@ -410,13 +402,13 @@ def rag_sidebar() -> None:
 
         if all([embed_model, chunk_size, chunk_overlap, distance_metric]):
             vs = filtered_df["vector_store"].iloc[0]
-            update_user_settings_state("rag", "vector_store", vs)
-            update_user_settings_state("rag", "alias", alias)
-            update_user_settings_state("rag", "model", embed_model)
-            update_user_settings_state("rag", "chunk_size", chunk_size)
-            update_user_settings_state("rag", "chunk_overlap", chunk_overlap)
-            update_user_settings_state("rag", "distance_metric", distance_metric)
-            update_user_settings_state("rag", "index_type", index_type)
+            update_user_settings("rag", "vector_store", vs)
+            update_user_settings("rag", "alias", alias)
+            update_user_settings("rag", "model", embed_model)
+            update_user_settings("rag", "chunk_size", chunk_size)
+            update_user_settings("rag", "chunk_overlap", chunk_overlap)
+            update_user_settings("rag", "distance_metric", distance_metric)
+            update_user_settings("rag", "index_type", index_type)
         else:
             st.error("Please select Embedding options or disable RAG to continue.", icon="❌")
             state.enable_sandbox = False

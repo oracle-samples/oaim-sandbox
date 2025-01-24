@@ -28,7 +28,7 @@ def get_databases() -> dict[str, dict]:
     if "database_config" not in state or state["database_config"] == {}:
         try:
             api_url = f"{state.server['url']}:{state.server['port']}/v1/databases"
-            response = api_call.get(url=api_url)["data"]
+            response = api_call.get(url=api_url)
             state["database_config"] = {
                 item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response
             }
@@ -66,11 +66,11 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
             st_common.clear_state_key("database_config")
             st_common.clear_state_key("database_error")
             state.database_error = None
-            get_databases() # Refresh the Config
         except api_call.ApiError as ex:
             logger.error("Database Update failed: %s", ex)
             state.database_error = str(ex)
             state.database_config[name]["connected"] = False
+        st.rerun()
     else:
         st.info(f"{name} Database Configuration - No Changes Detected.", icon="ℹ️")
 
@@ -79,7 +79,7 @@ def drop_vs(vs: dict):
     """Drop a Vector Storage Table"""
     try:
         api_url = f"{state.server['url']}:{state.server['port']}/v1/embed/drop_vs"
-        api_call.post(url=api_url, payload={"json": vs})
+        api_call.patch(url=api_url, params={"client": state["user_settings"]["client"]}, payload={"json": vs})
         st.success(f"{vs['vector_store']} - Dropped", icon="✅")
         st_common.clear_state_key("database_config")
     except api_call.ApiError as ex:

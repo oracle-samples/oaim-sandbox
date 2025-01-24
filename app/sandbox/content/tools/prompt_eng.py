@@ -33,7 +33,7 @@ def get_prompts() -> dict[str, dict]:
     if "prompts_config" not in state or state["prompts_config"] == {}:
         try:
             api_url = f"{state.server['url']}:{state.server['port']}/v1/prompts"
-            state["prompts_config"] = api_call.get(url=api_url)["data"]
+            state["prompts_config"] = api_call.get(url=api_url)
             logger.info("State created: state['prompts_config']")
         except api_call.ApiError as ex:
             logger.error("Unable to retrieve prompts: %s", ex)
@@ -88,7 +88,7 @@ def main():
             options=list(sys_dict.keys()),
             index=list(sys_dict.keys()).index(state.user_settings["prompts"]["sys"]),
             key="selected_prompts_sys",
-            on_change=st_common.update_user_settings_state,
+            on_change=st_common.update_user_settings,
             args=("prompts", "sys"),
         )
         prompt_sys_prompt = st.text_area(
@@ -108,7 +108,7 @@ def main():
             options=list(ctx_dict.keys()),
             index=list(ctx_dict.keys()).index(state.user_settings["prompts"]["ctx"]),
             key="selected_prompts_ctx",
-            on_change=st_common.update_user_settings_state,
+            on_change=st_common.update_user_settings,
             args=("prompts", "ctx"),
         )
         prompt_ctx_prompt = st.text_area(

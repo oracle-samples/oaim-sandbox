@@ -134,7 +134,10 @@ def main() -> None:
 
     file_sources = ["OCI", "Local", "Web"]
     get_oci()
-    if not state.oci_config[state.user_settings["oci_profile"]]["namespace"]:
+    try:
+        if not state.oci_config[state.user_settings["oci_profile"]].get("namespace"):
+            raise KeyError
+    except (KeyError, TypeError):
         st.warning("OCI is not configured, some functionality is disabled", icon="⚠️")
         file_sources.remove("OCI")
 
@@ -287,7 +290,7 @@ def main() -> None:
             the current split and embed options.  Please Split and Embed to enable Vector Storage.
         """
         st.text(f"OCI namespace: {state.oci_config[state.user_settings['oci_profile']]['namespace']}")
-        oci_compartments = get_compartments()["data"]
+        oci_compartments = get_compartments()
         src_bucket_list = []
         col2_1, col2_2 = st.columns([0.5, 0.5])
         with col2_1:
@@ -298,7 +301,7 @@ def main() -> None:
                 placeholder="Select bucket compartment...",
             )
             if bucket_compartment:
-                src_bucket_list = get_buckets(oci_compartments[bucket_compartment])["data"]
+                src_bucket_list = get_buckets(oci_compartments[bucket_compartment])
         with col2_2:
             src_bucket = st.selectbox(
                 "Source bucket:",
@@ -309,7 +312,7 @@ def main() -> None:
             )
         src_files = []
         if src_bucket:
-            src_objects = get_bucket_objects(src_bucket)["data"]
+            src_objects = get_bucket_objects(src_bucket)
             src_files = files_data_frame(src_objects)
         else:
             src_files = pd.DataFrame({"File": [], "Process": []})
@@ -323,7 +326,7 @@ def main() -> None:
     st.header("Populate Vector Store", divider="red")
     existing_vs = state["database_config"][state["user_settings"]["rag"]["database"]]["vector_stores"]
     vs_msg = f"{embed_request.vector_store}, will be created."
-    if any(d.get('vector_store') == embed_request.vector_store for d in existing_vs):
+    if any(d.get("vector_store") == embed_request.vector_store for d in existing_vs):
         vs_msg = f"{embed_request.vector_store} exists, new chunks will be added."
     st.markdown(f"##### **Vector Store:** `{embed_request.vector_store}`")
     st.caption(f"{vs_msg}")
@@ -382,7 +385,6 @@ def main() -> None:
             # All files are now on Server... Run Embeddings
             embed_params = {
                 "client": state.user_settings["client"],
-                "directory": "split_embed",
                 "rate_limit": rate_limit,
             }
             response = api_call.post(
@@ -392,7 +394,7 @@ def main() -> None:
                 timeout=300,
             )
             placeholder.empty()
-            st.success(f"Vector Store Populated: {response['msg']}", icon="✅")
+            st.success(f"Vector Store Populated: {response['message']}", icon="✅")
             # Delete database_config state to reflect new vector stores
             st_common.clear_state_key("database_config")
         except api_call.ApiError as ex:

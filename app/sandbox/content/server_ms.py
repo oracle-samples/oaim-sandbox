@@ -16,9 +16,30 @@ from streamlit import session_state as state
 
 import sandbox.utils.st_common as st_common
 import sandbox.utils.client as client
+import sandbox.utils.api_call as api_call
 import common.logging_config as logging_config
+from common.schema import ClientIdType
 
 logger = logging_config.logging.getLogger("sandbox.content.server")
+
+#####################################################
+# Functions
+#####################################################
+def copy_user_settings(new_client: ClientIdType) -> None:
+    """Copy User Setting to a new client (e.g. the Server)"""
+    logger.info("Copying user settings to: %s", new_client)
+    api_url = f"{state.server['url']}:{state.server['port']}/v1/settings"
+    try:
+        api_call.patch(
+            url=api_url,
+            params={"client": new_client},
+            payload={"json": state.user_settings},
+        )
+        st.success(f"Settings for {new_client} - Updated", icon="✅")
+        st_common.clear_state_key(f"{new_client}_settings")
+    except api_call.ApiError as ex:
+        st.success(f"Settings for {new_client} - Update Failed", icon="❌")
+        logger.error("%s Settings Update failed: %s", new_client, ex)
 
 #####################################################
 # MAIN
@@ -54,7 +75,7 @@ async def main() -> None:
     st.button(
         "Copy Sandbox Settings",
         type="primary",
-        on_click=st_common.copy_user_settings,
+        on_click=copy_user_settings,
         kwargs=dict(new_client="server"),
         help="Copy your settings, from the ChatBot, by clicking here.",
     )

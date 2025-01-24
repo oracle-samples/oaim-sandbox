@@ -50,8 +50,9 @@ def download_file(label, data, file_name, mime):
     """Download HTML Report - Here as a fragment to prevent a page-reload"""
     st.download_button(label=label, data=data, file_name=file_name, mime=mime)
 
+
 @st.dialog("Evaluation Report", width="large")
-def evaluation_report(eid = None, report = None):
+def evaluation_report(eid=None, report=None):
     def create_gauge(value):
         """Create the GUI Gauge"""
         fig = go.Figure(
@@ -82,8 +83,8 @@ def evaluation_report(eid = None, report = None):
     # Get the Report
     if eid:
         api_url = f"{API_ENDPOINT}/evaluation"
-        api_params = {"eid": eid}
-        report = api_call.get(url=api_url, params=api_params)["data"]
+        api_params = {"client": state.user_settings["client"], "eid": eid}
+        report = api_call.get(url=api_url, params=api_params)
 
     # Settings
     st.subheader("Evaluation Settings")
@@ -92,7 +93,14 @@ def evaluation_report(eid = None, report = None):
     ll_settings_reversed = ll_settings.iloc[:, ::-1]
     st.dataframe(ll_settings_reversed, hide_index=True)
     if report["settings"]["rag"]["rag_enabled"]:
+        st.subheader("RAG Settings")
+        st.markdown(f"""**Database**: {report['settings']['rag']['database']}; 
+            **Vector Store**: {report['settings']['rag']['vector_store']}
+        """)
         embed_settings = pd.DataFrame(report["settings"]["rag"], index=[0])
+        embed_settings.drop(["database", "vector_store", "alias", "rag_enabled"], axis=1, inplace=True)
+        if report["settings"]["rag"]["search_type"] == "Similarity":
+            embed_settings.drop(["score_threshold", "fetch_k", "lambda_mult"], axis=1, inplace=True)
         st.dataframe(embed_settings, hide_index=True)
     else:
         st.markdown("**Evaluated without RAG**")
@@ -124,10 +132,12 @@ def evaluation_report(eid = None, report = None):
     # Download Button
     download_file("Download Report", report["html_report"], "evaluation_report.html", "text/html")
 
+
 @st.cache_data
 def get_testbed_db_testsets() -> dict:
     """Get Database TestSets; this is cached"""
-    return api_call.get(url=f"{API_ENDPOINT}/testsets")["data"]
+    api_params = {"client": state["user_settings"]["client"]}
+    return api_call.get(url=f"{API_ENDPOINT}/testsets", params=api_params)
 
 
 def qa_update_db() -> None:
@@ -135,6 +145,7 @@ def qa_update_db() -> None:
     update_record(0)  # Ensure any changes made to current record are recorded
     api_url = f"{API_ENDPOINT}/testset_load"
     api_params = {
+        "client": state.user_settings["client"],
         "name": state.selected_new_testset_name,
         "tid": state.testbed["testset_id"],
     }
@@ -272,7 +283,8 @@ def main():
     ###################################
     button_load_disabled = True
     button_text, api_url, testset_source = None, None, None
-    api_params = {"timeout": 3600}
+    # Initialise the API Parameters (Increase Timeout)
+    client_api_params = {"client": state.user_settings["client"]}
     if not state.selected_generate_test:
         st.subheader("Run Existing Q&A Test Set", divider="red")
         button_text = "Load Q&A"
@@ -342,7 +354,7 @@ def main():
             help="Don't see your model? Unfortunately it is not currently supported by the testing framework.",
         )
         api_params = {"ll_model": test_gen_llm, "embed_model": test_gen_embed, "questions": test_gen_questions}
-
+        api_params.update(client_api_params)
     # Process Q&A Request
     button_load_disabled = button_load_disabled or state.testbed["testset_id"] == "" or "testbed_qa" in state
     col_left, col_center, _ = st.columns([3, 3, 4])
@@ -386,13 +398,16 @@ def main():
                 ),
                 None,
             )
+            api_params = {"tid": state.testbed["testset_id"]}
+            api_params.update(client_api_params)
             # Retrieve TestSet Data
-            response = api_call.get(url=api_url, params={"tid": state.testbed["testset_id"]})
+            response = api_call.get(url=api_url, params=api_params)
             # Retrieve Evaluations
             api_url = f"{API_ENDPOINT}/evaluations"
-            state.testbed_evaluations = api_call.get(url=api_url, params={"tid": state.testbed["testset_id"]})
+            state.testbed_evaluations = api_call.get(url=api_url, params=api_params)
         try:
-            state.testbed_qa = response["data"]["qa_data"]
+            print(response)
+            state.testbed_qa = response["qa_data"]
             st.success(f"{len(state.testbed_qa)} Tests Loaded.", icon="✅")
         except UnboundLocalError as ex:
             logger.exception("Failed to load Tests: %s", ex)
@@ -432,9 +447,9 @@ def main():
         ###################################
         # Evaluator
         ###################################
-        if "testbed_evaluations" in state:
-            st.subheader(f"Previous Evaluations for {state.testbed['testset_name']}", divider="red")
-            for evaluation in state.testbed_evaluations["data"]:
+        if "testbed_evaluations" in state and state.testbed_evaluations:
+            st.subheader(f"Previous Evaluations for {state.selected_new_testset_name}", divider="red")
+            for evaluation in state.testbed_evaluations:
                 eval_label = (
                     f"ℹ️ **Evaluated:** {evaluation['evaluated']} -- **Correctness:** {evaluation['correctness']}"
                 )
@@ -452,12 +467,13 @@ def main():
             help="Evaluation will automatically save the TestSet to the Database",
             on_click=qa_update_db,
         ):
-            st_common.copy_user_settings(new_client="testbed")
             placeholder = st.empty()
             with placeholder:
                 st.warning("Starting Q&A evaluation... please be patient.", icon="⚠️")
+            st_common.patch_settings()
             api_url = f"{API_ENDPOINT}/evaluate"
             api_params = {"tid": state.testbed["testset_id"]}
+            api_params.update(client_api_params)
             evaluate = api_call.post(url=api_url, params=api_params, timeout=1200)
             st.success("Evaluation Complete!", icon="✅")
             placeholder.empty()
@@ -466,7 +482,7 @@ def main():
             # Results
             ###################################
             if evaluate:
-                evaluation_report(report=evaluate['data'])
+                evaluation_report(report=evaluate)
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:

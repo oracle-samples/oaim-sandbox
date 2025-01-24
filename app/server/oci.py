@@ -28,16 +28,15 @@ def init_client(
         oci.identity.IdentityClient,
     ],
     config: OracleCloudSettings = None,
-    retries: bool = True,
 ) -> Union[
     oci.object_storage.ObjectStorageClient,
     oci.identity.IdentityClient,
 ]:
     """Initialize OCI Client with either user or Token"""
-    # Setup Retries
-    retry_strategy = oci.retry.DEFAULT_RETRY_STRATEGY
-    if not retries:
-        retry_strategy = oci.retry.NoneRetryStrategy()
+    # Retries and timeouts should be handled on the client side otherwise they conflict
+    retry_strategy = oci.retry.NoneRetryStrategy()
+    # connection timeout to 1 seconds and the read timeout to 60 seconds
+    timeout = (1, 60)
 
     # Dump Model into JSON
     config_json = config.model_dump(exclude_none=False)
@@ -47,7 +46,7 @@ def init_client(
     if not config_json:
         logger.info("OCI Authentication with Workload Identity")
         oke_workload_signer = oci.auth.signers.get_oke_workload_identity_resource_principal_signer()
-        client = client_type(config={}, signer=oke_workload_signer)
+        client = client_type(config={}, signer=oke_workload_signer, retry_strategy=retry_strategy, timeout=timeout)
     elif config_json and config_json["security_token_file"]:
         logger.info("OCI Authentication with Security Token")
         token = None
@@ -55,19 +54,21 @@ def init_client(
             token = f.read()
         private_key = oci.signer.load_private_key_from_file(config_json["key_file"])
         signer = oci.auth.signers.SecurityTokenSigner(token, private_key)
-        client = client_type(config={"region": config_json["region"]}, signer=signer)
+        client = client_type(
+            config={"region": config_json["region"]}, signer=signer, retry_strategy=retry_strategy, timeout=timeout
+        )
     else:
         logger.info("OCI Authentication as Standard")
-        client = client_type(config_json, retry_strategy=retry_strategy)
+        client = client_type(config_json, retry_strategy=retry_strategy, timeout=timeout)
     return client
 
 
-def get_namespace(config: OracleCloudSettings = None, retries: bool = True) -> str:
+def get_namespace(config: OracleCloudSettings = None) -> str:
     """Get the Object Storage Namespace.  Also used for testing AuthN"""
     logger.info("Getting Object Storage Namespace")
     client_type = oci.object_storage.ObjectStorageClient
     try:
-        client = init_client(client_type, config, retries)
+        client = init_client(client_type, config)
         namespace = client.get_namespace().data
         logger.info("Succeeded - Namespace = %s", namespace)
     except oci.exceptions.InvalidConfig as ex:
@@ -86,10 +87,10 @@ def get_namespace(config: OracleCloudSettings = None, retries: bool = True) -> s
     return namespace
 
 
-def get_compartments(config: OracleCloudSettings = None, retries: bool = True) -> set:
+def get_compartments(config: OracleCloudSettings = None) -> set:
     """Retrieve a list of compartments"""
     client_type = oci.identity.IdentityClient
-    client = init_client(client_type, config, retries)
+    client = init_client(client_type, config)
 
     compartment_paths = {}
     response = client.list_compartments(
@@ -120,13 +121,13 @@ def get_compartments(config: OracleCloudSettings = None, retries: bool = True) -
     return compartment_paths
 
 
-def get_buckets(compartment: str, config: OracleCloudSettings = None, retries: bool = True) -> list:
+def get_buckets(compartment: str, config: OracleCloudSettings = None) -> list:
     """Get a list of buckets"""
     client_type = oci.object_storage.ObjectStorageClient
-    client = init_client(client_type, config, retries)
+    client = init_client(client_type, config)
 
     logger.info("Getting Buckets in %s", compartment)
-    client = init_client(client_type, config, retries)
+    client = init_client(client_type, config)
     bucket_names = []
     response = client.list_buckets(namespace_name=config.namespace, compartment_id=compartment, fields=["tags"])
     buckets = response.data
@@ -138,10 +139,10 @@ def get_buckets(compartment: str, config: OracleCloudSettings = None, retries: b
     return bucket_names
 
 
-def get_bucket_objects(bucket_name: str, config: OracleCloudSettings = None, retries: bool = True) -> list:
+def get_bucket_objects(bucket_name: str, config: OracleCloudSettings = None) -> list:
     """Get a list of Bucket Objects"""
     client_type = oci.object_storage.ObjectStorageClient
-    client = init_client(client_type, config, retries)
+    client = init_client(client_type, config)
 
     object_names = []
     try:
@@ -158,12 +159,10 @@ def get_bucket_objects(bucket_name: str, config: OracleCloudSettings = None, ret
     return object_names
 
 
-def get_object(
-    directory: str, object_name: str, bucket_name: str, config: OracleCloudSettings = None, retries: bool = True
-) -> list:
+def get_object(directory: str, object_name: str, bucket_name: str, config: OracleCloudSettings = None) -> list:
     """Download Object Storage Object"""
     client_type = oci.object_storage.ObjectStorageClient
-    client = init_client(client_type, config, retries)
+    client = init_client(client_type, config)
 
     file_name = os.path.basename(object_name)
     file_path = os.path.join(directory, file_name)

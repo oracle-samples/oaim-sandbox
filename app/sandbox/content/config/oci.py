@@ -34,7 +34,7 @@ def get_oci() -> dict[str, dict]:
             response = api_call.get(url=api_url)
             state["oci_config"] = {
                 item["profile"]: {k: v if v is not None else None for k, v in item.items() if k != "profile"} 
-                for item in response["data"]
+                for item in response
             }
             logger.info("State created: state['oci_config']")
             print(state['oci_config'])
@@ -82,7 +82,6 @@ def patch_oci(
             st.success(f"{profile} OCI Configuration - Updated", icon="✅")
             st_common.clear_state_key("oci_config")
             st_common.clear_state_key("oci_error")
-            get_oci() # Refresh the Config
         except api_call.ApiError as ex:
             logger.error("OCI Update failed: %s", ex)
             state.oci_error = ex
@@ -90,6 +89,7 @@ def patch_oci(
                 state.oci_config[profile]["namespace"] = None
             except AttributeError:
                 pass
+        st.rerun()
     else:
         st.info(f"{profile} OCI Configuration - No Changes Detected.", icon="ℹ️")
 

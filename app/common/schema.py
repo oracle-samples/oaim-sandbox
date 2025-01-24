@@ -118,7 +118,7 @@ class OracleResource(BaseModel):
 class OracleCloudSettings(BaseModel):
     """Store Oracle Cloud Infrastructure Settings"""
 
-    profile: str = Field(default="default", description="Config File Profile")
+    profile: str = Field(default="DEFAULT", description="Config File Profile")
     namespace: Optional[str] = Field(default=None, description="Object Store Namespace", readOnly=True)
     user: Optional[str] = Field(default=None, description="Optional if using Auth Token")
     security_token_file: Optional[str] = Field(default=None, description="Security Key File for Auth Token")

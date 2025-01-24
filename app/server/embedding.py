@@ -305,6 +305,7 @@ def populate_vs(
     # Creates a TEMP Vector Store Table; which may already exist
     # This is to allow re-using an existing VS; will merge this over later
     # drop_vs(conn=db_conn, vs=vector_store_tmp) -- THIS SEEMS TO HANG
+    logger.info("Establishing initial vector store")
     vs_tmp = OracleVS(
         client=db_conn,
         embedding_function=embed_client,
@@ -315,7 +316,9 @@ def populate_vs(
     # Batch Size does not have a measurable impact on performance
     # but does eliminate issues with timeouts
     # Careful increasing as may break token rate limits
+
     batch_size = 500
+    logger.info("Embedding chunks in batches of: %i", batch_size)
     for i in range(0, len(unique_chunks), batch_size):
         batch = unique_chunks[i : i + batch_size]
         logger.info(

@@ -4,6 +4,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 """
 
 import time
+import json
 from typing import Optional, Dict
 import requests
 from streamlit import session_state as state
@@ -63,9 +64,9 @@ def send_request(
     for attempt in range(retries + 1):
         try:
             response = method_map[method](**args)
-            logger.info("%s Response: %s", method, response.json())
+            logger.info("%s Response: %s", method, response)
             response.raise_for_status()
-            return response.json()
+            return response
 
         except requests.exceptions.HTTPError as ex:
             failure = ex.response.json()["detail"]
@@ -82,9 +83,10 @@ def send_request(
     raise ApiError("An unexpected error occurred.")
 
 
-def get(url: str, params: Optional[dict] = None, retries: int = 3, backoff_factor: float = 2.0) -> dict:
+def get(url: str, params: Optional[dict] = None, retries: int = 3, backoff_factor: float = 2.0) -> json:
     """GET Requests"""
-    return send_request("GET", url, params=params, retries=retries, backoff_factor=backoff_factor)
+    response = send_request("GET", url, params=params, retries=retries, backoff_factor=backoff_factor)
+    return response.json()
 
 
 def post(
@@ -94,11 +96,12 @@ def post(
     timeout: int = 60,
     retries: int = 3,
     backoff_factor: float = 2.0,
-) -> dict:
+) -> json:
     """POST Requests"""
-    return send_request(
+    response = send_request(
         "POST", url, params=params, payload=payload, timeout=timeout, retries=retries, backoff_factor=backoff_factor
     )
+    return response.json()
 
 
 def patch(
@@ -108,8 +111,8 @@ def patch(
     timeout: int = 60,
     retries: int = 3,
     backoff_factor: float = 2.0,
-) -> dict:
+) -> None:
     """PATCH Requests"""
-    return send_request(
+    send_request(
         "PATCH", url, payload=payload, params=params, timeout=timeout, retries=retries, backoff_factor=backoff_factor
     )

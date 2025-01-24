@@ -266,7 +266,7 @@ def main():
         help="Save or Upload Sandbox Settings.",
     )
     if not upload_settings:
-        st.json(state.server_settings, expanded=False)
+        st.json(state, expanded=False)
         col_left, col_centre, _ = st.columns([3, 4, 3])
         # Oder matters (selected_sensitive_settings must be defined)
         col_centre.checkbox(

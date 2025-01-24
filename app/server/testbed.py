@@ -99,7 +99,7 @@ def get_testsets(db_conn: Connection) -> list:
     """Get list of TestSets"""
     logger.info("Getting All TestSets")
     testsets = []
-    sql = "SELECT tid, name, to_char(created) FROM testsets"
+    sql = "SELECT tid, name, to_char(created) FROM testsets ORDER BY created"
     results = databases.execute_sql(db_conn, sql)
     try:
         testsets = [TestSets(tid=tid.hex(), name=name, created=created) for tid, name, created in results]
@@ -109,16 +109,15 @@ def get_testsets(db_conn: Connection) -> list:
     return testsets
 
 
-def get_testset_qa(db_conn: Connection, tid: TestSetsIdType) -> list:
+def get_testset_qa(db_conn: Connection, tid: TestSetsIdType) -> TestSetQA:
     """Get list of TestSet Q&A"""
     logger.info("Getting TestSet Q&A for TID: %s", tid)
     binds = {"tid": tid}
     sql = "SELECT qa_data FROM testset_qa where tid=:tid"
     results = databases.execute_sql(db_conn, sql, binds)
     qa_data = [qa_data[0] for qa_data in results]
-    testset_qa = TestSetQA(qa_data=qa_data)
 
-    return testset_qa
+    return TestSetQA(qa_data=qa_data)
 
 
 def get_evaluations(db_conn: Connection, tid: TestSetsIdType) -> list:
@@ -126,7 +125,7 @@ def get_evaluations(db_conn: Connection, tid: TestSetsIdType) -> list:
     logger.info("Getting Evaluations for: %s", tid)
     evaluations = []
     binds = {"tid": tid}
-    sql = "SELECT eid, to_char(evaluated), correctness FROM evaluations WHERE tid=:tid"
+    sql = "SELECT eid, to_char(evaluated), correctness FROM evaluations WHERE tid=:tid ORDER BY evaluated"
     results = databases.execute_sql(db_conn, sql, binds)
     try:
         evaluations = [
@@ -269,7 +268,7 @@ def build_knowledge_base(text_nodes: str, questions: int, ll_model: Model, embed
             complex_questions,
         ],
         num_questions=questions,
-        agent_description="A chatbot answering questions on a knowledge base",
+        agent_description="A chatbot answering questions based on the provided knowledge base",
     )
     logger.info("Test Set from Knowledge Base Generated")
 
@@ -303,6 +302,7 @@ def process_report(db_conn: Connection, eid: TestSetsIdType) -> EvaluationReport
     sql = """
         SELECT eid, to_char(evaluated), correctness, settings, rag_report 
           FROM evaluations WHERE eid=:eid
+         ORDER BY evaluated
         """
     results = databases.execute_sql(db_conn, sql, binds)
     pickled_report = results[0][4].read()

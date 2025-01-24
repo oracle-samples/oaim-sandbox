@@ -23,7 +23,7 @@ from server.agents.tools.oraclevs_retriever import oraclevs_tool
 from common.schema import ChatResponse, ChatUsage, ChatChoices, ChatMessage
 from common import logging_config
 
-# from IPython.display import Image, display
+from IPython.display import Image, display
 
 
 logger = logging_config.logging.getLogger("server.agents.chatbot")
@@ -115,7 +115,7 @@ def respond(state: AgentState, config: RunnableConfig) -> ChatResponse:
     return {"final_response": openai_response}
 
 
-def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["vs_delete", "generate_rag"]:
+def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["vs_irrelevant", "vs_generate"]:
     """Determines whether the retrieved documents are relevant to the question."""
     logger.info("Grading RAG Response")
 
@@ -134,7 +134,7 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["vs_de
     context = document_formatter(state["messages"][-1].content)
     if "I think you found a bug!" in context or "Please fix your mistakes" in context:
         logger.exception("Found a bug: %s", context)
-        return "vs_delete"
+        return "vs_irrelevant"
 
     # Prompt
     grade_template = """
@@ -162,22 +162,19 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["vs_de
     score = scored_result.binary_score
     logger.info("Grading Decision: RAG Relevant: %s", score)
     if score == "yes":
-        return "generate_rag"
+        return "vs_generate"
     else:
-        # RAG not relevant, remove documents from state then get response
-        return "vs_delete"
+        return "vs_irrelevant"
 
 
-def vs_delete(state: AgentState, config: RunnableConfig):
+def vs_irrelevant(state: AgentState) -> None:
     """
     Delete documents from last vs_retrieve as they are not relevant to the question
     Disable RAG on this session to generate non-RAG completion
     """
-    config["metadata"]["rag_settings"].rag_enabled = False
     state["messages"][-1].content = "[]"
 
-
-def generate_rag(state: AgentState, config: RunnableConfig) -> None:
+def vs_generate(state: AgentState, config: RunnableConfig) -> None:
     """Generate answer when RAG enabled; modify state with response"""
     logger.info("Generating RAG Response")
 
@@ -235,6 +232,15 @@ def agent(state: AgentState, config: RunnableConfig) -> AgentState:
 
     return {"messages": [response], "cleaned_messages": messages}
 
+def generate_response(state: AgentState, config: RunnableConfig) -> AgentState:
+    """Invokes the agent model; response will either be a tool call or completion"""
+    model = config["configurable"].get("ll_client", None)
+    messages = get_messages(state, config)
+    if config["metadata"]["sys_prompt"].prompt:
+        messages.insert(0, SystemMessage(content=config["metadata"]["sys_prompt"].prompt))
+    logger.debug("Invoking on: %s", messages)
+    response = model.invoke(messages)
+    return {"messages": [response], "cleaned_messages": messages}
 
 #############################################################################
 # GRAPH
@@ -246,22 +252,24 @@ workflow = StateGraph(AgentState)
 
 # Define the nodes
 workflow.add_node("agent", agent)
-workflow.add_node("respond", respond)
 workflow.add_node("vs_retrieve", ToolNode(tools))
-workflow.add_node("generate_rag", generate_rag)
-workflow.add_node("vs_delete", vs_delete)
+workflow.add_node("vs_generate", vs_generate)
+workflow.add_node("vs_irrelevant", vs_irrelevant)
+workflow.add_node("generate_response", generate_response)
+workflow.add_node("respond", respond)
 
 # Call agent node to decide to retrieve or not
 workflow.add_edge(START, "agent")
 
 # Assess the agent decision to retrieve or not
 workflow.add_conditional_edges("agent", tools_condition, {"tools": "vs_retrieve", END: "respond"})
-# If retrieving, grade the documents returned and either generate (not relevant) or generate_rag (relevant)
+# If retrieving, grade the documents returned and either generate (not relevant) or vs_generate (relevant)
 workflow.add_conditional_edges("vs_retrieve", grade_documents)
 
 # Generate the Output
-workflow.add_edge("vs_delete", "agent")
-workflow.add_edge("generate_rag", "respond")
+workflow.add_edge("vs_irrelevant", "generate_response")
+workflow.add_edge("generate_response", "respond")
+workflow.add_edge("vs_generate", "respond")
 workflow.add_edge("respond", END)
 
 # Compile
@@ -269,4 +277,4 @@ memory = MemorySaver()
 chatbot_graph = workflow.compile(checkpointer=memory)
 
 # This will write a graph.png file of the LangGraph; don't deliver uncommented
-# display(Image(chatbot_graph.get_graph(xray=True).draw_mermaid_png(output_file_path="graph.png")))
+display(Image(chatbot_graph.get_graph(xray=True).draw_mermaid_png(output_file_path="graph.png")))

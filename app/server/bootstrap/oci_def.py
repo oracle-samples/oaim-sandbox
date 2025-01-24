@@ -8,8 +8,11 @@ import os
 import configparser
 import oci
 import server.oci as server_oci
+
+import common.logging_config as logging_config
 from common.schema import OracleCloudSettings
 
+logger = logging_config.logging.getLogger("server.bootstrap.oci_def")
 
 def main() -> list[OracleCloudSettings]:
     """Read in OCI Configuration options into an object"""
@@ -19,6 +22,7 @@ def main() -> list[OracleCloudSettings]:
         config_parser = configparser.ConfigParser()
         config_parser.read(file)
         for section in config_parser.sections() + ["DEFAULT"]:
+            logger.debug("Evaluating OCI Profile: %s", section)
             try:
                 profile_data = oci.config.from_file(profile_name=section)
             except oci.exceptions.InvalidKeyFilePath:
@@ -30,11 +34,13 @@ def main() -> list[OracleCloudSettings]:
 
     # If no default profile was found, append one
     if not any(item["profile"] == oci.config.DEFAULT_PROFILE for item in config):
+        logger.debug("Inserting empty OCI Profile: %s", oci.config.DEFAULT_PROFILE)
         config.append({"profile": oci.config.DEFAULT_PROFILE})
 
     # override the default profile with EnvVars if set
     for default in config:
         if default["profile"] == oci.config.DEFAULT_PROFILE:
+            logger.debug("Overriding OCI Profile: %s with OS Environment", oci.config.DEFAULT_PROFILE)
             default["tenancy"] = os.environ.get("OCI_CLI_TENANCY", default.get("tenancy", None))
             default["region"] = os.environ.get("OCI_CLI_REGION", default.get("region", None))
             default["user"] = os.environ.get("OCI_CLI_USER", default.get("user", None))
@@ -58,6 +64,7 @@ def main() -> list[OracleCloudSettings]:
             except server_oci.OciException:
                 continue
 
+    logger.debug("Bootstrapped OCI Objects: %s", oci_objects)
     return oci_objects
 
 
