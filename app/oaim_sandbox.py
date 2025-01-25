@@ -19,12 +19,14 @@ import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("oaim_sandbox")
 
-# Start the server if it's local and not running
+# Import oaim_server if it exists
+REMOTE_SERVER = False
 try:
-    import oaim_server
-    oaim_server.start_server()
+    from oaim_server import start_server
 except ImportError:
-    state.remote_server = True
+    REMOTE_SERVER = True
+
+
 #############################################################################
 # MAIN
 #############################################################################
@@ -50,23 +52,21 @@ def main() -> None:
         """,
     )
     st.logo("sandbox/media/logo_light.png")
-
     # Setup Settings State
     api_endpoint = f"{state.server['url']}:{state.server['port']}/v1/settings"
-    api_down = True
+    api_down = False
     if "user_settings" not in state:
         try:
             state.user_settings = api_call.post(url=api_endpoint, params={"client": client_gen_id()})
-            api_down = False
         except api_call.ApiError:
-            st.error("Unable to contact the API Server... trying again...", icon="🚨")
-    if "server_settings" not in state:
+            api_down = True
+    if not api_down and "server_settings" not in state:
         try:
             state.server_settings = api_call.get(url=api_endpoint, params={"client": "server"})
-            api_down = False
         except api_call.ApiError:
-            st.error("Unable to contact the API Server.  Stopping.", icon="🚨")
+            api_down = True
     if api_down:
+        st.error("Unable to contact the API Server.  Please check that it is running.", icon="🛑")
         st.stop()
 
     # Enable/Disable Functionality
@@ -122,6 +122,13 @@ def main() -> None:
     pg.run()
 
 
+
 if __name__ == "__main__":
     set_server_state()
+    # Start Server if not running
+    if not REMOTE_SERVER:
+        try:
+            logger.debug("Server PID: %i", state.server["pid"])
+        except KeyError:
+            state.server["pid"] = start_server()
     main()

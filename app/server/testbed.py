@@ -2,7 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore giskard testset, ollama, testsets
+# spell-checker:ignore giskard testset, ollama, testsets, oaim
 
 import json
 import pickle
@@ -59,32 +59,32 @@ def jsonl_to_json_content(content: str) -> json:
 def create_testset_objects(db_conn: Connection) -> None:
     """Create table to store Q&A from TestSets"""
     testsets_tbl = """
-            CREATE TABLE IF NOT EXISTS testsets (
+            CREATE TABLE IF NOT EXISTS oaim_testsets (
                 tid     RAW(16) DEFAULT SYS_GUID(),
                 name    VARCHAR2(255) NOT NULL,
                 created TIMESTAMP(9) WITH LOCAL TIME ZONE,
-                CONSTRAINT testsets_pk PRIMARY KEY (tid),
-                CONSTRAINT testsets_uq UNIQUE (name, created)
+                CONSTRAINT oaim_testsets_pk PRIMARY KEY (tid),
+                CONSTRAINT oaim_testsets_uq UNIQUE (name, created)
             )
         """
     testset_qa_tbl = """
-            CREATE TABLE IF NOT EXISTS testset_qa (
+            CREATE TABLE IF NOT EXISTS oaim_testset_qa (
                 tid      RAW(16) DEFAULT SYS_GUID(),
                 qa_data  JSON,
-                CONSTRAINT testset_qa_fk FOREIGN KEY (tid) REFERENCES testsets(tid) ON DELETE CASCADE
+                CONSTRAINT oaim_testset_qa_fk FOREIGN KEY (tid) REFERENCES testsets(tid) ON DELETE CASCADE
             )
         """
     evaluation_tbl = """
-            CREATE TABLE IF NOT EXISTS evaluations (
+            CREATE TABLE IF NOT EXISTS oaim_evaluations (
                 eid                 RAW(16) DEFAULT SYS_GUID(),
                 tid                 RAW(16) DEFAULT SYS_GUID(),
                 evaluated           TIMESTAMP(9) WITH LOCAL TIME ZONE,
                 correctness         NUMBER DEFAULT 0,
                 settings            JSON,
                 rag_report          BLOB,
-                CONSTRAINT evaluations_pk PRIMARY KEY (eid),
-                CONSTRAINT evaluations_fk FOREIGN KEY (tid) REFERENCES testsets(tid) ON DELETE CASCADE,
-                CONSTRAINT evaluations_uq UNIQUE (eid, evaluated)
+                CONSTRAINT oaim_evaluations_pk PRIMARY KEY (eid),
+                CONSTRAINT oaim_evaluations_fk FOREIGN KEY (tid) REFERENCES testsets(tid) ON DELETE CASCADE,
+                CONSTRAINT oaim_evaluations_uq UNIQUE (eid, evaluated)
             )
         """
     logger.info("Creating testsets Table")
@@ -99,7 +99,7 @@ def get_testsets(db_conn: Connection) -> list:
     """Get list of TestSets"""
     logger.info("Getting All TestSets")
     testsets = []
-    sql = "SELECT tid, name, to_char(created) FROM testsets ORDER BY created"
+    sql = "SELECT tid, name, to_char(created) FROM oaim_testsets ORDER BY created"
     results = databases.execute_sql(db_conn, sql)
     try:
         testsets = [TestSets(tid=tid.hex(), name=name, created=created) for tid, name, created in results]
@@ -113,7 +113,7 @@ def get_testset_qa(db_conn: Connection, tid: TestSetsIdType) -> TestSetQA:
     """Get list of TestSet Q&A"""
     logger.info("Getting TestSet Q&A for TID: %s", tid)
     binds = {"tid": tid}
-    sql = "SELECT qa_data FROM testset_qa where tid=:tid"
+    sql = "SELECT qa_data FROM oaim_testset_qa where tid=:tid"
     results = databases.execute_sql(db_conn, sql, binds)
     qa_data = [qa_data[0] for qa_data in results]
 
@@ -125,7 +125,7 @@ def get_evaluations(db_conn: Connection, tid: TestSetsIdType) -> list:
     logger.info("Getting Evaluations for: %s", tid)
     evaluations = []
     binds = {"tid": tid}
-    sql = "SELECT eid, to_char(evaluated), correctness FROM evaluations WHERE tid=:tid ORDER BY evaluated"
+    sql = "SELECT eid, to_char(evaluated), correctness FROM oaim_evaluations WHERE tid=:tid ORDER BY evaluated"
     results = databases.execute_sql(db_conn, sql, binds)
     try:
         evaluations = [
@@ -155,9 +155,9 @@ def upsert_qa(
     binds = {"name": name, "created": created, "json_array": json_data, "tid": tid}
     plsql = """
         DECLARE
-            l_tid      TESTSETS.TID%TYPE := :tid;
-            l_name     TESTSETS.NAME%TYPE := :name;
-            l_created  TESTSETS.CREATED%TYPE := TO_TIMESTAMP(:created ,'YYYY-MM-DD"T"HH24:MI:SS.FF');
+            l_tid      oaim_testsets.tid%TYPE := :tid;
+            l_name     oaim_testsets.name%TYPE := :name;
+            l_created  oaim_testsets.created%TYPE := TO_TIMESTAMP(:created ,'YYYY-MM-DD"T"HH24:MI:SS.FF');
             l_qa_array JSON_ARRAY_T := JSON_ARRAY_T(:json_array);
             l_qa_obj   JSON_OBJECT_T;
             l_qa_str   VARCHAR2(32000);
@@ -165,23 +165,22 @@ def upsert_qa(
             BEGIN
                 IF l_tid is NULL THEN
                     SELECT tid into l_tid
-                    FROM testsets
+                    FROM oaim_testsets
                     WHERE created = l_created
                     AND name = l_name;
                 ELSE
-                    UPDATE testsets SET name = l_name WHERE tid = l_tid;
+                    UPDATE oaim_testsets SET name = l_name WHERE tid = l_tid;
                 END IF;
-
-                DELETE FROM testset_qa WHERE tid = l_tid;
+                DELETE FROM oaim_testset_qa WHERE tid = l_tid;
             EXCEPTION WHEN NO_DATA_FOUND THEN
-                INSERT INTO TESTSETS (name, created) VALUES (l_name, l_created)
+                INSERT INTO oaim_testsets (name, created) VALUES (l_name, l_created)
                 RETURNING tid INTO l_tid;
             END;    
             FOR i IN 0 .. l_qa_array.get_size - 1
             LOOP
                 l_qa_obj := TREAT(l_qa_array.get(i) AS json_object_t);
                 l_qa_str := l_qa_obj.stringify(); -- Using due to DB Bug
-                INSERT INTO testset_qa (tid, qa_data) VALUES (l_tid, l_qa_str);
+                INSERT INTO oaim_testset_qa (tid, qa_data) VALUES (l_tid, l_qa_str);
             END LOOP;
             DBMS_OUTPUT.PUT_LINE(l_tid);
         END;
@@ -202,10 +201,10 @@ def insert_evaluation(db_conn, tid, evaluated, correctness, settings, rag_report
     }
     plsql = """
         DECLARE
-            l_eid      EVALUATIONS.EID%TYPE;
-            l_evaluated evaluations.evaluated%TYPE := TO_TIMESTAMP(:evaluated ,'YYYY-MM-DD"T"HH24:MI:SS.FF');
+            l_eid       oaim_evaluations.eid%TYPE;
+            l_evaluated oaim_evaluations.evaluated%TYPE := TO_TIMESTAMP(:evaluated ,'YYYY-MM-DD"T"HH24:MI:SS.FF');
         BEGIN
-            INSERT INTO evaluations (
+            INSERT INTO oaim_evaluations (
                 tid, evaluated, correctness, settings, rag_report)
             VALUES (
                 :tid, l_evaluated, :correctness, :settings, :rag_report)
@@ -301,7 +300,7 @@ def process_report(db_conn: Connection, eid: TestSetsIdType) -> EvaluationReport
     binds = {"eid": eid}
     sql = """
         SELECT eid, to_char(evaluated), correctness, settings, rag_report 
-          FROM evaluations WHERE eid=:eid
+          FROM oaim_evaluations WHERE eid=:eid
          ORDER BY evaluated
         """
     results = databases.execute_sql(db_conn, sql, binds)

@@ -133,7 +133,7 @@ def main() -> None:
 
         if st.form_submit_button("Save"):
             if not user or not password or not dsn:
-                st.error("Username, Password and Connect String fields are required.", icon="❌")
+                st.error("Username, Password and Connect String fields are required.", icon="🛑")
                 st.stop()
             patch_database(name, user, password, dsn, wallet_password)
 

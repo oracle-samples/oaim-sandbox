@@ -154,7 +154,7 @@ def main() -> None:
             security_token_file = None if not token_auth else security_token_file
             user = None if token_auth else user
             if not (fingerprint and tenancy and region and key_file and (user or security_token_file)):
-                st.error("All fields are required.", icon="❌")
+                st.error("All fields are required.", icon="🛑")
                 st.stop()
             patch_oci(profile, fingerprint, tenancy, region, key_file, user, security_token_file)
 

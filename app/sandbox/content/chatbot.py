@@ -58,7 +58,7 @@ async def main() -> None:
     get_model(model_type="ll", only_enabled=True)
     available_ll_models = list(state.ll_model_enabled.keys())
     if not available_ll_models:
-        st.error("No language models are configured and/or enabled. Disabling Sandbox.", icon="❌")
+        st.error("No language models are configured and/or enabled. Disabling Sandbox.", icon="🛑")
         st.stop()
     # the sidebars will set this to False if not everything is configured.
     state.enable_sandbox = True
@@ -122,7 +122,7 @@ if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:
         asyncio.run(main())
     except ValueError as ex:
         logger.exception("Bug detected: %s", ex)
-        st.error("It looks like you found a bug; please open an issue", icon="🚨")
+        st.error("It looks like you found a bug; please open an issue", icon="🛑")
         st.stop()
     except IndexError as ex:
         logger.exception("Unable to contact the server: %s", ex)

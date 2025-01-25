@@ -14,7 +14,6 @@ import time
 import streamlit as st
 from streamlit import session_state as state
 
-import oaim_server
 import sandbox.utils.st_common as st_common
 import sandbox.utils.client as client
 import sandbox.utils.api_call as api_call
@@ -23,7 +22,11 @@ from common.schema import ClientIdType
 
 logger = logging_config.logging.getLogger("sandbox.content.server")
 
-
+try:
+    import oaim_server
+    REMOTE_SERVER = False
+except ImportError:
+    REMOTE_SERVER = True
 #####################################################
 # Functions
 #####################################################
@@ -53,6 +56,7 @@ def server_restart() -> None:
 
     oaim_server.stop_server(state.server["pid"])
     state.server["pid"] = oaim_server.start_server(state.server["port"])
+    time.sleep(10)
     state.pop("sever_client", None)
 
 
@@ -64,8 +68,6 @@ async def main() -> None:
     st_common.set_server_state()
     st.header("API Server")
     st.write("Access the Sandbox with your own client.")
-    if "remote_server" not in state:
-        state.remote_server = False
     left, right = st.columns([0.2, 0.8])
     left.number_input(
         "API Server Port:",
@@ -73,16 +75,16 @@ async def main() -> None:
         key="user_server_port",
         min_value=1,
         max_value=65535,
-        disabled=not state.remote_server
+        disabled=REMOTE_SERVER
     )
     right.text_input(
         "API Server Key:",
         value=state.server["key"],
         key="user_server_key",
         type="password",
-        disabled=not state.remote_server
+        disabled=REMOTE_SERVER
     )
-    if state.remote_server:
+    if not REMOTE_SERVER:
         st.button("Restart Server", type="primary", on_click=server_restart)
 
     st.header("Server Configuration", divider="red")
@@ -106,14 +108,16 @@ async def main() -> None:
             settings=state["server_settings"],
             timeout=10,
         )
+
     server_client: client.SandboxClient = state.server_client
 
     auto_refresh = st.toggle("Auto Refresh (every 10sec)", value=False, key="selected_auto_refresh")
     st.button("Manual Refresh", disabled=auto_refresh)
     with st.container():
         history = await server_client.get_history()
-        if len(history) == 1:
+        if history is None or len(history) == 1:
             st.write("No Server Activity")
+            history = []
         for message in history:
             if message["role"] in ("ai", "assistant"):
                 st.chat_message("ai").json(message, expanded=False)

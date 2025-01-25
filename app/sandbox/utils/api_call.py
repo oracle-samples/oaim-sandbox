@@ -83,7 +83,7 @@ def send_request(
     raise ApiError("An unexpected error occurred.")
 
 
-def get(url: str, params: Optional[dict] = None, retries: int = 2, backoff_factor: float = 2.0) -> json:
+def get(url: str, params: Optional[dict] = None, retries: int = 3, backoff_factor: float = 2.0) -> json:
     """GET Requests"""
     response = send_request("GET", url, params=params, retries=retries, backoff_factor=backoff_factor)
     return response.json()
@@ -94,7 +94,7 @@ def post(
     params: Optional[dict] = None,
     payload: Optional[Dict] = None,
     timeout: int = 60,
-    retries: int = 2,
+    retries: int = 3,
     backoff_factor: float = 2.0,
 ) -> json:
     """POST Requests"""
@@ -109,7 +109,7 @@ def patch(
     params: Optional[dict] = None,
     payload: Optional[dict] = None,
     timeout: int = 60,
-    retries: int = 2,
+    retries: int = 3,
     backoff_factor: float = 2.0,
 ) -> None:
     """PATCH Requests"""

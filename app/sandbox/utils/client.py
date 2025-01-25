@@ -77,16 +77,19 @@ class SandboxClient:
             return f"Error: {response.status_code} - {error_msg}"
 
     async def get_history(self) -> list[ChatMessage]:
-        response = httpx.get(
-            url=self.server_url + "/v1/chat/history",
-            params={"client": self.settings["client"]},
-            headers=self.headers,
-            timeout=self.timeout,
-        )
-        response_data = response.json()
-        logger.debug("Response Received: %s", response_data)
-        if response.status_code == 200:
-            return response_data
+        try:
+            response = httpx.get(
+                url=self.server_url + "/v1/chat/history",
+                params={"client": self.settings["client"]},
+                headers=self.headers,
+                timeout=self.timeout,
+            )
+            response_data = response.json()
+            logger.debug("Response Received: %s", response_data)
+            if response.status_code == 200:
+                return response_data
 
-        error_msg = response_data["detail"][0].get("msg", response.text)
-        return f"Error: {response.status_code} - {error_msg}"
+            error_msg = response_data["detail"][0].get("msg", response.text)
+            return f"Error: {response.status_code} - {error_msg}"
+        except httpx.ConnectError:
+            logger.error("Unable to contact the API Server; will try again later.")
