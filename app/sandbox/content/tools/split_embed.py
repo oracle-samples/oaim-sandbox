@@ -40,7 +40,7 @@ if "server" in state:
 @st.cache_data
 def get_compartments() -> dict:
     """Get OCI Compartments; function for Streamlit caching"""
-    api_url = f"{OCI_API_ENDPOINT}/compartments/{state.user_settings['oci_profile']}"
+    api_url = f"{OCI_API_ENDPOINT}/compartments/{state.user_settings['oci']['profile']}"
     response = api_call.get(url=api_url)
     return response
 
@@ -48,7 +48,7 @@ def get_compartments() -> dict:
 @st.cache_data
 def get_buckets(compartment: str) -> list:
     """Get OCI Buckets in selected compartment; function for Streamlit caching"""
-    api_url = f"{OCI_API_ENDPOINT}/buckets/{compartment}/{state.user_settings['oci_profile']}"
+    api_url = f"{OCI_API_ENDPOINT}/buckets/{compartment}/{state.user_settings['oci']['profile']}"
     response = api_call.get(url=api_url)
     return response
 
@@ -56,7 +56,7 @@ def get_buckets(compartment: str) -> list:
 @st.cache_data
 def get_bucket_objects(bucket: str) -> list:
     """Get OCI Buckets in selected compartment; function for Streamlit caching"""
-    api_url = f"{OCI_API_ENDPOINT}/objects/{bucket}/{state.user_settings['oci_profile']}"
+    api_url = f"{OCI_API_ENDPOINT}/objects/{bucket}/{state.user_settings['oci']['profile']}"
     response = api_call.get(url=api_url)
     return response
 
@@ -135,7 +135,7 @@ def main() -> None:
     file_sources = ["OCI", "Local", "Web"]
     get_oci()
     try:
-        if not state.oci_config[state.user_settings["oci_profile"]].get("namespace"):
+        if not state.oci_config[state.user_settings[""]].get("namespace"):
             raise KeyError
     except (KeyError, TypeError):
         st.warning("OCI is not configured, some functionality is disabled", icon="⚠️")
@@ -289,7 +289,7 @@ def main() -> None:
             This button is disabled if there are no documents from the source bucket split with
             the current split and embed options.  Please Split and Embed to enable Vector Storage.
         """
-        st.text(f"OCI namespace: {state.oci_config[state.user_settings['oci_profile']]['namespace']}")
+        st.text(f"OCI namespace: {state.oci_config[state.user_settings['oci']['profile']]['namespace']}")
         oci_compartments = get_compartments()
         src_bucket_list = []
         col2_1, col2_2 = st.columns([0.5, 0.5])
@@ -375,7 +375,7 @@ def main() -> None:
 
             if file_source == "OCI":
                 # Download OCI Objects for Processing
-                api_url = f"{OCI_API_ENDPOINT}/objects/download/{src_bucket}/{state.user_settings['oci_profile']}"
+                api_url = f"{OCI_API_ENDPOINT}/objects/download/{src_bucket}/{state.user_settings['oci']['profile']}"
                 process_list = src_files_selected[src_files_selected["Process"]].reset_index(drop=True)
                 api_payload = {"json": process_list["File"].tolist()}
 

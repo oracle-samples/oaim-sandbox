@@ -180,6 +180,9 @@ class RagSettings(DatabaseVectorStorage):
         default=0.5, ge=0.0, le=1.0, description="Degree of Diversity (for Maximal Marginal Relevance)"
     )
 
+class OciSettings(BaseModel):
+    """OCI Settings"""
+    profile: Optional[str] = Field(default="DEFAULT", description="Oracle Cloud Settings Profile")
 
 class Settings(BaseModel):
     """Server Settings"""
@@ -195,7 +198,7 @@ class Settings(BaseModel):
         default_factory=PromptSettings, description="Prompt Engineering Settings"
     )
     rag: Optional[RagSettings] = Field(default_factory=RagSettings, description="RAG Settings")
-    oci_profile: Optional[str] = Field(default="DEFAULT", description="Oracle Cloud Settings Profile")
+    oci: Optional[OciSettings] = Field(default_factory=OciSettings, description="OCI Settings")
 
 
 #####################################################

@@ -8,7 +8,7 @@ It includes a form to input and test OCI API Access.
 Session States Set:
 - oci_config: Stores OCI Configuration
 """
-# spell-checker:ignore streamlit, ocid
+# spell-checker:ignore streamlit, ocid, selectbox
 
 import inspect
 
@@ -33,11 +33,11 @@ def get_oci() -> dict[str, dict]:
             api_url = f"{state.server['url']}:{state.server['port']}/v1/oci"
             response = api_call.get(url=api_url)
             state["oci_config"] = {
-                item["profile"]: {k: v if v is not None else None for k, v in item.items() if k != "profile"} 
+                item["profile"]: {k: v if v is not None else None for k, v in item.items() if k != "profile"}
                 for item in response
             }
             logger.info("State created: state['oci_config']")
-            print(state['oci_config'])
+            print(state["oci_config"])
         except api_call.ApiError as ex:
             st.error(f"Unable to retrieve oci_configuration: {ex}", icon="🚨")
             state["oci_config"] = {}
@@ -105,9 +105,20 @@ def main() -> None:
         get_oci()  # Create/Rebuild state
     except api_call.ApiError:
         st.stop()
-    # TODO(gotsysdba) Add select for profiles
-    profile = "DEFAULT"
     st.subheader("Configuration")
+    # Set Default Profile
+    profile = state.user_settings["oci"]["profile"]
+    avail_profiles = [key for key in state.oci_config.keys() if key != "DEFAULT"]
+    avail_profiles = ["DEFAULT"] + avail_profiles
+    if len(avail_profiles) > 0:
+        st.selectbox(
+            "Profile:",
+            options=avail_profiles,
+            index=avail_profiles.index(profile),
+            key="selected_oci_profile",
+            on_change=st_common.update_user_settings,
+            args=("oci", "profile"),
+        )
     token_auth = st.checkbox("Use token authentication?", value=False)
     with st.form("update_oci_config"):
         user = st.text_input(
