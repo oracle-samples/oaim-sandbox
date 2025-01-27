@@ -15,7 +15,7 @@ import oracledb
 #####################################################
 # Literals
 #####################################################
-Statuses = Literal["NOT_CONFIGURED", "UNVERIFIED", "NOT_AUTHORIZED", "UNREACHABLE", "VALID", "CONNECTED"]
+Statuses = Literal["NOT_CONFIGURED", "UNVERIFIED", "NOT_AUTHORIZED", "UNREACHABLE", "VALID", "CONNECTED", "CUSTOM"]
 DistanceMetrics = Literal["COSINE", "EUCLIDEAN_DISTANCE", "DOT_PRODUCT"]
 IndexTypes = Literal["HNSW", "IVF"]
 
@@ -73,18 +73,17 @@ class Database(DatabaseAuth):
 class LanguageModelParameters(BaseModel):
     """Language Model Parameters (also used by settings.py)"""
 
-    frequency_penalty: Optional[float] = Field(description=help_text.help_dict["frequency_penalty"], default=0.0)
+    context_length: Optional[int] = Field(default=None, description="The context window for Language Model.")
+    frequency_penalty: Optional[float] = Field(description=help_text.help_dict["frequency_penalty"], default=0.00)
     max_completion_tokens: Optional[int] = Field(description=help_text.help_dict["max_completion_tokens"], default=256)
-    presence_penalty: Optional[float] = Field(description=help_text.help_dict["presence_penalty"], default=0.0)
-    stream: Optional[bool] = Field(description="If set, partial message deltas will be sent.", default=False)
-    temperature: Optional[float] = Field(description=help_text.help_dict["temperature"], default=1.0)
-    top_p: Optional[float] = Field(description=help_text.help_dict["top_p"], default=1.0)
+    presence_penalty: Optional[float] = Field(description=help_text.help_dict["presence_penalty"], default=0.00)
+    temperature: Optional[float] = Field(description=help_text.help_dict["temperature"], default=1.00)
+    top_p: Optional[float] = Field(description=help_text.help_dict["top_p"], default=1.00)
 
 
 class EmbeddingModelParameters(BaseModel):
     """Embedding Model Parameters (also used by settings.py)"""
 
-    context_length: Optional[int] = Field(default=None, description="The context window for Language Model.")
     max_chunk_size: Optional[int] = Field(default=None, description="Max Chunk Size for Embedding Models.")
 
 
@@ -103,7 +102,7 @@ class Model(ModelAccess, LanguageModelParameters, EmbeddingModelParameters):
     type: Literal["ll", "embed", "re-rank"] = Field(..., description="Type of Model.")
     api: str = Field(..., description="API for Model.", examples=["ChatOllama", "OpenAI", "OpenAIEmbeddings"])
     openai_compat: bool = Field(default=True, description="Is the API OpenAI compatible?")
-    status: Statuses = Field(default="INACTIVE", description="Status (read-only)", readOnly=True)
+    status: Statuses = Field(default="UNVERIFIED", description="Status (read-only)", readOnly=True)
 
 
 #####################################################
@@ -180,9 +179,12 @@ class RagSettings(DatabaseVectorStorage):
         default=0.5, ge=0.0, le=1.0, description="Degree of Diversity (for Maximal Marginal Relevance)"
     )
 
+
 class OciSettings(BaseModel):
     """OCI Settings"""
+
     profile: Optional[str] = Field(default="DEFAULT", description="Oracle Cloud Settings Profile")
+
 
 class Settings(BaseModel):
     """Server Settings"""

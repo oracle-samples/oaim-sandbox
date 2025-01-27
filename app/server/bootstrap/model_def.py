@@ -211,7 +211,7 @@ def main() -> list[Model]:
     unique_entries = set()
     for model in models_list:
         if model["name"] in unique_entries:
-            raise ValueError(f"Model '{model['name']}' already exists.")
+            raise ValueError(f"Model '{model['name']}': already exists.")
         unique_entries.add(model["name"])
 
     model_objects = [Model(**model_dict) for model_dict in models_list]

@@ -36,11 +36,11 @@ from fastapi import FastAPI, Query, HTTPException, UploadFile, Response
 logger = logging_config.logging.getLogger("server.endpoints")
 
 # Load Models with Definition Data
-database_objects = bootstrap.database_def.main()
-model_objects = bootstrap.model_def.main()
-oci_objects = bootstrap.oci_def.main()
-prompt_objects = bootstrap.prompt_eng_def.main()
-settings_objects = bootstrap.settings_def.main()
+DATABASE_OBJECTS = bootstrap.database_def.main()
+MODEL_OBJECTS = bootstrap.model_def.main()
+OCI_OBJECTS = bootstrap.oci_def.main()
+PROMPT_OBJECTS = bootstrap.prompt_eng_def.main()
+SETTINGS_OBJECTS = bootstrap.settings_def.main()
 
 
 #####################################################
@@ -49,11 +49,11 @@ settings_objects = bootstrap.settings_def.main()
 def get_db(client: schema.ClientIdType) -> schema.Database:
     """Return a schema.Database Object based on client settings"""
     db_name = "DEFAULT"
-    client_settings = next((settings for settings in settings_objects if settings.client == client), None)
+    client_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == client), None)
     if client_settings.rag:
         db_name = getattr(client_settings.rag, "database", "DEFAULT")
 
-    return next((db for db in database_objects if db.name == db_name), None)
+    return next((db for db in DATABASE_OBJECTS if db.name == db_name), None)
 
 
 #####################################################
@@ -79,7 +79,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.get("/v1/databases", description="Get all database configurations", response_model=list[schema.Database])
     async def databases_list() -> list[schema.Database]:
         """List all databases"""
-        for db in database_objects:
+        for db in DATABASE_OBJECTS:
             logger.debug("Checking database: %s", db)
             try:
                 db_conn = databases.connect(db)
@@ -88,7 +88,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
                 continue
             db.vector_stores = embedding.get_vs(db_conn)
 
-        return database_objects
+        return DATABASE_OBJECTS
 
     @auth.get(
         "/v1/databases/{name}",
@@ -97,7 +97,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     )
     async def databases_get(name: schema.DatabaseNameType) -> schema.Database:
         """Get single database"""
-        db = next((db for db in database_objects if db.name == name), None)
+        db = next((db for db in DATABASE_OBJECTS if db.name == name), None)
         if not db:
             raise HTTPException(status_code=404, detail=f"schema.Database: {name} not found")
 
@@ -112,7 +112,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     async def databases_update(name: schema.DatabaseNameType, payload: schema.DatabaseAuth) -> Response:
         """Update schema.Database"""
         logger.info("Received schema.Database Payload: %s", payload)
-        db = next((db for db in database_objects if db.name == name), None)
+        db = next((db for db in DATABASE_OBJECTS if db.name == name), None)
         if db:
             try:
                 db_conn = databases.connect(payload)
@@ -128,7 +128,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             db.vector_stores = embedding.get_vs(db_conn)
             db.set_connection(db_conn)
             # Unset and disconnect other databases
-            for other_db in database_objects:
+            for other_db in DATABASE_OBJECTS:
                 if other_db.name != name and other_db.connection:
                     other_db.set_connection(databases.disconnect(db.connection))
                     other_db.connected = False
@@ -224,7 +224,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
                 write_json=False,
                 output_dir=None,
             )
-            embed_client = await models.get_client(model_objects, {"model": request.model, "rag_enabled": True})
+            embed_client = await models.get_client(MODEL_OBJECTS, {"model": request.model, "rag_enabled": True})
             embedding.populate_vs(
                 vector_store=request,
                 db_conn=get_db(client).connection,
@@ -246,40 +246,64 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     #################################################
     # models Endpoints
     #################################################
-    @auth.get("/v1/models", description="Get All Models", response_model=list[schema.Model])
+    @auth.get("/v1/models", description="Get all models", response_model=list[schema.Model])
     async def models_list(
         model_type: Optional[schema.ModelTypeType] = Query(None),
         only_enabled: bool = False,
     ) -> list[schema.Model]:
         """List all models after applying filters if specified"""
-        models_ret = await models.apply_filter(model_objects, model_type=model_type, only_enabled=only_enabled)
+        models_ret = await models.apply_filter(MODEL_OBJECTS, model_type=model_type, only_enabled=only_enabled)
 
         return models_ret
 
-    @auth.get("/v1/models/{name}", description="Get a single schema.Model", response_model=schema.Model)
+    @auth.get("/v1/models/{name:path}", description="Get a single model", response_model=schema.Model)
     async def models_get(name: schema.ModelNameType) -> schema.Model:
         """List a specific model"""
-        models_ret = await models.apply_filter(model_objects, model_name=name)
+        models_ret = await models.apply_filter(MODEL_OBJECTS, model_name=name)
         if not models_ret:
             raise HTTPException(status_code=404, detail=f"schema.Model {name}: not found")
 
-        return models_ret
+        return models_ret[0]
 
-    @auth.patch("/v1/models/{name}", description="Update a schema.Model")
+    @auth.patch("/v1/models/update", description="Update a model")
     async def models_update(name: schema.ModelNameType, payload: schema.ModelAccess) -> Response:
         """Update a model"""
-        logger.debug("Received schema.Model Payload: %s", payload)
-        model_upd = await models.apply_filter(model_objects, model_name=name)
+        logger.debug("Received model payload: %s", payload)
+        model_upd = await models.apply_filter(MODEL_OBJECTS, model_name=name)
         if not model_upd:
-            raise HTTPException(status_code=404, detail=f"schema.Model {name}: not found")
+            raise HTTPException(status_code=404, detail=f"Model {name}: not found")
 
         for key, value in payload:
             if hasattr(model_upd[0], key):
                 setattr(model_upd[0], key, value)
             else:
-                raise HTTPException(status_code=404, detail=f"Invalid schema.Model Setting: {key}")
+                raise HTTPException(status_code=404, detail=f"Invalid model setting: {key}")
 
         return Response(status_code=204)
+
+    @auth.patch("/v1/models/delete", description="Delete a model")
+    async def models_delete(name: schema.ModelNameType) -> Response:
+        """Update a model"""
+        global MODEL_OBJECTS
+        MODEL_OBJECTS = [model for model in MODEL_OBJECTS if model.name != name]
+
+        return Response(status_code=204)
+
+    @auth.post("/v1/models/create", description="Create a model", response_model=schema.Model)
+    async def model_create(payload: schema.Model) -> schema.Model:
+        """Update a model"""
+        logger.debug("Received model payload: %s", payload)
+        if payload.name == "new" or payload.api == "unknown":
+            raise HTTPException(status_code=406, detail="Model name and API must be specified.")
+        if payload.name in MODEL_OBJECTS:
+            raise HTTPException(status_code=409, detail=f"Model {payload.name}: already exists.")
+        openai_compat = next(
+            (model_config.openai_compat for model_config in MODEL_OBJECTS if model_config.api == payload.api), False
+        )
+        payload.openai_compat = openai_compat
+        MODEL_OBJECTS.append(payload)
+
+        return payload
 
     #################################################
     # oci Endpoints
@@ -287,7 +311,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.get("/v1/oci", description="View OCI Configuration", response_model=list[schema.OracleCloudSettings])
     async def oci_list() -> list[schema.OracleCloudSettings]:
         """List OCI Configuration"""
-        return oci_objects
+        return OCI_OBJECTS
 
     @auth.get(
         "/v1/oci/compartments/{profile}",
@@ -296,7 +320,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     )
     async def oci_list_compartments(profile: schema.OCIProfileType) -> dict:
         """Return a list of compartments"""
-        oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
+        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.profile == profile), None)
         compartments = server_oci.get_compartments(oci_config)
         return compartments
 
@@ -308,7 +332,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     async def oci_list_buckets(profile: schema.OCIProfileType, compartment: str) -> list:
         """Return a list of buckets; Validate OCID using Pydantic class"""
         compartment_obj = schema.OracleResource(ocid=compartment)
-        oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
+        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.profile == profile), None)
         buckets = server_oci.get_buckets(compartment_obj.ocid, oci_config)
         return buckets
 
@@ -319,7 +343,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     )
     async def oci_list_bucket_objects(profile: schema.OCIProfileType, bucket_name: str) -> list:
         """Return a list of bucket objects; Validate OCID using Pydantic class"""
-        oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
+        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.profile == profile), None)
         objects = server_oci.get_bucket_objects(bucket_name, oci_config)
         return objects
 
@@ -327,7 +351,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     async def oci_update(profile: schema.OCIProfileType, payload: schema.OracleCloudSettings) -> Response:
         """Update OCI Configuration"""
         logger.debug("Received OCI Payload: %s", payload)
-        oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
+        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.profile == profile), None)
         if oci_config:
             try:
                 namespace = server_oci.get_namespace(payload)
@@ -358,7 +382,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         """Download files from Object Storage"""
         # Files should be placed in the embedding folder
         temp_directory = functions.get_temp_directory(client, "embedding")
-        oci_config = next((oci_config for oci_config in oci_objects if oci_config.profile == profile), None)
+        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.profile == profile), None)
         for object_name in request:
             server_oci.get_object(temp_directory, object_name, bucket_name, oci_config)
 
@@ -377,11 +401,11 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         category: Optional[schema.PromptCategoryType] = Query(None),
     ) -> list[schema.Prompt]:
         """List all prompts after applying filters if specified"""
-        prompts_all = prompt_objects
+        prompts_all = PROMPT_OBJECTS
         # Apply filtering if query parameters are provided
         if category is not None:
             logger.info("Filtering prompts on category: %s", category)
-            prompts_all = [prompt for prompt in prompt_objects if prompt.category == category]
+            prompts_all = [prompt for prompt in PROMPT_OBJECTS if prompt.category == category]
 
         return prompts_all
 
@@ -393,7 +417,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     async def prompts_get(category: schema.PromptCategoryType, name: schema.PromptNameType) -> schema.Prompt:
         """Get a single schema.Prompt"""
         prompt = next(
-            (prompt for prompt in prompt_objects if prompt.category == category and prompt.name == name), None
+            (prompt for prompt in PROMPT_OBJECTS if prompt.category == category and prompt.name == name), None
         )
         if not prompt:
             raise HTTPException(status_code=404, detail=f"Prompt {category}-{name}: not found")
@@ -409,7 +433,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     ) -> Response:
         """Update a single schema.Prompt"""
         logger.debug("Received %s (%s) schema.Prompt Payload: %s", name, category, payload)
-        for prompt in prompt_objects:
+        for prompt in PROMPT_OBJECTS:
             if prompt.name == name and prompt.category == category:
                 # Update the prompt with the new text
                 prompt.prompt = payload.prompt
@@ -424,7 +448,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.get("/v1/settings", description="Get client settings", response_model=schema.Settings)
     async def settings_get(client: schema.ClientIdType) -> schema.Settings:
         """Get settings for a specific client by name"""
-        client_settings = next((settings for settings in settings_objects if settings.client == client), None)
+        client_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == client), None)
         if not client_settings:
             raise HTTPException(status_code=404, detail=f"Client {client}: not found")
 
@@ -434,11 +458,11 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     async def settings_update(client: schema.ClientIdType, payload: schema.Settings) -> Response:
         """Update a single client settings"""
         logger.debug("Received %s Client Payload: %s", client, payload)
-        client_settings = next((settings for settings in settings_objects if settings.client == client), None)
+        client_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == client), None)
         if client_settings:
-            settings_objects.remove(client_settings)
+            SETTINGS_OBJECTS.remove(client_settings)
             payload.client = client
-            settings_objects.append(payload)
+            SETTINGS_OBJECTS.append(payload)
 
             return Response(status_code=204)
 
@@ -447,14 +471,14 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.post("/v1/settings", description="Create new client settings", response_model=schema.Settings)
     async def settings_create(client: schema.ClientIdType) -> schema.Settings:
         """Get settings for a specific client by name"""
-        if any(settings.client == client for settings in settings_objects):
+        if any(settings.client == client for settings in SETTINGS_OBJECTS):
             raise HTTPException(status_code=400, detail=f"Client {client}: already exists")
-        default_settings = next((settings for settings in settings_objects if settings.client == "default"), None)
+        default_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == "default"), None)
 
         # Copy the default settings
         client_settings = schema.Settings(**default_settings.model_dump())
         client_settings.client = client
-        settings_objects.append(client_settings)
+        SETTINGS_OBJECTS.append(client_settings)
 
         return client_settings
 
@@ -466,7 +490,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     )
     async def chat_post(client: schema.ClientIdType, request: schema.ChatRequest) -> schema.ChatResponse:
         """Chatbot Completion"""
-        client_settings = next((settings for settings in settings_objects if settings.client == client), None)
+        client_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == client), None)
         logger.debug("schema.Settings: %s", client_settings)
         logger.debug("Request: %s", request.model_dump())
 
@@ -478,7 +502,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
 
         # Setup Client schema.Model
         try:
-            ll_client = await models.get_client(model_objects, model)
+            ll_client = await models.get_client(MODEL_OBJECTS, model)
         except Exception as ex:
             logger.error("An exception initializing model: %s", ex)
             raise HTTPException(status_code=500, detail="Unexpected error") from ex
@@ -487,7 +511,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         try:
             user_sys_prompt = getattr(client_settings.prompts, "sys", "Basic Example")
             sys_prompt = next(
-                (prompt for prompt in prompt_objects if prompt.category == "sys" and prompt.name == user_sys_prompt),
+                (prompt for prompt in PROMPT_OBJECTS if prompt.category == "sys" and prompt.name == user_sys_prompt),
                 None,
             )
         except AttributeError as ex:
@@ -498,11 +522,11 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         # Setup RAG
         embed_client, ctx_prompt = None, None
         if client_settings.rag.rag_enabled:
-            embed_client = await models.get_client(model_objects, client_settings.rag.model_dump())
+            embed_client = await models.get_client(MODEL_OBJECTS, client_settings.rag.model_dump())
 
             user_ctx_prompt = getattr(client_settings.prompts, "ctx", "Basic Example")
             ctx_prompt = next(
-                (prompt for prompt in prompt_objects if prompt.category == "ctx" and prompt.name == user_ctx_prompt),
+                (prompt for prompt in PROMPT_OBJECTS if prompt.category == "ctx" and prompt.name == user_ctx_prompt),
                 None,
             )
 
@@ -559,7 +583,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             return [ChatMessage(content="I'm sorry, I have no history of this conversation", role="system")]
 
     #################################################
-    # Testbed
+    # testbed Endpoints
     #################################################
     @auth.get("/v1/testbed/testsets", description="Get Stored TestSets.", response_model=list[schema.TestSets])
     async def testbed_get_testsets(client: schema.ClientIdType) -> list[schema.TestSets]:
@@ -627,13 +651,13 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         """Retrieve contents from a local file uploaded and generate Q&A"""
         # Setup Models
         giskard_ll_model = await models.apply_filter(
-            model_objects,
+            MODEL_OBJECTS,
             model_name=ll_model,
             model_type="ll",
             only_enabled=True,
         )
         giskard_embed_model = await models.apply_filter(
-            model_objects,
+            MODEL_OBJECTS,
             model_name=embed_model,
             model_type="embed",
             only_enabled=True,
@@ -694,7 +718,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             return ai_response.choices[0].message.content
 
         evaluated = datetime.now().isoformat()
-        client_settings = next((settings for settings in settings_objects if settings.client == client), None)
+        client_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == client), None)
         # Change Disable History
         client_settings.ll_model.chat_history = False
 

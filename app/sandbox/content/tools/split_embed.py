@@ -171,7 +171,6 @@ def main() -> None:
             min_value=0,
             max_value=chunk_size_max,
             value=chunk_size_max,
-            step=1,
             key="selected_chunk_size_slider",
             on_change=update_chunk_size_input,
             help=help_text.help_dict["chunk_size"],
@@ -195,7 +194,6 @@ def main() -> None:
             min_value=0,
             max_value=chunk_size_max,
             value=chunk_size_max,
-            step=1,
             key="selected_chunk_size_input",
             on_change=update_chunk_size_slider,
         )
@@ -344,7 +342,6 @@ def main() -> None:
         "Rate Limit (RPM):",
         value=None,
         help="Leave blank for no rate-limiting - Requests Per Minute",
-        step=1,
         max_value=60,
         key="selected_rate_limit",
     )
