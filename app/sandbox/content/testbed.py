@@ -94,8 +94,8 @@ def evaluation_report(eid=None, report=None):
     st.dataframe(ll_settings_reversed, hide_index=True)
     if report["settings"]["rag"]["rag_enabled"]:
         st.subheader("RAG Settings")
-        st.markdown(f"""**Database**: {report['settings']['rag']['database']}; 
-            **Vector Store**: {report['settings']['rag']['vector_store']}
+        st.markdown(f"""**Database**: {report["settings"]["rag"]["database"]}; 
+            **Vector Store**: {report["settings"]["rag"]["vector_store"]}
         """)
         embed_settings = pd.DataFrame(report["settings"]["rag"], index=[0])
         embed_settings.drop(["database", "vector_store", "alias", "rag_enabled"], axis=1, inplace=True)
@@ -353,7 +353,11 @@ def main():
             index=0,
             help="Don't see your model? Unfortunately it is not currently supported by the testing framework.",
         )
-        api_params = {"ll_model": test_gen_llm, "embed_model": test_gen_embed, "questions": test_gen_questions}
+        api_params = {
+            "ll_model": test_gen_llm,
+            "embed_model": test_gen_embed,
+            "questions": test_gen_questions,
+        }
         api_params.update(client_api_params)
     # Process Q&A Request
     button_load_disabled = button_load_disabled or state.testbed["testset_id"] == "" or "testbed_qa" in state
@@ -372,11 +376,11 @@ def main():
         with placeholder:
             st.info("Processing Q&A... please be patient.", icon="⚠️")
         if testset_source != "Database":
-            client_api_params["name"] = state.testbed["testset_name"]
+            api_params.update({"name": state.testbed["testset_name"]})
             files = st_common.local_file_payload(state[f"selected_uploader_{state.testbed['uploader_key']}"])
             api_payload = {"files": files}
             try:
-                response = api_call.post(url=api_url, params=client_api_params, payload=api_payload)
+                response = api_call.post(url=api_url, params=api_params, payload=api_payload, timeout=3600)
                 get_testbed_db_testsets.clear()
                 state.testbed_db_testsets = get_testbed_db_testsets()
                 state.testbed["testset_id"] = next(
