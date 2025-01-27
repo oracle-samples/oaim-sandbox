@@ -71,7 +71,8 @@ def create_testset_objects(db_conn: Connection) -> None:
             CREATE TABLE IF NOT EXISTS oaim_testset_qa (
                 tid      RAW(16) DEFAULT SYS_GUID(),
                 qa_data  JSON,
-                CONSTRAINT oaim_testset_qa_fk FOREIGN KEY (tid) REFERENCES testsets(tid) ON DELETE CASCADE
+                CONSTRAINT oaim_testset_qa_fk FOREIGN KEY (tid) 
+                    REFERENCES oaim_testsets(tid) ON DELETE CASCADE
             )
         """
     evaluation_tbl = """
@@ -83,7 +84,8 @@ def create_testset_objects(db_conn: Connection) -> None:
                 settings            JSON,
                 rag_report          BLOB,
                 CONSTRAINT oaim_evaluations_pk PRIMARY KEY (eid),
-                CONSTRAINT oaim_evaluations_fk FOREIGN KEY (tid) REFERENCES testsets(tid) ON DELETE CASCADE,
+                CONSTRAINT oaim_evaluations_fk FOREIGN KEY (tid)
+                    REFERENCES oaim_testsets(tid) ON DELETE CASCADE,
                 CONSTRAINT oaim_evaluations_uq UNIQUE (eid, evaluated)
             )
         """
