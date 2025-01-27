@@ -59,14 +59,19 @@ def main() -> None:
         try:
             state.user_settings = api_call.post(url=api_endpoint, params={"client": client_gen_id()})
         except api_call.ApiError:
+            logger.error("Unable to contact API Server; setting as Down!")
             api_down = True
     if not api_down and "server_settings" not in state:
         try:
             state.server_settings = api_call.get(url=api_endpoint, params={"client": "server"})
         except api_call.ApiError:
+            logger.error("Unable to contact API Server; setting as Down!")
             api_down = True
-    if api_down:
-        st.error("Unable to contact the API Server.  Please check that it is running.", icon="🛑")
+    if api_down and "user_settings" not in state:
+        st.error(
+            "Unable to contact the API Server.  Please check that it is running and refresh your browser.",
+            icon="🛑",
+        )
         st.stop()
 
     # Enable/Disable Functionality
@@ -120,7 +125,6 @@ def main() -> None:
 
     pg = st.navigation(navigation, position="sidebar", expanded=False)
     pg.run()
-
 
 
 if __name__ == "__main__":

@@ -14,8 +14,8 @@ langchain-huggingface==0.1.2
 langchain-ollama==0.2.2
 langchain-openai==0.3.2
 langgraph==0.2.67
-litellm==1.59.7
-llama_index==0.12.13
+litellm==1.59.8
+llama_index==0.12.14
 lxml==5.3.0 
 matplotlib==3.10.0
 oci>=2.0.0

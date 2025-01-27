@@ -23,7 +23,7 @@ from server.agents.tools.oraclevs_retriever import oraclevs_tool
 from common.schema import ChatResponse, ChatUsage, ChatChoices, ChatMessage
 from common import logging_config
 
-from IPython.display import Image, display
+# from IPython.display import Image, display
 
 
 logger = logging_config.logging.getLogger("server.agents.chatbot")
@@ -277,4 +277,4 @@ memory = MemorySaver()
 chatbot_graph = workflow.compile(checkpointer=memory)
 
 # This will write a graph.png file of the LangGraph; don't deliver uncommented
-display(Image(chatbot_graph.get_graph(xray=True).draw_mermaid_png(output_file_path="graph.png")))
+# display(Image(chatbot_graph.get_graph(xray=True).draw_mermaid_png(output_file_path="graph.png")))
