@@ -135,7 +135,7 @@ def main() -> None:
     file_sources = ["OCI", "Local", "Web"]
     get_oci()
     try:
-        if not state.oci_config[state.user_settings[""]].get("namespace"):
+        if not state.oci_config[state.user_settings["oci"]["profile"]].get("namespace"):
             raise KeyError
     except (KeyError, TypeError):
         st.warning("OCI is not configured, some functionality is disabled", icon="⚠️")
