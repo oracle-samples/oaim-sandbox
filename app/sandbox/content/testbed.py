@@ -372,11 +372,11 @@ def main():
         with placeholder:
             st.info("Processing Q&A... please be patient.", icon="⚠️")
         if testset_source != "Database":
-            api_params["name"] = state.testbed["testset_name"]
+            client_api_params["name"] = state.testbed["testset_name"]
             files = st_common.local_file_payload(state[f"selected_uploader_{state.testbed['uploader_key']}"])
             api_payload = {"files": files}
             try:
-                response = api_call.post(url=api_url, params=api_params, payload=api_payload)
+                response = api_call.post(url=api_url, params=client_api_params, payload=api_payload)
                 get_testbed_db_testsets.clear()
                 state.testbed_db_testsets = get_testbed_db_testsets()
                 state.testbed["testset_id"] = next(
