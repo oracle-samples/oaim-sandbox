@@ -238,15 +238,17 @@ def build_knowledge_base(text_nodes: str, questions: int, ll_model: Model, embed
     def configure_and_set_model(client_model):
         """Configure and set Model for TestSet Generation"""
         model_name, params = None, None
-        if client_model.api == "OpenAI" or client_model.api == "OpenAIEmbeddings":
-            model_name, params = client_model.name, {"api_key": client_model.api_key}
-        elif client_model.api == "ChatOllama":
+        if client_model.api == "ChatOllama":
             model_name, params = (
                 f"ollama/{client_model.name}",
                 {"disable_structured_output": True, "api_base": client_model.url},
             )
         elif client_model.api == "OllamaEmbeddings":
             model_name, params = f"ollama/{client_model.name}", {"api_base": client_model.url}
+        elif client_model.api == "Perplexity":
+            model_name, params = f"perplexity/{client_model.name}", {"api_key": client_model.api_key}
+        else:
+            model_name, params = client_model.name, {"api_key": client_model.api_key}
 
         if client_model.type == "ll":
             set_llm_model(model_name, **params)
@@ -254,6 +256,7 @@ def build_knowledge_base(text_nodes: str, questions: int, ll_model: Model, embed
             set_embedding_model(model_name, **params)
 
     logger.info("KnowledgeBase creation starting...")
+    logger.info("LL Model: %s; Embedding: %s", ll_model, embed_model)
     configure_and_set_model(ll_model)
     configure_and_set_model(embed_model)
 
