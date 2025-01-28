@@ -89,7 +89,7 @@ def evaluation_report(eid=None, report=None):
     # Settings
     st.subheader("Evaluation Settings")
     ll_settings = pd.DataFrame(report["settings"]["ll_model"], index=[0])
-    ll_settings.drop(["chat_history"], axis=1, inplace=True)
+    ll_settings.drop(["streaming", "chat_history"], axis=1, inplace=True)
     ll_settings_reversed = ll_settings.iloc[:, ::-1]
     st.dataframe(ll_settings_reversed, hide_index=True)
     if report["settings"]["rag"]["rag_enabled"]:
