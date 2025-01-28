@@ -98,8 +98,8 @@ async def get_client(
         model_classes = {
             "OpenAIEmbeddings": lambda: OpenAIEmbeddings(model=model_name, api_key=model_api_key),
             "CohereEmbeddings": lambda: CohereEmbeddings(model=model_name, cohere_api_key=model_api_key),
-            "OllamaEmbeddings": OllamaEmbeddings(model=model_name, base_url=model_url),
-            "HuggingFaceEndpointEmbeddings": HuggingFaceEndpointEmbeddings(model=model_url),
+            "OllamaEmbeddings": lambda: OllamaEmbeddings(model=model_name, base_url=model_url),
+            "HuggingFaceEndpointEmbeddings": lambda: HuggingFaceEndpointEmbeddings(model=model_url),
             "GenericOpenAIEmbeddings": lambda: OpenAIEmbeddings(
                 model=model_name, base_url=model_url, api_key=model_api_key
             ),
