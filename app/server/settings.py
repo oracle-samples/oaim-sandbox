@@ -50,12 +50,12 @@ def upsert_settings(
             l_type     oaim_settings.type%TYPE := :type;
             l_qa_obj   JSON_OBJECT_T := :json_data;
         BEGIN
-            UPDATE oaim_settings SET 
+            UPDATE oaim_settings SET
                 updated  = CURRENT_TIMESTAMP,
                 settings = l_qa_object
             WHERE name = l_name AND type = l_type;
         EXCEPTION WHEN NO_DATA_FOUND
-            INSERT INTO oaim_settings (name, type, created, settings) 
+            INSERT INTO oaim_settings (name, type, created, settings)
             VALUES (l_name, l_type, CURRENT_TIMESTAMP, l_qa_object);
         END;
     """

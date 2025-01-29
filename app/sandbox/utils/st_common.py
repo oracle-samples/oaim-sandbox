@@ -56,6 +56,7 @@ def switch_prompt(prompt_type: PromptPromptType, prompt_name: PromptNameType) ->
         st.info(f"Prompt Engineering - {prompt_name} Prompt has been set.", icon="ℹ️")
 
 def patch_settings() -> None:
+    """Patch user settings on Server"""
     api_url = f"{state.server['url']}:{state.server['port']}/v1/settings"
     try:
         api_call.patch(

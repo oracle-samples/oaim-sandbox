@@ -53,6 +53,8 @@ def download_file(label, data, file_name, mime):
 
 @st.dialog("Evaluation Report", width="large")
 def evaluation_report(eid=None, report=None):
+    """Dialog Box with Evaluation Report"""
+
     def create_gauge(value):
         """Create the GUI Gauge"""
         fig = go.Figure(
@@ -94,7 +96,7 @@ def evaluation_report(eid=None, report=None):
     st.dataframe(ll_settings_reversed, hide_index=True)
     if report["settings"]["rag"]["rag_enabled"]:
         st.subheader("RAG Settings")
-        st.markdown(f"""**Database**: {report["settings"]["rag"]["database"]}; 
+        st.markdown(f"""**Database**: {report["settings"]["rag"]["database"]};
             **Vector Store**: {report["settings"]["rag"]["vector_store"]}
         """)
         embed_settings = pd.DataFrame(report["settings"]["rag"], index=[0])

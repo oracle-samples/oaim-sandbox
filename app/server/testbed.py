@@ -71,7 +71,7 @@ def create_testset_objects(db_conn: Connection) -> None:
             CREATE TABLE IF NOT EXISTS oaim_testset_qa (
                 tid      RAW(16) DEFAULT SYS_GUID(),
                 qa_data  JSON,
-                CONSTRAINT oaim_testset_qa_fk FOREIGN KEY (tid) 
+                CONSTRAINT oaim_testset_qa_fk FOREIGN KEY (tid)
                     REFERENCES oaim_testsets(tid) ON DELETE CASCADE
             )
         """
@@ -177,7 +177,7 @@ def upsert_qa(
             EXCEPTION WHEN NO_DATA_FOUND THEN
                 INSERT INTO oaim_testsets (name, created) VALUES (l_name, l_created)
                 RETURNING tid INTO l_tid;
-            END;    
+            END;
             FOR i IN 0 .. l_qa_array.get_size - 1
             LOOP
                 l_qa_obj := TREAT(l_qa_array.get(i) AS json_object_t);
@@ -283,6 +283,7 @@ def process_report(db_conn: Connection, eid: TestSetsIdType) -> EvaluationReport
     """Process an evaluate report"""
 
     def clean(orig_html):
+        """Remove elements from html output"""
         soup = BeautifulSoup(orig_html, "html.parser")
         titles_to_remove = [
             "GENERATOR",
@@ -304,7 +305,7 @@ def process_report(db_conn: Connection, eid: TestSetsIdType) -> EvaluationReport
     # Main
     binds = {"eid": eid}
     sql = """
-        SELECT eid, to_char(evaluated), correctness, settings, rag_report 
+        SELECT eid, to_char(evaluated), correctness, settings, rag_report
           FROM oaim_evaluations WHERE eid=:eid
          ORDER BY evaluated
         """

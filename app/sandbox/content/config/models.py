@@ -34,6 +34,7 @@ logger = logging_config.logging.getLogger("config.models")
 # Functions
 ###################################
 def clear_model_state(model_type: ModelTypeType) -> None:
+    """Remove model configuration from session state"""
     state_config_key = f"{model_type}_model_config"
     state_enabled_key = f"{model_type}_model_enabled"
     st_common.clear_state_key(state_config_key)
@@ -78,6 +79,7 @@ def delete_model(model: Model) -> None:
 
 @st.dialog("Model Configuration", width="large")
 def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_name: ModelNameType = None) -> None:
+    """Model Edit Dialog Box"""
     # Initialize our model request
     if action == "edit":
         name = urllib.parse.quote(model_name, safe="")

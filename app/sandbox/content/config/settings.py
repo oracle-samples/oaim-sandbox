@@ -177,6 +177,7 @@ def update_server(updates):
 
 
 def spring_ai_conf_check(ll_model, embed_model) -> str:
+    """Check if configuration is valid for SpringAI package"""
     if ll_model is None or embed_model is None:
         return "hybrid"
 
@@ -192,7 +193,7 @@ def spring_ai_conf_check(ll_model, embed_model) -> str:
 
 
 def spring_ai_obaas(src_dir, file_name, provider, ll_model):
-    # Get the users CTX prompt
+    """Get the users CTX Prompt"""
     ctx_prompt = next(
         item["prompt"]
         for item in state["prompts_config"]

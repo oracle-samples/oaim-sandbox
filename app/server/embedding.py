@@ -348,7 +348,7 @@ def populate_vs(
 
     # Perform the Merge
     merge_sql = f"""
-        INSERT INTO {vector_store.vector_store} SELECT * FROM {vector_store_tmp.vector_store} src 
+        INSERT INTO {vector_store.vector_store} SELECT * FROM {vector_store_tmp.vector_store} src
          WHERE NOT EXISTS (SELECT 1 FROM {vector_store.vector_store} tgt WHERE tgt.ID = src.ID)
     """
     logger.info("Merging %s into %s", vector_store_tmp.vector_store, vector_store.vector_store)

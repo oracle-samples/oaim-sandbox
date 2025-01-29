@@ -49,6 +49,7 @@ SETTINGS_OBJECTS = bootstrap.settings_def.main()
 # Helpers
 #####################################################
 def get_client_settings(client: schema.ClientIdType) -> schema.Settings:
+    """Return schema.Settings Object based on client ID"""
     client_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == client), None)
     if not client_settings:
         raise HTTPException(status_code=404, detail=f"Client {client}: not found")
@@ -76,10 +77,12 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     #################################################
     @noauth.get("/v1/liveness")
     async def liveness_probe():
+        """Kubernetes liveness probe"""
         return {"status": "alive"}
 
     @noauth.get("/v1/readiness")
     async def readiness_probe():
+        """Kubernetes ready probe"""
         return {"status": "ready"}
 
     #####################################################
