@@ -3,11 +3,11 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
 
+from typing import AsyncIterator
 import httpx
 
 from langchain_core.messages import ChatMessage
-
-from common.schema import ChatRequest, ChatResponse
+from common.schema import ChatRequest
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("utils.client")
@@ -29,9 +29,12 @@ class SandboxClient:
         self.server_url = f"{server['url']}:{server['port']}"
         self.settings = settings
         self.agent = agent
-        self.timeout = timeout
 
-        self.headers = {"Authorization": f"Bearer {server['key']}", "Content-Type": "application/json"}
+        self.request_defaults = {
+            "params": {"client": self.settings["client"]},
+            "headers": {"Authorization": f"Bearer {server['key']}", "Content-Type": "application/json"},
+            "timeout": timeout,
+        }
 
         def settings_request(method):
             """Send Settings to Server"""
@@ -39,10 +42,8 @@ class SandboxClient:
                 return client.request(
                     method=method,
                     url=f"{self.server_url}/v1/settings",
-                    params={"client": self.settings["client"]},
                     json=self.settings,
-                    headers=self.headers,
-                    timeout=self.timeout,
+                    **self.request_defaults,
                 )
 
         response = settings_request("PATCH")
@@ -54,35 +55,32 @@ class SandboxClient:
                 logger.error("Error updating settings with POST: %i - %s", response.status_code, response.text)
         logger.info("Established SandboxClient")
 
-    async def completions(self, message: str) -> ChatResponse:
+    async def stream(self, message: str) -> AsyncIterator[str]:
+        """Call stream endpoint for completion"""
+        # This is called by ChatBot, so enable streaming
+        self.settings["ll_model"]["streaming"] = True
         request = ChatRequest(
             **self.settings["ll_model"],
             messages=[ChatMessage(role="human", content=message)],
         )
         logger.debug("Sending Request: %s", request.model_dump_json())
+        client_call = {"json": request.model_dump(), **self.request_defaults}
         async with httpx.AsyncClient() as client:
-            response = await client.post(
-                url=self.server_url + "/v1/chat/completions",
-                params={"client": self.settings["client"]},
-                json=request.model_dump(),
-                headers=self.headers,
-                timeout=self.timeout,
-            )
-            response_data = response.json()
-            logger.debug("Response Received: %s", response_data)
-            if response.status_code == 200:
-                return ChatResponse.model_validate(response_data)
-
-            error_msg = response_data["detail"][0].get("msg", response.text)
-            return f"Error: {response.status_code} - {error_msg}"
+            async with client.stream(
+                method="POST", url=self.server_url + "/v1/chat/streams", **client_call
+            ) as response:
+                async for chunk in response.aiter_bytes():
+                    content = chunk.decode("utf-8")
+                    if content == "[stream_finished]":
+                        break
+                    yield content
 
     async def get_history(self) -> list[ChatMessage]:
+        """Output all chat history"""
         try:
             response = httpx.get(
                 url=self.server_url + "/v1/chat/history",
-                params={"client": self.settings["client"]},
-                headers=self.headers,
-                timeout=self.timeout,
+                **self.request_defaults,
             )
             response_data = response.json()
             logger.debug("Response Received: %s", response_data)

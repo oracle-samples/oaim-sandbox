@@ -2,7 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore langgraph, oraclevs, checkpointer
+# spell-checker:ignore langgraph, oraclevs, checkpointer, ainvoke
 
 from datetime import datetime, timezone
 import json
@@ -170,11 +170,11 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["vs_ir
 def vs_irrelevant(state: AgentState) -> None:
     """
     Delete documents from last vs_retrieve as they are not relevant to the question
-    Disable RAG on this session to generate non-RAG completion
     """
     state["messages"][-1].content = "[]"
 
-def vs_generate(state: AgentState, config: RunnableConfig) -> None:
+
+async def vs_generate(state: AgentState, config: RunnableConfig) -> None:
     """Generate answer when RAG enabled; modify state with response"""
     logger.info("Generating RAG Response")
 
@@ -194,17 +194,17 @@ def vs_generate(state: AgentState, config: RunnableConfig) -> None:
     generate_chain = prompt_template | llm | StrOutputParser()
 
     logger.debug("Completing: %s against: %s", question, context)
-    response = generate_chain.invoke(
-        {
-            "sys_prompt": config["metadata"]["sys_prompt"].prompt,
-            "context": context,
-            "question": question,
-        }
-    )
+    chain = {
+        "sys_prompt": config["metadata"]["sys_prompt"].prompt,
+        "context": context,
+        "question": question,
+    }
+
+    response = await generate_chain.ainvoke(chain)
     return {"messages": ("assistant", response)}
 
 
-def agent(state: AgentState, config: RunnableConfig) -> AgentState:
+async def agent(state: AgentState, config: RunnableConfig) -> AgentState:
     """Invokes the agent model; response will either be a tool call or completion"""
     use_rag = config["metadata"]["rag_settings"].rag_enabled
     logger.info("Starting Agent with RAG: %s", use_rag)
@@ -217,8 +217,8 @@ def agent(state: AgentState, config: RunnableConfig) -> AgentState:
         try:
             model = model.bind_tools(tools, tool_choice="oraclevs_tool")
         except Exception as ex:
-            #TODO: Fallback to non-tool call :(
-            logger.exception("Model doesn't support tools (as of now): %s", ex)
+            # TODO(gotsysdba): Fallback to non-tool RAG
+            logger.exception("Model doesn't support tools: %s", ex)
 
     messages = get_messages(state, config)
 
@@ -228,19 +228,20 @@ def agent(state: AgentState, config: RunnableConfig) -> AgentState:
     logger.debug("Invoking on: %s", messages)
 
     # Invoke Chain
-    response = model.invoke(messages)
-
+    response = await model.ainvoke(messages)
     return {"messages": [response], "cleaned_messages": messages}
 
-def generate_response(state: AgentState, config: RunnableConfig) -> AgentState:
+
+async def generate_response(state: AgentState, config: RunnableConfig) -> AgentState:
     """Invokes the agent model; response will either be a tool call or completion"""
     model = config["configurable"].get("ll_client", None)
     messages = get_messages(state, config)
     if config["metadata"]["sys_prompt"].prompt:
         messages.insert(0, SystemMessage(content=config["metadata"]["sys_prompt"].prompt))
     logger.debug("Invoking on: %s", messages)
-    response = model.invoke(messages)
+    response = await model.ainvoke(messages)
     return {"messages": [response], "cleaned_messages": messages}
+
 
 #############################################################################
 # GRAPH

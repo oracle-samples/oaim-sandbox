@@ -2,7 +2,6 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore genai
 
 import oracledb
 
@@ -23,7 +22,8 @@ class DbException(Exception):
 
 def connect(config: Database) -> oracledb.Connection:
     """Establish a connection to an Oracle Database"""
-    logger.info("Connecting to Database: %s", config.dsn)
+    logger.info("Establishing connection to the Database.")
+    logger.debug("Connecting to Database: %s", config.dsn)
     include_fields = set(DatabaseAuth.model_fields.keys())
     db_config = config.model_dump(include=include_fields)
     # Check if connection settings are configured
@@ -42,7 +42,7 @@ def connect(config: Database) -> oracledb.Connection:
 
 
 def disconnect(conn: oracledb.Connection) -> None:
-    """Establish a connection to an Oracle Database"""
+    """Disconnect from an Oracle Database"""
     return conn.close()
 
 

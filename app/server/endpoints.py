@@ -2,7 +2,8 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore ainvoke, langgraph, modelcfg, jsonable, genai, ocid, docos, ollama, giskard, testsets, testset, noauth
+# spell-checker:ignore langgraph, ocid, docos, giskard, testsets, testset, noauth
+# spell-checker:ignore astream, ainvoke, oaim
 
 import asyncio
 import json
@@ -11,7 +12,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 from pathlib import Path
 import shutil
-from typing import Optional
+from typing import AsyncGenerator, Optional
 from pydantic import HttpUrl
 import requests
 
@@ -32,6 +33,7 @@ from langchain_core.runnables import RunnableConfig
 from giskard.rag import evaluate, QATestset
 
 from fastapi import FastAPI, Query, HTTPException, UploadFile, Response
+from fastapi.responses import StreamingResponse
 
 logger = logging_config.logging.getLogger("server.endpoints")
 
@@ -46,10 +48,17 @@ SETTINGS_OBJECTS = bootstrap.settings_def.main()
 #####################################################
 # Helpers
 #####################################################
-def get_db(client: schema.ClientIdType) -> schema.Database:
+def get_client_settings(client: schema.ClientIdType) -> schema.Settings:
+    client_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == client), None)
+    if not client_settings:
+        raise HTTPException(status_code=404, detail=f"Client {client}: not found")
+    return client_settings
+
+
+def get_client_db(client: schema.ClientIdType) -> schema.Database:
     """Return a schema.Database Object based on client settings"""
     db_name = "DEFAULT"
-    client_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == client), None)
+    client_settings = get_client_settings(client)
     if client_settings.rag:
         db_name = getattr(client_settings.rag, "database", "DEFAULT")
 
@@ -141,7 +150,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.patch("/v1/embed/drop_vs", description="Drop Vector Store")
     async def embed_drop_vs(client: schema.ClientIdType, vs: schema.DatabaseVectorStorage) -> Response:
         """Drop Vector Storage"""
-        embedding.drop_vs(get_db(client).connection, vs)
+        embedding.drop_vs(get_client_db(client).connection, vs)
         return Response(status_code=204)
 
     @auth.post(
@@ -227,7 +236,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             embed_client = await models.get_client(MODEL_OBJECTS, {"model": request.model, "rag_enabled": True})
             embedding.populate_vs(
                 vector_store=request,
-                db_conn=get_db(client).connection,
+                db_details=get_client_db(client),
                 embed_client=embed_client,
                 input_data=split_docos,
                 rate_limit=rate_limit,
@@ -448,25 +457,19 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.get("/v1/settings", description="Get client settings", response_model=schema.Settings)
     async def settings_get(client: schema.ClientIdType) -> schema.Settings:
         """Get settings for a specific client by name"""
-        client_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == client), None)
-        if not client_settings:
-            raise HTTPException(status_code=404, detail=f"Client {client}: not found")
-
-        return client_settings
+        return get_client_settings(client)
 
     @auth.patch("/v1/settings", description="Update client settings")
     async def settings_update(client: schema.ClientIdType, payload: schema.Settings) -> Response:
         """Update a single client settings"""
         logger.debug("Received %s Client Payload: %s", client, payload)
-        client_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == client), None)
-        if client_settings:
-            SETTINGS_OBJECTS.remove(client_settings)
-            payload.client = client
-            SETTINGS_OBJECTS.append(payload)
+        client_settings = get_client_settings(client)
 
-            return Response(status_code=204)
+        SETTINGS_OBJECTS.remove(client_settings)
+        payload.client = client
+        SETTINGS_OBJECTS.append(payload)
 
-        raise HTTPException(status_code=404, detail=f"Client {client}: settings not found")
+        return Response(status_code=204)
 
     @auth.post("/v1/settings", description="Create new client settings", response_model=schema.Settings)
     async def settings_create(client: schema.ClientIdType) -> schema.Settings:
@@ -485,20 +488,18 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     #################################################
     # chat Endpoints
     #################################################
-    @auth.post(
-        "/v1/chat/completions", description="Submit a message for completion.", response_model=schema.ChatResponse
-    )
-    async def chat_post(client: schema.ClientIdType, request: schema.ChatRequest) -> schema.ChatResponse:
-        """Chatbot Completion"""
-        client_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == client), None)
-        logger.debug("schema.Settings: %s", client_settings)
+    async def completion_generator(
+        client: schema.ClientIdType, request: schema.ChatRequest
+    ) -> AsyncGenerator[str, None]:
+        """Generate a completion from agent, stream the results"""
+        client_settings = get_client_settings(client)
+        logger.debug("Settings: %s", client_settings)
         logger.debug("Request: %s", request.model_dump())
 
         # Establish LL schema.Model Params (if the request specs a model, otherwise override from settings)
         model = request.model_dump()
         if not model["model"]:
             model = client_settings.ll_model.model_dump()
-        logger.debug("schema.Model: %s", model)
 
         # Setup Client schema.Model
         try:
@@ -537,7 +538,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
                     "thread_id": client,
                     "ll_client": ll_client,
                     "embed_client": embed_client,
-                    "db_conn": get_db(client).connection,
+                    "db_conn": get_client_db(client).connection,
                 },
                 metadata={
                     "model_name": model["model"],
@@ -548,17 +549,52 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
                 },
             ),
         }
-        logger.info("Completion Kwargs: %s", kwargs)
+        logger.debug("Completion Kwargs: %s", kwargs)
         agent: CompiledStateGraph = chatbot.chatbot_graph
         try:
-            # invoke from langchain_core.language_models.BaseChatModel
-            # output in OpenAI compatible format
-            response = agent.invoke(**kwargs)["final_response"]
-            return response
+            async for chunk in agent.astream_events(**kwargs, version="v2"):
+                logger.debug("Streamed Chunk: %s", chunk)
+                if chunk["event"] == "on_chat_model_stream":
+                    if "tools_condition" in str(chunk["metadata"]["langgraph_triggers"]):
+                        continue  # Skip Tool Call messages
+                    content = chunk["data"]["chunk"].content
+                    if content == "":
+                        continue  # Skip Empty messages
+                    yield content.encode("utf-8")
+                last_response = chunk["data"]
+            final_response = last_response["output"]["final_response"]
+            yield "[stream_finished]"  # This will break the Chatbot loop
+            yield final_response  # This will be captured for ChatResponse
         except Exception as ex:
             logger.error("An invoke exception occurred: %s", ex)
-            # TODO: gotsysdba - If a message is returned; attempt to format and return (this might be done in the agent instead)
+            # TODO(gotsysdba) - If a message is returned;
+            # format and return (this should be done in the agent)
             raise HTTPException(status_code=500, detail="Unexpected error") from ex
+
+    @auth.post(
+        "/v1/chat/completions",
+        description="Submit a message for full completion.",
+        response_model=schema.ChatResponse,
+    )
+    async def chat_post(client: schema.ClientIdType, request: schema.ChatRequest) -> schema.ChatResponse:
+        """Full Completion Requests"""
+        last_message = None
+        async for chunk in completion_generator(client, request):
+            last_message = chunk
+        return last_message
+
+    @auth.post(
+        "/v1/chat/streams",
+        description="Submit a message for streamed completion.",
+        response_class=StreamingResponse,
+        include_in_schema=False,
+    )
+    async def chat_stream(client: schema.ClientIdType, request: schema.ChatRequest) -> StreamingResponse:
+        """Completion Requests"""
+        return StreamingResponse(
+            completion_generator(client, request),
+            media_type="application/octet-stream",
+        )
 
     @auth.get(
         "/v1/chat/history",
@@ -588,7 +624,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.get("/v1/testbed/testsets", description="Get Stored TestSets.", response_model=list[schema.TestSets])
     async def testbed_get_testsets(client: schema.ClientIdType) -> list[schema.TestSets]:
         """Get a list of stored TestSets, create TestSet objects if they don't exist"""
-        testsets = testbed.get_testsets(db_conn=get_db(client).connection)
+        testsets = testbed.get_testsets(db_conn=get_client_db(client).connection)
         return testsets
 
     @auth.get("/v1/testbed/evaluations", description="Get Stored Evaluations.", response_model=list[schema.Evaluation])
@@ -596,7 +632,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         client: schema.ClientIdType, tid: schema.TestSetsIdType
     ) -> list[schema.Evaluation]:
         """Get Evaluations"""
-        evaluations = testbed.get_evaluations(db_conn=get_db(client).connection, tid=tid.upper())
+        evaluations = testbed.get_evaluations(db_conn=get_client_db(client).connection, tid=tid.upper())
         return evaluations
 
     @auth.get(
@@ -608,13 +644,13 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         client: schema.ClientIdType, eid: schema.TestSetsIdType
     ) -> schema.EvaluationReport:
         """Get Evaluations"""
-        evaluation = testbed.process_report(db_conn=get_db(client).connection, eid=eid.upper())
+        evaluation = testbed.process_report(db_conn=get_client_db(client).connection, eid=eid.upper())
         return evaluation
 
     @auth.get("/v1/testbed/testset_qa", description="Get Stored schema.TestSets Q&A.", response_model=schema.TestSetQA)
     async def testbed_get_testset_qa(client: schema.ClientIdType, tid: schema.TestSetsIdType) -> schema.TestSetQA:
         """Get TestSet Q&A"""
-        return testbed.get_testset_qa(db_conn=get_db(client).connection, tid=tid.upper())
+        return testbed.get_testset_qa(db_conn=get_client_db(client).connection, tid=tid.upper())
 
     @auth.post("/v1/testbed/testset_load", description="Upsert TestSets.", response_model=schema.TestSetQA)
     async def testbed_upsert_testsets(
@@ -625,7 +661,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     ) -> schema.TestSetQA:
         """Update stored TestSet data"""
         created = datetime.now().isoformat()
-        db_conn = get_db(client).connection
+        db_conn = get_client_db(client).connection
         try:
             for file in files:
                 file_content = await file.read()
@@ -718,11 +754,11 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             return ai_response.choices[0].message.content
 
         evaluated = datetime.now().isoformat()
-        client_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == client), None)
+        client_settings = get_client_settings(client)
         # Change Disable History
         client_settings.ll_model.chat_history = False
 
-        db_conn = get_db(client).connection
+        db_conn = get_client_db(client).connection
         testset = testbed.get_testset_qa(db_conn=db_conn, tid=tid.upper())
         qa_test = "\n".join(json.dumps(item) for item in testset.qa_data)
         temp_directory = functions.get_temp_directory(client, "testbed")

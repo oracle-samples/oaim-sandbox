@@ -86,7 +86,7 @@ def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_
     else:
         model = Model(name="unset", type=model_type, api="unset", status="CUSTOM")
     with st.form("edit_model"):
-        model.enabled = st.checkbox("Enabled", value=model.enabled)
+        model.enabled = st.checkbox("Enabled", value=True if action=="add" else model.enabled)
         model.name = st.text_input(
             "Model Name:",
             value=None if model.name == "unset" else model.name,

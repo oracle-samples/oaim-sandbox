@@ -2,7 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore langchain, docstore, docos, getbuffer, tiktoken, vectorstores, oraclevs, genai
+# spell-checker:ignore langchain, docstore, docos, vectorstores, oraclevs
 
 import json
 import copy
@@ -27,7 +27,7 @@ from langchain_text_splitters import HTMLSectionSplitter, CharacterTextSplitter
 import server.databases as databases
 
 import common.functions
-from common.schema import DatabaseVectorStorage
+from common.schema import DatabaseVectorStorage, Database
 
 import common.logging_config as logging_config
 
@@ -254,7 +254,7 @@ def load_and_split_url(
 ##########################################
 def populate_vs(
     vector_store: DatabaseVectorStorage,
-    db_conn: oracledb.Connection,
+    db_details: Database,
     embed_client: BaseChatModel,
     input_data: Union[list["LangchainDocument"], list] = None,
     rate_limit: int = 0,
@@ -303,8 +303,10 @@ def populate_vs(
     logger.info("Total Unique Chunks: %i", len(unique_chunks))
 
     # Creates a TEMP Vector Store Table; which may already exist
+    # Establish a dedicated connection to the database
+    db_conn = databases.connect(db_details)
     # This is to allow re-using an existing VS; will merge this over later
-    # drop_vs(conn=db_conn, vs=vector_store_tmp) -- THIS SEEMS TO HANG
+    drop_vs(conn=db_conn, vs=vector_store_tmp)
     logger.info("Establishing initial vector store")
     vs_tmp = OracleVS(
         client=db_conn,
@@ -366,3 +368,4 @@ def populate_vs(
     _, store_comment = common.functions.get_vs_table(**vector_store.model_dump(exclude={"database", "vector_store"}))
     comment = f"COMMENT ON TABLE {vector_store.vector_store} IS 'GENAI: {store_comment}'"
     databases.execute_sql(db_conn, comment)
+    databases.disconnect(db_conn)

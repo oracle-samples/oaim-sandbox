@@ -102,7 +102,13 @@ async def main() -> None:
     if human_request := st.chat_input(f"Ask your question here... (current prompt: {sys_prompt})"):
         st.chat_message("human").write(human_request)
         try:
-            _ = await user_client.completions(message=human_request)
+            # response = user_client.streams(message=human_request)
+            message_placeholder = st.chat_message("ai").empty()
+            full_answer = ""
+            async for chunk in user_client.stream(message=human_request):
+                full_answer += chunk
+                message_placeholder.markdown(full_answer)
+            # Stream until we hit the end then refresh to replace with history
             st.rerun()
         except Exception:
             logger.error("Exception:", exc_info=1)

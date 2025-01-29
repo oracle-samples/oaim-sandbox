@@ -263,6 +263,24 @@ class ChatRequest(LanguageModelParameters):
     model: Optional[str] = Field(default=None, description="The model to use for chat completions.")
     messages: list[ChatMessage] = Field(description="A list of messages comprising the conversation so far.")
 
+    ### Example Request (will display in docs)
+    model_config = {
+        "json_schema_extra": {
+            "examples": [
+                {
+                    "model": "gpt-4o-mini",
+                    "messages": [{"role": "user", "content": "Hello, how are you?"}],
+                    "response_format": {"type": "text"},
+                    "temperature": 1,
+                    "max_completion_tokens": 10000,
+                    "top_p": 1,
+                    "frequency_penalty": 0,
+                    "presence_penalty": 0,
+                }
+            ]
+        }
+    }
+
 
 #####################################################
 # Testbed

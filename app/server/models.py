@@ -74,7 +74,7 @@ async def get_client(
     if not embedding:
         logger.debug("Configuring LL Model")
         ll_common_params = {}
-        for key in ["temperature", "max_completion_tokens", "top_p", "frequency_penalty", "presence_penalty"]:
+        for key in ["temperature", "max_completion_tokens", "top_p", "frequency_penalty", "presence_penalty", "streaming"]:
             try:
                 logger.debug("--> Setting: %s; was sent %s", key, model_config[key])
                 ll_common_params[key] = model_config[key] or await get_key_value(model_objects, model_name, key)
