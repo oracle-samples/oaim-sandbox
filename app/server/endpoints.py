@@ -166,7 +166,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
 
         # Save the file temporarily
         for url in request:
-            filename = Path(urlparse(url).path).name
+            filename = Path(urlparse(str(url)).path).name
             response = requests.get(url, timeout=60)
             content_type = response.headers.get("Content-Type", "").lower()
 
