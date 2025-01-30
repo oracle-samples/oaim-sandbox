@@ -388,7 +388,7 @@ def main() -> None:
                 url=EMBED_API_ENDPOINT,
                 params=embed_params,
                 payload={"json": embed_request.model_dump()},
-                timeout=0,
+                timeout=7200,
             )
             placeholder.empty()
             st.success(f"Vector Store Populated: {response['message']}", icon="✅")
