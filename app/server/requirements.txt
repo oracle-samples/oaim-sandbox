@@ -9,12 +9,12 @@ faiss-cpu==1.9.0.post1
 giskard==2.16.0
 IPython==8.31.0
 langchain-cohere==0.4.2
-langchain-community==0.3.15
+langchain-community==0.3.16
 langchain-huggingface==0.1.2
 langchain-ollama==0.2.2
-langchain-openai==0.3.2
-langgraph==0.2.67
-litellm==1.59.8
+langchain-openai==0.3.3
+langgraph==0.2.68
+litellm==1.59.9
 llama_index==0.12.14
 lxml==5.3.0 
 matplotlib==3.10.0
@@ -28,5 +28,5 @@ uvicorn==0.34.0
 ## For Licensing Purposes; ensures no GPU modules are installed
 ## as part of langchain-huggingface
 -f https://download.pytorch.org/whl/cpu/torch
-torch==2.5.1+cpu ; sys_platform == "linux"
-torch==2.5.1 ; sys_platform == "darwin"
+torch==2.6.0+cpu ; sys_platform == "linux"
+torch==2.6.0 ; sys_platform == "darwin"

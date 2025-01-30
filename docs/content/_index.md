@@ -54,26 +54,26 @@ The [Walkthrough](walkthrough) is a great way to familiarize yourself with the S
 
 ### Bare-Metal Installation
 
-To run the application on bare-metal; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the top-level directory:
+To run the application on bare-metal; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the `app/` directory:
 
 1. Create and activate a Python Virtual Environment:
 
    ```bash
+   cd app/
    python3.11 -m venv .venv
    source .venv/bin/activate
-   pip3 install --upgrade pip wheel
+   pip3.11 install --upgrade pip wheel
    ```
 
 1. Install the Python modules:
 
    ```bash
-   pip3 install -r app/requirements.txt
+   pip3.11 install -r app/requirements.txt
    ```
 
 1. Start Streamlit:
 
    ```bash
-   cd app
    streamlit run oaim_sandbox.py --server.port 8501
    ```
 

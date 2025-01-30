@@ -12,7 +12,6 @@ The **Oracle AI Microservices Sandbox** provides a streamlined environment where
 
 - [Configuring Embedding and Chat Models](https://oracle-samples.github.io/oaim-sandbox/sandbox/configuration/model_config)
 - [Splitting and Embedding Documentation](https://oracle-samples.github.io/oaim-sandbox/sandbox/tools/split_embed)
-- [Storing Embedded Documents into the Oracle Database](https://oracle-samples.github.io/oaim-sandbox/sandbox/tools/split_embed)
 - [Modifying System Prompts (Prompt Engineering)](https://oracle-samples.github.io/oaim-sandbox/sandbox/tools/prompt_eng)
 - [Experimenting with **LLM** Parameters](https://oracle-samples.github.io/oaim-sandbox/sandbox/chatbot)
 - [Testbed for auto-generated or existing Q&A datasets](https://oracle-samples.github.io/oaim-sandbox/sandbox/testbed)
@@ -36,27 +35,27 @@ For more information, including more details on **Setup and Configuration** plea
 
 #### Bare-Metal Installation
 
-To run the application on bare-metal; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the top-level directory:
+To run the application on bare-metal; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from `app/`:
 
 1. Create and activate a Python Virtual Environment:
 
    ```bash
+   cd app/
    python3.11 -m venv .venv
    source .venv/bin/activate
-   pip3 install --upgrade pip wheel
+   pip3.11 install --upgrade pip wheel
    ```
 
 1. Install the Python modules:
 
    ```bash
-   pip3 install -r app/requirements.txt
+   pip3.11 install -r app/requirements.txt
    source .venv/bin/activate
    ```
 
 1. Start Streamlit:
 
    ```bash
-   cd app
    streamlit run oaim_sandbox.py --server.port 8501
    ```
 

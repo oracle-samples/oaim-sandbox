@@ -8,7 +8,7 @@ weight = 10
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
-<!--spell-checker: ignore mxbai, ollama, oaim, sqlplus, sysdba, spfile, freepdb, tablespace, firewalld -->
+<!--spell-checker: ignore mxbai, ollama, oaim, sqlplus, sysdba, spfile, freepdb, tablespace, firewalld, hnsw -->
 
 This walkthrough will guide you through a basic installation of the **Oracle AI Microservices Sandbox** (the **Sandbox**). It will allow you to experiment with GenAI, using Retrieval-Augmented Generation (**RAG**) with Oracle Database 23ai at the core.
 
@@ -54,7 +54,7 @@ You will run four container images to establish the "Infrastructure":
 
 To enable the _ChatBot_ functionality, access to a **LLM** is required. The walkthrough will use [Ollama](https://ollama.com/) to run the _llama3.1_ **LLM**.
 
-1. Start the container :
+1. Start the *Ollama* container:
 
    ```bash
    podman run -d --gpus=all -v ollama:$HOME/.ollama -p 11434:11434 --name ollama docker.io/ollama/ollama
@@ -160,36 +160,35 @@ If you are running the **Sandbox** on a remote host, you may need to allow acces
 For example, in Oracle Linux 8/9 with `firewalld`:
 
 ```bash
-firewall-cmd --zone=public --add-port=8501/tcp --permanent
+firewall-cmd --zone=public --add-port=8501/tcp
 ```
 
 ## Configuration
 
-With the "Infrastructure" in-place, you're ready to configure the **Sandbox**. In a web browser, navigate to your host's `8501` port:
+With the "Infrastructure" in-place, you're ready to configure the **Sandbox**. 
 
-![Sandbox](images/sandbox.png)
+In a web browser, navigate to your host's `8501` port:
+![Sandbox](images/chatbot_no_models.png)
 
-Notice that neither the database nor models are configured for use. Let's start the configuration.
+Notice that there are no language models configured to use. Let's start the configuration.
 
 ### Configure the LLM
 
 To configure the On-Premises **LLM**, navigate to the _Configuration -> Models_ screen:
 
-1. Enable the `llama3.1` model that you pulled earlier by ticking the checkbox
-1. Configure the _API URL_ to `http://127.0.0.1:11434`
-1. Save
-
-![Configure LLM](images/llm-config.png)
-
+1. Enable the `llama3.1` model that you pulled earlier by clicking the _Edit_ button
+![Configure LLM](images/models_edit.png)
+1. Tick the _Enabled_ checkbox, leave all other settings as-is, and _Save_
+![Enable LLM](images/models_enable_llm.png)
 {{% icon star %}} More information about configuring **LLM**s in the **Sandbox** can be found in the [Model Configuration](../configuration/model_config) documentation.
 
 #### Say "Hello?"
 
 Navigate to the _ChatBot_ screen:
 
-![Say Hello?](images/hello.png)
+![Say Hello?](images/chatbot_say_hello.png)
 
-The error about chat models will have disappeared, but the database warning will still be displayed. You'll take care of that in the next step.
+The error about language models will have disappeared, but there are new warnings about embedding models and the database. You'll take care of those in the next steps.
 
 The `Chat model:` will have been pre-set to the only enabled **LLM** (_llama3.1_) and a dialog box to interact with the **LLM** will be ready for input.
 
@@ -202,11 +201,8 @@ You'll come back to the _ChatBot_ later to experiment further.
 
 To configure the On-Premises Embedding Model, navigate back to the _Configuration -> Models_ screen:
 
-1. Enable the `mxbai-embed-large` model that you pulled earlier by ticking the checkbox
-1. Configure the _API URL_ to `http://127.0.0.1:11434`
-1. Save
-
-![Configure Embedding Model](images/embed-config.png)
+1. Enable the `mxbai-embed-large` Embedding Model following the same process as you did for the Language Model.
+![Configure Embedding Model](images/models_enable_embed.png)
 
 {{% icon star %}}  More information about configuring embedding models in the **Sandbox** can be found in the [Model Configuration](../configuration/model_config) documentation.
 
@@ -215,11 +211,11 @@ To configure the On-Premises Embedding Model, navigate back to the _Configuratio
 To configure Oracle Database 23ai Free, navigate to the _Configuration -> Database_ screen:
 
 1. Enter the Database Username: `WALKTHROUGH`
-1. Enter the Database Password for `WALKTHROUGH`: `OrA_41_M_SANDBOX`
+1. Enter the Database Password for the database user: `OrA_41_M_SANDBOX`
 1. Enter the Database Connection String: `//localhost:1521/FREEPDB1`
 1. Save
 
-![Configure Database](images/db-config.png)
+![Configure Database](images/database_config.png)
 
 {{% icon star %}} More information about configuring the database in the **Sandbox** can be found in the [Database Configuration](../configuration/db_config) documentation.
 
@@ -230,7 +226,10 @@ With the embedding model and database configured, you can now split and embed do
 Navigate to the _Split/Embed_ Screen:
 
 1. Change the File Source to `Web`
-1. Enter the URL: `https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/ai-vector-search-users-guide.pdf`
+1. Enter the URL: 
+   ```text
+   https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/ai-vector-search-users-guide.pdf
+   ```
 1. Press Enter
 1. Click _Load, Split, and Populate Vector Store_
 1. Please be patient...
@@ -239,12 +238,12 @@ Navigate to the _Split/Embed_ Screen:
 Depending on the infrastructure, the embedding process can take a few minutes. As long as the "RUNNING" dialog in the top-right corner is moving... it's working.
 {{% /notice %}}
 
-![Split and Embed](images/split-embed.png)
+![Split and Embed](images/split_embed_web.png)
 
 {{% notice style="code" title="Thumb Twiddling" icon="circle-info" %}}
 You can watch the progress of the embedding by streaming the **Sandbox** logs: `podman logs -f oaim-sandbox`
 
-Chunks are processed in batches of 1,000. Wait until the **Sandbox** logs output: `SQL Executed` before continuing.
+Chunks are processed in batches. Wait until the **Sandbox** logs output: `POST Response: <Response [200]>` before continuing.
 {{% /notice %}}
 
 ### Query the Vector Store
@@ -262,7 +261,7 @@ From the command line:
 1. Query the Vector Store:
 
    ```sql
-   select * from WALKTHROUGH.MXBAI_EMBED_LARGE_512_103_COSINE;
+   select * from WALKTHROUGH.MXBAI_EMBED_LARGE_512_103_COSINE_HNSW;
    ```
 
 ## Experiment
@@ -273,10 +272,6 @@ Navigate back to the _ChatBot_. There will be no more configuration warnings and
 
 For this guided experiment, perform the following:
 
-1. Disable **RAG** by un-checking the _RAG?_ box
-
-![Disable RAG](images/disable_rag.png)
-
 1. Ask the _ChatBot_:
    ```text
    In Oracle Database 23ai, how do I determine the accuracy of my vector indexes?
@@ -285,11 +280,9 @@ For this guided experiment, perform the following:
 Responses may vary, but generally the _ChatBot_'s response will be inaccurate, including:
 
 - Not understanding that 23ai is an Oracle Database release. This is known as knowledge-cutoff.
-- Suggestions of running SELECTS, irrelevant DBMS stored procedures, and maybe an ANALYZE. These are hallucinations.
+- Suggestions of running SELECTS, irrelevant DBMS or non-existent stored procedures, and maybe an ANALYZE. These are hallucinations.
 
 Now enable _RAG?_ and simply ask: `Are you sure?`
-
-![Enable RAG](images/enable_rag.png)
 
 {{% notice style="code" title="Performance: Host Overload..." icon="circle-info" %}}
 With **RAG** enabled, all the services (**LLM**/Embedding Models and Database) are being utilized simultaneously:
@@ -300,6 +293,8 @@ With **RAG** enabled, all the services (**LLM**/Embedding Models and Database) a
 
 Depending on your hardware, this may cause the response to be significantly delayed.
 {{% /notice %}}
+
+![Enable RAG](images/enable_rag.png)
 
 By asking `Are you sure?`, you are taking advantage of the **Sandbox**'s history and context functionality.  
 The response should be significantly different and include references to `DBMS_VECTOR` and links to the embedded documentation where this information can be found. It might even include an apology!

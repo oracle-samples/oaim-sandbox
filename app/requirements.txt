@@ -11,9 +11,9 @@
 
 ### python3.11 -m venv .venv
 ### source .venv/bin/activate
-### pip3 install --upgrade pip wheel setuptools
-### pip3 install -r requirements.txt
-langchain-core==0.3.31
+### pip3.11 install --upgrade pip wheel setuptools
+### pip3.11 install -r requirements.txt
+langchain-core==0.3.33
 httpx==0.27.2 # litellm restriction
 oracledb>=2.0.0
 -r server/requirements.txt

@@ -12,7 +12,7 @@ from datetime import datetime
 from urllib.parse import urlparse
 from pathlib import Path
 import shutil
-from typing import AsyncGenerator, Optional
+from typing import AsyncGenerator, Literal, Optional
 from pydantic import HttpUrl
 import requests
 
@@ -492,7 +492,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     # chat Endpoints
     #################################################
     async def completion_generator(
-        client: schema.ClientIdType, request: schema.ChatRequest
+        client: schema.ClientIdType, request: schema.ChatRequest, call: Literal["completions", "streams"]
     ) -> AsyncGenerator[str, None]:
         """Generate a completion from agent, stream the results"""
         client_settings = get_client_settings(client)
@@ -556,18 +556,20 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         agent: CompiledStateGraph = chatbot.chatbot_graph
         try:
             async for chunk in agent.astream_events(**kwargs, version="v2"):
-                logger.debug("Streamed Chunk: %s", chunk)
+                # The below will produce A LOT of output; uncomment when desperate
+                # logger.debug("Streamed Chunk: %s", chunk)
                 if chunk["event"] == "on_chat_model_stream":
                     if "tools_condition" in str(chunk["metadata"]["langgraph_triggers"]):
                         continue  # Skip Tool Call messages
                     content = chunk["data"]["chunk"].content
-                    if content == "":
-                        continue  # Skip Empty messages
-                    yield content.encode("utf-8")
+                    if content != "" and call == "streams":
+                        yield content.encode("utf-8")
                 last_response = chunk["data"]
-            final_response = last_response["output"]["final_response"]
-            yield "[stream_finished]"  # This will break the Chatbot loop
-            yield final_response  # This will be captured for ChatResponse
+            if call == "streams":
+                yield "[stream_finished]"  # This will break the Chatbot loop
+            elif call == "completions":
+                final_response = last_response["output"]["final_response"]
+                yield final_response  # This will be captured for ChatResponse
         except Exception as ex:
             logger.error("An invoke exception occurred: %s", ex)
             # TODO(gotsysdba) - If a message is returned;
@@ -582,7 +584,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     async def chat_post(client: schema.ClientIdType, request: schema.ChatRequest) -> schema.ChatResponse:
         """Full Completion Requests"""
         last_message = None
-        async for chunk in completion_generator(client, request):
+        async for chunk in completion_generator(client, request, "completions"):
             last_message = chunk
         return last_message
 
@@ -595,7 +597,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     async def chat_stream(client: schema.ClientIdType, request: schema.ChatRequest) -> StreamingResponse:
         """Completion Requests"""
         return StreamingResponse(
-            completion_generator(client, request),
+            completion_generator(client, request, "streams"),
             media_type="application/octet-stream",
         )
 
