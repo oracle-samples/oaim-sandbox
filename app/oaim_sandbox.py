@@ -23,7 +23,10 @@ logger = logging_config.logging.getLogger("oaim_sandbox")
 REMOTE_SERVER = False
 try:
     from oaim_server import start_server
-except ImportError:
+    logger.info("Imported API Server.")
+except ImportError as ex:
+    logger.info("API Server not present.")
+    logger.debug("Import Exception: %s", ex)
     REMOTE_SERVER = True
 
 

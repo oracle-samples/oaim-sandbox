@@ -20,11 +20,11 @@ import common.logging_config as logging_config
 import common.schema as schema
 import common.functions as functions
 import server.bootstrap as bootstrap
-import server.databases as databases
-import server.embedding as embedding
-import server.models as models
-import server.oci as server_oci
-import server.testbed as testbed
+import server.utils.databases as databases
+import server.utils.embedding as embedding
+import server.utils.models as models
+import server.utils.oci as server_oci
+import server.utils.testbed as testbed
 import server.agents.chatbot as chatbot
 
 from langgraph.graph.state import CompiledStateGraph

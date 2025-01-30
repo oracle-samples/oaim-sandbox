@@ -24,7 +24,7 @@ from langchain.docstore.document import Document as LangchainDocument
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_text_splitters import HTMLSectionSplitter, CharacterTextSplitter
 
-import server.databases as databases
+import server.utils.databases as databases
 
 import common.functions
 from common.schema import DatabaseVectorStorage, Database

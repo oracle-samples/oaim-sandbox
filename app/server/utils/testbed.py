@@ -18,7 +18,7 @@ from giskard.llm import set_llm_model, set_embedding_model
 from giskard.rag import generate_testset, KnowledgeBase, QATestset
 from giskard.rag.question_generators import simple_questions, complex_questions
 
-import server.databases as databases
+import server.utils.databases as databases
 from common.schema import (
     TestSetsIdType,
     TestSetsNameType,

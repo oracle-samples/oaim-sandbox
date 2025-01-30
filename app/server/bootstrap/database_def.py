@@ -4,8 +4,8 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 """
 
 import os
-import server.databases as databases
-import server.embedding as embedding
+import server.utils.databases as databases
+import server.utils.embedding as embedding
 from common.schema import Database
 
 

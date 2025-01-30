@@ -7,7 +7,7 @@ Licensed under the Universal Permissive License v 1.0 as shown at http://oss.ora
 import json
 
 from oracledb import Connection
-import server.databases as databases
+import server.utils.databases as databases
 from common.schema import ClientIdType
 import common.logging_config as logging_config
 

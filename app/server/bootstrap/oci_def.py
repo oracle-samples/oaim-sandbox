@@ -7,7 +7,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 import os
 import configparser
 import oci
-import server.oci as server_oci
+import server.utils.oci as server_oci
 
 import common.logging_config as logging_config
 from common.schema import OracleCloudSettings
