@@ -38,11 +38,11 @@ def main() -> list[Prompt]:
             "name": "Basic Example",
             "category": "ctx",
             "prompt": (
-                "Given the latest user input and chat history, your task is to reformulate the "
-                "users question into a standalone form that would make sense in a search query "
-                "and understood without the chat history.  DO NOT answer the question, rephrase "
-                "it to clarify the intent based on context.  If there is no chat history, "
-                "return the user input without modification."
+                "Reformulate the user's input into a standalone query that makes "
+                "sense in a search context based on the latest input and chat history. " 
+                "DO NOT answer the question just clarify the intent. "
+                "If there is no chat history, return the user's input unchanged. "
+                "DO NOT include explanations or notes about the process or history. "
             ),
         },
         {

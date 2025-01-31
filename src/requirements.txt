@@ -7,7 +7,7 @@
 ## Any new modules will require regenerating the 3PL, be selective
 
 
-## Installation Example (from this directory):
+## Installation Example from this directory:
 
 ### python3.11 -m venv .venv
 ### source .venv/bin/activate

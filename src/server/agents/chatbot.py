@@ -53,9 +53,7 @@ def get_messages(state: AgentState, config: RunnableConfig) -> list:
     state_messages = state["messages"] if use_history else state["messages"][-1:]
 
     messages = []
-    logger.debug("*** Messages:")
     for msg in state_messages:
-        logger.debug("--> %s", repr(msg))
         if isinstance(msg, SystemMessage):
             continue
         if isinstance(msg, ToolMessage):
@@ -67,11 +65,10 @@ def get_messages(state: AgentState, config: RunnableConfig) -> list:
     return messages
 
 
-def document_formatter(message) -> str:
+def document_formatter(rag_context) -> str:
     """Extract the RAG Documents and format into a string"""
-    rag_context = json.loads(message)
+    logger.info("Extracting chunks for RAG Retrieval")
     chunks = "\n\n".join([doc["page_content"] for doc in rag_context])
-    logger.debug("Generated Chunks: %s", chunks)
     return chunks
 
 
@@ -130,16 +127,18 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["vs_ir
     llm_with_grader = model.with_structured_output(Grade)
 
     # Extract the context and question for the grader
-    question = state["messages"][-3].content  # Tool call is [-2]
-    context = document_formatter(state["messages"][-1].content)
+    vs_context = json.loads(state["messages"][-1].content)
+    question = vs_context[1]  # Grade on the redefined question
+    context = document_formatter(vs_context[0])
     if "I think you found a bug!" in context or "Please fix your mistakes" in context:
         logger.exception("Found a bug: %s", context)
         return "vs_irrelevant"
 
     # Prompt
     grade_template = """
-    You are a Grader assessing relevance of retrieved documents to user input.
-    Here are the retrieved document:
+    You MUST respond with a binary score of 'yes' or 'no'.
+    You are a Grader assessing the relevance of retrieved text to the user's input. 
+    Here is the retrieved text:
     -------
     {context}
     -------
@@ -147,9 +146,10 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["vs_ir
     -------
     {question}
     -------
-    If the documents contain keyword(s) or semantic meaning related to the user input,
-    grade it as relevant. Give a binary score 'yes' or 'no' score to indicate whether the
-    document is relevant to the question.
+    Your task: 
+    - Check the text contains keywords or semantic meaning related to the user input. 
+    - If you find ANY relevant text, return 'yes' immediately and stop grading. 
+    - If the text is not relevant, return 'no'. 
     """
     grader = PromptTemplate(
         template=grade_template,
@@ -159,7 +159,11 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["vs_ir
     chain = grader | llm_with_grader
 
     scored_result = chain.invoke({"question": question, "context": context})
-    score = scored_result.binary_score
+    try:
+        score = scored_result.binary_score
+    except Exception:
+        logger.error("LLM is not returning binary score in grader.")
+        score = "no"
     logger.info("Grading Decision: RAG Relevant: %s", score)
     if score == "yes":
         return "vs_generate"
@@ -179,8 +183,9 @@ async def vs_generate(state: AgentState, config: RunnableConfig) -> None:
     logger.info("Generating RAG Response")
 
     # Extract the context and question for the completion
-    question = state["messages"][-3].content  # Tool call is [-2]
-    context = document_formatter(state["messages"][-1].content)
+    vs_context = json.loads(state["messages"][-1].content)
+    question = vs_context[1]  # Generate on the rephrased question
+    context = document_formatter(vs_context[0])
 
     # Generate prompt with RAG context
     generate_template = "SystemMessage(content='{sys_prompt}\n {context}'), HumanMessage(content='{question}')"
@@ -222,18 +227,17 @@ async def agent(state: AgentState, config: RunnableConfig) -> AgentState:
 
     messages = get_messages(state, config)
 
-    # This response will either make a tool call or provide a completion
+    # This response will either make a tool call or instruct for completion
     if config["metadata"]["sys_prompt"].prompt:
         messages.insert(0, SystemMessage(content=config["metadata"]["sys_prompt"].prompt))
     logger.debug("Invoking on: %s", messages)
-
-    # Invoke Chain
     response = await model.ainvoke(messages)
+    logger.info("Finished Agent; proceeding through graph")
     return {"messages": [response], "cleaned_messages": messages}
 
 
 async def generate_response(state: AgentState, config: RunnableConfig) -> AgentState:
-    """Invokes the agent model; response will either be a tool call or completion"""
+    """No tool call made, get response"""
     model = config["configurable"].get("ll_client", None)
     messages = get_messages(state, config)
     if config["metadata"]["sys_prompt"].prompt:

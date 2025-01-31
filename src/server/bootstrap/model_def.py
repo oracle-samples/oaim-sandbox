@@ -25,7 +25,7 @@ def main() -> list[Model]:
             "context_length": 127072,
             "temperature": 0.3,
             "max_completion_tokens": 4096,
-            "frequency_penalty": 0.0
+            "frequency_penalty": 0.0,
         },
         {
             "name": "gpt-4o-mini",
@@ -38,7 +38,7 @@ def main() -> list[Model]:
             "context_length": 127072,
             "temperature": 1.0,
             "max_completion_tokens": 4096,
-            "frequency_penalty": 0.0
+            "frequency_penalty": 0.0,
         },
         {
             "name": "sonar",
@@ -51,7 +51,7 @@ def main() -> list[Model]:
             "context_length": 127072,
             "temperature": 0.2,
             "max_completion_tokens": 28000,
-            "frequency_penalty": 1.0
+            "frequency_penalty": 1.0,
         },
         {
             "name": "llama3.1",
@@ -64,7 +64,7 @@ def main() -> list[Model]:
             "context_length": 131072,
             "temperature": 1.0,
             "max_completion_tokens": 2048,
-            "frequency_penalty": 0.0
+            "frequency_penalty": 0.0,
         },
         {
             "name": "thenlper/gte-base",
@@ -114,7 +114,6 @@ def main() -> list[Model]:
         if model["name"] in unique_entries:
             raise ValueError(f"Model '{model['name']}': already exists.")
         unique_entries.add(model["name"])
-
     model_objects = [Model(**model_dict) for model_dict in models_list]
     return model_objects
 

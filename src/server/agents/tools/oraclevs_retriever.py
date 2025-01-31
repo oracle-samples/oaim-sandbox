@@ -27,13 +27,45 @@ def oraclevs_tool(
 ) -> list[dict]:
     """Search and return information using retrieval augmented generation (RAG)"""
     logger.info("Initializing OracleVS Tool")
+    # Take our contextualization prompt and reword the question
+    # before doing the vector search
+    history = state["cleaned_messages"]
+    if config["metadata"]["ctx_prompt"].prompt:
+        retrieve_question = history.pop().content
+        model = config["configurable"].get("ll_client", None)
+        ctx_template = """
+            {ctx_prompt}
+            Here is the chat history:
+            -------
+            {history}
+            -------
+            Here is the user input/question:
+            -------
+            {question}
+        """
+        rephrase = PromptTemplate(
+            template=ctx_template,
+            input_variables=["ctx_prompt", "history", "question"],
+        )
+        chain = rephrase | model
+        logger.info("Retrieving Rephrased Input for VS")
+        result = chain.invoke(
+            {
+                "ctx_prompt": config["metadata"]["ctx_prompt"].prompt,
+                "history": history,
+                "question": retrieve_question,
+            }
+        )
+        if result.content != retrieve_question:
+            logger.info("Replacing User Question: %s with contextual one: %s", retrieve_question, result.content)
+            retrieve_question = result.content
     try:
+        logger.info("Connecting to VectorStore")
         db_conn = config["configurable"]["db_conn"]
         embed_client = config["configurable"]["embed_client"]
         rag_settings = config["metadata"]["rag_settings"]
         logger.info("Initializing Vector Store: %s", rag_settings.vector_store)
         try:
-            logger.info("Connecting to VectorStore")
             vectorstore = OracleVS(db_conn, embed_client, rag_settings.vector_store, rag_settings.distance_metric)
         except Exception as ex:
             logger.exception("Failed to initialize the Vector Store")
@@ -60,42 +92,6 @@ def oraclevs_tool(
                 retriever = vectorstore.as_retriever(search_type="mmr", search_kwargs=search_kwargs)
             else:
                 raise ValueError(f"Unsupported search_type: {search_type}")
-
-            # Take our contextualization prompt and reword the question
-            # before doing the vector search
-            history = state["cleaned_messages"]
-            if config["metadata"]["ctx_prompt"].prompt:
-                retrieve_question = history.pop().content
-                model = config["configurable"].get("ll_client", None)
-                ctx_template = """
-                    {ctx_prompt}
-                    Here is the chat history:
-                    -------
-                    {history}
-                    -------
-                    Here is the user input/question:
-                    -------
-                    {question}
-                """
-                rephrase = PromptTemplate(
-                    template=ctx_template,
-                    input_variables=["ctx_prompt", "history", "question"],
-                )
-                chain = rephrase | model
-                result = chain.invoke(
-                    {
-                        "ctx_prompt": config["metadata"]["ctx_prompt"].prompt,
-                        "history": history,
-                        "question": retrieve_question,
-                    }
-                )
-                print(result)
-                if result.content != retrieve_question:
-                    logger.info(
-                        "Replacing User Question: %s with contextual one: %s", retrieve_question, result.content
-                    )
-                    retrieve_question = result.content
-
             logger.info("Invoking retriever on: %s", retrieve_question)
             documents = retriever.invoke(retrieve_question)
         except Exception as ex:
@@ -107,8 +103,8 @@ def oraclevs_tool(
         )
 
     documents_dict = [vars(doc) for doc in documents]
-    logger.debug("Found Documents: %s", documents_dict)
-    return documents_dict
+    logger.info("Found Documents: %i", len(documents_dict))
+    return documents_dict, retrieve_question
 
 
 oraclevs_retriever: BaseTool = tool(oraclevs_tool)

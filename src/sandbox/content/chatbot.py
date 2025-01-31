@@ -28,12 +28,13 @@ logger = logging_config.logging.getLogger("content.chatbot")
 def show_rag_refs(context):
     """When RAG Content Found, show the references"""
     st.markdown("**References:**")
+    # st.write(context[1]) - This is the question the VS was performed on
     ref_src = set()
     ref_cols = st.columns([3, 3, 3])
     # Create a button in each column
     for i, ref_col in enumerate(ref_cols):
         with ref_col.popover(f"Reference: {i + 1}"):
-            chunk = context[i]
+            chunk = context[0][i]
             ref_src.add(chunk["metadata"]["filename"])
             st.subheader("Reference Text", divider="red")
             st.markdown(chunk["page_content"])
@@ -77,7 +78,7 @@ async def main() -> None:
         state.user_client = client.SandboxClient(
             server=state.server,
             settings=state["user_settings"],
-            timeout=600,
+            timeout=1200,
         )
     user_client: client.SandboxClient = state.user_client
 
