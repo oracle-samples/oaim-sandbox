@@ -136,33 +136,30 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["vs_ir
 
     # Prompt
     grade_template = """
-    You MUST respond with a binary score of 'yes' or 'no'.
-    You are a Grader assessing the relevance of retrieved text to the user's input. 
-    Here is the retrieved text:
-    -------
-    {context}
-    -------
+    You are a Grader assessing the relevance of retrieved text to the user's input.
+    You MUST respond with a only a binary score of 'yes' or 'no'.
+    If you DO find ANY relevant retrieved text to the user's input, return 'yes' immediately and stop grading. 
+    If you DO NOT find relevant retrieved text to the user's input, return 'no'.
     Here is the user input:
     -------
     {question}
     -------
-    Your task: 
-    - Check the text contains keywords or semantic meaning related to the user input. 
-    - If you find ANY relevant text, return 'yes' immediately and stop grading. 
-    - If the text is not relevant, return 'no'. 
+    Here is the retrieved text:
+    -------
+    {context}
     """
     grader = PromptTemplate(
         template=grade_template,
         input_variables=["context", "question"],
     )
-    logger.debug("Grading: %s against: %s", question, context)
+    logger.debug("Grading: %s against documents", question)
     chain = grader | llm_with_grader
-
     scored_result = chain.invoke({"question": question, "context": context})
     try:
+        logger.info("Grading completed.")
         score = scored_result.binary_score
     except Exception:
-        logger.error("LLM is not returning binary score in grader.")
+        logger.error("LLM is not returning binary score in grader!")
         score = "no"
     logger.info("Grading Decision: RAG Relevant: %s", score)
     if score == "yes":
@@ -198,7 +195,7 @@ async def vs_generate(state: AgentState, config: RunnableConfig) -> None:
     llm = config["configurable"].get("ll_client", None)
     generate_chain = prompt_template | llm | StrOutputParser()
 
-    logger.debug("Completing: %s against: %s", question, context)
+    logger.debug("Completing: %s against relevant RAG documents", question)
     chain = {
         "sys_prompt": config["metadata"]["sys_prompt"].prompt,
         "context": context,
@@ -230,6 +227,8 @@ async def agent(state: AgentState, config: RunnableConfig) -> AgentState:
     # This response will either make a tool call or instruct for completion
     if config["metadata"]["sys_prompt"].prompt:
         messages.insert(0, SystemMessage(content=config["metadata"]["sys_prompt"].prompt))
+
+    # If this is a tool call, then it will go through the graph, if not it will respond
     logger.debug("Invoking on: %s", messages)
     response = await model.ainvoke(messages)
     logger.info("Finished Agent; proceeding through graph")
@@ -237,13 +236,14 @@ async def agent(state: AgentState, config: RunnableConfig) -> AgentState:
 
 
 async def generate_response(state: AgentState, config: RunnableConfig) -> AgentState:
-    """No tool call made, get response"""
+    """Tool call was made but results were irrelevant, generate response without results"""
     model = config["configurable"].get("ll_client", None)
     messages = get_messages(state, config)
     if config["metadata"]["sys_prompt"].prompt:
         messages.insert(0, SystemMessage(content=config["metadata"]["sys_prompt"].prompt))
     logger.debug("Invoking on: %s", messages)
     response = await model.ainvoke(messages)
+    print(f"==================== {response} ====================")
     return {"messages": [response], "cleaned_messages": messages}
 
 

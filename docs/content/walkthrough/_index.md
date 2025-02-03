@@ -144,7 +144,7 @@ The **Sandbox** provides an easy to use front-end for experimenting with **LLM**
 1. Build the Container Image
 
    ```bash
-   cd oaim-sandbox/app
+   cd oaim-sandbox/src
    podman build -t localhost/oaim-sandbox:latest .
 
    ```
@@ -287,17 +287,19 @@ Now enable _RAG?_ and simply ask: `Are you sure?`
 {{% notice style="code" title="Performance: Host Overload..." icon="circle-info" %}}
 With **RAG** enabled, all the services (**LLM**/Embedding Models and Database) are being utilized simultaneously:
 
-- The embedding model is being used to convert your query into vectors for a similarity search
-- The database is being queried for documentation chunks similar to your query (AI Vector Search)
-- The **LLM** is processing the results from the database for its response
+- The **LLM** is rephrasing "Are you sure?" into a query that takes into account the conversation history and context
+- The embedding model is being used to convert the rephrased query into vectors for a similarity search
+- The database is being queried for documentation chunks similar to the rephrased query (AI Vector Search)
+- The **LLM** is grading the relevancy of the documents retrieved against the query
+- The **LLM** is completing its response using the documents from the database (if the documents are relevant)
 
-Depending on your hardware, this may cause the response to be significantly delayed.
+Depending on your hardware, this may cause the response to be **_significantly_** delayed.
 {{% /notice %}}
 
 ![Enable RAG](images/enable_rag.png)
 
 By asking `Are you sure?`, you are taking advantage of the **Sandbox**'s history and context functionality.  
-The response should be significantly different and include references to `DBMS_VECTOR` and links to the embedded documentation where this information can be found. It might even include an apology!
+The response should be different and include references to `DBMS_VECTOR` and links to the embedded documentation where this information can be found. It might even include an apology!
 
 ## What's Next?
 

@@ -28,20 +28,22 @@ def oraclevs_tool(
     """Search and return information using retrieval augmented generation (RAG)"""
     logger.info("Initializing OracleVS Tool")
     # Take our contextualization prompt and reword the question
-    # before doing the vector search
+    # before doing the vector search; do only if history is turned on
     history = state["cleaned_messages"]
-    if config["metadata"]["ctx_prompt"].prompt:
-        retrieve_question = history.pop().content
+    retrieve_question = history.pop().content
+    if config["metadata"]["use_history"] and config["metadata"]["ctx_prompt"].prompt and len(history) > 1:
         model = config["configurable"].get("ll_client", None)
         ctx_template = """
             {ctx_prompt}
-            Here is the chat history:
+            Here is the context and history:
             -------
             {history}
             -------
-            Here is the user input/question:
+            Here is the user input:
             -------
             {question}
+            -------
+            Return ONLY the rephrased query without any explanation or additional text.
         """
         rephrase = PromptTemplate(
             template=ctx_template,
@@ -57,7 +59,7 @@ def oraclevs_tool(
             }
         )
         if result.content != retrieve_question:
-            logger.info("Replacing User Question: %s with contextual one: %s", retrieve_question, result.content)
+            logger.info("**** Replacing User Question: %s with contextual one: %s", retrieve_question, result.content)
             retrieve_question = result.content
     try:
         logger.info("Connecting to VectorStore")

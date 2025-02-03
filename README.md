@@ -35,12 +35,12 @@ For more information, including more details on **Setup and Configuration** plea
 
 #### Bare-Metal Installation
 
-To run the application on bare-metal; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from `app/`:
+To run the application on bare-metal; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from `src/`:
 
 1. Create and activate a Python Virtual Environment:
 
    ```bash
-   cd app/
+   cd src/
    python3.11 -m venv .venv
    source .venv/bin/activate
    pip3.11 install --upgrade pip wheel
@@ -49,7 +49,7 @@ To run the application on bare-metal; download the [source](https://github.com/o
 1. Install the Python modules:
 
    ```bash
-   pip3.11 install -r app/requirements.txt
+   pip3.11 install -r requirements.txt
    source .venv/bin/activate
    ```
 
@@ -65,13 +65,14 @@ To run the application on bare-metal; download the [source](https://github.com/o
 
 #### Container Installation
 
-To run the application in a container; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the top-level directory:
+To run the application in a container; download the [source](https://github.com/oracle-samples/oaim-sandbox):
 
 1. Build the all-in-one image.
 
-   From the `app/` directory, build image:
+   From the `src/` directory, build image:
 
    ```bash
+   cd src/
    podman build -t oaim-sandbox .
    ```
 

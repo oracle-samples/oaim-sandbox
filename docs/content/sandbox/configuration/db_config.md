@@ -58,14 +58,14 @@ If using and ADB-S wallet, unzip the contents into the `TNS_ADMIN` directory. Th
 
 ### Bare-Metal Installation
 
-For bare-metal installations, set the `TNS_ADMIN` environment variable, or copy the contents of your current TNS_ADMIN to `app/src/tns_admin` before starting the **Sandbox**.
+For bare-metal installations, set the `TNS_ADMIN` environment variable, or copy the contents of your current TNS_ADMIN to `src/tns_admin` before starting the **Sandbox**.
 
 ### Container Installation
 
 For container installations, there are a couple of ways to include the contents of your `TNS_ADMIN` in the image:
 
-- Before building the image, copy the contents of your `TNS_ADMIN` to `app/src/tns_admin`. This will include your `TNS_ADMIN` as part of the image.
-- Mount your `TNS_ADMIN` directory into the container on startup, for example: `podman run -p 8501:8501 -v $TNS_ADMIN:/app/tns_admin -it --rm oaim-sandbox`
+- Before building the image, copy the contents of your `TNS_ADMIN` to `src/tns_admin`. This will include your `TNS_ADMIN` as part of the image.
+- Mount your `TNS_ADMIN` directory into the container on startup, for example: `podman run -p 8501:8501 -v $TNS_ADMIN:/tns_admin -it --rm oaim-sandbox`
 - Copy the `TNS_ADMIN` directory into an existing running container, for example: `podman cp $TNS_ADMIN /app/tns_admin oaim-sandbox`
 
 ## Database User

@@ -18,39 +18,47 @@ def main() -> list[Prompt]:
             "name": "RAG Example",
             "category": "sys",
             "prompt": (
-                "You are an assistant for question-answering tasks, be concise. "
-                "Use the retrieved DOCUMENTS and history to answer the question as accurately and "
-                "comprehensively as possible.  Keep your answer grounded in the facts of the "
-                "DOCUMENTS and reference the DOCUMENTS where possible. If you do not know the "
-                "answer, just say that you are sorry as you do not have enough information."
+                """You are an assistant for question-answering tasks, be concise. 
+                Use the retrieved DOCUMENTS to answer the user input as accurately and 
+                comprehensively as possible.  Keep your answer grounded in the facts of the 
+                DOCUMENTS and reference the DOCUMENTS where possible. If you do not know the 
+                answer, just say that you are sorry as you do not have enough information.
+                """
             ),
         },
         {
             "name": "Custom",
             "category": "sys",
             "prompt": (
-                "You are an assistant for question-answering tasks.  Use the retrieved DOCUMENTS "
-                "and history to answer the question.  If the DOCUMENTS do not contain the specific "
-                "information, do your best to still answer."
+                """You are an assistant for question-answering tasks.  Use the retrieved DOCUMENTS
+                and history to answer the question.  If the DOCUMENTS do not contain the specific
+                information, do your best to still answer.
+                """
             ),
         },
         {
             "name": "Basic Example",
             "category": "ctx",
             "prompt": (
-                "Reformulate the user's input into a standalone query that makes "
-                "sense in a search context based on the latest input and chat history. " 
-                "DO NOT answer the question just clarify the intent. "
-                "If there is no chat history, return the user's input unchanged. "
-                "DO NOT include explanations or notes about the process or history. "
+                """Rephrase the current query for an optimal knowledge retrieval search while ensuring accuracy. 
+                Follow these strict rules:
+                - If the current query is vague or refers to previous context 
+                (e.g., 'tell me more', 'are you sure?'), retain key details from the most relevant past interaction.
+                - If the query introduces a new topic (e.g., greetings like 'hello', 'hi', 'good morning' or 
+                unrelated subjects), IGNORE prior context and return it as-is.
+                - STRICTLY use only the original user-provided details (e.g., software versions, names, or numbers)
+                  and DO NOT use or assume any details from AI-generated responses.
+                - DO NOT answer the question. Simply return the rephrased query.
+                """
             ),
         },
         {
             "name": "Custom",
             "category": "ctx",
             "prompt": (
-                "Ignore chat history and context and do not reformulate the question. "
-                "Return the user input without modification."
+                """Ignore chat history and context and do not reformulate the question.
+                DO NOT answer the question. Simply return the original query AS-IS.
+                """
             ),
         },
     ]
