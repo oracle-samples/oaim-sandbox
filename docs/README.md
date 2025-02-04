@@ -15,9 +15,20 @@ From the `docs` directory:
 1. Download the [Relearn](https://github.com/McShelby/hugo-theme-relearn) theme
    ```bash
    mkdir -p themes/relearn
+   ```
+
+   For Linux:
+   ```bash
    wget -qO- $(curl -s https://api.github.com/repos/McShelby/hugo-theme-relearn/releases/latest \
       | grep "tarball_url" | awk -F'"' '{print $4}') \
       | tar --exclude='*/exampleSite' -xz -C themes/relearn --strip-components=1
+   ```
+
+   For MacOS:
+   ```bash
+   curl -L $(curl -s https://api.github.com/repos/McShelby/hugo-theme-relearn/releases/latest \
+      | grep "tarball_url" | cut -d '"' -f 4) \
+      | tar -xz -C themes/relearn --strip-components=1 --exclude='*/exampleSite'
    ```
 
 1. Start Hugo: `hugo serve`
