@@ -32,6 +32,9 @@ from langchain_cohere import ChatCohere
 from langchain_ollama import ChatOllama
 from langchain_openai import ChatOpenAI
 
+from langchain_community.chat_models.oci_generative_ai import ChatOCIGenAI
+
+
 from llama_index.core import Document
 from llama_index.core.node_parser import SentenceSplitter
 
@@ -102,7 +105,8 @@ def get_ll_model(model, ll_models_config=None, giskarded=False):
         "frequency_penalty": lm_params["frequency_penalty"][0],
         "presence_penalty": lm_params["presence_penalty"][0],
     }
-
+    logger.info("LLM_API:"+llm_api)
+      
     ## Start - Add Additional Model Authentication Here
     client = None
     if giskarded:
@@ -117,6 +121,17 @@ def get_ll_model(model, ll_models_config=None, giskarded=False):
         client = ChatPerplexity(pplx_api_key=lm_params["api_key"], model_kwargs=common_params)
     elif llm_api == "ChatOllama":
         client = ChatOllama(model=model,base_url=lm_params["url"], model_kwargs=common_params)
+    elif llm_api == "CohereOCI":
+        #state.oci_config["tenancy_ocid"] 
+        client = ChatOCIGenAI(
+            model_id=model,
+            service_endpoint=lm_params["url"],
+            compartment_id=os.environ.get("OCI_COMPARTMENT_ID", default=""),
+            auth_profile=lm_params["api_key"], 
+            model_kwargs={"temperature": common_params["temperature"], "max_tokens": common_params["max_tokens"],"top_p": common_params["top_p"], 
+                          "frequency_penalty": common_params["frequency_penalty"], "presence_penalty": common_params["presence_penalty"]}
+        )
+ 
     ## End - Add Additional Model Authentication Here
     api_accessible, err_msg = is_url_accessible(llm_url)
 
@@ -134,6 +149,7 @@ def get_embedding_model(model, embed_model_config=None, giskarded=False):
     embed_key = embed_model_config[model]["api_key"]
 
     logger.debug("Matching Embedding API: %s", embed_api)
+ 
     if giskarded:
         giskard_key = embed_key or "giskard"
         _client = OpenAI(api_key=giskard_key, base_url=f"{embed_url}/v1/")
@@ -148,6 +164,9 @@ def get_embedding_model(model, embed_model_config=None, giskarded=False):
         client = embed_api(model=model, base_url=embed_url)
     elif embed_api.__name__ == "CohereEmbeddings":
         client = embed_api(model=model, cohere_api_key=embed_key)
+    elif embed_api.__name__ == "OCIGenAIEmbeddings":
+        client = embed_api(model_id=model, service_endpoint=embed_url, compartment_id= os.environ.get("OCI_COMPARTMENT_ID", default=""), auth_profile=embed_key)
+
     else:
         client = embed_api(model=embed_url)
 
@@ -397,6 +416,10 @@ def populate_vs(
 
     execute_sql(db_conn, mergesql)
     db_conn.commit()
+    #NOTE: In this release, index is automatically created without user control. This part of code helps the future release
+    #to re-create an index or leave without an existing vectorstore.
+    #for this reason the index_exists is set to True to recreate in any case the index.
+    index_exists=True
 
     if (index_exists):
         # Build the Index
@@ -498,6 +521,7 @@ def oci_initialize(
     region=None,
     key_file=None,
     security_token_file=None,
+    compartment_id=None,
 ):
     """Initialize the configuration for OCI AuthN"""
     config = {
@@ -510,10 +534,12 @@ def oci_initialize(
         "additional_user_agent": "",
         "log_requests": False,
         "pass_phrase": None,
+        "compartment_id":compartment_id,
     }
 
     config_file = os.environ.get("OCI_CLI_CONFIG_FILE", default=oci.config.DEFAULT_LOCATION)
     config_profile = os.environ.get("OCI_CLI_PROFILE", default=oci.config.DEFAULT_PROFILE)
+    compartment_id = os.environ.get("OCI_COMPARTMENT_ID", default="")
 
     # Ingest config file when parameter are missing
     if not (fingerprint and tenancy and region and key_file and (user or security_token_file)):
@@ -529,6 +555,7 @@ def oci_initialize(
     config["tenancy"] = os.environ.get("OCI_CLI_TENANCY", config.get("tenancy"))
     config["region"] = os.environ.get("OCI_CLI_REGION", config.get("region"))
     config["key_file"] = os.environ.get("OCI_CLI_KEY_FILE", config.get("key_file"))
+    config["compartment_id"] = os.environ.get("OCI_COMPARTMENT_ID", config.get("compartment_id"))
     return config
 
 
