@@ -294,6 +294,7 @@ def rag_sidebar() -> None:
                 min_value=0.0,
                 max_value=1.0,
                 step=0.1,
+                key="selected_rag_score_threshold"
                 on_change=update_user_settings,
                 args=("rag", "score_threshold"),
             )

@@ -6,4 +6,5 @@
 **/__pycache__
 **/.pytest_cache
 **/*.sh
+!sandbox/spring_ai/templates/env.sh
 !entrypoint.sh

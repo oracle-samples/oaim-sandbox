@@ -17,14 +17,6 @@ From the `docs` directory:
    mkdir -p themes/relearn
    ```
 
-   For Linux:
-   ```bash
-   wget -qO- $(curl -s https://api.github.com/repos/McShelby/hugo-theme-relearn/releases/latest \
-      | grep "tarball_url" | awk -F'"' '{print $4}') \
-      | tar --exclude='*/exampleSite' -xz -C themes/relearn --strip-components=1
-   ```
-
-   For MacOS:
    ```bash
    curl -L $(curl -s https://api.github.com/repos/McShelby/hugo-theme-relearn/releases/latest \
       | grep "tarball_url" | cut -d '"' -f 4) \
