@@ -75,7 +75,7 @@ To run the application in a container; download the [source](https://github.com/
 
 1. Build the image.
 
-   From the `app/` directory, build Image:
+   From the root of the project, build Image:
 
    ```bash
    podman build -t oaim-sandbox .
