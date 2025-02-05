@@ -10,7 +10,7 @@ ENV RUNUSER=oracleaim
 RUN microdnf -y update
 RUN microdnf -y install python3.11 python3.11-pip 
 RUN python3.11 -m venv --symlinks --upgrade-deps /opt/venv
-COPY ./requirements.txt /opt/requirements.txt
+COPY app/requirements.txt /opt/requirements.txt
 RUN source /opt/venv/bin/activate && \
     pip3 install --upgrade pip wheel setuptools && \
     pip3 install -r /opt/requirements.txt
@@ -25,10 +25,11 @@ ARG ENVIRONMENT
 ENV PATH=/opt/venv/bin:$PATH
 
 #COPY THIRD_PARTY_LICENSES.txt /THIRD_PARTY_LICENSES.txt
-COPY entrypoint.sh /entrypoint.sh
+COPY app/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-COPY --chown=$RUNUSER:$RUNUSER src/ /app/
+COPY --chown=$RUNUSER:$RUNUSER app/src/ /app/
+COPY --chown=$RUNUSER:$RUNUSER spring_ai/ /spring_ai/
 # Copy the OCI directory if it exists
 ENV ENVIRONMENT=${ENVIRONMENT}
 RUN if [ -d "/app/.oci" ] && [ "$ENVIRONMENT" != "development" ]; then \
