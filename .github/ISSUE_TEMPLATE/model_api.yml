@@ -1,0 +1,34 @@
+name: Additional Model API Support
+description: Submit a request for additional model support.
+title: "[Model]: "
+labels: ["model support"]
+body:
+  - type: input
+    id: model-name
+    attributes:
+      label: Model Name
+      description: "Enter the name of a model or API you would like support for:"
+      placeholder: "Example: hermes-2-theta-llama-3-8b (model name) or LocalAI (API)"
+    validations:
+      required: true
+  - type: textarea
+    id: model-card
+    attributes:
+      label: Model Card URL
+      description: "Provide the URL to a model that you would like support for:"
+      placeholder: "Example: https://huggingface.co/NousResearch/Hermes-2-Theta-Llama-3-8B"
+    validations:
+      required: true
+  - type: textarea
+    id: more-info
+    attributes:
+      label: Additional Information
+      description: "Add any extra details here:"
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Code of Conduct
+      description: By submitting this issue, you agree to follow our [Code of Conduct](https://github.com/oracle-samples/oaim-sandbox/blob/release/1.0-beta/CONTRIBUTING.md#code-of-conduct). 
+      options:
+        - label: I agree to follow this project's Code of Conduct
+          required: true
