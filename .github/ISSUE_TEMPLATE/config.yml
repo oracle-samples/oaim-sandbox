@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Oracle Security 
+    url: https://github.com/oracle-samples/oaim-sandbox/blob/release/1.0-beta/SECURITY.md
+    about: Please review how to report security vulnerabilities here.
