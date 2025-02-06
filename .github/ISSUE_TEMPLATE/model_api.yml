@@ -1,5 +1,5 @@
-name: Additional Model API Support
-description: Submit a request for additional model support.
+name: additional_model_support
+description: Submit a request for additional model API support.
 title: "[Model]: "
 labels: ["model support"]
 body:
