@@ -205,12 +205,14 @@ def spring_ai_obaas(src_dir, file_name, provider, ll_model):
 
     formatted_content = template_content.format(
         provider=provider,
-        ctx_prompt=ctx_prompt,
+        ctx_prompt=f"{ctx_prompt}",
         ll_model=state["user_settings"]["ll_model"] | state["ll_model_enabled"][ll_model],
         rag=state["user_settings"]["rag"],
         database_config=state["database_config"][state["user_settings"]["rag"]["database"]],
     )
+   
     if file_name.endswith(".yaml"):
+  
         yaml_data = yaml.safe_load(formatted_content)
         if provider == "ollama":
             del yaml_data["spring"]["ai"]["openai"]
