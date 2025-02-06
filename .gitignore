@@ -44,3 +44,7 @@ temp/rag_agent.ipynb
 temp/tools.ipynb
 temp/tools.py
 temp/json-dual.sql
+sandbox.sh
+server.sh
+temp/genai_work.py
+temp/test_oci.py
