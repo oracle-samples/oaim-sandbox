@@ -5,16 +5,23 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # spell-checker:ignore rerank, mult, HNSW
 
 help_dict = {
+    "context_length": """
+        Maximum number of tokens (words, sub-words, or characters) the model can consider
+        at once when generating a response.   It defines how much prior conversation or text 
+        the model "remembers" within a single interaction.
+        Value often determined from the model card.
+        """,
     "temperature": """
         Controls how creative the responses are.
         A higher temperature results in more creative and varied answers, while a lower
         temperature produces more focused and predictable ones.  It is generally
         recommended altering this or Top P but not both.
+        Default value often determined from the model card.
         """,
     "max_completion_tokens": """
         Sets the maximum length of the response.
         The higher the number, the longer the potential response, but it won't exceed this
-        limit.
+        limit.  Max value often determined from the model card.
         """,
     "top_p": """
         Limits the choice of words to the most likely ones.
@@ -26,7 +33,7 @@ help_dict = {
     "frequency_penalty": """
         Discourages repeating the same words or phrases in the response.
         A higher frequency penalty makes repetition less likely, promoting more varied
-        language in the response.
+        language in the response.  Default value often determined from the model card.
         """,
     "presence_penalty": """
         Encourages the introduction of new topics or ideas in the response.
@@ -69,10 +76,10 @@ help_dict = {
         Max Characters: 20
         """,
     "chunk_overlap": """
-        Defines the amount of consecutive chunks' overlap as percentage of chunk size
+        Defines the amount of consecutive chunks' overlap as percentage of chunk size.
         """,
     "chunk_size": """
-        Defines the length of each chunk
+        Defines the length of each chunk.  Max value often determined from the model card.
         """,
     "index_type": """
         - HNSW: (Hierarchical Navigable Small Worlds) index. A graph-based index.
@@ -83,7 +90,7 @@ help_dict = {
         are in a high-dimensional space. These metrics help compare and cluster
         embeddings effectively.
         """,
-    "model_name":"""
+    "model_name": """
         The official name of the model as per the model card.  
         Misconfigured names will result in an error.
         """,
@@ -91,8 +98,11 @@ help_dict = {
         API of the model.  If the API of the model is not listed here, try an OpenAI one.
         Open an issue if you'd like to request support for an unlisted model.
         """,
+    "model_api_url": """
+        API URL for accessing the model.  
+        """,
     "model_api_key": """
         API Key for accessing the model.  
         Often left blank for on-premises models.
-        """
+        """,
 }

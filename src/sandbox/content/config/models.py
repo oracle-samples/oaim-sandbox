@@ -112,15 +112,26 @@ def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_
             disabled=action == "edit",
         )
         model.url = st.text_input(
-            "API URL:", help=help_text.help_dict["model_api_key"], key="add_model_api_url", value=model.url
+            "API URL:", help=help_text.help_dict["model_api_url"], key="add_model_api_url", value=model.url
         )
-        model.api_key = st.text_input("API Key:", key="add_model__api_key", type="password", value=model.api_key)
+        model.api_key = st.text_input(
+            "API Key:",
+            help=help_text.help_dict["model_api_key"],
+            key="add_model_api_key",
+            type="password",
+            value=model.api_key,
+        )
         if model_type == "ll":
             model.context_length = st.number_input(
-                "Context Length:", min_value=0, key="add_model_context_length", value=model.context_length
+                "Context Length:",
+                help=help_text.help_dict["context_length"],
+                min_value=0,
+                key="add_model_context_length",
+                value=model.context_length,
             )
             model.temperature = st.number_input(
                 "Default Temperature:",
+                help=help_text.help_dict["temperature"],
                 min_value=0.00,
                 max_value=2.00,
                 key="add_model_temperature",
@@ -128,12 +139,14 @@ def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_
             )
             model.max_completion_tokens = st.number_input(
                 "Max Completion Tokens:",
+                help=help_text.help_dict["max_completion_tokens"],
                 min_value=1,
                 key="add_model_max_completion_tokens",
                 value=model.max_completion_tokens,
             )
             model.frequency_penalty = st.number_input(
                 "Default Frequency Penalty:",
+                help=help_text.help_dict["frequency_penalty"],
                 min_value=-2.00,
                 max_value=2.00,
                 value=model.frequency_penalty,
@@ -141,7 +154,11 @@ def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_
             )
         else:
             model.max_chunk_size = st.number_input(
-                "Max Chunk Size:", min_value=0, key="add_model_max_chunk_size", value=model.max_chunk_size
+                "Max Chunk Size:",
+                help=help_text.help_dict["chunk_size"],
+                min_value=0,
+                key="add_model_max_chunk_size",
+                value=model.max_chunk_size,
             )
         button_col_format = st.columns([1.2, 1.4, 1.4, 5])
         action_button, delete_button, cancel_button, _ = button_col_format
