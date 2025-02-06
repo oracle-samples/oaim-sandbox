@@ -24,6 +24,7 @@ from streamlit import session_state as state
 import sandbox.utils.st_common as st_common
 import sandbox.utils.api_call as api_call
 
+import common.help_text as help_text
 from common.schema import Model, ModelTypeType, ModelNameType
 import common.logging_config as logging_config
 
@@ -88,9 +89,10 @@ def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_
     else:
         model = Model(name="unset", type=model_type, api="unset", status="CUSTOM")
     with st.form("edit_model"):
-        model.enabled = st.checkbox("Enabled", value=True if action=="add" else model.enabled)
+        model.enabled = st.checkbox("Enabled", value=True if action == "add" else model.enabled)
         model.name = st.text_input(
             "Model Name:",
+            help=help_text.help_dict["model_name"],
             value=None if model.name == "unset" else model.name,
             key="add_model_name",
             disabled=action == "edit",
@@ -102,13 +104,16 @@ def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_
         api_index = next((i for i, item in enumerate(api_values) if item == model.api), None)
         model.api = st.selectbox(
             "API:",
+            help=help_text.help_dict["model_api"],
             placeholder="-- Choose the Model's API --",
             index=api_index,
             options=api_values,
             key="add_model_api",
             disabled=action == "edit",
         )
-        model.url = st.text_input("API URL:", key="add_model_api_url", value=model.url)
+        model.url = st.text_input(
+            "API URL:", help=help_text.help_dict["model_api_key"], key="add_model_api_url", value=model.url
+        )
         model.api_key = st.text_input("API Key:", key="add_model__api_key", type="password", value=model.api_key)
         if model_type == "ll":
             model.context_length = st.number_input(
