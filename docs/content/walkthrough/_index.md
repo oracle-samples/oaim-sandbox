@@ -32,6 +32,8 @@ The performance of the **Sandbox** will vary depending on the infrastructure.
 
 **LLM**s and Embedding Models are designed to use GPUs, but this walkthrough _can work_ on machines with just CPUs; albeit _much_ slower!
 When testing the **LLM**, if you don't get a response in a couple of minutes; your hardware is not sufficient to continue with the walkthrough.
+
+For **MacOS** users: if using Podman, each Podman machine is backed by a virtual machine.  The VM should be started with **10240** Mb memory allocated.
 {{% /notice %}}
 
 ## Installation
@@ -57,7 +59,7 @@ To enable the _ChatBot_ functionality, access to a **LLM** is required. The walk
 1. Start the *Ollama* container:
 
    ```bash
-   podman run -d --gpus=all -v ollama:$HOME/.ollama -p 11434:11434 --name ollama docker.io/ollama/ollama
+   podman run -d -e OLLAMA_NUM_PARALLEL=1 --gpus=all -v ollama:$HOME/.ollama -p 11434:11434 --name ollama docker.io/ollama/ollama
    ```
 
 1. Pull the **LLM** into the container:
@@ -136,7 +138,7 @@ The **Sandbox** provides an easy to use front-end for experimenting with **LLM**
 1. Download and Unzip the latest version of the **Sandbox**:
 
    ```bash
-   wget -O oaim-sandbox.tar.gz https://github.com/oracle-samples/oaim-sandbox/archive/refs/heads/main.tar.gz
+   curl -L -o oaim-sandbox.tar.gz https://github.com/oracle-samples/oaim-sandbox/archive/refs/heads/main.tar.gz
    mkdir oaim-sandbox
    tar zxf oaim-sandbox.tar.gz --strip-components=1 -C oaim-sandbox
    ```

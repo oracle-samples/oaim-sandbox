@@ -24,6 +24,7 @@ from streamlit import session_state as state
 import sandbox.utils.st_common as st_common
 import sandbox.utils.api_call as api_call
 
+import common.help_text as help_text
 from common.schema import Model, ModelTypeType, ModelNameType
 import common.logging_config as logging_config
 
@@ -88,9 +89,10 @@ def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_
     else:
         model = Model(name="unset", type=model_type, api="unset", status="CUSTOM")
     with st.form("edit_model"):
-        model.enabled = st.checkbox("Enabled", value=True if action=="add" else model.enabled)
+        model.enabled = st.checkbox("Enabled", value=True if action == "add" else model.enabled)
         model.name = st.text_input(
             "Model Name:",
+            help=help_text.help_dict["model_name"],
             value=None if model.name == "unset" else model.name,
             key="add_model_name",
             disabled=action == "edit",
@@ -102,20 +104,34 @@ def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_
         api_index = next((i for i, item in enumerate(api_values) if item == model.api), None)
         model.api = st.selectbox(
             "API:",
+            help=help_text.help_dict["model_api"],
             placeholder="-- Choose the Model's API --",
             index=api_index,
             options=api_values,
             key="add_model_api",
             disabled=action == "edit",
         )
-        model.url = st.text_input("API URL:", key="add_model_api_url", value=model.url)
-        model.api_key = st.text_input("API Key:", key="add_model__api_key", type="password", value=model.api_key)
+        model.url = st.text_input(
+            "API URL:", help=help_text.help_dict["model_api_url"], key="add_model_api_url", value=model.url
+        )
+        model.api_key = st.text_input(
+            "API Key:",
+            help=help_text.help_dict["model_api_key"],
+            key="add_model_api_key",
+            type="password",
+            value=model.api_key,
+        )
         if model_type == "ll":
             model.context_length = st.number_input(
-                "Context Length:", min_value=0, key="add_model_context_length", value=model.context_length
+                "Context Length:",
+                help=help_text.help_dict["context_length"],
+                min_value=0,
+                key="add_model_context_length",
+                value=model.context_length,
             )
             model.temperature = st.number_input(
                 "Default Temperature:",
+                help=help_text.help_dict["temperature"],
                 min_value=0.00,
                 max_value=2.00,
                 key="add_model_temperature",
@@ -123,12 +139,14 @@ def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_
             )
             model.max_completion_tokens = st.number_input(
                 "Max Completion Tokens:",
+                help=help_text.help_dict["max_completion_tokens"],
                 min_value=1,
                 key="add_model_max_completion_tokens",
                 value=model.max_completion_tokens,
             )
             model.frequency_penalty = st.number_input(
                 "Default Frequency Penalty:",
+                help=help_text.help_dict["frequency_penalty"],
                 min_value=-2.00,
                 max_value=2.00,
                 value=model.frequency_penalty,
@@ -136,7 +154,11 @@ def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_
             )
         else:
             model.max_chunk_size = st.number_input(
-                "Max Chunk Size:", min_value=0, key="add_model_max_chunk_size", value=model.max_chunk_size
+                "Max Chunk Size:",
+                help=help_text.help_dict["chunk_size"],
+                min_value=0,
+                key="add_model_max_chunk_size",
+                value=model.max_chunk_size,
             )
         button_col_format = st.columns([1.2, 1.4, 1.4, 5])
         action_button, delete_button, cancel_button, _ = button_col_format
