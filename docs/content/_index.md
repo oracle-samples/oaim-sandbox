@@ -35,7 +35,7 @@ The **Sandbox** streamlines the entire workflow from prototyping to production, 
 
 # Getting Started
 
-The **Sandbox** is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on a bare-metal, within a container, or in a Kubernetes Cluster.
+The **Sandbox** is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on bare-metal, within a container, or in a Kubernetes Cluster.
 
 {{% notice style="code" title="Prefer a Step-by-Step?" icon="circle-info" %}}
 The [Walkthrough](walkthrough) is a great way to familiarize yourself with the Sandbox and its features in a development environment.
@@ -79,12 +79,12 @@ To run the application on bare-metal; download the [source](https://github.com/o
 
 1. Navigate to `http://localhost:8501`.
 
-1. [Configure](configuration) the Sandbox.
+1. [Configure](sandbox/configuration) the Sandbox.
 
 ### Container Installation
 
 {{% notice style="code" title="Same... but Different" icon="circle-info" %}}
-Reference to `podman` commands, if applicable to your environment, can be substituted with `docker`.
+References to `podman` commands, if applicable to your environment, can be substituted with `docker`.
 {{% /notice %}}
 
 To run the application in a container; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the top-level directory:
@@ -106,4 +106,4 @@ To run the application in a container; download the [source](https://github.com/
 
 1. Navigate to `http://localhost:8501`.
 
-1. [Configure](configuration) the Sandbox.
+1. [Configure](sandbox/configuration) the Sandbox.

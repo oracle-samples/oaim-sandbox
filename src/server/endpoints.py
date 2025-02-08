@@ -16,17 +16,6 @@ from typing import AsyncGenerator, Literal, Optional
 from pydantic import HttpUrl
 import requests
 
-import common.logging_config as logging_config
-import common.schema as schema
-import common.functions as functions
-import server.bootstrap as bootstrap
-import server.utils.databases as databases
-import server.utils.embedding as embedding
-import server.utils.models as models
-import server.utils.oci as server_oci
-import server.utils.testbed as testbed
-import server.agents.chatbot as chatbot
-
 from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import HumanMessage, AnyMessage, convert_to_openai_messages, ChatMessage
 from langchain_core.runnables import RunnableConfig
@@ -34,6 +23,18 @@ from giskard.rag import evaluate, QATestset
 
 from fastapi import FastAPI, Query, HTTPException, UploadFile, Response
 from fastapi.responses import StreamingResponse
+
+import common.logging_config as logging_config
+import common.schema as schema
+import common.functions as functions
+import server.bootstrap as bootstrap
+import server.utils.databases as databases
+import server.utils.oci as server_oci
+import server.utils.models as models
+import server.utils.embedding as embedding
+import server.utils.testbed as testbed
+import server.agents.chatbot as chatbot
+
 
 logger = logging_config.logging.getLogger("server.endpoints")
 
@@ -326,75 +327,91 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         return OCI_OBJECTS
 
     @auth.get(
-        "/v1/oci/compartments/{profile}",
+        "/v1/oci/compartments/{auth_profile}",
         description="Get OCI Compartments",
         response_model=dict,
     )
-    async def oci_list_compartments(profile: schema.OCIProfileType) -> dict:
+    async def oci_list_compartments(auth_profile: schema.OCIProfileType) -> dict:
         """Return a list of compartments"""
-        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.profile == profile), None)
+        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.auth_profile == auth_profile), None)
         compartments = server_oci.get_compartments(oci_config)
         return compartments
 
     @auth.get(
-        "/v1/oci/buckets/{compartment}/{profile}",
+        "/v1/oci/buckets/{compartment}/{auth_profile}",
         description="Get OCI Object Storage buckets in Compartment OCID",
         response_model=list,
     )
-    async def oci_list_buckets(profile: schema.OCIProfileType, compartment: str) -> list:
+    async def oci_list_buckets(auth_profile: schema.OCIProfileType, compartment: str) -> list:
         """Return a list of buckets; Validate OCID using Pydantic class"""
         compartment_obj = schema.OracleResource(ocid=compartment)
-        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.profile == profile), None)
+        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.auth_profile == auth_profile), None)
         buckets = server_oci.get_buckets(compartment_obj.ocid, oci_config)
         return buckets
 
     @auth.get(
-        "/v1/oci/objects/{bucket_name}/{profile}",
+        "/v1/oci/objects/{bucket_name}/{auth_profile}",
         description="Get OCI Object Storage buckets objects",
         response_model=list,
     )
-    async def oci_list_bucket_objects(profile: schema.OCIProfileType, bucket_name: str) -> list:
+    async def oci_list_bucket_objects(auth_profile: schema.OCIProfileType, bucket_name: str) -> list:
         """Return a list of bucket objects; Validate OCID using Pydantic class"""
-        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.profile == profile), None)
+        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.auth_profile == auth_profile), None)
         objects = server_oci.get_bucket_objects(bucket_name, oci_config)
         return objects
 
-    @auth.patch("/v1/oci/{profile}", description="Update, Test, Set as Default OCI Configuration")
-    async def oci_update(profile: schema.OCIProfileType, payload: schema.OracleCloudSettings) -> Response:
+    @auth.patch("/v1/oci/{auth_profile}", description="Update, Test, Set as Default OCI Configuration")
+    async def oci_update(auth_profile: schema.OCIProfileType, payload: schema.OracleCloudSettings) -> Response:
         """Update OCI Configuration"""
         logger.debug("Received OCI Payload: %s", payload)
-        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.profile == profile), None)
+        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.auth_profile == auth_profile), None)
         if oci_config:
             try:
                 namespace = server_oci.get_namespace(payload)
             except server_oci.OciException as ex:
                 raise HTTPException(status_code=401, detail=str(ex)) from ex
             oci_config.namespace = namespace
-            oci_config.tenancy = payload.tenancy
-            oci_config.region = payload.region
-            oci_config.user = payload.user
-            oci_config.fingerprint = payload.fingerprint
-            oci_config.key_file = payload.key_file
-            oci_config.security_token_file = payload.security_token_file
-
+            oci_config.tenancy = payload.tenancy if payload.tenancy else oci_config.tenancy
+            oci_config.region = payload.region if payload.region else oci_config.region
+            oci_config.user = payload.user if payload.user else oci_config.user
+            oci_config.fingerprint = payload.fingerprint if payload.fingerprint else oci_config.fingerprint
+            oci_config.key_file = payload.key_file if payload.key_file else oci_config.key_file
+            oci_config.security_token_file = (
+                payload.security_token_file if payload.security_token_file else oci_config.security_token_file
+            )
+            # OCI GenAI
+            try:
+                oci_config.service_endpoint = (
+                    payload.service_endpoint if payload.service_endpoint else oci_config.service_endpoint
+                )
+                oci_config.compartment_id = (
+                    payload.compartment_id if payload.compartment_id else oci_config.compartment_id
+                )
+                if oci_config.service_endpoint != "" and oci_config.compartment_id != "":
+                    for model in MODEL_OBJECTS:
+                        if "OCI" in model.api:
+                            model.enabled = True
+                            model.url = oci_config.service_endpoint
+            except AttributeError:
+                pass
             return Response(status_code=204)
 
-        raise HTTPException(status_code=404, detail=f"OCI Profile {profile}: not found")
+        raise HTTPException(status_code=404, detail=f"OCI Profile {auth_profile}: not found")
 
     @auth.post(
-        "/v1/oci/objects/download/{bucket_name}/{profile}",
+        "/v1/oci/objects/download/{bucket_name}/{auth_profile}",
         description="Download files from Object Storage",
     )
     async def oci_download_objects(
         client: schema.ClientIdType,
         bucket_name: str,
-        profile: schema.OCIProfileType,
+        auth_profile: schema.OCIProfileType,
         request: list[str],
     ) -> Response:
         """Download files from Object Storage"""
         # Files should be placed in the embedding folder
         temp_directory = functions.get_temp_directory(client, "embedding")
-        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.profile == profile), None)
+        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.auth_profile == auth_profile), None)
         for object_name in request:
             server_oci.get_object(temp_directory, object_name, bucket_name, oci_config)
 

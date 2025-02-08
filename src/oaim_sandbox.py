@@ -23,6 +23,7 @@ logger = logging_config.logging.getLogger("oaim_sandbox")
 REMOTE_SERVER = False
 try:
     from oaim_server import start_server
+
     logger.debug("Imported API Server.")
 except ImportError as ex:
     logger.debug("API Server not present: %s", ex)
@@ -59,7 +60,7 @@ def main() -> None:
     api_down = False
     if "user_settings" not in state:
         try:
-            state.user_settings = api_call.post(url=api_endpoint, params={"client": client_gen_id()})
+            state.user_settings = api_call.post(url=api_endpoint, params={"client": client_gen_id()}, backoff_factor=4)
         except api_call.ApiError:
             logger.error("Unable to contact API Server; setting as Down!")
             api_down = True

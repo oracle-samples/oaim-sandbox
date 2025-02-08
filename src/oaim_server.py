@@ -23,15 +23,13 @@ from typing import Annotated
 import uvicorn
 import psutil
 
-import common.logging_config as logging_config
+from fastapi import FastAPI, HTTPException, Depends, status, APIRouter
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 # Endpoints
 from server.endpoints import register_endpoints
 
-from fastapi import FastAPI, HTTPException, Depends, status, APIRouter
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-
-
+import common.logging_config as logging_config
 logger = logging_config.logging.getLogger("oaim_server")
 
 

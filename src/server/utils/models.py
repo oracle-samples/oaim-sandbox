@@ -11,9 +11,11 @@ from langchain_cohere import ChatCohere, CohereEmbeddings
 from langchain_ollama import ChatOllama, OllamaEmbeddings
 from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
+from langchain_community.chat_models.oci_generative_ai import ChatOCIGenAI
+from langchain_community.embeddings.oci_generative_ai import OCIGenAIEmbeddings
 
 import common.logging_config as logging_config
-from common.schema import ModelNameType, ModelTypeType, ModelEnabledType, Model, ModelAccess
+from common.schema import ModelNameType, ModelTypeType, ModelEnabledType, Model, ModelAccess, OracleCloudSettings
 
 logger = logging_config.logging.getLogger("server.models")
 
@@ -53,8 +55,7 @@ async def get_key_value(
 
 
 async def get_client(
-    model_objects: list[ModelAccess],
-    model_config: dict,
+    model_objects: list[ModelAccess], model_config: dict, oci_config: OracleCloudSettings
 ) -> BaseChatModel:
     """Retrieve model configuration"""
     logger.debug("Model Config: %s", model_config)
@@ -96,6 +97,12 @@ async def get_client(
             "Perplexity": lambda: ChatOpenAI(
                 model=model_name, base_url=model_url, api_key=model_api_key, **ll_common_params
             ),
+            # "ChatOCIGenAI": lambda: ChatOCIGenAI(
+            #     model_id=model_name,
+            #     client=
+            #     compartment_id=
+            #     model_kwargs=ll_common_params,
+            # ),
             "GenericOpenAI": lambda: ChatOpenAI(
                 model=model_name, base_url=model_url, api_key=model_api_key, **ll_common_params
             ),
@@ -107,6 +114,11 @@ async def get_client(
             "CohereEmbeddings": lambda: CohereEmbeddings(model=model_name, cohere_api_key=model_api_key),
             "OllamaEmbeddings": lambda: OllamaEmbeddings(model=model_name, base_url=model_url),
             "HuggingFaceEndpointEmbeddings": lambda: HuggingFaceEndpointEmbeddings(model=model_url),
+            # "OCIGenAIEmbeddings": lambda: OCIGenAIEmbeddings(
+            #     model_id=model_name,
+            #     client=
+            #     compartment_id=
+            # ),
             "GenericOpenAIEmbeddings": lambda: OpenAIEmbeddings(
                 model=model_name, base_url=model_url, api_key=model_api_key
             ),
