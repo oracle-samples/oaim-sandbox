@@ -7,10 +7,9 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 from typing import Optional, Literal, Union
 from pydantic import BaseModel, Field, PrivateAttr
 
-import common.help_text as help_text
 from langchain_core.messages import ChatMessage
-
 import oracledb
+import common.help_text as help_text
 
 #####################################################
 # Literals
@@ -124,7 +123,7 @@ class OracleCloudSettings(BaseModel):
     security_token_file: Optional[str] = Field(default=None, description="Security Key File for Auth Token")
 
     class Config(object):
-        """Allow arbitrary keys for other values as we don't know what will be supplied"""
+        """Allow arbitrary keys for other OCI settings"""
 
         extra = "allow"
 
@@ -184,7 +183,7 @@ class RagSettings(DatabaseVectorStorage):
 class OciSettings(BaseModel):
     """OCI Settings"""
 
-    profile: Optional[str] = Field(default="DEFAULT", description="Oracle Cloud Settings Profile")
+    auth_profile: Optional[str] = Field(default="DEFAULT", description="Oracle Cloud Settings Profile")
 
 
 class Settings(BaseModel):
