@@ -146,9 +146,17 @@ def update_server(updates):
             continue
 
         if key == "oci_config":
-            valid_keys = ["profile", "user", "fingerprint", "tenancy", "region", "key_file", "security_token_file"]
+            valid_keys = [
+                "auth_profile",
+                "user",
+                "fingerprint",
+                "tenancy",
+                "region",
+                "key_file",
+                "security_token_file",
+            ]
             for profile, config in value.items():
-                new_config = {"profile": profile}
+                new_config = {"auth_profile": profile}
                 new_config.update(config)
                 new_config = {key: value for key, value in new_config.items() if key in valid_keys}
                 patch_oci(**new_config)
@@ -247,8 +255,8 @@ def spring_ai_zip(provider, ll_model):
                     zip_file.write(file_path, arc_name)
             env_content = spring_ai_obaas(src_dir, "env.sh", provider, ll_model)
             yaml_content = spring_ai_obaas(src_dir, "obaas.yaml", provider, ll_model)
-            zip_file.writestr("env.sh", env_content.encode('utf-8'))
-            zip_file.writestr("src/main/resources/application-obaas.yml", yaml_content.encode('utf-8'))
+            zip_file.writestr("env.sh", env_content.encode("utf-8"))
+            zip_file.writestr("src/main/resources/application-obaas.yml", yaml_content.encode("utf-8"))
         zip_buffer.seek(0)
     return zip_buffer
 

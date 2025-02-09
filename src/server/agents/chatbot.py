@@ -86,6 +86,12 @@ def respond(state: AgentState, config: RunnableConfig) -> ChatResponse:
         ai_metadata = state["messages"][1]
         logger.debug("Using Metadata from: %s", repr(ai_metadata))
 
+    finish_reason = ai_metadata.response_metadata.get("finish_reason", "stop")
+    if finish_reason == "COMPLETE":
+        finish_reason = "stop"
+    elif finish_reason == "MAX_TOKENS":
+        finish_reason = "length"
+
     openai_response = ChatResponse(
         id=ai_message.id,
         created=int(datetime.now(timezone.utc).timestamp()),
@@ -104,7 +110,7 @@ def respond(state: AgentState, config: RunnableConfig) -> ChatResponse:
                     additional_kwargs=ai_metadata.additional_kwargs,
                     response_metadata=ai_metadata.response_metadata,
                 ),
-                finish_reason=ai_metadata.response_metadata.get("finish_reason", "stop"),
+                finish_reason=finish_reason,
                 logprobs=None,
             )
         ],

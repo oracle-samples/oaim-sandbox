@@ -2,7 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore ollama, pplx, huggingface
+# spell-checker:ignore ollama, pplx, huggingface, genai
 
 from typing import Optional
 
@@ -14,8 +14,9 @@ from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_community.chat_models.oci_generative_ai import ChatOCIGenAI
 from langchain_community.embeddings.oci_generative_ai import OCIGenAIEmbeddings
 
-import common.logging_config as logging_config
+from server.utils.oci import init_genai_client
 from common.schema import ModelNameType, ModelTypeType, ModelEnabledType, Model, ModelAccess, OracleCloudSettings
+import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("server.models")
 
@@ -77,10 +78,10 @@ async def get_client(
         ll_common_params = {}
         for key in [
             "temperature",
-            "max_completion_tokens",
             "top_p",
             "frequency_penalty",
             "presence_penalty",
+            "max_completion_tokens",
             "streaming",
         ]:
             try:
@@ -97,12 +98,16 @@ async def get_client(
             "Perplexity": lambda: ChatOpenAI(
                 model=model_name, base_url=model_url, api_key=model_api_key, **ll_common_params
             ),
-            # "ChatOCIGenAI": lambda: ChatOCIGenAI(
-            #     model_id=model_name,
-            #     client=
-            #     compartment_id=
-            #     model_kwargs=ll_common_params,
-            # ),
+            "ChatOCIGenAI": lambda oci_cfg=oci_config: ChatOCIGenAI(
+                model_id=model_name,
+                client=init_genai_client(oci_cfg),
+                compartment_id=oci_cfg.compartment_id,
+                model_kwargs={
+                    (k if k != "max_completion_tokens" else "max_tokens"): v
+                    for k, v in ll_common_params.items()
+                    if k not in {"streaming"}
+                },
+            ),
             "GenericOpenAI": lambda: ChatOpenAI(
                 model=model_name, base_url=model_url, api_key=model_api_key, **ll_common_params
             ),
@@ -114,11 +119,11 @@ async def get_client(
             "CohereEmbeddings": lambda: CohereEmbeddings(model=model_name, cohere_api_key=model_api_key),
             "OllamaEmbeddings": lambda: OllamaEmbeddings(model=model_name, base_url=model_url),
             "HuggingFaceEndpointEmbeddings": lambda: HuggingFaceEndpointEmbeddings(model=model_url),
-            # "OCIGenAIEmbeddings": lambda: OCIGenAIEmbeddings(
-            #     model_id=model_name,
-            #     client=
-            #     compartment_id=
-            # ),
+            "OCIGenAIEmbeddings": lambda oci_cfg=oci_config: OCIGenAIEmbeddings(
+                model_id=model_name,
+                client=init_genai_client(oci_cfg),
+                compartment_id=oci_cfg.compartment_id,
+            ),
             "GenericOpenAIEmbeddings": lambda: OpenAIEmbeddings(
                 model=model_name, base_url=model_url, api_key=model_api_key
             ),

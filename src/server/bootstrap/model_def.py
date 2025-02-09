@@ -72,13 +72,13 @@ def main() -> list[Model]:
             "enabled": os.getenv("OCI_GENAI_COMPARTMENT_ID") is not None
             and os.getenv("OCI_GENAI_SERVICE_ENDPOINT") is not None,
             "type": "ll",
-            "api": "CohereOCI",
+            "api": "ChatOCIGenAI",
             "url": os.environ.get("OCI_GENAI_SERVICE_ENDPOINT", None),
             "api_key": "",
             "openai_compat": False,
             "context_length": 131072,
             "temperature": 0.3,
-            "max_completion_tokens": 4096,
+            "max_completion_tokens": 4000,
             "frequency_penalty": 0.0,
         },
         {

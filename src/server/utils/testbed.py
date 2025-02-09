@@ -319,14 +319,14 @@ def process_report(db_conn: Connection, eid: TestSetsIdType) -> EvaluationReport
     failures = report.failures
 
     evaluation_results = {
-        'eid': results[0][0].hex(),
-        'evaluated': results[0][1],
-        'correctness': results[0][2],
-        'settings': results[0][3],
-        'report': full_report.to_dict(),
-        'correct_by_topic': by_topic.to_dict(),
-        'failures': failures.to_dict(),
-        'html_report': clean(html_report),
+        "eid": results[0][0].hex(),
+        "evaluated": results[0][1],
+        "correctness": results[0][2],
+        "settings": results[0][3],
+        "report": full_report.to_dict(),
+        "correct_by_topic": by_topic.to_dict(),
+        "failures": failures.to_dict(),
+        "html_report": clean(html_report),
     }
     logger.debug("Evaluation Results: %s", evaluation_results)
     evaluation = EvaluationReport(**evaluation_results)

@@ -24,9 +24,6 @@ from giskard.rag import evaluate, QATestset
 from fastapi import FastAPI, Query, HTTPException, UploadFile, Response
 from fastapi.responses import StreamingResponse
 
-import common.logging_config as logging_config
-import common.schema as schema
-import common.functions as functions
 import server.bootstrap as bootstrap
 import server.utils.databases as databases
 import server.utils.oci as server_oci
@@ -35,8 +32,12 @@ import server.utils.embedding as embedding
 import server.utils.testbed as testbed
 import server.agents.chatbot as chatbot
 
+import common.schema as schema
+import common.functions as functions
+import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("server.endpoints")
+
 
 # Load Models with Definition Data
 DATABASE_OBJECTS = bootstrap.database_def.main()
@@ -56,6 +57,15 @@ def get_client_settings(client: schema.ClientIdType) -> schema.Settings:
         raise HTTPException(status_code=404, detail=f"Client {client}: not found")
     return client_settings
 
+
+def get_client_oci(client: schema.ClientIdType) -> schema.OracleCloudSettings:
+    """Return schema.Settings Object based on client ID"""
+    auth_profile = "DEFAULT"
+    client_settings = get_client_settings(client)
+    if client_settings.oci:
+        auth_profile = getattr(client_settings.oci, "auth_profile", "DEFAULT")
+
+    return next((oci for oci in OCI_OBJECTS if oci.auth_profile == auth_profile), None)
 
 def get_client_db(client: schema.ClientIdType) -> schema.Database:
     """Return a schema.Database Object based on client settings"""
@@ -213,6 +223,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         rate_limit: int = 0,
     ) -> Response:
         """Perform Split and Embed"""
+        oci_config = get_client_oci(client)
         temp_directory = functions.get_temp_directory(client, "embedding")
 
         try:
@@ -237,7 +248,9 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
                 write_json=False,
                 output_dir=None,
             )
-            embed_client = await models.get_client(MODEL_OBJECTS, {"model": request.model, "rag_enabled": True})
+            embed_client = await models.get_client(
+                MODEL_OBJECTS, {"model": request.model, "rag_enabled": True}, oci_config
+            )
             embedding.populate_vs(
                 vector_store=request,
                 db_details=get_client_db(client),
@@ -521,9 +534,10 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         if not model["model"]:
             model = client_settings.ll_model.model_dump()
 
+        oci_config = get_client_oci(client)
         # Setup Client schema.Model
         try:
-            ll_client = await models.get_client(MODEL_OBJECTS, model)
+            ll_client = await models.get_client(MODEL_OBJECTS, model, oci_config)
         except Exception as ex:
             logger.error("An exception initializing model: %s", ex)
             raise HTTPException(status_code=500, detail="Unexpected error") from ex
@@ -543,7 +557,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         # Setup RAG
         embed_client, ctx_prompt = None, None
         if client_settings.rag.rag_enabled:
-            embed_client = await models.get_client(MODEL_OBJECTS, client_settings.rag.model_dump())
+            embed_client = await models.get_client(MODEL_OBJECTS, client_settings.rag.model_dump(), oci_config)
 
             user_ctx_prompt = getattr(client_settings.prompts, "ctx", "Basic Example")
             ctx_prompt = next(

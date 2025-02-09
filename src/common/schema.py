@@ -117,7 +117,7 @@ class OracleResource(BaseModel):
 class OracleCloudSettings(BaseModel):
     """Store Oracle Cloud Infrastructure Settings"""
 
-    profile: str = Field(default="DEFAULT", description="Config File Profile")
+    auth_profile: str = Field(default="DEFAULT", description="Config File Profile")
     namespace: Optional[str] = Field(default=None, description="Object Store Namespace", readOnly=True)
     user: Optional[str] = Field(default=None, description="Optional if using Auth Token")
     security_token_file: Optional[str] = Field(default=None, description="Security Key File for Auth Token")
@@ -324,7 +324,7 @@ DatabaseNameType = Database.__annotations__["name"]
 ModelNameType = Model.__annotations__["name"]
 ModelTypeType = Model.__annotations__["type"]
 ModelEnabledType = ModelAccess.__annotations__["enabled"]
-OCIProfileType = OracleCloudSettings.__annotations__["profile"]
+OCIProfileType = OracleCloudSettings.__annotations__["auth_profile"]
 PromptNameType = Prompt.__annotations__["name"]
 PromptCategoryType = Prompt.__annotations__["category"]
 PromptPromptType = PromptText.__annotations__["prompt"]
