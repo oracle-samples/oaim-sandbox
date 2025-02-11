@@ -67,6 +67,7 @@ def get_client_oci(client: schema.ClientIdType) -> schema.OracleCloudSettings:
 
     return next((oci for oci in OCI_OBJECTS if oci.auth_profile == auth_profile), None)
 
+
 def get_client_db(client: schema.ClientIdType) -> schema.Database:
     """Return a schema.Database Object based on client settings"""
     db_name = "DEFAULT"
@@ -588,10 +589,12 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         try:
             async for chunk in agent.astream_events(**kwargs, version="v2"):
                 # The below will produce A LOT of output; uncomment when desperate
-                # logger.debug("Streamed Chunk: %s", chunk)
+                logger.debug("Streamed Chunk: %s", chunk)
                 if chunk["event"] == "on_chat_model_stream":
                     if "tools_condition" in str(chunk["metadata"]["langgraph_triggers"]):
                         continue  # Skip Tool Call messages
+                    if "vs_retrieve" in str(chunk["metadata"]["langgraph_node"]):
+                        continue  # Skip Fake-Tool Call messages
                     content = chunk["data"]["chunk"].content
                     if content != "" and call == "streams":
                         yield content.encode("utf-8")

@@ -160,8 +160,7 @@ def main() -> None:
             options=avail_profiles,
             index=avail_profiles.index(auth_profile),
             key="selected_oci_profile",
-            on_change=st_common.update_user_settings,
-            args=("oci", "auth_profile"),
+            on_change=st_common.update_user_settings("oci"),
         )
     token_auth = st.checkbox("Use token authentication?", value=False)
     with st.form("update_oci_config"):

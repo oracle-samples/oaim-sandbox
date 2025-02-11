@@ -82,18 +82,6 @@ def main() -> list[Model]:
             "frequency_penalty": 0.0,
         },
         {
-            # OCI GenAI; url and enabled will be determined by OCI config
-            "name": "cohere.embed-multilingual-v3.0",
-            "enabled": os.getenv("OCI_GENAI_COMPARTMENT_ID") is not None
-            and os.getenv("OCI_GENAI_SERVICE_ENDPOINT") is not None,
-            "type": "embed",
-            "api": "OCIGenAIEmbeddings",
-            "url": os.environ.get("OCI_GENAI_SERVICE_ENDPOINT", None),
-            "api_key": "",
-            "openai_compat": False,
-            "max_chunk_size": 512,
-        },
-        {
             "name": "thenlper/gte-base",
             "enabled": os.getenv("ON_PREM_HF_URL") is not None,
             "type": "embed",
@@ -131,6 +119,18 @@ def main() -> list[Model]:
             "url": os.environ.get("ON_PREM_OLLAMA_URL", default="http://127.0.0.1:11434"),
             "api_key": "",
             "openai_compat": True,
+            "max_chunk_size": 512,
+        },
+        {
+            # OCI GenAI; url and enabled will be determined by OCI config
+            "name": "cohere.embed-multilingual-v3.0",
+            "enabled": os.getenv("OCI_GENAI_COMPARTMENT_ID") is not None
+            and os.getenv("OCI_GENAI_SERVICE_ENDPOINT") is not None,
+            "type": "embed",
+            "api": "OCIGenAIEmbeddings",
+            "url": os.environ.get("OCI_GENAI_SERVICE_ENDPOINT", None),
+            "api_key": "",
+            "openai_compat": False,
             "max_chunk_size": 512,
         },
     ]

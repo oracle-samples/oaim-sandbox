@@ -28,7 +28,6 @@ logger = logging_config.logging.getLogger("content.chatbot")
 def show_rag_refs(context):
     """When RAG Content Found, show the references"""
     st.markdown("**References:**")
-    # st.write(context[1]) - This is the question the VS was performed on
     ref_src = set()
     ref_cols = st.columns([3, 3, 3])
     # Create a button in each column
@@ -44,6 +43,7 @@ def show_rag_refs(context):
 
     for link in ref_src:
         st.markdown("- " + link)
+    st.markdown(f"**Notes:** Vector Search Query - {context[1]}")
 
 
 #############################################################################
