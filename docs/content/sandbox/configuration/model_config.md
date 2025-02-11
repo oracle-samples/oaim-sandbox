@@ -24,6 +24,7 @@ If there is a specific model API that you would like to use with the **Oracle AI
 | LLM   | [ChatPerplexity](#additional-information)                |               |
 | LLM   | [Cohere](#additional-information)                        |               |
 | Embed | [OCIGenAIEmbeddings](#additional-information)            | Private Cloud |
+| Embed | [OpenAIEmbeddings](#additional-information)              |               |
 | Embed | [OllamaEmbeddings](#additional-information)              | On-Premises   |
 | Embed | [HuggingFaceEndpointEmbeddings](#additional-information) | On-Premises   |
 | Embed | [CohereEmbeddings](#additional-information)              |               |
@@ -47,6 +48,13 @@ Set the API, API Keys, API URL and other parameters as required.  Parameters suc
 #### API
 
 The **Sandbox** supports a number of model API's.  When adding a model, choose the most appropriate Model API.  If unsure, or the specific API is not listed, try *OpenAI* before [opening an issue](https://github.com/oracle-samples/oaim-sandbox/issues/new?template=additional_model_support) requesting an additional model API support.
+
+There are a number of local AI Model runners that use OpenAI compatible API's, including:
+- [LM Studio](https://lmstudio.ai)
+- [vLLM](https://docs.vllm.ai/en/latest/#)
+- [LocalAI](https://localai.io/)
+
+When using these local runners, select the appropriate OpenAI API (Language: **OpenAI**; Embeddings: **OpenAIEmbeddings**)
 
 #### API URL
 
