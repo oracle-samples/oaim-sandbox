@@ -18,7 +18,8 @@ litellm==1.61.0
 llama_index==0.12.16
 lxml==5.3.1
 matplotlib==3.10.0
-oci>=2.0.0
+oci~=2.0
+oracledb~=2.0
 plotly==5.24.1
 psutil==6.1.1
 python-multipart==0.0.20
