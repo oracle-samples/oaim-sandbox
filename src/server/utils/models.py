@@ -93,6 +93,9 @@ async def get_client(
         logger.debug("LL Model Parameters: %s", ll_common_params)
         model_classes = {
             "OpenAI": lambda: ChatOpenAI(model=model_name, api_key=model_api_key, **ll_common_params),
+            "CompatOpenAI": lambda: ChatOpenAI(
+                model=model_name, base_url=model_url, api_key=model_api_key or "api_compat", **ll_common_params
+            ),
             "Cohere": lambda: ChatCohere(model=model_name, cohere_api_key=model_api_key, **ll_common_params),
             "ChatOllama": lambda: ChatOllama(model=model_name, base_url=model_url, model_kwargs=ll_common_params),
             "Perplexity": lambda: ChatOpenAI(
@@ -108,14 +111,17 @@ async def get_client(
                     if k not in {"streaming"}
                 },
             ),
-            "GenericOpenAI": lambda: ChatOpenAI(
-                model=model_name, base_url=model_url, api_key=model_api_key, **ll_common_params
-            ),
         }
     if embedding:
         logger.debug("Configuring Embed Model")
         model_classes = {
             "OpenAIEmbeddings": lambda: OpenAIEmbeddings(model=model_name, api_key=model_api_key),
+            "CompatOpenAIEmbeddings": lambda: OpenAIEmbeddings(
+                model=model_name,
+                base_url=model_url,
+                api_key=model_api_key or "api_compat",
+                check_embedding_ctx_length=False,
+            ),
             "CohereEmbeddings": lambda: CohereEmbeddings(model=model_name, cohere_api_key=model_api_key),
             "OllamaEmbeddings": lambda: OllamaEmbeddings(model=model_name, base_url=model_url),
             "HuggingFaceEndpointEmbeddings": lambda: HuggingFaceEndpointEmbeddings(model=model_url),
@@ -123,9 +129,6 @@ async def get_client(
                 model_id=model_name,
                 client=init_genai_client(oci_cfg),
                 compartment_id=oci_cfg.compartment_id,
-            ),
-            "GenericOpenAIEmbeddings": lambda: OpenAIEmbeddings(
-                model=model_name, base_url=model_url, api_key=model_api_key
             ),
         }
 

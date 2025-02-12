@@ -67,6 +67,19 @@ def main() -> list[Model]:
             "frequency_penalty": 0.0,
         },
         {
+            "name": "phi-4",
+            "enabled": False,
+            "type": "ll",
+            "api": "CompatOpenAI",
+            "api_key": "",
+            "openai_compat": True,
+            "url": "http://localhost:1234/v1",
+            "context_length": 131072,
+            "temperature": 1.0,
+            "max_completion_tokens": 4096,
+            "frequency_penalty": 0.0,
+        },
+        {
             # OCI GenAI; url and enabled will be determined by OCI config
             "name": "cohere.command-r-plus-08-2024",
             "enabled": os.getenv("OCI_GENAI_COMPARTMENT_ID") is not None
@@ -132,6 +145,16 @@ def main() -> list[Model]:
             "api_key": "",
             "openai_compat": False,
             "max_chunk_size": 512,
+        },
+        {
+            "name": "text-embedding-nomic-embed-text-v1.5",
+            "enabled": False,
+            "type": "embed",
+            "api": "CompatOpenAIEmbeddings",
+            "url": "http://localhost:1234/v1",
+            "api_key": "",
+            "openai_compat": True,
+            "max_chunk_size": 8192,
         },
     ]
 
