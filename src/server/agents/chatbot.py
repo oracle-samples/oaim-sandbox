@@ -221,39 +221,44 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["gener
 
         binary_score: str = Field(description="Relevance score 'yes' or 'no'")
 
-    # LLM (Bound to Tool)
-    model = config["configurable"].get("ll_client", None)
-    llm_with_grader = model.with_structured_output(Grade)
+    if config["metadata"]["rag_settings"].grading:
+        # LLM (Bound to Tool)
+        model = config["configurable"].get("ll_client", None)
+        llm_with_grader = model.with_structured_output(Grade)
 
-    # Prompt
-    grade_template = """
-    You are a Grader assessing the relevance of retrieved text to the user's input.
-    You MUST respond with a only a binary score of 'yes' or 'no'.
-    If you DO find ANY relevant retrieved text to the user's input, return 'yes' immediately and stop grading. 
-    If you DO NOT find relevant retrieved text to the user's input, return 'no'.
-    Here is the user input:
-    -------
-    {question}
-    -------
-    Here is the retrieved text:
-    -------
-    {context}
-    """
-    grader = PromptTemplate(
-        template=grade_template,
-        input_variables=["context", "question"],
-    )
-    documents = document_formatter(state["documents"])
-    question = state["context_input"]
-    logger.debug("Grading %s against Documents: %s", question, documents)
-    chain = grader | llm_with_grader
-    scored_result = chain.invoke({"question": question, "context": documents})
-    try:
-        logger.info("Grading completed.")
-        score = scored_result.binary_score
-    except Exception:
-        logger.error("LLM is not returning binary score in grader!")
-        score = "no"
+        # Prompt
+        grade_template = """
+        You are a Grader assessing the relevance of retrieved text to the user's input.
+        You MUST respond with a only a binary score of 'yes' or 'no'.
+        If you DO find ANY relevant retrieved text to the user's input, return 'yes' immediately and stop grading. 
+        If you DO NOT find relevant retrieved text to the user's input, return 'no'.
+        Here is the user input:
+        -------
+        {question}
+        -------
+        Here is the retrieved text:
+        -------
+        {context}
+        """
+        grader = PromptTemplate(
+            template=grade_template,
+            input_variables=["context", "question"],
+        )
+        documents = document_formatter(state["documents"])
+        question = state["context_input"]
+        logger.debug("Grading %s against Documents: %s", question, documents)
+        chain = grader | llm_with_grader
+        scored_result = chain.invoke({"question": question, "context": documents})
+        try:
+            logger.info("Grading completed.")
+            score = scored_result.binary_score
+        except Exception:
+            logger.error("LLM is not returning binary score in grader!")
+            score = "no"
+    else:
+        logger.info("RAG Grading disabled; marking all results relevant.")
+        score = "yes"
+
     logger.info("Grading Decision: RAG Relevant: %s", score)
     if score == "yes":
         # This is where we fake a tools response before the completion.
@@ -267,14 +272,6 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["gener
         return "vs_generate"
     else:
         return "generate_response"
-
-
-# def vs_irrelevant(state: AgentState) -> None:
-#     """
-#     Delete documents from last vs_retrieve as they are not relevant to the question
-#     """
-#     state["messages"][-1].content = "[]"
-
 
 async def vs_generate(state: AgentState, config: RunnableConfig) -> None:
     """Generate answer when RAG enabled; modify state with response"""

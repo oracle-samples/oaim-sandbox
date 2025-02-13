@@ -796,6 +796,8 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         client_settings = get_client_settings(client)
         # Change Disable History
         client_settings.ll_model.chat_history = False
+        # Change Grade RAG
+        client_settings.rag.grading = False
 
         db_conn = get_client_db(client).connection
         testset = testbed.get_testset_qa(db_conn=db_conn, tid=tid.upper())
