@@ -13,7 +13,7 @@
 ### source .venv/bin/activate
 ### pip3.11 install --upgrade pip wheel setuptools
 ### pip3.11 install -r requirements.txt
-langchain-core==0.3.34
+langchain-core==0.3.35
 httpx==0.28.1
 -r server/requirements.txt
 -r sandbox/requirements.txt

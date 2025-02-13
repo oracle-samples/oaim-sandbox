@@ -6,6 +6,7 @@ Licensed under the Universal Permissive License v 1.0 as shown at http://oss.ora
 
 import json
 import pickle
+import nest_asyncio
 import pandas as pd
 from bs4 import BeautifulSoup
 
@@ -255,6 +256,7 @@ def build_knowledge_base(text_nodes: str, questions: int, ll_model: Model, embed
         else:
             set_embedding_model(model_name, **params)
 
+    nest_asyncio.apply()
     logger.info("KnowledgeBase creation starting...")
     logger.info("LL Model: %s; Embedding: %s", ll_model, embed_model)
     configure_and_set_model(ll_model)
