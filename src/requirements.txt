@@ -15,5 +15,6 @@
 ### pip3.11 install -r requirements.txt
 langchain-core==0.3.35
 httpx==0.28.1
+oracledb~=2.0
 -r server/requirements.txt
 -r sandbox/requirements.txt
