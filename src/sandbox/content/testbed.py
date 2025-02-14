@@ -52,7 +52,7 @@ def download_file(label, data, file_name, mime):
 
 
 @st.dialog("Evaluation Report", width="large")
-def evaluation_report(eid=None, report=None):
+def evaluation_report(eid=None, report=None) -> None:
     """Dialog Box with Evaluation Report"""
 
     def create_gauge(value):
@@ -455,12 +455,34 @@ def main():
         ###################################
         if "testbed_evaluations" in state and state.testbed_evaluations:
             st.subheader(f"Previous Evaluations for {state.selected_new_testset_name}", divider="red")
-            for evaluation in state.testbed_evaluations:
-                eval_label = (
-                    f"ℹ️ **Evaluated:** {evaluation['evaluated']} -- **Correctness:** {evaluation['correctness']}"
-                )
-                if st.button(eval_label):
-                    evaluation_report(eid=evaluation["eid"])
+            evaluations = {
+                evaluation["eid"]: f"Evaluated: {evaluation['evaluated']} -- Correctness: {evaluation['correctness']}"
+                for evaluation in state.testbed_evaluations
+            }
+            select, view = st.columns([9, 1])
+            evaluation_eid = select.selectbox(
+                "Previous Evaluations:",
+                placeholder="-- Select --",
+                label_visibility="collapsed",
+                options=list(evaluations.keys()),
+                format_func=lambda x: evaluations[x],
+                key="selected_evaluation_report",
+            )
+            view.button(
+                "View",
+                type="primary",
+                use_container_width=True,
+                on_click=evaluation_report,
+                kwargs=dict(eid=evaluation_eid),
+                disabled=evaluation_eid is None,
+            )
+            # delete.button(
+            #     "Delete",
+            #     use_container_width=True,
+            #     on_click=evaluation_report,
+            #     kwargs=dict(eid=evaluation_eid),
+            #     disabled=evaluation_eid is None
+            # )
 
         st.subheader("Q&A Evaluation", divider="red")
         st.info("Use the sidebar settings for evaluation parameters", icon="⬅️")

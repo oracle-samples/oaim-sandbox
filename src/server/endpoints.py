@@ -786,7 +786,6 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         def get_answer(question: str):
             """Submit question against the chatbot"""
             request = schema.ChatRequest(
-                model=client_settings.ll_model.model,
                 messages=[ChatMessage(role="human", content=question)],
             )
             ai_response = asyncio.run(chat_post(client=client, request=request))
