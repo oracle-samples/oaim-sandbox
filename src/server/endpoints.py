@@ -74,8 +74,12 @@ def get_client_db(client: schema.ClientIdType) -> schema.Database:
     client_settings = get_client_settings(client)
     if client_settings.rag:
         db_name = getattr(client_settings.rag, "database", "DEFAULT")
+        db_obj = next((db for db in DATABASE_OBJECTS if db.name == db_name), None)
+        # Refresh the connection if disconnected
+        if db_obj:
+            databases.test(db_obj)
 
-    return next((db for db in DATABASE_OBJECTS if db.name == db_name), None)
+    return db_obj
 
 
 #####################################################
