@@ -330,7 +330,7 @@ def rag_sidebar() -> None:
                     "index_type",
                 ):
                     clear_state_key(f"selected_rag_{key}")
-                update_user_settings("rag")
+                    state["user_settings"]["rag"][key] = ""
 
         def vs_gen_selectbox(label, options, key):
             """Handle selectbox with auto-setting for a single unique value"""
@@ -342,9 +342,10 @@ def rag_sidebar() -> None:
                 disabled = False
                 if len(valid_options) == 1:  # Pre-select if only one unique option
                     selected_value = valid_options[0]
+                    logger.debug("Defaulting %s to %s", key, selected_value)
                 else:
                     selected_value = state["user_settings"]["rag"][key.removeprefix("selected_rag_")] or ""
-
+                    logger.debug("User selected %s to %s", key, selected_value)
             return st.sidebar.selectbox(
                 label,
                 options=[""] + valid_options,
@@ -389,7 +390,7 @@ def rag_sidebar() -> None:
             "Select Index Type:", filtered_df["index_type"].unique().tolist(), "selected_rag_index_type"
         )
 
-        if all([embed_model, chunk_size, chunk_overlap, distance_metric]):
+        if all([alias, embed_model, chunk_size, chunk_overlap, distance_metric, index_type]):
             vs = filtered_df["vector_store"].iloc[0]
             state.user_settings["rag"]["vector_store"] = vs
             state.user_settings["rag"]["alias"] = alias

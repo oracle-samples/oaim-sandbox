@@ -128,7 +128,7 @@ def get_evaluations(db_conn: Connection, tid: TestSetsIdType) -> list:
     logger.info("Getting Evaluations for: %s", tid)
     evaluations = []
     binds = {"tid": tid}
-    sql = "SELECT eid, to_char(evaluated), correctness FROM oaim_evaluations WHERE tid=:tid ORDER BY evaluated"
+    sql = "SELECT eid, to_char(evaluated), correctness FROM oaim_evaluations WHERE tid=:tid ORDER BY evaluated DESC"
     results = databases.execute_sql(db_conn, sql, binds)
     try:
         evaluations = [

@@ -224,11 +224,11 @@ def main() -> None:
     embed_alias_invalid = False
     embed_request.vector_store = None
     embed_request.alias = embed_alias_size.text_input(
-        "Embedding Alias:",
+        "Vector Store Alias:",
         max_chars=20,
         help=help_text.help_dict["embed_alias"],
         key="selected_embed_alias",
-        placeholder="Optional; press Enter to set.",
+        placeholder="Press Enter to set.",
     )
     # Define the regex pattern: starts with a letter, followed by alphanumeric characters or underscores
     pattern = r"^[A-Za-z][A-Za-z0-9_]*$"
@@ -345,7 +345,9 @@ def main() -> None:
         max_value=60,
         key="selected_rate_limit",
     )
-    if st.button(
+    if not embed_request.alias:
+        st.info("Please provide a Vector Store Alias.")
+    elif st.button(
         "Populate Vector Store",
         type="primary",
         key="button_populate",

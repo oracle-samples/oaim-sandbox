@@ -7,6 +7,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 from datetime import datetime, timezone
 from typing import Literal
 import json
+import copy
 
 from langchain_core.documents.base import Document
 from langchain_core.messages import SystemMessage, ToolMessage
@@ -132,7 +133,7 @@ def vs_retrieve(state: AgentState, config: RunnableConfig) -> AgentState:
     logger.info("Perform Vector Search")
     # Take our contextualization prompt and reword the question
     # before doing the vector search; do only if history is turned on
-    history = state["cleaned_messages"]
+    history = copy.deepcopy(state["cleaned_messages"])
     retrieve_question = history.pop().content
     if config["metadata"]["use_history"] and config["metadata"]["ctx_prompt"].prompt and len(history) > 1:
         model = config["configurable"].get("ll_client", None)

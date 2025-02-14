@@ -71,7 +71,7 @@ help_dict = {
         comprehensive and varied set of information for generating the final response.
         """,
     "embed_alias": """
-        (Optional) Provide an alias to help identify the embedding during RAG experimentation.
+        Provide an alias to help identify the embedding during RAG experimentation.
         It must start with a character and only contain alphanumerics and underscores.
         Max Characters: 20
         """,
