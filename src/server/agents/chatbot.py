@@ -274,6 +274,7 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["gener
     else:
         return "generate_response"
 
+
 async def vs_generate(state: AgentState, config: RunnableConfig) -> None:
     """Generate answer when RAG enabled; modify state with response"""
     logger.info("Generating RAG Response")
@@ -344,12 +345,10 @@ workflow.add_edge(START, "agent")
 
 # Branch to either "vs_retrieve" or "generate_response"
 workflow.add_conditional_edges("agent", use_rag)
-# workflow.add_edge("vs_retrieve", vs_retrieve)
 workflow.add_edge("generate_response", "respond")
 
 # If retrieving, grade the documents returned and either generate (not relevant) or vs_generate (relevant)
 workflow.add_conditional_edges("vs_retrieve", grade_documents)
-# workflow.add_edge("vs_irrelevant", "generate_response")
 workflow.add_edge("vs_generate", "respond")
 
 # Finish with OpenAI Compatible Response

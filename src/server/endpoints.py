@@ -560,7 +560,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             raise HTTPException(status_code=500, detail="Unexpected error") from ex
 
         # Setup RAG
-        embed_client, ctx_prompt = None, None
+        embed_client, ctx_prompt, db_conn = None, None, None
         if client_settings.rag.rag_enabled:
             embed_client = await models.get_client(MODEL_OBJECTS, client_settings.rag.model_dump(), oci_config)
 
@@ -569,6 +569,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
                 (prompt for prompt in PROMPT_OBJECTS if prompt.category == "ctx" and prompt.name == user_ctx_prompt),
                 None,
             )
+            db_conn = get_client_db(client).connection
 
         kwargs = {
             "input": {"messages": [HumanMessage(content=request.messages[0].content)]},
@@ -577,7 +578,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
                     "thread_id": client,
                     "ll_client": ll_client,
                     "embed_client": embed_client,
-                    "db_conn": get_client_db(client).connection,
+                    "db_conn": db_conn,
                 },
                 metadata={
                     "model_name": model["model"],
