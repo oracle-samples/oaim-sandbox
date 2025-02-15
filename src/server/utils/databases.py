@@ -42,6 +42,7 @@ def connect(config: Database) -> oracledb.Connection:
 
 
 def test(config: Database) -> None:
+    """Test connection and re-establish if no longer open"""
     try:
         config.connection.ping()
         logger.info("%s database connection is active.", config.name)

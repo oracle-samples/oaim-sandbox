@@ -69,6 +69,7 @@ def init_client(
 
 
 def init_genai_client(config: OracleCloudSettings) -> oci.generative_ai_inference.GenerativeAiInferenceClient:
+    """Initialise OCI GenAI Client"""
     client_type = oci.generative_ai_inference.GenerativeAiInferenceClient
     return init_client(client_type, config)
 

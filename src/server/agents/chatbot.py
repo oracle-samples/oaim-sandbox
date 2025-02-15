@@ -231,7 +231,7 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["gener
         grade_template = """
         You are a Grader assessing the relevance of retrieved text to the user's input.
         You MUST respond with a only a binary score of 'yes' or 'no'.
-        If you DO find ANY relevant retrieved text to the user's input, return 'yes' immediately and stop grading. 
+        If you DO find ANY relevant retrieved text to the user's input, return 'yes' immediately and stop grading.
         If you DO NOT find relevant retrieved text to the user's input, return 'no'.
         Here is the user input:
         -------
@@ -309,6 +309,7 @@ async def agent(state: AgentState, config: RunnableConfig) -> AgentState:
 
 
 def use_rag(_, config: RunnableConfig) -> Literal["vs_retrieve", "generate_response"]:
+    """Conditional edge to determine if using RAG or not"""
     rag_enabled = config["metadata"]["rag_settings"].rag_enabled
     logger.info("Invoking Chatbot with RAG: %s", rag_enabled)
     return "vs_retrieve" if rag_enabled else "generate_response"
