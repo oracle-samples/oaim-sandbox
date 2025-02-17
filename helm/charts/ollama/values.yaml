@@ -1,18 +1,8 @@
 replicaCount: 1
 image:
-  repository: localhost/oaim-server
+  repository: docker.io/ollama/ollama
   tag: "latest"
 imagePullPolicy: IfNotPresent
-imagePullSecrets: []
-  # - name: regcred
-
-ingress:
-  enabled: false
-  className: nginx
-  annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
-    nginx.ingress.kubernetes.io/upstream-vhost: "localhost"
-  tls: []
 
 autoscaling:
   enabled: false
@@ -40,36 +30,6 @@ service:
   http:
     type: "ClusterIP"
 
-# -- Oracle Cloud Infrastructure Configuration
-oci:
-  region: ""
-
-# -- Oracle Autonomous Database Configuration
-adb:
-  enabled: false
-  ocid: ""
-  mtlsWallet: ""
-  authN:
-    secretName: ""
-    usernameKey: ""
-    passwordKey: ""
-    serviceKey: ""
-
-# -- Model Configuration
-models:
-  openAI:
-    secretName: ""
-    secretKey: ""
-  perplexity:
-    secretName: ""
-    secretKey: ""
-  cohere:
-    secretName: ""
-    secretKey: ""
-  huggingface:
-    # -- e.g http://hf.hf.svc.cluster.local:8080
-    urlPort: ""
-
 # -- Additional volumes on the output Deployment definition.
 volumes: []
 # - name: foo
@@ -82,3 +42,8 @@ volumeMounts: []
 # - name: foo
 #   mountPath: "/etc/foo"
 #   readOnly: true
+
+# -- Models to deploy.
+models: []
+# - foo
+# - bar

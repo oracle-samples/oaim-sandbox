@@ -26,6 +26,17 @@ http://{{ include "oaim-server.serviceName" . }}.{{ .Release.Namespace }}.svc.cl
 {{- end -}}
 
 {{/*
+Define the ServiceName of the Ollama.
+*/}}
+{{- define "ollama.serviceName" -}}
+{{ include "release.name" . }}-ollama-http
+{{- end -}}
+
+{{- define "ollama.serviceUrl" -}}
+http://{{ include "ollama.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:11434
+{{- end -}}
+
+{{/*
 Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.

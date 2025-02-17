@@ -1,0 +1,8 @@
+{{/*
+Create the pull model list
+*/}}
+{{- define "ollama.modelPullList" -}}
+{{- with .Values.models -}}
+{{- . | uniq | join " " -}}
+{{- end -}}
+{{- end -}}

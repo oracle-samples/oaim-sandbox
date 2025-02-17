@@ -21,3 +21,7 @@ dependencies:
     version: 0.1.0
     repository: file://charts/oaim-sandbox
     condition: oaim-sandbox.enabled
+  - name: ollama
+    version: 0.1.0
+    repository: file://charts/ollama
+    condition: ollama.enabled
