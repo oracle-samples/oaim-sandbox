@@ -52,7 +52,7 @@ def download_file(label, data, file_name, mime):
 
 
 @st.dialog("Evaluation Report", width="large")
-def evaluation_report(eid=None, report=None):
+def evaluation_report(eid=None, report=None) -> None:
     """Dialog Box with Evaluation Report"""
 
     def create_gauge(value):
@@ -100,7 +100,7 @@ def evaluation_report(eid=None, report=None):
             **Vector Store**: {report["settings"]["rag"]["vector_store"]}
         """)
         embed_settings = pd.DataFrame(report["settings"]["rag"], index=[0])
-        embed_settings.drop(["database", "vector_store", "alias", "rag_enabled"], axis=1, inplace=True)
+        embed_settings.drop(["database", "vector_store", "alias", "rag_enabled", "grading"], axis=1, inplace=True)
         if report["settings"]["rag"]["search_type"] == "Similarity":
             embed_settings.drop(["score_threshold", "fetch_k", "lambda_mult"], axis=1, inplace=True)
         st.dataframe(embed_settings, hide_index=True)
@@ -123,7 +123,8 @@ def evaluation_report(eid=None, report=None):
     st.subheader("Failures")
     failures = pd.DataFrame(report["failures"])
     failures.drop(["conversation_history", "metadata", "correctness"], axis=1, inplace=True)
-    st.dataframe(failures, hide_index=True)
+    if not failures.empty:
+        st.dataframe(failures, hide_index=True)
 
     # Full Report
     st.subheader("Full Report")
@@ -408,9 +409,6 @@ def main():
             api_params.update(client_api_params)
             # Retrieve TestSet Data
             response = api_call.get(url=api_url, params=api_params)
-            # Retrieve Evaluations
-            api_url = f"{API_ENDPOINT}/evaluations"
-            state.testbed_evaluations = api_call.get(url=api_url, params=api_params)
         try:
             print(response)
             state.testbed_qa = response["qa_data"]
@@ -453,14 +451,35 @@ def main():
         ###################################
         # Evaluator
         ###################################
-        if "testbed_evaluations" in state and state.testbed_evaluations:
+        if "testbed_evaluations" not in state and "testset_id" in state.testbed and state.testbed["testset_id"]:
+            # Retrieve Evaluations
+            api_params = {"tid": state.testbed["testset_id"]}
+            api_params.update(client_api_params)
+            api_url = f"{API_ENDPOINT}/evaluations"
+            state.testbed_evaluations = api_call.get(url=api_url, params=api_params)
+        if state.testbed_evaluations:
             st.subheader(f"Previous Evaluations for {state.selected_new_testset_name}", divider="red")
-            for evaluation in state.testbed_evaluations:
-                eval_label = (
-                    f"ℹ️ **Evaluated:** {evaluation['evaluated']} -- **Correctness:** {evaluation['correctness']}"
-                )
-                if st.button(eval_label):
-                    evaluation_report(eid=evaluation["eid"])
+            evaluations = {
+                evaluation["eid"]: f"Evaluated: {evaluation['evaluated']} -- Correctness: {evaluation['correctness']}"
+                for evaluation in state.testbed_evaluations
+            }
+            select, view = st.columns([9, 1])
+            evaluation_eid = select.selectbox(
+                "Previous Evaluations:",
+                placeholder="-- Select --",
+                label_visibility="collapsed",
+                options=list(evaluations.keys()),
+                format_func=lambda x: evaluations[x],
+                key="selected_evaluation_report",
+            )
+            view.button(
+                "View",
+                type="primary",
+                use_container_width=True,
+                on_click=evaluation_report,
+                kwargs=dict(eid=evaluation_eid),
+                disabled=evaluation_eid is None,
+            )
 
         st.subheader("Q&A Evaluation", divider="red")
         st.info("Use the sidebar settings for evaluation parameters", icon="⬅️")
@@ -473,6 +492,7 @@ def main():
             help="Evaluation will automatically save the TestSet to the Database",
             on_click=qa_update_db,
         ):
+            st_common.clear_state_key("testbed_evaluations")
             placeholder = st.empty()
             with placeholder:
                 st.warning("Starting Q&A evaluation... please be patient.", icon="⚠️")

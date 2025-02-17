@@ -1,6 +1,9 @@
 """
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
+
+DISABLED!! Due to some models not being able to handle tool calls, this code is not called.  It is
+maintained here for future capabilities.  DO NOT DELETE (gotsysdba - 11-Feb-2025)
 """
 # spell-checker:ignore vectorstore, vectorstores, oraclevs, mult, langgraph
 

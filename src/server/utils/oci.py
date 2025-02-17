@@ -26,41 +26,52 @@ def init_client(
     client_type: Union[
         oci.object_storage.ObjectStorageClient,
         oci.identity.IdentityClient,
+        oci.generative_ai_inference.GenerativeAiInferenceClient,
     ],
     config: OracleCloudSettings = None,
 ) -> Union[
     oci.object_storage.ObjectStorageClient,
     oci.identity.IdentityClient,
+    oci.generative_ai_inference.GenerativeAiInferenceClient,
 ]:
     """Initialize OCI Client with either user or Token"""
-    # Retries and timeouts should be handled on the client side otherwise they conflict
-    retry_strategy = oci.retry.NoneRetryStrategy()
     # connection timeout to 1 seconds and the read timeout to 60 seconds
-    timeout = (1, 60)
+    # Retries and timeouts should be handled on the client side otherwise they conflict
+    client_kwargs = {
+        "retry_strategy": oci.retry.NoneRetryStrategy(),
+        "timeout": (1, 60),
+    }
 
-    # Dump Model into JSON
-    config_json = config.model_dump(exclude_none=False)
+    # OCI GenAI
+    if client_type == oci.generative_ai_inference.GenerativeAiInferenceClient and config.service_endpoint:
+        client_kwargs["service_endpoint"] = config.service_endpoint
 
     # Initialize Client (Workload Identity, Token and API)
+    config_json = config.model_dump(exclude_none=False)
     client = None
-    if not config_json:
+    if not config_json["auth_profile"]:
         logger.info("OCI Authentication with Workload Identity")
         oke_workload_signer = oci.auth.signers.get_oke_workload_identity_resource_principal_signer()
-        client = client_type(config={}, signer=oke_workload_signer, retry_strategy=retry_strategy, timeout=timeout)
-    elif config_json and config_json["security_token_file"]:
+        client = client_type(config={}, signer=oke_workload_signer, **client_kwargs)
+    elif config_json["auth_profile"] and config_json["security_token_file"]:
         logger.info("OCI Authentication with Security Token")
         token = None
         with open(config_json["security_token_file"], "r", encoding="utf-8") as f:
             token = f.read()
         private_key = oci.signer.load_private_key_from_file(config_json["key_file"])
         signer = oci.auth.signers.SecurityTokenSigner(token, private_key)
-        client = client_type(
-            config={"region": config_json["region"]}, signer=signer, retry_strategy=retry_strategy, timeout=timeout
-        )
+        client = client_type(config={"region": config_json["region"]}, signer=signer, **client_kwargs)
     else:
         logger.info("OCI Authentication as Standard")
-        client = client_type(config_json, retry_strategy=retry_strategy, timeout=timeout)
+        client = client_type(config_json, **client_kwargs)
+
     return client
+
+
+def init_genai_client(config: OracleCloudSettings) -> oci.generative_ai_inference.GenerativeAiInferenceClient:
+    """Initialise OCI GenAI Client"""
+    client_type = oci.generative_ai_inference.GenerativeAiInferenceClient
+    return init_client(client_type, config)
 
 
 def get_namespace(config: OracleCloudSettings = None) -> str:

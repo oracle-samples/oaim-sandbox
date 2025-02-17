@@ -2,7 +2,7 @@
 Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore ollama, minilm, pplx, thenlper, mxbai, nomic
+# spell-checker:ignore ollama, minilm, pplx, thenlper, mxbai, nomic, genai
 
 import os
 import configparser
@@ -13,6 +13,7 @@ import common.logging_config as logging_config
 from common.schema import OracleCloudSettings
 
 logger = logging_config.logging.getLogger("server.bootstrap.oci_def")
+
 
 def main() -> list[OracleCloudSettings]:
     """Read in OCI Configuration options into an object"""
@@ -27,19 +28,19 @@ def main() -> list[OracleCloudSettings]:
                 profile_data = oci.config.from_file(profile_name=section)
             except oci.exceptions.InvalidKeyFilePath:
                 continue
-            profile_data["profile"] = section
+            profile_data["auth_profile"] = section
             config.append(profile_data)
     except oci.exceptions.ConfigFileNotFound:
         pass
 
     # If no default profile was found, append one
-    if not any(item["profile"] == oci.config.DEFAULT_PROFILE for item in config):
+    if not any(item["auth_profile"] == oci.config.DEFAULT_PROFILE for item in config):
         logger.debug("Inserting empty OCI Profile: %s", oci.config.DEFAULT_PROFILE)
-        config.append({"profile": oci.config.DEFAULT_PROFILE})
+        config.append({"auth_profile": oci.config.DEFAULT_PROFILE})
 
     # override the default profile with EnvVars if set
     for default in config:
-        if default["profile"] == oci.config.DEFAULT_PROFILE:
+        if default["auth_profile"] == oci.config.DEFAULT_PROFILE:
             logger.debug("Overriding OCI Profile: %s with OS Environment", oci.config.DEFAULT_PROFILE)
             default["tenancy"] = os.environ.get("OCI_CLI_TENANCY", default.get("tenancy", None))
             default["region"] = os.environ.get("OCI_CLI_REGION", default.get("region", None))
@@ -49,6 +50,12 @@ def main() -> list[OracleCloudSettings]:
             default["security_token_file"] = os.environ.get(
                 "OCI_CLI_SECURITY_TOKEN_FILE", default.get("security_token_file", None)
             )
+            # GenAI
+            default["compartment_id"] = os.environ.get("OCI_GENAI_COMPARTMENT_ID", default.get("compartment_id", ""))
+            default["service_endpoint"] = os.environ.get(
+                "OCI_GENAI_SERVICE_ENDPOINT", default.get("service_endpoint", "")
+            )
+            # Misc
             default["log_requests"] = default.get("log_requests", False)
             default["additional_user_agent"] = default.get("additional_user_agent", "")
             default["pass_phrase"] = default.get("pass_phrase", None)
@@ -57,7 +64,7 @@ def main() -> list[OracleCloudSettings]:
     for oci_object in config:
         oci_config = OracleCloudSettings(**oci_object)
         oci_objects.append(oci_config)
-        if oci_config.profile == "DEFAULT":
+        if oci_config.auth_profile == "DEFAULT":
             try:
                 namespace = server_oci.get_namespace(oci_config)
                 oci_config.namespace = namespace

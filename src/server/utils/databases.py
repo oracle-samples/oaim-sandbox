@@ -41,6 +41,17 @@ def connect(config: Database) -> oracledb.Connection:
     return conn
 
 
+def test(config: Database) -> None:
+    """Test connection and re-establish if no longer open"""
+    try:
+        config.connection.ping()
+        logger.info("%s database connection is active.", config.name)
+    except oracledb.DatabaseError:
+        db_conn = connect(config)
+        logger.info("Refreshing %s database connection.", config.name)
+        config.set_connection(db_conn)
+
+
 def disconnect(conn: oracledb.Connection) -> None:
     """Disconnect from an Oracle Database"""
     return conn.close()

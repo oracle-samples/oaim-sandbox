@@ -7,7 +7,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 help_dict = {
     "context_length": """
         Maximum number of tokens (words, sub-words, or characters) the model can consider
-        at once when generating a response.   It defines how much prior conversation or text 
+        at once when generating a response.   It defines how much prior conversation or text
         the model "remembers" within a single interaction.
         Value often determined from the model card.
         """,
@@ -71,7 +71,7 @@ help_dict = {
         comprehensive and varied set of information for generating the final response.
         """,
     "embed_alias": """
-        (Optional) Provide an alias to help identify the embedding during RAG experimentation.
+        Provide an alias to help identify the embedding during RAG experimentation.
         It must start with a character and only contain alphanumerics and underscores.
         Max Characters: 20
         """,
@@ -91,7 +91,7 @@ help_dict = {
         embeddings effectively.
         """,
     "model_name": """
-        The official name of the model as per the model card.  
+        The official name of the model as per the model card.
         Misconfigured names will result in an error.
         """,
     "model_api": """
@@ -99,10 +99,10 @@ help_dict = {
         Open an issue if you'd like to request support for an unlisted model.
         """,
     "model_api_url": """
-        API URL for accessing the model.  
+        API URL for accessing the model.
         """,
     "model_api_key": """
-        API Key for accessing the model.  
+        API Key for accessing the model.
         Often left blank for on-premises models.
         """,
 }

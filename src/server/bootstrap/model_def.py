@@ -5,7 +5,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 NOTE: Provide only one example per API to populate supported API lists; additional models should be
 added via the APIs
 """
-# spell-checker:ignore ollama, minilm, pplx, thenlper, mxbai, nomic
+# spell-checker:ignore ollama, minilm, pplx, thenlper, mxbai, nomic, genai
 
 import os
 from common.schema import Model
@@ -67,6 +67,34 @@ def main() -> list[Model]:
             "frequency_penalty": 0.0,
         },
         {
+            "name": "phi-4",
+            "enabled": False,
+            "type": "ll",
+            "api": "CompatOpenAI",
+            "api_key": "",
+            "openai_compat": True,
+            "url": "http://localhost:1234/v1",
+            "context_length": 131072,
+            "temperature": 1.0,
+            "max_completion_tokens": 4096,
+            "frequency_penalty": 0.0,
+        },
+        {
+            # OCI GenAI; url and enabled will be determined by OCI config
+            "name": "cohere.command-r-plus-08-2024",
+            "enabled": os.getenv("OCI_GENAI_COMPARTMENT_ID") is not None
+            and os.getenv("OCI_GENAI_SERVICE_ENDPOINT") is not None,
+            "type": "ll",
+            "api": "ChatOCIGenAI",
+            "url": os.environ.get("OCI_GENAI_SERVICE_ENDPOINT", None),
+            "api_key": "",
+            "openai_compat": False,
+            "context_length": 131072,
+            "temperature": 0.3,
+            "max_completion_tokens": 4000,
+            "frequency_penalty": 0.0,
+        },
+        {
             "name": "thenlper/gte-base",
             "enabled": os.getenv("ON_PREM_HF_URL") is not None,
             "type": "embed",
@@ -105,6 +133,28 @@ def main() -> list[Model]:
             "api_key": "",
             "openai_compat": True,
             "max_chunk_size": 512,
+        },
+        {
+            # OCI GenAI; url and enabled will be determined by OCI config
+            "name": "cohere.embed-multilingual-v3.0",
+            "enabled": os.getenv("OCI_GENAI_COMPARTMENT_ID") is not None
+            and os.getenv("OCI_GENAI_SERVICE_ENDPOINT") is not None,
+            "type": "embed",
+            "api": "OCIGenAIEmbeddings",
+            "url": os.environ.get("OCI_GENAI_SERVICE_ENDPOINT", None),
+            "api_key": "",
+            "openai_compat": False,
+            "max_chunk_size": 512,
+        },
+        {
+            "name": "text-embedding-nomic-embed-text-v1.5",
+            "enabled": False,
+            "type": "embed",
+            "api": "CompatOpenAIEmbeddings",
+            "url": "http://localhost:1234/v1",
+            "api_key": "",
+            "openai_compat": True,
+            "max_chunk_size": 8192,
         },
     ]
 

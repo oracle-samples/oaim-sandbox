@@ -6,6 +6,7 @@ Licensed under the Universal Permissive License v 1.0 as shown at http://oss.ora
 
 import json
 import pickle
+import nest_asyncio
 import pandas as pd
 from bs4 import BeautifulSoup
 
@@ -127,7 +128,7 @@ def get_evaluations(db_conn: Connection, tid: TestSetsIdType) -> list:
     logger.info("Getting Evaluations for: %s", tid)
     evaluations = []
     binds = {"tid": tid}
-    sql = "SELECT eid, to_char(evaluated), correctness FROM oaim_evaluations WHERE tid=:tid ORDER BY evaluated"
+    sql = "SELECT eid, to_char(evaluated), correctness FROM oaim_evaluations WHERE tid=:tid ORDER BY evaluated DESC"
     results = databases.execute_sql(db_conn, sql, binds)
     try:
         evaluations = [
@@ -255,6 +256,7 @@ def build_knowledge_base(text_nodes: str, questions: int, ll_model: Model, embed
         else:
             set_embedding_model(model_name, **params)
 
+    nest_asyncio.apply()
     logger.info("KnowledgeBase creation starting...")
     logger.info("LL Model: %s; Embedding: %s", ll_model, embed_model)
     configure_and_set_model(ll_model)
@@ -319,14 +321,14 @@ def process_report(db_conn: Connection, eid: TestSetsIdType) -> EvaluationReport
     failures = report.failures
 
     evaluation_results = {
-        'eid': results[0][0].hex(),
-        'evaluated': results[0][1],
-        'correctness': results[0][2],
-        'settings': results[0][3],
-        'report': full_report.to_dict(),
-        'correct_by_topic': by_topic.to_dict(),
-        'failures': failures.to_dict(),
-        'html_report': clean(html_report),
+        "eid": results[0][0].hex(),
+        "evaluated": results[0][1],
+        "correctness": results[0][2],
+        "settings": results[0][3],
+        "report": full_report.to_dict(),
+        "correct_by_topic": by_topic.to_dict(),
+        "failures": failures.to_dict(),
+        "html_report": clean(html_report),
     }
     logger.debug("Evaluation Results: %s", evaluation_results)
     evaluation = EvaluationReport(**evaluation_results)
