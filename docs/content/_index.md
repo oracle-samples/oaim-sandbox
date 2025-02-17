@@ -6,16 +6,12 @@ description = 'AI Microservices Sandbox'
 keywords = 'oracle microservices development genai rag'
 +++
 
-<!--
-Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+{{% comment %}}
+Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
 spell-checker:ignore streamlit, genai, venv, oaim
--->
-
-{{% notice style="code" title="30-Jan-2025: Documentation In-Progress..." icon="pen" %}}
-Thank you for your patience as we work on updating the documentation. Please check back soon for the latest updates.
-{{% /notice %}}
+{{% /comment %}}
 
 The **Oracle AI Microservices Sandbox** (the **Sandbox**) provides a streamlined environment where developers and data scientists can explore the potential of Generative Artificial Intelligence (**GenAI**) combined with Retrieval-Augmented Generation (**RAG**) capabilities. By integrating Oracle Database AI Vector Search, the **Sandbox** enables users to enhance existing Large Language Models (**LLM**s) through **RAG**. This method significantly improves the performance and accuracy of AI models, helping to avoid common issues such as knowledge cutoff and hallucinations.
 
@@ -48,9 +44,9 @@ The [Walkthrough](walkthrough) is a great way to familiarize yourself with the S
 - Container Runtime e.g. docker/podman (for running in a Container)
 - Access to an Embedding and Chat Model:
   - API Keys for Third-Party Models
-  - On-Premises Models<sub>\*</sub>
+  - On-Premises Models*
 
-<sub>\*Oracle recommends running On-Premises Models on hardware with GPUs. For more information, please review the [Infrastructure](infrastructure/) documentation.</sub>
+~\*Oracle recommends running On-Premises Models on hardware with GPUs. For more information, please review the [Architecture](architecture/) documentation.~
 
 ### Bare-Metal Installation
 
@@ -107,3 +103,8 @@ To run the application in a container; download the [source](https://github.com/
 1. Navigate to `http://localhost:8501`.
 
 1. [Configure](sandbox/configuration) the Sandbox.
+
+### Advanced Installation
+
+The **Sandbox** is designed to operate within a Microservices Architecture, leveraging Microservices Infrastructure like Kubernetes.
+Review the [Architecture](../architecture) for more information on the components of the **Sandbox** and additional [Installation](../installation) options.

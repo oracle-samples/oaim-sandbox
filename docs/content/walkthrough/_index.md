@@ -1,14 +1,14 @@
 +++
 title = 'Walkthrough'
 menus = 'main'
-weight = 10
+weight = 5
 +++
 
-<!--
-Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+{{% comment %}}
+Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
--->
-<!--spell-checker: ignore mxbai, ollama, oaim, sqlplus, sysdba, spfile, freepdb, tablespace, firewalld, hnsw -->
+{{% /comment %}}
+{{% comment %}}spell-checker: ignore mxbai, ollama, oaim, sqlplus, sysdba, spfile, freepdb, tablespace, firewalld, hnsw {{% /comment %}}
 
 This walkthrough will guide you through a basic installation of the **Oracle AI Microservices Sandbox** (the **Sandbox**). It will allow you to experiment with GenAI, using Retrieval-Augmented Generation (**RAG**) with Oracle Database 23ai at the core.
 
@@ -105,7 +105,7 @@ To start Oracle Database 23ai Free:
    podman run -d --name oaim-db -p 1521:1521 container-registry.oracle.com/database/free:latest
    ```
 
-1. Alter the `vector_memory_size` parameter and create a [new database user](../configuration/db_config#database-user):
+1. Alter the `vector_memory_size` parameter and create a [new database user](../sandbox/configuration/db_config#database-user):
 
    ```bash
    podman exec -it oaim-db sqlplus '/ as sysdba'
@@ -217,7 +217,7 @@ To configure Oracle Database 23ai Free, navigate to the _Configuration -> Databa
 1. Enter the Database Connection String: `//localhost:1521/FREEPDB1`
 1. Save
 
-![Configure Database](images/database_config.png)
+![Configure Database](../sandbox/configuration/images/database_config.png)
 
 {{% icon star %}} More information about configuring the database in the **Sandbox** can be found in the [Database Configuration](../configuration/db_config) documentation.
 

@@ -2,17 +2,17 @@
 title = '🤖 Model Configuration'
 weight = 10
 +++
-<!--
-Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+{{% comment %}}
+Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
--->
-<!-- spell-checker:ignore ollama, mxbai, nomic, thenlper, minilm, uniqueid, huggingface, hftei, openai, pplx -->
+{{% /comment %}}
+{{% comment %}} spell-checker:ignore ollama, mxbai, nomic, thenlper, minilm, uniqueid, huggingface, hftei, openai, pplx {{% /comment %}}
 
 ## Supported Models
 
 At a minimum, a Large _Language Model_ (LLM) must be configured in **Oracle AI Microservices Sandbox** for basic functionality. For Retrieval-Augmented Generation (**RAG**), an _Embedding Model_ will also need to be configured.
 
-{{% notice style="default" title="Model APIs" icon="pen" %}}
+{{% notice style="default" title="Model APIs" icon="circle-info" %}}
 If there is a specific model API that you would like to use with the **Oracle AI Microservices Sandbox**, please [open an issue in GitHub](https://github.com/oracle-samples/oaim-sandbox/issues/new).
 {{% /notice %}}
 
