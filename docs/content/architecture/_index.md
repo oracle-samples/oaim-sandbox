@@ -3,12 +3,12 @@ title = 'Architecture'
 weight = 10
 +++
 
-{{% comment %}}
+<!--
 Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
 spell-checker:ignore streamlit, oaim, uvicorn
-{{% /comment %}}
+-->
 
 The **Oracle AI Microservices Sandbox** (the **Sandbox**) consists of an API Server ([**oaim-server**](#api-server-oaim-server)) and an _optional_ web-based GUI ([**oaim-sandbox**](#client-oaim-sandbox)) component.  Both the API Server and GUI can be run on bare-metal or inside containers.  
 

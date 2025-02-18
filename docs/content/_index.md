@@ -6,12 +6,12 @@ description = 'AI Microservices Sandbox'
 keywords = 'oracle microservices development genai rag'
 +++  
 
-{{% comment %}}
+<!--
 Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
 spell-checker:ignore streamlit, genai, venv, oaim
-{{% /comment %}}
+-->
 
 The **Oracle AI Microservices Sandbox** (the **Sandbox**) provides a streamlined environment where developers and data scientists can explore the potential of Generative Artificial Intelligence (**GenAI**) combined with Retrieval-Augmented Generation (**RAG**) capabilities. By integrating Oracle Database AI Vector Search, the **Sandbox** enables users to enhance existing Large Language Models (**LLM**s) through **RAG**. This method significantly improves the performance and accuracy of AI models, helping to avoid common issues such as knowledge cutoff and hallucinations.
 

@@ -28,10 +28,13 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 # Logging
 import common.logging_config as logging_config
+
 # Endpoints
 from server.endpoints import register_endpoints
 
 logger = logging_config.logging.getLogger("oaim_server")
+
+
 ##########################################
 # Process Control
 ##########################################
