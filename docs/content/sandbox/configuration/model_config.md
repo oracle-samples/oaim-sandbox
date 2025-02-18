@@ -5,8 +5,8 @@ weight = 10
 {{% comment %}}
 Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
-{{% /comment %}}
-{{% comment %}} spell-checker:ignore ollama, mxbai, nomic, thenlper, minilm, uniqueid, huggingface, hftei, openai, pplx {{% /comment %}}
+
+spell-checker:ignore ollama, mxbai, nomic, thenlper, minilm, uniqueid, huggingface, hftei, openai, pplx {{% /comment %}}
 
 ## Supported Models
 

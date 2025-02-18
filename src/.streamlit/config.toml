@@ -9,6 +9,7 @@ serverAddress = "localhost"
 
 [server]
 cookieSecret = "oaim-sandbox-cookie"
+headless = true
 
 [client]
 toolbarMode = "minimal"

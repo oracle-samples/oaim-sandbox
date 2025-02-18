@@ -4,7 +4,7 @@ menus = 'main'
 archetype = "home"
 description = 'AI Microservices Sandbox'
 keywords = 'oracle microservices development genai rag'
-+++
++++  
 
 {{% comment %}}
 Copyright (c) 2024-2025, Oracle and/or its affiliates.

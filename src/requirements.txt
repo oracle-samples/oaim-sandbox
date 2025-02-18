@@ -9,7 +9,7 @@
 
 ## Installation Example from this directory:
 
-### python3.11 -m venv .venv
+### python3.11 -m venv .venv --copies
 ### source .venv/bin/activate
 ### pip3.11 install --upgrade pip wheel setuptools
 ### pip3.11 install -r requirements.txt
