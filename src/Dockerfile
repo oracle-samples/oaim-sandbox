@@ -5,7 +5,9 @@
 ##################################################
 FROM container-registry.oracle.com/os/oraclelinux:8-slim AS all_in_one_pyenv
 
+# NUMBA_DISABLE_JIT is for Apple Silicon support
 ENV TOKENIZERS_PARALLELISM=true \
+    NUMBA_DISABLE_JIT=1 \
     RUNUSER=oracleaim
 
 # Combine related commands into a single RUN layer to minimize image layers
