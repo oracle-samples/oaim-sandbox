@@ -6,6 +6,8 @@ weight = 20
 <!--
 Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
+
+spell-checker: ignore tablespace mycomplexsecret mycomplexwalletsecret sandboxdb oaim
 -->
 
 To use the Retrieval-Augmented Generation (RAG) functionality of the Sandbox, you will need to setup/enable an [embedding model](../model_config) and have access to an **Oracle Database 23ai**. Both the [Always Free Oracle Autonomous Database Serverless (ADB-S)](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/autonomous-always-free.html) and the [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) are supported. They are a great, no-cost, way to get up and running quickly.
@@ -24,7 +26,15 @@ Provide the following input:
 
 - **DB Username**: The pre-created [database username](#database-user) where the embeddings will be stored
 - **DB Password**: The password for the **DB Username**
-- **Database Connect String**: The full connection string or [TNS Alias](#using-a-wallettns_admin-directory) for the Database. This is normally in the form of `(DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=<hostname>)(PORT=<port>))(CONNECT_DATA=(SERVICE_NAME=<service_name>)))` or `//<hostname>:<port>/<service_name>`.
+- **Database Connect String**: The full connection string or [TNS Alias](#using-a-wallettns_admin-directory) for the Database. 
+    This is normally in the form of 
+    `
+    (DESCRIPTION=(ADDRESS=(PROTOCOL=tcp)(HOST=<hostname>)(PORT=<port>))(CONNECT_DATA=(SERVICE_NAME=<service_name>)))
+    ` 
+    or 
+    `
+    //<hostname>:<port>/<service_name>
+    `
 - **Wallet Password** (_Optional_): If the connection to the database uses mTLS, provide the wallet password. {{< icon "star" >}}Review [Using a Wallet](#using-a-wallettns_admin-directory) for additional setup instructions.
 
 Once all fields are set, click the `Save` button.
