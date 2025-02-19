@@ -14,21 +14,23 @@ spell-checker:ignore ollama, mxbai, nomic, thenlper, minilm, uniqueid, huggingfa
 At a minimum, a Large _Language Model_ (LLM) must be configured in **Oracle AI Microservices Sandbox** for basic functionality. For Retrieval-Augmented Generation (**RAG**), an _Embedding Model_ will also need to be configured.
 
 {{% notice style="default" title="Model APIs" icon="circle-info" %}}
-If there is a specific model API that you would like to use with the **Oracle AI Microservices Sandbox**, please [open an issue in GitHub](https://github.com/oracle-samples/oaim-sandbox/issues/new).
+If there is a specific model API that you would like to use with the **Oracle AI Microservices Sandbox**, please [open an issue in GitHub](https://github.com/oracle-samples/oaim-sandbox/issues/new).  
 {{% /notice %}}
 
 | Type  | API                                                      | Location      |
 | ----- | -------------------------------------------------------- | ------------- |
 | LLM   | [ChatOCIGenAI](#additional-information)                  | Private Cloud |
 | LLM   | [ChatOllama](#additional-information)                    | On-Premises   |
-| LLM   | [OpenAI](#additional-information)                        |               |
-| LLM   | [ChatPerplexity](#additional-information)                |               |
-| LLM   | [Cohere](#additional-information)                        |               |
+| LLM   | [CompatOpenAI](#additional-information)                  | On-Premises   |
+| LLM   | [OpenAI](#additional-information)                        | Third-Party   |
+| LLM   | [ChatPerplexity](#additional-information)                | Third-Party   |
+| LLM   | [Cohere](#additional-information)                        | Third-Party   |
 | Embed | [OCIGenAIEmbeddings](#additional-information)            | Private Cloud |
-| Embed | [OpenAIEmbeddings](#additional-information)              |               |
 | Embed | [OllamaEmbeddings](#additional-information)              | On-Premises   |
 | Embed | [HuggingFaceEndpointEmbeddings](#additional-information) | On-Premises   |
-| Embed | [CohereEmbeddings](#additional-information)              |               |
+| Embed | [CompatOpenAIEmbeddings](#additional-information)        | On-Premises   |
+| Embed | [OpenAIEmbeddings](#additional-information)              | Third-Party   |
+| Embed | [CohereEmbeddings](#additional-information)              | Third-Party   |
 
 ## Configuration
 
@@ -48,20 +50,26 @@ Set the API, API Keys, API URL and other parameters as required.  Parameters suc
 
 #### API
 
-The **Sandbox** supports a number of model API's.  When adding a model, choose the most appropriate Model API.  If unsure, or the specific API is not listed, try *OpenAI* before [opening an issue](https://github.com/oracle-samples/oaim-sandbox/issues/new?template=additional_model_support) requesting an additional model API support.
+The **Sandbox** supports a number of model API's.  When adding a model, choose the most appropriate Model API.  If unsure, or the specific API is not listed, try *CompatOpenAI* or *CompatOpenAIEmbeddings* before [opening an issue](https://github.com/oracle-samples/oaim-sandbox/issues/new?template=additional_model_support) requesting an additional model API support.
 
 There are a number of local AI Model runners that use OpenAI compatible API's, including:
 - [LM Studio](https://lmstudio.ai)
 - [vLLM](https://docs.vllm.ai/en/latest/#)
 - [LocalAI](https://localai.io/)
 
-When using these local runners, select the appropriate OpenAI API (Language: **OpenAI**; Embeddings: **OpenAIEmbeddings**)
+When using these local runners, select the appropriate compatible OpenAI API (Language: **CompatOpenAI**; Embeddings: **CompatOpenAIEmbeddings**).
 
 #### API URL
 
-When using an on-premises model, for performance purposes, they should be running on hosts with GPUs. As the **Sandbox** does not require GPUs, often is the case that the API URL for these models will be the **IP or hostname** address of a remote host. Specify the API URL and Port of the remote host.
+The API URL for the model will either be the *URL*, including the *IP* or *Hostname* and *Port*, of a locally running model; or the remote *URL* for a Third-Party or Cloud model.
+
+Examples:
+ - **Third-Party**: OpenAI - https://api.openai.com
+ - **On-Premises**: Ollama - http://localhost:11434
+ - **On-Premises**: LM Studio - http://localhost:1234/v1
 
 #### API Keys
+
 Third-Party cloud models, such as [OpenAI](https://openai.com/api/) and [Perplexity AI](https://docs.perplexity.ai/getting-started), require API Keys. These keys are tied to registered, funded accounts on these platforms. For more information on creating an account, funding it, and generating API Keys for third-party cloud models, please visit their respective sites.
 
 On-Premises models, such as those from [Ollama](https://ollama.com/) or [HuggingFace](https://huggingface.co/) usually do not require API Keys. These values can be left blank.
@@ -77,6 +85,20 @@ On-Premises models, such as those from [Ollama](https://ollama.com/) or [Hugging
 Please follow the [Getting Started](https://docs.oracle.com/en-us/iaas/Content/generative-ai/getting-started.htm) guide for deploying the service in your OCI tenancy.
 
 To use OCI GenAI, the **Sandbox** must be configured for [OCI access](oci_config); including the Compartment OCID for the OCI GenAI service.
+
+>[!code]Skip the GUI!
+>You can set the following environment variables to automatically enable OCI GenAI models:
+>```shell
+>export OCI_GENAI_SERVICE_ENDPOINT=<OCI GenAI Service Endpoint>
+>export OCI_GENAI_COMPARTMENT_ID=<OCI Compartment OCID of the OCI GenAI Service>
+>```
+>
+>Alternatively, you can specify the following in the `~/.oci/config` configfile under the appropriate OCI profile:
+>```shell
+>service_endpoint=<OCI GenAI Service Endpoint>
+>compartment_id=<OCI Compartment OCID of the OCI GenAI Service>
+>```
+
 {{% /tab %}}
 {{% tab title="Ollama" %}}
 # Ollama
@@ -192,6 +214,12 @@ Example of running thenlper/gte-base in a container:
 >```shell
 >export OPENAI_API_KEY=<super-secret API Key>
 >```
+
+{{% /tab %}}
+{{% tab title="CompatOpenAI" %}}
+# Compatible OpenAI
+
+Many "AI Runners" provide OpenAI compatible APIs.  These can be used without any specific API by using the **Compat**OpenAI API specification.  The API URL will normally be a local address and the API Key can be left blank.
 
 {{% /tab %}}
 {{% tab title="Perplexity AI" %}}
