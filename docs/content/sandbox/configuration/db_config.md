@@ -49,7 +49,7 @@ export DB_WALLET_PASSWORD=MYCOMPLEXWALLETSECRET
 
 ## Using a Wallet/TNS_ADMIN Directory
 
-For mTLS database connectivity or to specify a TNS alias instead of a full connect string, you can use the contents of a `TNS_ADMIN` directory.
+For mTLS database connectivity or, if you prefer to specify a TNS alias instead of a full connect string, you can use the contents of a `TNS_ADMIN` directory.
 
 {{% notice style="default" title="Great things come from unzipped files." icon="circle-info" %}}
 If using and ADB-S wallet, unzip the contents into the `TNS_ADMIN` directory. The `.zip` file will not be recognized.

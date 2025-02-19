@@ -33,8 +33,6 @@ The performance of the **Sandbox** will vary depending on the infrastructure.
 
 **LLM**s and Embedding Models are designed to use GPUs, but this walkthrough _can work_ on machines with just CPUs; albeit _much_ slower!
 When testing the **LLM**, if you don't get a response in a couple of minutes; your hardware is not sufficient to continue with the walkthrough.
-
-For **MacOS** users: if using Podman, each Podman machine is backed by a virtual machine.  The VM should be started with **10240** Mb memory allocated.
 {{% /notice %}}
 
 ## Installation
@@ -59,9 +57,33 @@ To enable the _ChatBot_ functionality, access to a **LLM** is required. The walk
 
 1. Start the *Ollama* container:
 
+   {{< tabs "uniqueid" >}}
+   {{% tab title="Linux/MacOS (x86)" %}}
    ```bash
-   podman run -d -e OLLAMA_NUM_PARALLEL=1 --gpus=all -v ollama:$HOME/.ollama -p 11434:11434 --name ollama docker.io/ollama/ollama
+   podman run -d --gpus=all -v ollama:$HOME/.ollama -p 11434:11434 --name ollama docker.io/ollama/ollama
    ```
+   {{% /tab %}}
+   {{% tab title="MacOS (Silicon)" %}}
+   The Container Runtime is backed by a virtual machine.  The VM should be started with **10G memory** and **100G disk space** allocated.
+
+   AI Runners like Ollama won’t utilize the "Metal" GPU when running in a container. This may change as the landscape evolves.
+
+   ```bash
+   podman run -d -e OLLAMA_NUM_PARALLEL=1 -v ollama:$HOME/.ollama -p 11434:11434 --name ollama docker.io/ollama/ollama
+   ```
+   {{% /tab %}}
+   {{% tab title="Windows" %}}
+   The Container Runtime is backed by a virtual machine.  The VM should be started with **10G memory** and **100G disk space** allocated.
+
+   ```bash
+   podman run -d --gpus=all -v ollama:$HOME/.ollama -p 11434:11434 --name ollama docker.io/ollama/ollama
+   ```
+   {{% /tab %}}
+   {{< /tabs >}}
+
+
+
+
 
 1. Pull the **LLM** into the container:
 
@@ -148,14 +170,14 @@ The **Sandbox** provides an easy to use front-end for experimenting with **LLM**
 
    ```bash
    cd oaim-sandbox/src
-   podman build -t localhost/oaim-sandbox:latest .
+   podman build -t localhost/oaim-sandbox-aio:latest .
 
    ```
 
 1. Start the **Sandbox**:
 
    ```bash
-   podman run -d --name oaim-sandbox --net="host" localhost/oaim-sandbox:latest
+   podman run -d --name oaim-sandbox-aio --net="host" localhost/oaim-sandbox-aio:latest
    ```
 
 If you are running the **Sandbox** on a remote host, you may need to allow access to the `8501` port.
@@ -244,7 +266,7 @@ Depending on the infrastructure, the embedding process can take a few minutes. A
 ![Split and Embed](images/split_embed_web.png)
 
 {{% notice style="code" title="Thumb Twiddling" icon="circle-info" %}}
-You can watch the progress of the embedding by streaming the **Sandbox** logs: `podman logs -f oaim-sandbox`
+You can watch the progress of the embedding by streaming the **Sandbox** logs: `podman logs -f oaim-sandbox-aio`
 
 Chunks are processed in batches. Wait until the **Sandbox** logs output: `POST Response: <Response [200]>` before continuing.
 {{% /notice %}}
@@ -320,6 +342,6 @@ To cleanup the walkthrough "Infrastructure", stop and remove the containers.
 
 ```bash
 podman container rm oaim-db --force
-podman container rm oaim-sandbox --force
+podman container rm oaim-sandbox-aio --force
 podman container rm ollama --force
 ```

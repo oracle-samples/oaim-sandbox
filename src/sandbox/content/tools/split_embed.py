@@ -219,31 +219,6 @@ def main() -> None:
     embed_request.index_type = col2_2.selectbox(
         "Index Type:", list(IndexTypes.__args__), key="selected_index_type", help=help_text.help_dict["index_type"]
     )
-    # Create a text input widget
-    embed_alias_size, _ = st.columns([0.5, 0.5])
-    embed_alias_invalid = False
-    embed_request.vector_store = None
-    embed_request.alias = embed_alias_size.text_input(
-        "Vector Store Alias:",
-        max_chars=20,
-        help=help_text.help_dict["embed_alias"],
-        key="selected_embed_alias",
-        placeholder="Press Enter to set.",
-    )
-    # Define the regex pattern: starts with a letter, followed by alphanumeric characters or underscores
-    pattern = r"^[A-Za-z][A-Za-z0-9_]*$"
-    # Check if input is valid
-    if embed_request.alias and not re.match(pattern, embed_request.alias):
-        st.error(
-            "Invalid Alias! It must start with a letter and only contain alphanumeric characters and underscores."
-        )
-        embed_alias_invalid = True
-
-    if not embed_alias_invalid:
-        embed_request.vector_store, _ = common.functions.get_vs_table(
-            **embed_request.model_dump(exclude={"database", "vector_store"})
-        )
-
     ################################################
     # Splitting
     ################################################
@@ -326,9 +301,34 @@ def main() -> None:
     vs_msg = f"{embed_request.vector_store}, will be created."
     if any(d.get("vector_store") == embed_request.vector_store for d in existing_vs):
         vs_msg = f"{embed_request.vector_store} exists, new chunks will be added."
+    # Mandatory Alias
+    embed_alias_size, _ = st.columns([0.5, 0.5])
+    embed_alias_invalid = False
+    embed_request.vector_store = None
+    embed_request.alias = embed_alias_size.text_input(
+        "Vector Store Alias:",
+        max_chars=20,
+        help=help_text.help_dict["embed_alias"],
+        key="selected_embed_alias",
+        placeholder="Press Enter to set.",
+    )
+    # Define the regex pattern: starts with a letter, followed by alphanumeric characters or underscores
+    pattern = r"^[A-Za-z][A-Za-z0-9_]*$"
+    # Check if input is valid
+    if embed_request.alias and not re.match(pattern, embed_request.alias):
+        st.error(
+            "Invalid Alias! It must start with a letter and only contain alphanumeric characters and underscores."
+        )
+        embed_alias_invalid = True
+
+    if not embed_alias_invalid:
+        embed_request.vector_store, _ = common.functions.get_vs_table(
+            **embed_request.model_dump(exclude={"database", "vector_store"})
+        )
     st.markdown(f"##### **Vector Store:** `{embed_request.vector_store}`")
     st.caption(f"{vs_msg}")
 
+    # Button
     if not populate_button_disabled and embed_request.vector_store:
         if "button_populate" in state and state.button_populate is True:
             state.running = True

@@ -43,6 +43,7 @@ class DatabaseAuth(BaseModel):
     dsn: Optional[str] = Field(default=None, description="Connect String")
     wallet_password: Optional[str] = Field(default=None, description="Wallet Password (for mTLS)")
     wallet_location: Optional[str] = Field(default=None, description="Wallet Location (for mTLS)")
+    config_dir: str = Field(default="tns_admin", description="Location of TNS_ADMIN directory")
     tcp_connect_timeout: int = Field(default=5, description="TCP Timeout in seconds")
 
 
@@ -51,7 +52,6 @@ class Database(DatabaseAuth):
 
     name: str = Field(default="DEFAULT", description="Name of Database (Alias)")
     connected: bool = Field(default=False, description="Connection Established")
-    tns_admin: str = Field(default="tns_admin", description="Location of TNS_ADMIN directory")
     vector_stores: Optional[list[DatabaseVectorStorage]] = Field(
         default=None, description="Vector Storage (read-only)", readOnly=True
     )

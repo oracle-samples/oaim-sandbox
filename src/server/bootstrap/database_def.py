@@ -10,7 +10,7 @@ from common.schema import Database
 
 
 def main() -> list[Database]:
-    """Define Default Database"""
+    """Define Default Database"""  
     database_list = [
         {
             "name": "DEFAULT",
@@ -18,11 +18,11 @@ def main() -> list[Database]:
             "password": os.environ.get("DB_PASSWORD", default=None),
             "dsn": os.environ.get("DB_DSN", default=None),
             "wallet_password": os.environ.get("DB_WALLET_PASSWORD", default=None),
-            "tns_admin": os.environ.get("TNS_ADMIN", default="tns_admin"),
+            "config_dir": os.environ.get("TNS_ADMIN", default="tns_admin"),
         },
     ]
     if "wallet_password" in database_list[0] and database_list[0]["wallet_password"]:
-        database_list[0]["wallet_location"] = database_list[0]["tns_admin"]
+        database_list[0]["wallet_location"] = database_list[0]["config_dir"]
 
     # Check for Duplicates
     unique_entries = set()

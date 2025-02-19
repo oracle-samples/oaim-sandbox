@@ -12,6 +12,9 @@ os.environ["LITELLM_LOCAL_MODEL_COST_MAP"] = "True"
 os.environ["GSK_DISABLE_SENTRY"] = "true"
 os.environ["GSK_DISABLE_ANALYTICS"] = "true"
 os.environ["USER_AGENT"] = "OAIM-SANDBOX"
+app_home = os.path.dirname(os.path.abspath(__file__))
+if "TNS_ADMIN" not in os.environ:
+    os.environ["TNS_ADMIN"] = os.path.join(app_home, "tns_admin")
 
 import queue
 import secrets
