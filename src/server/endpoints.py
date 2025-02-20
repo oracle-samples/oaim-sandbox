@@ -3,7 +3,7 @@ Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
 # spell-checker:ignore langgraph, ocid, docos, giskard, testsets, testset, noauth
-# spell-checker:ignore astream, ainvoke, oaim
+# spell-checker:ignore astream, ainvoke, oaim, litellm
 
 import asyncio
 import json
@@ -20,6 +20,7 @@ from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import HumanMessage, AnyMessage, convert_to_openai_messages, ChatMessage
 from langchain_core.runnables import RunnableConfig
 from giskard.rag import evaluate, QATestset
+from litellm import APIConnectionError
 
 from fastapi import FastAPI, Query, HTTPException, UploadFile, Response
 from fastapi.responses import StreamingResponse
@@ -771,11 +772,15 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
                     open(full_testsets, "a", encoding="utf-8") as destination,
                 ):
                     destination.write(source.read())
+            except APIConnectionError as ex:
+                shutil.rmtree(temp_directory)
+                logger.error("APIConnectionError Exception: %s", str(ex))
+                raise HTTPException(status_code=424, detail=str(ex)) from ex
             except Exception as ex:
                 shutil.rmtree(temp_directory)
-                logger.error("Error processing file: %s", str(ex))
+                logger.error("Unknown TestSet Exception: %s", str(ex))
                 raise HTTPException(status_code=500, detail=f"Unexpected testset error: {str(ex)}") from ex
-
+            
             # Store tests in database
             with open(full_testsets, "rb") as file:
                 upload_file = UploadFile(file=file, filename=full_testsets)

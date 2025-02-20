@@ -244,13 +244,11 @@ def build_knowledge_base(text_nodes: str, questions: int, ll_model: Model, embed
                 f"openai/{client_model.name}",
                 {"api_base": client_model.url, "api_key": client_model.api_key or "api_compat"},
             )
-        elif client_model.api == "ChatOllama":
+        elif client_model.api in ("ChatOllama", "OllamaEmbeddings"):
             model_name, params = (
                 f"ollama/{client_model.name}",
                 {"disable_structured_output": True, "api_base": client_model.url},
             )
-        elif client_model.api == "OllamaEmbeddings":
-            model_name, params = f"ollama/{client_model.name}", {"api_base": client_model.url}
         elif client_model.api == "Perplexity":
             model_name, params = f"perplexity/{client_model.name}", {"api_key": client_model.api_key}
         else:

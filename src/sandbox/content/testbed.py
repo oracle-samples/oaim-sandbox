@@ -390,6 +390,9 @@ def main():
                     (d["tid"] for d in state.testbed_db_testsets if d.get("name") == state.testbed["testset_name"]),
                     None,
                 )
+            except api_call.ApiError as ex:
+                st.error(f"Error Generating TestSet: {ex}", icon="🚨")
+                st.stop()
             except Exception as ex:
                 logger.error("Exception: %s", ex)
                 st.error(f"Looks like you found a bug: {ex}", icon="🚨")
