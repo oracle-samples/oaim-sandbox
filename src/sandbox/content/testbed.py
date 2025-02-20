@@ -379,7 +379,8 @@ def main():
         with placeholder:
             st.info("Processing Q&A... please be patient.", icon="⚠️")
         if testset_source != "Database":
-            api_params.update({"name": state.testbed["testset_name"]})
+            api_params = {"name": state.testbed["testset_name"]}
+            api_params.update(client_api_params)
             files = st_common.local_file_payload(state[f"selected_uploader_{state.testbed['uploader_key']}"])
             api_payload = {"files": files}
             try:
