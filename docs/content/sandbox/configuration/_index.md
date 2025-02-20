@@ -5,7 +5,7 @@ weight = 100
 +++
 
 <!--
-Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
 
@@ -41,4 +41,4 @@ For more information on configuring OCI, please read about [OCI Configuration](o
 
 Once you have configured the **Oracle AI Microservices Sandbox**, you can export the settings and import them after a restart or new deployment.
 
-For more information on importing (and exporting) settings, please read about [Import Settings](import_settings/).
+For more information on importing (and exporting) settings, please read about [Settings](settings/).

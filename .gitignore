@@ -22,6 +22,7 @@ sonar.sh
 **/.DS_Store
 **/*.swp
 **/.scannerwork
+**/tns_admin
 sonar-project.properties
 
 ##############################################################################

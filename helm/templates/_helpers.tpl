@@ -1,5 +1,5 @@
 {{/* 
-Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl. 
 */}}
 
@@ -23,6 +23,17 @@ Define the ServiceName of the API Server for Sandbox Access.
 
 {{- define "oaim-server.serviceUrl" -}}
 http://{{ include "oaim-server.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local
+{{- end -}}
+
+{{/*
+Define the ServiceName of the Ollama.
+*/}}
+{{- define "ollama.serviceName" -}}
+{{ include "release.name" . }}-ollama-http
+{{- end -}}
+
+{{- define "ollama.serviceUrl" -}}
+http://{{ include "ollama.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local:11434
 {{- end -}}
 
 {{/*

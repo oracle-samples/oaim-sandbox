@@ -1,8 +1,8 @@
 """
-Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v 1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore giskard testset, ollama, testsets, oaim
+# spell-checker:ignore giskard testset, ollama, testsets, oaim, litellm
 
 import json
 import pickle
@@ -237,9 +237,14 @@ def build_knowledge_base(text_nodes: str, questions: int, ll_model: Model, embed
     """Establish a temporary Knowledge Base"""
 
     def configure_and_set_model(client_model):
-        """Configure and set Model for TestSet Generation"""
+        """Configure and set Model for TestSet Generation (uses litellm)"""
         model_name, params = None, None
-        if client_model.api == "ChatOllama":
+        if client_model.api in ("CompatOpenAI", "CompatOpenAIEmbeddings"):
+            model_name, params = (
+                f"openai/{client_model.name}",
+                {"api_base": client_model.url, "api_key": client_model.api_key or "api_compat"},
+            )
+        elif client_model.api == "ChatOllama":
             model_name, params = (
                 f"ollama/{client_model.name}",
                 {"disable_structured_output": True, "api_base": client_model.url},
@@ -249,11 +254,13 @@ def build_knowledge_base(text_nodes: str, questions: int, ll_model: Model, embed
         elif client_model.api == "Perplexity":
             model_name, params = f"perplexity/{client_model.name}", {"api_key": client_model.api_key}
         else:
-            model_name, params = client_model.name, {"api_key": client_model.api_key}
+            model_name, params = f"openai/{client_model.name}", {"api_key": client_model.api_key}
 
         if client_model.type == "ll":
+            logger.debug("KnowledgeBase LL: %s (%s)", model_name, params)
             set_llm_model(model_name, **params)
         else:
+            logger.debug("KnowledgeBase Embed: %s (%s)", model_name, params)
             set_embedding_model(model_name, **params)
 
     nest_asyncio.apply()

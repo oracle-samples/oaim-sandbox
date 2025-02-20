@@ -1,11 +1,13 @@
-## Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+## Copyright (c) 2024-2025, Oracle and/or its affiliates.
 ## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 ##################################################
 # Base - All-In-One
 ##################################################
 FROM container-registry.oracle.com/os/oraclelinux:8-slim AS all_in_one_pyenv
 
+# NUMBA_DISABLE_JIT is for Apple Silicon support
 ENV TOKENIZERS_PARALLELISM=true \
+    NUMBA_DISABLE_JIT=1 \
     RUNUSER=oracleaim
 
 # Combine related commands into a single RUN layer to minimize image layers

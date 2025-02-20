@@ -1,5 +1,5 @@
 """
-Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
 # spell-checker:ignore langgraph, ocid, docos, giskard, testsets, testset, noauth
@@ -111,8 +111,8 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             logger.debug("Checking database: %s", db)
             try:
                 db_conn = databases.connect(db)
-                logger.debug("Unable to connect to database: %s", db)
             except databases.DbException:
+                logger.debug("Unable to connect to database: %s", db)
                 continue
             db.vector_stores = embedding.get_vs(db_conn)
 
@@ -143,6 +143,8 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         db = next((db for db in DATABASE_OBJECTS if db.name == name), None)
         if db:
             try:
+                payload.config_dir = db.config_dir
+                payload.wallet_location = db.wallet_location
                 db_conn = databases.connect(payload)
             except databases.DbException as ex:
                 db.connected = False
@@ -297,7 +299,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         return models_ret[0]
 
     @auth.patch("/v1/models/update", description="Update a model")
-    async def models_update(name: schema.ModelNameType, payload: schema.ModelAccess) -> Response:
+    async def models_update(name: schema.ModelNameType, payload: schema.Model) -> Response:
         """Update a model"""
         logger.debug("Received model payload: %s", payload)
         model_upd = await models.apply_filter(MODEL_OBJECTS, model_name=name)
@@ -541,11 +543,12 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
 
         oci_config = get_client_oci(client)
         # Setup Client schema.Model
-        try:
-            ll_client = await models.get_client(MODEL_OBJECTS, model, oci_config)
-        except Exception as ex:
-            logger.error("An exception initializing model: %s", ex)
-            raise HTTPException(status_code=500, detail="Unexpected error") from ex
+        ll_client = await models.get_client(MODEL_OBJECTS, model, oci_config)
+        if not ll_client:
+            yield "I'm sorry, I'm unable to initialise the Language Model.  Please refresh the application."
+        # except Exception as ex:
+        #     logger.error("An exception initializing model: %s", ex)
+        #     raise HTTPException(status_code=500, detail="Unexpected error") from ex
 
         # Get Prompts
         try:
@@ -611,6 +614,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
                 yield final_response  # This will be captured for ChatResponse
         except Exception as ex:
             logger.error("An invoke exception occurred: %s", ex)
+            # yield f"I'm sorry; {ex}"
             # TODO(gotsysdba) - If a message is returned;
             # format and return (this should be done in the agent)
             raise HTTPException(status_code=500, detail="Unexpected error") from ex
@@ -770,7 +774,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             except Exception as ex:
                 shutil.rmtree(temp_directory)
                 logger.error("Error processing file: %s", str(ex))
-                raise HTTPException(status_code=500, detail="Unexpected testset error") from ex
+                raise HTTPException(status_code=500, detail=f"Unexpected testset error: {str(ex)}") from ex
 
             # Store tests in database
             with open(full_testsets, "rb") as file:

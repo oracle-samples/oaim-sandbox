@@ -1,14 +1,15 @@
 +++
 title = 'Walkthrough'
 menus = 'main'
-weight = 10
+weight = 5
 +++
 
 <!--
-Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
+
+spell-checker: ignore mxbai, ollama, oaim, sqlplus, sysdba, spfile, freepdb, tablespace, firewalld, hnsw
 -->
-<!--spell-checker: ignore mxbai, ollama, oaim, sqlplus, sysdba, spfile, freepdb, tablespace, firewalld, hnsw -->
 
 This walkthrough will guide you through a basic installation of the **Oracle AI Microservices Sandbox** (the **Sandbox**). It will allow you to experiment with GenAI, using Retrieval-Augmented Generation (**RAG**) with Oracle Database 23ai at the core.
 
@@ -25,6 +26,7 @@ What you'll need for the walkthrough:
 - Internet Access (docker.io and container-registry.oracle.com)
 - Access to an environment where you can run container images (Podman or Docker).
 - 100G of free disk space.
+- 12G of usable memory.
 - Sufficient GPU/CPU resources to run the **LLM**, embedding model, and database (see below).
 
 {{% notice style="code" title="Performance: A Word of Caution" icon="fire" %}}
@@ -32,8 +34,6 @@ The performance of the **Sandbox** will vary depending on the infrastructure.
 
 **LLM**s and Embedding Models are designed to use GPUs, but this walkthrough _can work_ on machines with just CPUs; albeit _much_ slower!
 When testing the **LLM**, if you don't get a response in a couple of minutes; your hardware is not sufficient to continue with the walkthrough.
-
-For **MacOS** users: if using Podman, each Podman machine is backed by a virtual machine.  The VM should be started with **10240** Mb memory allocated.
 {{% /notice %}}
 
 ## Installation
@@ -58,9 +58,31 @@ To enable the _ChatBot_ functionality, access to a **LLM** is required. The walk
 
 1. Start the *Ollama* container:
 
+   {{< tabs "llm" >}}
+   {{% tab title="Linux/MacOS (x86)" %}}
+   The Container Runtime is native:
+
    ```bash
-   podman run -d -e OLLAMA_NUM_PARALLEL=1 --gpus=all -v ollama:$HOME/.ollama -p 11434:11434 --name ollama docker.io/ollama/ollama
+   podman run -d --gpus=all -v ollama:$HOME/.ollama -p 11434:11434 --name ollama docker.io/ollama/ollama
    ```
+   {{% /tab %}}
+   {{% tab title="MacOS (Silicon)" %}}
+   The Container Runtime is backed by a virtual machine.  The VM should be started with **12G memory** and **100G disk space** allocated.
+
+   AI Runners like Ollama, LM Studio, etc. won’t utilize Apple Silicon's "Metal" GPU when running in a container. This may change as the landscape evolves.
+
+   ```bash
+   podman run -d -e OLLAMA_NUM_PARALLEL=1 -v ollama:$HOME/.ollama -p 11434:11434 --name ollama docker.io/ollama/ollama
+   ```
+   {{% /tab %}}
+   {{% tab title="Windows" %}}
+   The Container Runtime is backed by a virtual machine.  The VM should be started with **12G memory** and **100G disk space** allocated.
+
+   ```bash
+   podman run -d --gpus=all -v ollama:$HOME/.ollama -p 11434:11434 --name ollama docker.io/ollama/ollama
+   ```
+   {{% /tab %}}
+   {{< /tabs >}}
 
 1. Pull the **LLM** into the container:
 
@@ -105,7 +127,7 @@ To start Oracle Database 23ai Free:
    podman run -d --name oaim-db -p 1521:1521 container-registry.oracle.com/database/free:latest
    ```
 
-1. Alter the `vector_memory_size` parameter and create a [new database user](../configuration/db_config#database-user):
+1. Alter the `vector_memory_size` parameter and create a [new database user](../sandbox/configuration/db_config#database-user):
 
    ```bash
    podman exec -it oaim-db sqlplus '/ as sysdba'
@@ -147,29 +169,40 @@ The **Sandbox** provides an easy to use front-end for experimenting with **LLM**
 
    ```bash
    cd oaim-sandbox/src
-   podman build -t localhost/oaim-sandbox:latest .
-
+   podman build -t localhost/oaim-sandbox-aio:latest .
    ```
 
 1. Start the **Sandbox**:
 
    ```bash
-   podman run -d --name oaim-sandbox --net="host" localhost/oaim-sandbox:latest
+   podman run -d --name oaim-sandbox-aio --network=host localhost/oaim-sandbox-aio:latest
    ```
 
-If you are running the **Sandbox** on a remote host, you may need to allow access to the `8501` port.
+   Operating System specific instructions:
+   {{< tabs "sandbox" >}}
+   {{% tab title="Linux" %}}
+   If you are running the **Sandbox** on a remote host, you may need to allow access to the `8501` port.
 
-For example, in Oracle Linux 8/9 with `firewalld`:
+   For example, in Oracle Linux 8/9 with `firewalld`:
 
-```bash
-firewall-cmd --zone=public --add-port=8501/tcp
-```
+   ```bash
+   firewall-cmd --zone=public --add-port=8501/tcp
+   ```
+   {{% /tab %}}
+   {{% tab title="MacOS/Windows" %}}
+   As the container is running in a VM, a port-forward is required from the localhost to the Podman VM:
+   ```bash
+   podman machine ssh -- -N -L 8501:localhost:8501
+   ```
+   {{% /tab %}}
+   {{% /tabs %}}
+
 
 ## Configuration
 
 With the "Infrastructure" in-place, you're ready to configure the **Sandbox**. 
 
-In a web browser, navigate to your host's `8501` port:
+In a web browser, navigate to `http://localhost:8501`:
 ![Sandbox](images/chatbot_no_models.png)
 
 Notice that there are no language models configured to use. Let's start the configuration.
@@ -182,7 +215,7 @@ To configure the On-Premises **LLM**, navigate to the _Configuration -> Models_ 
 ![Configure LLM](images/models_edit.png)
 1. Tick the _Enabled_ checkbox, leave all other settings as-is, and _Save_
 ![Enable LLM](images/models_enable_llm.png)
-{{% icon star %}} More information about configuring **LLM**s in the **Sandbox** can be found in the [Model Configuration](../configuration/model_config) documentation.
+{{% icon star %}} More information about configuring **LLM**s in the **Sandbox** can be found in the [Model Configuration](../sandbox/configuration/model_config) documentation.
 
 #### Say "Hello?"
 
@@ -194,8 +227,7 @@ The error about language models will have disappeared, but there are new warning
 
 The `Chat model:` will have been pre-set to the only enabled **LLM** (_llama3.1_) and a dialog box to interact with the **LLM** will be ready for input.
 
-Feel free to play around with the different **LLM** Parameters, hovering over the {{< q_icon >}}
-icons to get more information on what they do.
+Feel free to play around with the different **LLM** Parameters, hovering over the {{% icon circle-question %}} icons to get more information on what they do.
 
 You'll come back to the _ChatBot_ later to experiment further.
 
@@ -206,7 +238,7 @@ To configure the On-Premises Embedding Model, navigate back to the _Configuratio
 1. Enable the `mxbai-embed-large` Embedding Model following the same process as you did for the Language Model.
 ![Configure Embedding Model](images/models_enable_embed.png)
 
-{{% icon star %}}  More information about configuring embedding models in the **Sandbox** can be found in the [Model Configuration](../configuration/model_config) documentation.
+{{% icon star %}}  More information about configuring embedding models in the **Sandbox** can be found in the [Model Configuration](../sandbox/configuration/model_config) documentation.
 
 ### Configure the Database
 
@@ -217,9 +249,9 @@ To configure Oracle Database 23ai Free, navigate to the _Configuration -> Databa
 1. Enter the Database Connection String: `//localhost:1521/FREEPDB1`
 1. Save
 
-![Configure Database](images/database_config.png)
+![Configure Database](../sandbox/configuration/images/database_config.png)
 
-{{% icon star %}} More information about configuring the database in the **Sandbox** can be found in the [Database Configuration](../configuration/db_config) documentation.
+{{% icon star %}} More information about configuring the database in the **Sandbox** can be found in the [Database Configuration](../sandbox/configuration/db_config) documentation.
 
 ## Split and Embed
 
@@ -233,6 +265,7 @@ Navigate to the _Split/Embed_ Screen:
    https://docs.oracle.com/en/database/oracle/oracle-database/23/vecse/ai-vector-search-users-guide.pdf
    ```
 1. Press Enter
+1. Give the Vector Store an Alias: `WALKTHROUGH`
 1. Click _Load, Split, and Populate Vector Store_
 1. Please be patient...
 
@@ -243,7 +276,7 @@ Depending on the infrastructure, the embedding process can take a few minutes. A
 ![Split and Embed](images/split_embed_web.png)
 
 {{% notice style="code" title="Thumb Twiddling" icon="circle-info" %}}
-You can watch the progress of the embedding by streaming the **Sandbox** logs: `podman logs -f oaim-sandbox`
+You can watch the progress of the embedding by streaming the **Sandbox** logs: `podman logs -f oaim-sandbox-aio`
 
 Chunks are processed in batches. Wait until the **Sandbox** logs output: `POST Response: <Response [200]>` before continuing.
 {{% /notice %}}
@@ -263,14 +296,14 @@ From the command line:
 1. Query the Vector Store:
 
    ```sql
-   select * from WALKTHROUGH.MXBAI_EMBED_LARGE_512_103_COSINE_HNSW;
+   select * from WALKTHROUGH.WALKTHROUGH_MXBAI_EMBED_LARGE_512_103_COSINE_HNSW;
    ```
 
 ## Experiment
 
 With the **Oracle AI Microservices Sandbox** configured, you're ready for some experimentation.
 
-Navigate back to the _ChatBot_. There will be no more configuration warnings and `RAG?` will be automatically enabled:
+Navigate back to the _ChatBot_. There will be no more configuration warnings.
 
 For this guided experiment, perform the following:
 
@@ -298,7 +331,7 @@ With **RAG** enabled, all the services (**LLM**/Embedding Models and Database) a
 Depending on your hardware, this may cause the response to be **_significantly_** delayed.
 {{% /notice %}}
 
-![Enable RAG](images/enable_rag.png)
+![Enable RAG](images/chatbot_rag_enable.png)
 
 By asking `Are you sure?`, you are taking advantage of the **Sandbox**'s history and context functionality.  
 The response should be different and include references to `DBMS_VECTOR` and links to the embedded documentation where this information can be found. It might even include an apology!
@@ -319,6 +352,6 @@ To cleanup the walkthrough "Infrastructure", stop and remove the containers.
 
 ```bash
 podman container rm oaim-db --force
-podman container rm oaim-sandbox --force
+podman container rm oaim-sandbox-aio --force
 podman container rm ollama --force
 ```

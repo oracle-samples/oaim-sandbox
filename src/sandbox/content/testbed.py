@@ -1,8 +1,8 @@
 """
-Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore streamlit, selectbox, testset, testsets
+# spell-checker:ignore streamlit, selectbox, testset, testsets, iloc, mult
 
 import random
 import string
@@ -392,7 +392,8 @@ def main():
                 )
             except Exception as ex:
                 logger.error("Exception: %s", ex)
-                st.error("Test Sets not compatible.", icon="🚨")
+                st.error(f"Looks like you found a bug: {ex}", icon="🚨")
+                st.stop()
         else:
             # Set required state from splitting selected DB TestSet
             testset_name, testset_created = state.selected_db_testset.split(" -- Created: ", 1)

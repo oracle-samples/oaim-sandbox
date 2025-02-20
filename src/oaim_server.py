@@ -1,5 +1,5 @@
 """
-Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
 # spell-checker:ignore fastapi, laddr, checkpointer, langgraph, oaim, litellm, noauth
@@ -12,6 +12,9 @@ os.environ["LITELLM_LOCAL_MODEL_COST_MAP"] = "True"
 os.environ["GSK_DISABLE_SENTRY"] = "true"
 os.environ["GSK_DISABLE_ANALYTICS"] = "true"
 os.environ["USER_AGENT"] = "OAIM-SANDBOX"
+app_home = os.path.dirname(os.path.abspath(__file__))
+if "TNS_ADMIN" not in os.environ:
+    os.environ["TNS_ADMIN"] = os.path.join(app_home, "tns_admin")
 
 import queue
 import secrets
@@ -28,10 +31,13 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 # Logging
 import common.logging_config as logging_config
+
 # Endpoints
 from server.endpoints import register_endpoints
 
 logger = logging_config.logging.getLogger("oaim_server")
+
+
 ##########################################
 # Process Control
 ##########################################

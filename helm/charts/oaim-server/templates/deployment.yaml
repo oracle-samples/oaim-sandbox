@@ -1,4 +1,4 @@
-## Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+## Copyright (c) 2024-2025, Oracle and/or its affiliates.
 ## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
 apiVersion: apps/v1
@@ -132,16 +132,14 @@ spec:
                   name: {{ .models.cohere.secretName }}
                   key: {{ .models.cohere.secretKey | default "apiKey" }}
             {{- end }}
-            {{- if and .models.ollama .models.ollama.urlPort }}
-            - name: ON_PREM_OLLAMA_URL
-              value: {{ .models.ollama.urlPort }}
-            {{- end }}
-            {{- if and .models.ollama .models.huggingface.urlPort }}
+            {{- if and .models.huggingface .models.huggingface.urlPort }}
             - name: ON_PREM_HF_URL
               value: {{ .models.huggingface.urlPort }}
             {{- end }}
             {{- end }}
             {{- end }}
+            - name: ON_PREM_OLLAMA_URL
+              value: {{ include "ollama.serviceUrl" . }}
           volumeMounts:
             - name: tmp
               mountPath: "/app/tmp"

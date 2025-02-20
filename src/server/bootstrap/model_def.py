@@ -1,11 +1,11 @@
 """
-Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
 NOTE: Provide only one example per API to populate supported API lists; additional models should be
 added via the APIs
 """
-# spell-checker:ignore ollama, minilm, pplx, thenlper, mxbai, nomic, genai
+# spell-checker:ignore ollama, minilm, pplx, thenlper, mxbai, nomic, genai, docos
 
 import os
 from common.schema import Model
@@ -54,19 +54,6 @@ def main() -> list[Model]:
             "frequency_penalty": 1.0,
         },
         {
-            "name": "llama3.1",
-            "enabled": os.getenv("ON_PREM_OLLAMA_URL") is not None,
-            "type": "ll",
-            "api": "ChatOllama",
-            "api_key": "",
-            "openai_compat": True,
-            "url": os.environ.get("ON_PREM_OLLAMA_URL", default="http://127.0.0.1:11434"),
-            "context_length": 131072,
-            "temperature": 1.0,
-            "max_completion_tokens": 2048,
-            "frequency_penalty": 0.0,
-        },
-        {
             "name": "phi-4",
             "enabled": False,
             "type": "ll",
@@ -92,6 +79,20 @@ def main() -> list[Model]:
             "context_length": 131072,
             "temperature": 0.3,
             "max_completion_tokens": 4000,
+            "frequency_penalty": 0.0,
+        },
+        {
+            # This is intentionally last to line up with docos
+            "name": "llama3.1",
+            "enabled": os.getenv("ON_PREM_OLLAMA_URL") is not None,
+            "type": "ll",
+            "api": "ChatOllama",
+            "api_key": "",
+            "openai_compat": True,
+            "url": os.environ.get("ON_PREM_OLLAMA_URL", default="http://127.0.0.1:11434"),
+            "context_length": 131072,
+            "temperature": 1.0,
+            "max_completion_tokens": 2048,
             "frequency_penalty": 0.0,
         },
         {
@@ -125,16 +126,6 @@ def main() -> list[Model]:
             "max_chunk_size": 512,
         },
         {
-            "name": "mxbai-embed-large",
-            "enabled": os.getenv("ON_PREM_OLLAMA_URL") is not None,
-            "type": "embed",
-            "api": "OllamaEmbeddings",
-            "url": os.environ.get("ON_PREM_OLLAMA_URL", default="http://127.0.0.1:11434"),
-            "api_key": "",
-            "openai_compat": True,
-            "max_chunk_size": 512,
-        },
-        {
             # OCI GenAI; url and enabled will be determined by OCI config
             "name": "cohere.embed-multilingual-v3.0",
             "enabled": os.getenv("OCI_GENAI_COMPARTMENT_ID") is not None
@@ -155,6 +146,17 @@ def main() -> list[Model]:
             "api_key": "",
             "openai_compat": True,
             "max_chunk_size": 8192,
+        },
+        {
+            # This is intentionally last to line up with docos
+            "name": "mxbai-embed-large",
+            "enabled": os.getenv("ON_PREM_OLLAMA_URL") is not None,
+            "type": "embed",
+            "api": "OllamaEmbeddings",
+            "url": os.environ.get("ON_PREM_OLLAMA_URL", default="http://127.0.0.1:11434"),
+            "api_key": "",
+            "openai_compat": True,
+            "max_chunk_size": 512,
         },
     ]
 
