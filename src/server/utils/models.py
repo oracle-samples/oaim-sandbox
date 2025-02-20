@@ -2,9 +2,11 @@
 Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
-# spell-checker:ignore ollama, pplx, huggingface, genai
+# spell-checker:ignore ollama, pplx, huggingface, genai, giskard
 
 from typing import Optional
+
+from openai import OpenAI
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_cohere import ChatCohere, CohereEmbeddings
@@ -13,6 +15,8 @@ from langchain_openai import ChatOpenAI, OpenAIEmbeddings
 from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from langchain_community.chat_models.oci_generative_ai import ChatOCIGenAI
 from langchain_community.embeddings.oci_generative_ai import OCIGenAIEmbeddings
+
+from giskard.llm.client.openai import OpenAIClient
 
 from server.utils.oci import init_genai_client
 from common.schema import ModelNameType, ModelTypeType, ModelEnabledType, Model, ModelAccess, OracleCloudSettings
@@ -56,10 +60,10 @@ async def get_key_value(
 
 
 async def get_client(
-    model_objects: list[ModelAccess], model_config: dict, oci_config: OracleCloudSettings
+    model_objects: list[ModelAccess], model_config: dict, oci_config: OracleCloudSettings, giskard: bool = False
 ) -> BaseChatModel:
     """Retrieve model configuration"""
-    logger.debug("Model Config: %s", model_config)
+    logger.debug("Model Config: %s; Giskard: %s", model_config, giskard)
     model_name = model_config["model"]
     model_api = await get_key_value(model_objects, model_name, "api")
     model_api_key = await get_key_value(model_objects, model_name, "api_key")
@@ -133,9 +137,15 @@ async def get_client(
         }
 
     try:
-        logger.debug("Searching for %s in %s", model_api, model_classes)
-        client = model_classes[model_api]()
-        logger.debug("Model Client: %s", client)
+        if giskard:
+            logger.debug("Creating Giskard Client for %s in %s", model_api, model_classes)
+            giskard_key = model_api_key or "giskard"
+            _client = OpenAI(api_key=giskard_key, base_url=f"{model_url}/v1")
+            client = OpenAIClient(model=model_name, client=_client)
+        else:
+            logger.debug("Searching for %s in %s", model_api, model_classes)
+            client = model_classes[model_api]()
+            logger.debug("Model Client: %s", client)
         return client
     except (UnboundLocalError, KeyError):
         logger.error("Unable to find client; expect trouble!")

@@ -780,7 +780,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
                 shutil.rmtree(temp_directory)
                 logger.error("Unknown TestSet Exception: %s", str(ex))
                 raise HTTPException(status_code=500, detail=f"Unexpected testset error: {str(ex)}") from ex
-            
+
             # Store tests in database
             with open(full_testsets, "rb") as file:
                 upload_file = UploadFile(file=file, filename=full_testsets)
@@ -794,7 +794,9 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         description="Evaluate Q&A Test Set.",
         response_model=schema.EvaluationReport,
     )
-    def testbed_evaluate_qa(client: schema.ClientIdType, tid: schema.TestSetsIdType) -> schema.EvaluationReport:
+    def testbed_evaluate_qa(
+        client: schema.ClientIdType, tid: schema.TestSetsIdType, judge: schema.ModelNameType
+    ) -> schema.EvaluationReport:
         """Run evaluate against a testset"""
 
         def get_answer(question: str):
@@ -820,7 +822,12 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         with open(temp_directory / f"{tid}_output.txt", "w", encoding="utf-8") as file:
             file.write(qa_test)
         loaded_testset = QATestset.load(temp_directory / f"{tid}_output.txt")
-        report = evaluate(get_answer, testset=loaded_testset)
+
+        # Setup Judge Model
+        logger.debug("Starting evaluation with Judge: %s", judge)
+        oci_config = get_client_oci(client)
+        judge_client = asyncio.run(models.get_client(MODEL_OBJECTS, {"model": judge}, oci_config, True))
+        report = evaluate(get_answer, testset=loaded_testset, llm_client=judge_client)
 
         eid = testbed.insert_evaluation(
             db_conn=db_conn,
