@@ -8,14 +8,26 @@ Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
 
-Once you are happy with the settings of your **Sandbox**, they can be exported and imported later to save time configurating 
+Once you are happy with the specific configuration of your **Sandbox**, the settings can be exported in **.json** format.  Those settings can then be loaded in later to return the **Sandbox** to your previous configuration.  The settings an also be imported into another instance of the **Sandbox**.
 
+## View and Download
 
-## Download
+To view and download the **Sandbox** configuration, navigate to `Configuration -> Settings`:
 
+![Download Settings](../images/settings_download.png)
+
+{{< icon "triangle-exclamation" >}} Settings contain sensitive information such as database passwords and API Keys.  By default, these settings will not be exported and will have to be re-entered after uploading the settings in a new instance of the **Sandbox**.  If have a secure way to store the settings and would would like to export the sensitive data, tick the "Include Sensitive Settings" box.
 
 ## Upload
 
+To upload previously downloaded settings, navigate to `Configuration -> Settings`:
+
+![Upload Settings](../images/settings_upload.png)
+
+1. Toggle to the "Upload" position
+1. Browse files and select the settings file
+
+If there are differences found, you can review the differences before clicking "Apply New Settings".
 
 
 ## SpringAI
