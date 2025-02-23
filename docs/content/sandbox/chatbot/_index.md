@@ -7,6 +7,9 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
 
+The **Oracle AI Microservices Sandbox** (the **Sandbox**) provides a 
+
+
 Differently from a common LLM playground, that helps to test an LLM on the information on which has been trained on, the OAIM Sandbox works on the chunks retrieved in the Oracle DB 23ai by similarity with the question provided, like in this example:
 
 ![Chatbot](images/chatbot.png)

@@ -29,5 +29,10 @@ To upload previously downloaded settings, navigate to `Configuration -> Settings
 
 If there are differences found, you can review the differences before clicking "Apply New Settings".
 
-
 ## SpringAI
+
+{{% notice style="default" title="23-Feb-2025: Documentation In-Progress..." icon="pen" %}}
+Thank you for your patience as we work on updating the documentation. Please check back soon for the latest updates.
+{{% /notice %}}
+
+![SpringAI](../images/settings_spring_ai.png)
