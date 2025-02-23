@@ -57,76 +57,76 @@ variable "label_prefix" {
   }
 }
 
-// OKE Cluster
-variable "oke_version" {
+// K8s Cluster
+variable "k8s_version" {
   description = "The version of Kubernetes to install into the cluster masters."
   type        = string
   default     = "1.31.1"
 }
 
-variable "oke_api_is_public" {
+variable "k8s_api_is_public" {
   type    = bool
   default = true
 }
 
 # This is a string and not a list to support ORM/MP input, it will be converted to a list in locals
-variable "oke_api_endpoint_allowed_cidrs" {
+variable "k8s_api_endpoint_allowed_cidrs" {
   description = "Comma separated string of CIDR blocks from which the API Endpoint can be accessed."
   type        = string
   default     = "0.0.0.0/0"
   validation {
-    condition     = can(regex("$|((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(3[0-2]|[1-2]?[0-9])(,?)( ?)){1,}$", var.oke_api_endpoint_allowed_cidrs))
+    condition     = can(regex("$|((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(3[0-2]|[1-2]?[0-9])(,?)( ?)){1,}$", var.k8s_api_endpoint_allowed_cidrs))
     error_message = "Must be a comma separated string of valid CIDRs."
   }
 }
 
-variable "oke_worker_os_ver" {
-  description = "Oracle Linux Version for OKE Node Pool Workers"
+variable "k8s_worker_os_ver" {
+  description = "Oracle Linux Version for K8s Node Pool Workers"
   type        = string
   default     = "8.10"
 }
 
-variable "oke_node_pool_cpu_size" {
+variable "k8s_node_pool_cpu_size" {
   description = "Number of Workers in the CPU Node Pool."
   type        = number
   default     = 3
 }
 
-variable "oke_worker_cpu_shape" {
+variable "k8s_worker_cpu_shape" {
   description = "Choose the shape of the Node Pool Workers."
   type        = string
   default     = "VM.Standard.E5.Flex"
   validation {
-    condition     = contains(["VM.Standard.E5.Flex", "VM.Standard.E4.Flex", "VM.Standard3.Flex"], var.oke_worker_cpu_shape)
+    condition     = contains(["VM.Standard.E5.Flex", "VM.Standard.E4.Flex", "VM.Standard3.Flex"], var.k8s_worker_cpu_shape)
     error_message = "Must be either VM.Standard.E5.Flex, VM.Standard.E4.Flex, or VM.Standard3.Flex."
   }
 }
 
-variable "oke_worker_cpu_ocpu" {
+variable "k8s_worker_cpu_ocpu" {
   description = "The initial number of OCPU for the Node Pool Workers."
   type        = number
   default     = 2
 }
 
 // GPU Node Pool
-variable "oke_node_pool_gpu_deploy" {
+variable "k8s_node_pool_gpu_deploy" {
   description = "Deploy a GPU Node Pool"
   type        = bool
-  default     = false
+  default     = true
 }
 
-variable "oke_node_pool_gpu_size" {
+variable "k8s_node_pool_gpu_size" {
   description = "Number of Workers in the GPU Node Pool."
   type        = number
   default     = 1
 }
 
-variable "oke_worker_gpu_shape" {
+variable "k8s_worker_gpu_shape" {
   description = "Choose the shape of the Node Pool Workers."
   type        = string
   default     = "VM.GPU.A10.1"
   validation {
-    condition     = contains(["VM.GPU.A10.1", "VM.GPU.A10.2"], var.oke_worker_gpu_shape)
+    condition     = contains(["VM.GPU.A10.1", "VM.GPU.A10.2"], var.k8s_worker_gpu_shape)
     error_message = "Must be either VM.GPU.A10.1, or VM.GPU.A10.2."
   }
 }

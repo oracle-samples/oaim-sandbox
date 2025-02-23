@@ -5,14 +5,14 @@
 # Variable NSGs
 #########################################################################
 locals {
-  oke_api_endpoint_allowed_cidrs = split(",", replace(var.oke_api_endpoint_allowed_cidrs, "/\\s+/", ""))
+  k8s_api_endpoint_allowed_cidrs = split(",", replace(var.k8s_api_endpoint_allowed_cidrs, "/\\s+/", ""))
   service_lb_allowed_cidrs       = split(",", replace(var.service_lb_allowed_cidrs, "/\\s+/", ""))
   service_lb_allowed_ports       = split(",", replace(var.service_lb_allowed_ports, "/\\s+/", ""))
 }
 
 locals {
-  oke_api_endpoint_cidr_rules = var.oke_api_is_public ? {
-    for allowed_cidr in local.oke_api_endpoint_allowed_cidrs :
+  k8s_api_endpoint_cidr_rules = var.k8s_api_is_public ? {
+    for allowed_cidr in local.k8s_api_endpoint_allowed_cidrs :
     "Allow custom ingress to kube-apiserver from ${allowed_cidr}" => {
       protocol = local.tcp_protocol, port = local.apiserver_port, source = allowed_cidr, source_type = local.rule_type_cidr
     }
@@ -34,7 +34,7 @@ locals {
 # Static NSGs - Mess with these at your peril
 #########################################################################
 locals {
-  oke_api_endpoint_default_rules = {
+  k8s_api_endpoint_default_rules = {
     "API Endpoint from Workers." : {
       protocol = local.tcp_protocol, port = local.apiserver_port,
       source   = module.network.private_subnet_cidr_block, source_type = local.rule_type_cidr
@@ -46,7 +46,7 @@ locals {
     "API Endpoint Path Discovery - Ingress." : {
       protocol = local.icmp_protocol, source = module.network.private_subnet_cidr_block, source_type = local.rule_type_cidr
     },
-    "Control Plane to OKE Services." : {
+    "Control Plane to K8s Services." : {
       protocol    = local.tcp_protocol, port = 443,
       destination = data.oci_core_services.core_services.services.0.cidr_block, destination_type = local.rule_type_service
     },
@@ -59,7 +59,7 @@ locals {
     },
   }
 
-  oke_workers_default_rules = {
+  k8s_workers_default_rules = {
     "Workers from Workers." : {
       protocol = local.all_protocols, port = local.all_ports,
       source   = module.network.private_subnet_cidr_block, source_type = local.rule_type_cidr
@@ -91,7 +91,7 @@ locals {
       protocol    = local.tcp_protocol, port = local.control_plane_port,
       destination = module.network.public_subnet_cidr_block, destination_type = local.rule_type_cidr
     },
-    "Workers to OKE Services." : {
+    "Workers to K8s Services." : {
       protocol    = local.tcp_protocol, port = local.all_ports, port_min = 443, port_max = 443,
       destination = data.oci_core_services.core_services.services.0.cidr_block, destination_type = local.rule_type_service
     },
@@ -133,9 +133,9 @@ locals {
 locals {
   # Dynamic map of all NSG rules for enabled NSGs
   all_rules = { for x, y in merge(
-    { for k, v in local.oke_api_endpoint_default_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.oke_api_endpoint.id }) },
-    { for k, v in local.oke_api_endpoint_cidr_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.oke_api_endpoint.id }) },
-    { for k, v in local.oke_workers_default_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.oke_workers.id }) },
+    { for k, v in local.k8s_api_endpoint_default_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.k8s_api_endpoint.id }) },
+    { for k, v in local.k8s_api_endpoint_cidr_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.k8s_api_endpoint.id }) },
+    { for k, v in local.k8s_workers_default_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.k8s_workers.id }) },
     { for k, v in local.service_lb_default_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb[0].id }) },
     { for k, v in local.service_lb_cidr_port_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb[0].id }) },
     { for k, v in local.adb_private_endpoint_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.adb[0].id }) },
@@ -154,7 +154,7 @@ locals {
 #########################################################################
 # Implement
 #########################################################################
-resource "oci_core_network_security_group_security_rule" "oke" {
+resource "oci_core_network_security_group_security_rule" "k8s" {
   for_each                  = local.all_rules
   stateless                 = false
   description               = each.value.description

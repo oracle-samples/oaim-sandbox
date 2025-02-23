@@ -9,21 +9,19 @@ Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
 
-{{% notice style="code" title="10-Sept-2024: Documentation In-Progress..." icon="pen" %}}
-Thank you for your patience as we work on updating the documentation. Please check back soon for the latest updates.
-{{% /notice %}}
-
 The **Oracle AI Microservices Sandbox** is not configured out-of-the-box. To enable functionality, an embedding model, language model, database, and optionally, Oracle Cloud Infrastructure (OCI) will need to be configured.
 
 Once you have configured the Sandbox, the settings can be exported to be imported into another deployment or after a restart.
 
 ## 🤖 Model Configuration
 
-At a minimum, a large language model (LLM) will need to be configured to experiment with the **Oracle AI Microservices Sandbox**. The LLM can be a third-party LLM, such as ChatGPT or Perplexity, or an on-premises LLM. _If you are experimenting with sensitive, private data_, it is recommended to run both the embedding and LLM on-premises.
+At a minimum, a large language model (LLM) will need to be configured to experiment with the **Oracle AI Microservices Sandbox**. The LLM can be a third-party LLM, such as ChatGPT or Perplexity, or an on-premises LLM.
 
 Additionally, to enable Retrieval-Augmented Generation (RAG) capabilities, an embedding model will need to be configured and enabled.
 
 For more information on the currently supported models and how to configure them, please read about [Model Configuration](model_config/).
+
+{{< icon "star" >}} _If you are experimenting with sensitive, private data_, it is recommended to run both the embedding and LLM on-premises.
 
 ## 🗄️ Database Configuration
 
@@ -34,6 +32,8 @@ For more information on configuring the database, please read about [Database Co
 ## ☁️ OCI Configuration (Optional)
 
 Oracle Cloud Infrastructure (OCI) Object Storage buckets can be used to store documents for embedding and to store the split documents before inserting them in the Oracle Database Vector Store.
+
+Additionally, OCI GenAI services can be used for both private-cloud based LLM and Embedding Models.
 
 For more information on configuring OCI, please read about [OCI Configuration](oci_config/).
 

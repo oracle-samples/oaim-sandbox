@@ -192,7 +192,7 @@ def spring_ai_conf_check(ll_model, embed_model) -> str:
     ll_api = state["ll_model_enabled"][ll_model]["api"]
     embed_api = state["embed_model_enabled"][embed_model]["api"]
 
-    if ll_api == "OpenAI" and "OpenAI" in embed_api:
+    if "OpenAI" in ll_api and "OpenAI" in embed_api:
         return "openai"
     elif ll_api == "ChatOllama" and "Ollama" in embed_api:
         return "ollama"
@@ -218,9 +218,8 @@ def spring_ai_obaas(src_dir, file_name, provider, ll_model):
         rag=state["user_settings"]["rag"],
         database_config=state["database_config"][state["user_settings"]["rag"]["database"]],
     )
-   
+
     if file_name.endswith(".yaml"):
-  
         ctx_prompt = json.dumps(ctx_prompt, indent=True)  # Converts it into a valid JSON string (preserving quotes)
 
         formatted_content = template_content.format(
@@ -230,7 +229,6 @@ def spring_ai_obaas(src_dir, file_name, provider, ll_model):
             rag=state["user_settings"]["rag"],
             database_config=state["database_config"][state["user_settings"]["rag"]["database"]],
         )
-
 
         yaml_data = yaml.safe_load(formatted_content)
         if provider == "ollama":

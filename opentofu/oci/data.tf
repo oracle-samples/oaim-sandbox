@@ -5,8 +5,6 @@
 data "oci_artifacts_container_repositories" "container_repositories" {
   compartment_id = local.compartment_ocid
   display_name   = lower(format("%s/*", local.label_prefix))
-  // Depends to ensure registries are created before getting summary.  OCIR is part of
-  // ebaas modules, but using OKE to avoid tainting ansible vars
   depends_on = [
     oci_containerengine_cluster.default_cluster
   ]
@@ -119,4 +117,12 @@ data "cloudinit_config" "workers" {
     filename     = "50-oke.sh"
     merge_type   = "list(append)+dict(no_replace,recurse_list)+str(append)"
   }
+}
+
+data "oci_containerengine_node_pool" "default_node_pool_details" {
+  node_pool_id = oci_containerengine_node_pool.default_node_pool_details.id
+}
+data "oci_containerengine_node_pool" "gpu_node_pool_details" {
+  count        = var.k8s_node_pool_gpu_deploy ? 1 : 0
+  node_pool_id = oci_containerengine_node_pool.gpu_node_pool_details[0].id
 }

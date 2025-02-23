@@ -1,6 +1,13 @@
 # Copyright © 2023, 2024, Oracle and/or its affiliates.
 # All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
+output "repositories" {
+  value = flatten([
+    for repo in data.oci_artifacts_container_repositories.container_repositories.container_repository_collection :
+    [for r in repo.items : lower(format("%s.ocir.io/%s/%s", local.image_region, data.oci_objectstorage_namespace.objectstorage_namespace.namespace, r.display_name))]
+  ])
+}
+
 output "kubeconfig_cmd" {
   description = "Command to generate kubeconfig file"
   value = format(
