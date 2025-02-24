@@ -34,12 +34,16 @@ def show_rag_refs(context):
     for i, ref_col in enumerate(ref_cols):
         with ref_col.popover(f"Reference: {i + 1}"):
             chunk = context[0][i]
-            ref_src.add(chunk["metadata"]["filename"])
+            logger.debug("Chunk Content: %s", chunk)           
             st.subheader("Reference Text", divider="red")
             st.markdown(chunk["page_content"])
-            st.subheader("Metadata", divider="red")
-            st.markdown(f"File:  {chunk['metadata']['source']}")
-            st.markdown(f"Chunk: {chunk['metadata']['page']}")
+            try:
+                ref_src.add(chunk["metadata"]["filename"])
+                st.subheader("Metadata", divider="red")
+                st.markdown(f"File:  {chunk['metadata']['source']}")
+                st.markdown(f"Chunk: {chunk['metadata']['page']}")
+            except KeyError:
+                logger.error("Chunk Metadata NOT FOUND!!")
 
     for link in ref_src:
         st.markdown("- " + link)
