@@ -357,6 +357,8 @@ def rag_sidebar() -> None:
         def update_filtered_df():
             """Dynamically update filtered_df based on selected filters"""
             filtered = vs_df.copy()
+            # Remove vector stores where the model is not enabled
+            filtered = vs_df[vs_df["model"].isin(state["embed_model_enabled"].keys())]
             if st.session_state.get("selected_rag_alias"):
                 filtered = filtered[filtered["alias"] == st.session_state["selected_rag_alias"]]
             if st.session_state.get("selected_rag_model"):

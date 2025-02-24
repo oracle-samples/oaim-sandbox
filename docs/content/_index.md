@@ -46,7 +46,7 @@ The [Walkthrough](walkthrough) is a great way to familiarize yourself with the S
   - API Keys for Third-Party Models
   - On-Premises Models*
 
-~\*Oracle recommends running On-Premises Models on hardware with GPUs. For more information, please review the [Architecture](architecture/) documentation.~
+~\*Oracle recommends running On-Premises Models on hardware with GPUs. For more information, please review the [The Sandbox](sandbox/) documentation.~
 
 ### Bare-Metal Installation
 
@@ -107,4 +107,4 @@ To run the application in a container; download the [source](https://github.com/
 ### Advanced Installation
 
 The **Sandbox** is designed to operate within a Microservices Architecture, leveraging Microservices Infrastructure like Kubernetes.
-Review the [Architecture](../architecture) for more information on the components of the **Sandbox** and additional [Installation](../installation) options.
+Review [The Sandbox](../sandbox) for more information on the components of the **Sandbox** and additional [Installation](../installation) options.

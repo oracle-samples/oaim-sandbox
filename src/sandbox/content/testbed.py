@@ -379,7 +379,8 @@ def main():
         with placeholder:
             st.info("Processing Q&A... please be patient.", icon="⚠️")
         if testset_source != "Database":
-            api_params.update({"name": state.testbed["testset_name"]})
+            api_params = {"name": state.testbed["testset_name"]}
+            api_params.update(client_api_params)
             files = st_common.local_file_payload(state[f"selected_uploader_{state.testbed['uploader_key']}"])
             api_payload = {"files": files}
             try:
@@ -390,6 +391,9 @@ def main():
                     (d["tid"] for d in state.testbed_db_testsets if d.get("name") == state.testbed["testset_name"]),
                     None,
                 )
+            except api_call.ApiError as ex:
+                st.error(f"Error Generating TestSet: {ex}", icon="🚨")
+                st.stop()
             except Exception as ex:
                 logger.error("Exception: %s", ex)
                 st.error(f"Looks like you found a bug: {ex}", icon="🚨")
@@ -483,10 +487,19 @@ def main():
             )
 
         st.subheader("Q&A Evaluation", divider="red")
-        st.info("Use the sidebar settings for evaluation parameters", icon="⬅️")
+        st.info("Use the sidebar settings for chatbot evaluation parameters", icon="⬅️")
         st_common.ll_sidebar()
         st_common.rag_sidebar()
-        if st.button(
+        st.write("Choose a model to judge the correctness of the chatbot answer, then start evaluation.")
+        col_left, col_center, _ = st.columns([3, 3, 4])
+        col_left.selectbox(
+            "Judge Language Model:",
+            key="selected_evaluate_judge",
+            options=available_ll_models,
+            index=0,
+            label_visibility="collapsed",
+        )
+        if col_center.button(
             "Start Evaluation",
             type="primary",
             key="evaluate_button",
@@ -499,7 +512,7 @@ def main():
                 st.warning("Starting Q&A evaluation... please be patient.", icon="⚠️")
             st_common.patch_settings()
             api_url = f"{API_ENDPOINT}/evaluate"
-            api_params = {"tid": state.testbed["testset_id"]}
+            api_params = {"tid": state.testbed["testset_id"], "judge": state.selected_evaluate_judge}
             api_params.update(client_api_params)
             evaluate = api_call.post(url=api_url, params=api_params, timeout=1200)
             st.success("Evaluation Complete!", icon="✅")
