@@ -280,7 +280,7 @@ def main():
         on_change=reset_testset,
         help="Create a new Test Set to be used for evaluation.",
     )
-
+    api_params = {}
     ###################################
     # Load/Generate Test Set
     ###################################
@@ -361,7 +361,6 @@ def main():
             "embed_model": test_gen_embed,
             "questions": test_gen_questions,
         }
-        api_params.update(client_api_params)
     # Process Q&A Request
     button_load_disabled = button_load_disabled or state.testbed["testset_id"] == "" or "testbed_qa" in state
     col_left, col_center, _ = st.columns([3, 3, 4])
@@ -379,7 +378,7 @@ def main():
         with placeholder:
             st.info("Processing Q&A... please be patient.", icon="⚠️")
         if testset_source != "Database":
-            api_params = {"name": state.testbed["testset_name"]}
+            api_params["name"] = (state.testbed["testset_name"],)
             api_params.update(client_api_params)
             files = st_common.local_file_payload(state[f"selected_uploader_{state.testbed['uploader_key']}"])
             api_payload = {"files": files}

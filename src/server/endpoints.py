@@ -731,7 +731,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         name: schema.TestSetsNameType,
         ll_model: schema.ModelNameType = None,
         embed_model: schema.ModelNameType = None,
-        questions: int = 0,
+        questions: int = 2,
     ) -> schema.TestSetQA:
         """Retrieve contents from a local file uploaded and generate Q&A"""
         # Setup Models
