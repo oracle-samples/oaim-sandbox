@@ -298,9 +298,6 @@ def main() -> None:
     ######################################
     st.header("Populate Vector Store", divider="red")
     existing_vs = state["database_config"][state["user_settings"]["rag"]["database"]]["vector_stores"]
-    vs_msg = f"{embed_request.vector_store}, will be created."
-    if any(d.get("vector_store") == embed_request.vector_store for d in existing_vs):
-        vs_msg = f"{embed_request.vector_store} exists, new chunks will be added."
     # Mandatory Alias
     embed_alias_size, _ = st.columns([0.5, 0.5])
     embed_alias_invalid = False
@@ -325,6 +322,9 @@ def main() -> None:
         embed_request.vector_store, _ = common.functions.get_vs_table(
             **embed_request.model_dump(exclude={"database", "vector_store"})
         )
+    vs_msg = f"{embed_request.vector_store}, will be created."
+    if any(d.get("vector_store") == embed_request.vector_store for d in existing_vs):
+        vs_msg = f"{embed_request.vector_store} exists, new chunks will be added."
     st.markdown(f"##### **Vector Store:** `{embed_request.vector_store}`")
     st.caption(f"{vs_msg}")
 

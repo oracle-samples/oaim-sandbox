@@ -216,7 +216,6 @@ def vs_retrieve(state: AgentState, config: RunnableConfig) -> AgentState:
             id="DocumentException", page_content="I'm sorry, I think you found a bug!", metadata={"source": f"{ex}"}
         )
     documents_dict = [vars(doc) for doc in documents]
-    print(f"===================== {documents_dict}")
     logger.info("Found Documents: %i", len(documents_dict))
     return {"context_input": retrieve_question, "documents": documents_dict}
 
