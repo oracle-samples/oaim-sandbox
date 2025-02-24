@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from typing import Literal
 import json
 import copy
+import decimal
 
 from langchain_core.documents.base import Document
 from langchain_core.messages import SystemMessage, ToolMessage
@@ -75,9 +76,16 @@ def get_messages(state: AgentState, config: RunnableConfig) -> list:
 def document_formatter(rag_context) -> str:
     """Extract the RAG Documents and format into a string"""
     logger.info("Extracting chunks from RAG Retrieval")
+    logger.debug("RAG Context: %s", rag_context)
     chunks = "\n\n".join([doc["page_content"] for doc in rag_context])
     return chunks
 
+class DecimalEncoder(json.JSONEncoder):
+    """Used with json.dumps to encode decimals"""
+    def default(self, o):
+        if isinstance(o, decimal.Decimal):
+            return str(o)
+        return super().default(o)
 
 #############################################################################
 # NODES and EDGES
@@ -208,6 +216,7 @@ def vs_retrieve(state: AgentState, config: RunnableConfig) -> AgentState:
             id="DocumentException", page_content="I'm sorry, I think you found a bug!", metadata={"source": f"{ex}"}
         )
     documents_dict = [vars(doc) for doc in documents]
+    print(f"===================== {documents_dict}")
     logger.info("Found Documents: %i", len(documents_dict))
     return {"context_input": retrieve_question, "documents": documents_dict}
 
@@ -263,13 +272,17 @@ def grade_documents(state: AgentState, config: RunnableConfig) -> Literal["gener
     logger.info("Grading Decision: RAG Relevant: %s", score)
     if score == "yes":
         # This is where we fake a tools response before the completion.
+        logger.debug("Creating ToolsMessage Documents: %s", state["documents"])
+        logger.debug("Creating ToolsMessage ContextQ:  %s", state["context_input"])
+        
         state["messages"].append(
             ToolMessage(
-                content=json.dumps([state["documents"], state["context_input"]]),
+                content=json.dumps([state["documents"], state["context_input"]], cls=DecimalEncoder),
                 name="oraclevs_tool",
                 tool_call_id="tool_placeholder",
             )
         )
+        logger.debug("ToolsMessage Created")
         return "vs_generate"
     else:
         return "generate_response"
