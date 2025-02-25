@@ -68,9 +68,9 @@ def evaluation_report(eid=None, report=None) -> None:
                     "axis": {"range": [None, 100]},
                     "bar": {"color": "blue"},
                     "steps": [
-                        {"range": [0, 30], "color": "red"},
-                        {"range": [30, 70], "color": "yellow"},
-                        {"range": [70, 100], "color": "green"},
+                        {"range": [0, 60], "color": "red"},
+                        {"range": [60, 90], "color": "yellow"},
+                        {"range": [90, 100], "color": "green"},
                     ],
                     "threshold": {
                         "line": {"color": "blue", "width": 4},
