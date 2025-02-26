@@ -28,6 +28,4 @@ spec:
       password:
         k8sSecret:
           name: {{ include "oaim.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}
-  ociConfig:
-    configMapName: {{ include "oaim.fullname" . }}-oci-region
 {{ end }}

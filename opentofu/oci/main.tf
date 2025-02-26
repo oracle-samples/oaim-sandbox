@@ -1,4 +1,4 @@
-# Copyright © 2023, 2024, Oracle and/or its affiliates.
+# Copyright (c) 2024-2025, Oracle and/or its affiliates.
 # All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
 // random
@@ -7,10 +7,16 @@ resource "random_pet" "label" {
 }
 
 // oci_artifacts_container_repository
-resource "oci_artifacts_container_repository" "artifacts_container_repository" {
-  for_each       = toset(local.registries)
+resource "oci_artifacts_container_repository" "server_repository" {
   compartment_id = local.compartment_ocid
-  display_name   = lower(format("%s/%s", local.label_prefix, each.value))
+  display_name   = lower(format("%s/oaim-server", local.label_prefix))
+  is_immutable   = false
+  is_public      = false
+}
+
+resource "oci_artifacts_container_repository" "sandbox_repository" {
+  compartment_id = local.compartment_ocid
+  display_name   = lower(format("%s/oaim-sandbox", local.label_prefix))
   is_immutable   = false
   is_public      = false
 }
@@ -29,26 +35,13 @@ resource "oci_core_public_ip" "service_lb" {
 }
 
 // oci_identity
-# resource "oci_identity_dynamic_group" "node_dynamic_group" {
-#   compartment_id = var.tenancy_ocid
-#   name           = format("%s-worker-nodes-dyngrp", local.label_prefix)
-#   description    = format("%s Dynamic Group - K8s Nodes", local.label_prefix)
-#   matching_rule = format("All {instance.compartment.id='%s',tag.%s.value='%s'}",
-#     local.compartment_ocid, local.tag_clusterNameKey, local.tag_clusterNameVal
-#   )
-#   provider = oci.home_region
-# }
-
 resource "oci_identity_dynamic_group" "node_dynamic_group" {
   compartment_id = var.tenancy_ocid
   name           = format("%s-worker-nodes-dyngrp", local.label_prefix)
-  description    = format("%s Dynamic Group - K8S Nodes", local.label_prefix)
-
-  matching_rule = format(
-    "Any {%s}",
-    join(", ", [for id in local.instance_ids : format("instance.id = '%s'", id)])
+  description    = format("%s Dynamic Group - K8s Nodes", local.label_prefix)
+  matching_rule = format("All {instance.compartment.id='%s',tag.%s.value='%s'}",
+    local.compartment_ocid, local.tag_clusterNameKey, local.tag_clusterNameVal
   )
-
   provider = oci.home_region
 }
 
@@ -60,24 +53,24 @@ resource "oci_identity_policy" "worker_node_policies" {
     format("allow dynamic-group %s to manage buckets in compartment id %s", oci_identity_dynamic_group.node_dynamic_group.name, local.compartment_ocid),
     format("allow dynamic-group %s to manage objects in compartment id %s", oci_identity_dynamic_group.node_dynamic_group.name, local.compartment_ocid),
     format("allow dynamic-group %s to manage repos in compartment id %s", oci_identity_dynamic_group.node_dynamic_group.name, local.compartment_ocid),
-    format("allow dynamic-group %s to manage autonomous-database-family in compartment id %s", oci_identity_dynamic_group.node_dynamic_group.name, local.db_compartment),
+    format("allow dynamic-group %s to manage autonomous-database-family in compartment id %s", oci_identity_dynamic_group.node_dynamic_group.name, local.compartment_ocid),
   ]
   provider = oci.home_region
 }
 
-# resource "oci_identity_tag" "identity_tag_clusterName" {
-#   description      = "K8s Cluster Name"
-#   name             = format("%s-clusterName", local.label_prefix)
-#   tag_namespace_id = oci_identity_tag_namespace.tag_namespace.id
-#   provider         = oci.home_region
-# }
+resource "oci_identity_tag" "identity_tag_clusterName" {
+  description      = "K8s Cluster Name"
+  name             = format("%s-clusterName", local.label_prefix)
+  tag_namespace_id = oci_identity_tag_namespace.tag_namespace.id
+  provider         = oci.home_region
+}
 
-# resource "oci_identity_tag_namespace" "tag_namespace" {
-#   compartment_id = local.compartment_ocid
-#   description    = format("%s Tag Namespace", local.label_prefix)
-#   name           = local.label_prefix
-#   provider       = oci.home_region
-# }
+resource "oci_identity_tag_namespace" "tag_namespace" {
+  compartment_id = local.compartment_ocid
+  description    = format("%s Tag Namespace", local.label_prefix)
+  name           = local.label_prefix
+  provider       = oci.home_region
+}
 
 // K8s
 resource "oci_containerengine_cluster" "default_cluster" {
@@ -152,7 +145,7 @@ resource "oci_containerengine_node_pool" "default_node_pool_details" {
     }
     size    = var.k8s_node_pool_cpu_size
     nsg_ids = [oci_core_network_security_group.k8s_workers.id]
-    # defined_tags = { (local.tag_clusterNameKey) = local.tag_clusterNameVal }
+    defined_tags = { (local.tag_clusterNameKey) = local.tag_clusterNameVal }
   }
   node_eviction_node_pool_settings {
     #Optional
@@ -172,7 +165,7 @@ resource "oci_containerengine_node_pool" "default_node_pool_details" {
   node_metadata = {
     user_data = data.cloudinit_config.workers.rendered
   }
-  # defined_tags = { (local.tag_clusterNameKey) = local.tag_clusterNameVal }
+  defined_tags = { (local.tag_clusterNameKey) = local.tag_clusterNameVal }
   lifecycle {
     ignore_changes = [defined_tags, freeform_tags]
   }
@@ -204,7 +197,7 @@ resource "oci_containerengine_node_pool" "gpu_node_pool_details" {
     }
     size    = var.k8s_node_pool_gpu_size
     nsg_ids = [oci_core_network_security_group.k8s_workers.id]
-    # defined_tags = { (local.tag_clusterNameKey) = local.tag_clusterNameVal }
+    defined_tags = { (local.tag_clusterNameKey) = local.tag_clusterNameVal }
   }
   node_eviction_node_pool_settings {
     #Optional
@@ -220,7 +213,7 @@ resource "oci_containerengine_node_pool" "gpu_node_pool_details" {
   node_metadata = {
     user_data = data.cloudinit_config.workers.rendered
   }
-  # defined_tags = { (local.tag_clusterNameKey) = local.tag_clusterNameVal }
+  defined_tags = { (local.tag_clusterNameKey) = local.tag_clusterNameVal }
   lifecycle {
     ignore_changes = [defined_tags, freeform_tags]
   }

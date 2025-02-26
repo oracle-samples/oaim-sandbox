@@ -1,11 +1,41 @@
-# Copyright © 2023, 2024, Oracle and/or its affiliates.
+# Copyright (c) 2024-2025, Oracle and/or its affiliates.
 # All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
-output "repositories" {
-  value = flatten([
-    for repo in data.oci_artifacts_container_repositories.container_repositories.container_repository_collection :
-    [for r in repo.items : lower(format("%s.ocir.io/%s/%s", local.image_region, data.oci_objectstorage_namespace.objectstorage_namespace.namespace, r.display_name))]
-  ])
+output "lb_reserved_ip" {
+  value = oci_core_public_ip.service_lb[0].ip_address
+}
+
+output "lb_nsg_ocid" {
+  value = oci_core_network_security_group.service_lb[0].id
+}
+
+output "adb_ocid" {
+  description = "Autonomous Database OCID"
+  value       = oci_database_autonomous_database.default_adb.id
+}
+
+output "adb_password" {
+  description = "Autonomous Database ADMIN Password"
+  value       = oci_database_autonomous_database.default_adb.admin_password
+  sensitive = true
+}
+
+output "adb_service" {
+  description = "Autonomous Database Service Name"
+  value       = format("%s_TP", oci_database_autonomous_database.default_adb.db_name)
+}
+
+output "oci_region" {
+  description = "OCI Region"
+  value       = var.region
+}
+
+output "sandbox_repository" {
+  value = lower(format("%s.ocir.io/%s/%s", local.image_region, data.oci_objectstorage_namespace.objectstorage_namespace.namespace, oci_artifacts_container_repository.sandbox_repository.display_name))
+}
+
+output "server_repository" {
+  value = lower(format("%s.ocir.io/%s/%s", local.image_region, data.oci_objectstorage_namespace.objectstorage_namespace.namespace, oci_artifacts_container_repository.server_repository.display_name))
 }
 
 output "kubeconfig_cmd" {
@@ -16,15 +46,4 @@ output "kubeconfig_cmd" {
     var.region,
     oci_containerengine_cluster.default_cluster.endpoint_config[0].is_public_ip_enabled ? "PUBLIC_ENDPOINT" : "PRIVATE_ENDPOINT"
   )
-}
-
-//ADB
-output "adb_name" {
-  description = "Autonomous Database Name"
-  value       = var.byo_db ? var.byo_db_type == "ADB-S" ? data.oci_database_autonomous_database.byo_db[0].db_name : null : oci_database_autonomous_database.default_adb[0].db_name
-}
-
-output "adb_ip" {
-  description = "Autonomous Database IP Address"
-  value       = var.byo_db ? var.byo_db_type == "ADB-S" ? data.oci_database_autonomous_database.byo_db[0].private_endpoint_ip : null : var.adb_networking == "PRIVATE_ENDPOINT_ACCESS" ? oci_database_autonomous_database.default_adb[0].private_endpoint_ip : "Secured Access"
 }

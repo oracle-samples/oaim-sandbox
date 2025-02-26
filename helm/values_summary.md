@@ -1,3 +1,6 @@
+## Copyright (c) 2024-2025, Oracle and/or its affiliates.
+## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
+
 # --Global Configuration
 global:
   api:
@@ -28,10 +31,10 @@ oaim-server:
 
     autoscaling:
       enabled: false
-      minReplicas: 1
-      maxReplicas: 100
-      targetCPUUtilizationPercentage: 80
-      targetMemoryUtilizationPercentage: 80
+      # minReplicas: 1
+      # maxReplicas: 100
+      # targetCPUUtilizationPercentage: 80
+      # targetMemoryUtilizationPercentage: 80
 
     resources: {}
       # We usually recommend not to specify default resources and to leave this as a conscious
@@ -51,10 +54,6 @@ oaim-server:
     service:
       http:
         type: "ClusterIP"
-
-    # -- Oracle Cloud Infrastructure Configuration
-    oci:
-      region: ""
 
     # -- Oracle Autonomous Database Configuration
     adb:

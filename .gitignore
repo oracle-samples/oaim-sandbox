@@ -7,7 +7,7 @@
 !app/server/requirements.txt
 !app/sandbox/requirements.txt
 app/THIRD_PARTY_LICENSES.txt
-helm/values.yaml
+helm/values*.yaml
 sbin/**
 **/*.bak
 **/tmp/**
