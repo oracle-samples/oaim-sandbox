@@ -17,7 +17,7 @@ output "adb_ocid" {
 output "adb_password" {
   description = "Autonomous Database ADMIN Password"
   value       = oci_database_autonomous_database.default_adb.admin_password
-  sensitive = true
+  sensitive   = true
 }
 
 output "adb_service" {

@@ -3,6 +3,13 @@ title = 'Microservices'
 weight = 5
 +++
 
+<!--
+Copyright (c) 2024-2025, Oracle and/or its affiliates.
+Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
+
+spell-checker: ignore opentofu ocid oraclecloud oaim  ollama crds ADBDB finalizers mxbai sandboxdb
+-->
+
 The Oracle AI Microservices Sandbox (the **Sandbox**) was specifically designed to run on infrastructure supporting microservices architecture, including [Kubernetes](https://kubernetes.io/).
 
 ## Oracle Kubernetes Engine
@@ -103,29 +110,6 @@ These will be output as part of the **IaC** but can be removed from the code if 
 1. Apply the Service:
     ```bash
     kubectl apply -f service.yaml
-    ```
-
-### Oracle Operator for Kubernetes
-
-Using the [Oracle Operator for Kubernetes](https://github.com/oracle/oracle-database-operator) (OraOperator) will allow you to manage the lifecycle of the Oracle Database used for Vector Storage from Kubernetes.
-
-This is not a requirement, but if using an Autonomous Database with mTLS (as per this example), the OraOperator will simplify the setup of the TNS and Wallet secrets needed to connect the **Sandbox** to the Database.
-
-1. Install CertManager:
-    ```bash
-    helm upgrade \
-      --install cert-manager cert-manager \
-      --repo https://charts.jetstack.io \
-      --namespace cert-manager \
-      --create-namespace \
-      --set crds.enabled=true
-    ```
-
-1. Install the **OraOperator**:
-    ```bash
-    kubectl apply -f https://raw.githubusercontent.com/oracle/oracle-database-operator/refs/heads/main/rbac/cluster-role-binding.yaml
-
-    kubectl apply -f https://raw.githubusercontent.com/oracle/oracle-database-operator/refs/heads/main/oracle-database-operator.yaml
     ```
 
 ### Images

@@ -53,6 +53,7 @@ resource "oci_identity_policy" "worker_node_policies" {
     format("allow dynamic-group %s to manage buckets in compartment id %s", oci_identity_dynamic_group.node_dynamic_group.name, local.compartment_ocid),
     format("allow dynamic-group %s to manage objects in compartment id %s", oci_identity_dynamic_group.node_dynamic_group.name, local.compartment_ocid),
     format("allow dynamic-group %s to manage repos in compartment id %s", oci_identity_dynamic_group.node_dynamic_group.name, local.compartment_ocid),
+    # format("allow dynamic-group %s to manage load-balancers in compartment id %s", oci_identity_dynamic_group.node_dynamic_group.name, local.compartment_ocid),
     format("allow dynamic-group %s to manage autonomous-database-family in compartment id %s", oci_identity_dynamic_group.node_dynamic_group.name, local.compartment_ocid),
   ]
   provider = oci.home_region
@@ -122,6 +123,32 @@ resource "oci_containerengine_cluster" "default_cluster" {
   }
 }
 
+resource "oci_containerengine_addon" "oraoper_addon" {
+  addon_name                       = "OracleDatabaseOperator"
+  cluster_id                       = oci_containerengine_cluster.default_cluster.id
+  remove_addon_resources_on_delete = true
+}
+
+resource "oci_containerengine_addon" "certmgr_addon" {
+  addon_name                       = "CertManager"
+  cluster_id                       = oci_containerengine_cluster.default_cluster.id
+  remove_addon_resources_on_delete = true
+}
+
+# resource "oci_containerengine_addon" "ingress_addon" {
+#   addon_name                       = "NativeIngressController"
+#   cluster_id                       = oci_containerengine_cluster.default_cluster.id
+#   remove_addon_resources_on_delete = true
+#   configurations {
+#     key   = "compartmentId"
+#     value = local.compartment_ocid
+#   }
+#   configurations {
+#     key   = "loadBalancerSubnetId"
+#     value = module.network.public_subnet_ocid
+#   }
+# }
+
 resource "oci_containerengine_node_pool" "default_node_pool_details" {
   cluster_id         = oci_containerengine_cluster.default_cluster.id
   compartment_id     = local.compartment_ocid
@@ -143,8 +170,8 @@ resource "oci_containerengine_node_pool" "default_node_pool_details" {
         subnet_id           = module.network.private_subnet_ocid
       }
     }
-    size    = var.k8s_node_pool_cpu_size
-    nsg_ids = [oci_core_network_security_group.k8s_workers.id]
+    size         = var.k8s_node_pool_cpu_size
+    nsg_ids      = [oci_core_network_security_group.k8s_workers.id]
     defined_tags = { (local.tag_clusterNameKey) = local.tag_clusterNameVal }
   }
   node_eviction_node_pool_settings {
@@ -195,8 +222,8 @@ resource "oci_containerengine_node_pool" "gpu_node_pool_details" {
         subnet_id           = module.network.private_subnet_ocid
       }
     }
-    size    = var.k8s_node_pool_gpu_size
-    nsg_ids = [oci_core_network_security_group.k8s_workers.id]
+    size         = var.k8s_node_pool_gpu_size
+    nsg_ids      = [oci_core_network_security_group.k8s_workers.id]
     defined_tags = { (local.tag_clusterNameKey) = local.tag_clusterNameVal }
   }
   node_eviction_node_pool_settings {
