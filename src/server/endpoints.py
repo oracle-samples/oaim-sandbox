@@ -140,7 +140,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     )
     async def databases_update(name: schema.DatabaseNameType, payload: schema.DatabaseAuth) -> Response:
         """Update schema.Database"""
-        logger.info("Received schema.Database Payload: %s", payload)
+        logger.debug("Received Database Payload: %s", payload)
         db = next((db for db in DATABASE_OBJECTS if db.name == name), None)
         if db:
             try:

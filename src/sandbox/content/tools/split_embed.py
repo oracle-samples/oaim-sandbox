@@ -24,7 +24,7 @@ import common.functions
 import common.help_text as help_text
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("config.tools.split_embed")
+logger = logging_config.logging.getLogger("sandbox.tools.split_embed")
 
 # Set endpoint if server has been established
 OCI_API_ENDPOINT = None

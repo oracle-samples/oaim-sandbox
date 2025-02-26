@@ -4,6 +4,9 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 """
 
 from common.schema import Settings
+import common.logging_config as logging_config
+
+logger = logging_config.logging.getLogger("server.bootstrap.settings_def")
 
 
 def main() -> list[Settings]:

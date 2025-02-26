@@ -10,7 +10,7 @@ from langchain_core.messages import ChatMessage
 from common.schema import ChatRequest
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("utils.client")
+logger = logging_config.logging.getLogger("sandbox.utils.client")
 
 
 class SandboxClient:

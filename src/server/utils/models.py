@@ -22,7 +22,7 @@ from server.utils.oci import init_genai_client
 from common.schema import ModelNameType, ModelTypeType, ModelEnabledType, Model, ModelAccess, OracleCloudSettings
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("server.models")
+logger = logging_config.logging.getLogger("server.utils.models")
 
 
 #####################################################

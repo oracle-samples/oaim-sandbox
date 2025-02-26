@@ -32,7 +32,7 @@ from common.schema import (
 )
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("server.testbed")
+logger = logging_config.logging.getLogger("server.utils.testbed")
 
 
 def jsonl_to_json_content(content: str) -> json:

@@ -31,7 +31,7 @@ from common.schema import DatabaseVectorStorage, Database
 
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("server.embedding")
+logger = logging_config.logging.getLogger("server.utils.embedding")
 
 
 def drop_vs(conn: oracledb.Connection, vs: DatabaseVectorStorage) -> None:

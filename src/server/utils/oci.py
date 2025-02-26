@@ -12,7 +12,7 @@ import oci
 from common.schema import OracleCloudSettings
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("server.oci")
+logger = logging_config.logging.getLogger("server.utils.oci")
 
 
 class OciException(Exception):

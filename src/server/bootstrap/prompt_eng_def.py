@@ -5,6 +5,9 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 # pylint: disable=line-too-long
 from common.schema import Prompt
+import common.logging_config as logging_config
+
+logger = logging_config.logging.getLogger("server.bootstrap.prompt_eng_def")
 
 
 def main() -> list[Prompt]:
@@ -19,12 +22,11 @@ def main() -> list[Prompt]:
             "name": "RAG Example",
             "category": "sys",
             "prompt": (
-                "You are an assistant for question-answering tasks, be concise. "
+                "You are an assistant for question-answering tasks, be concise.  "
                 "Use the retrieved DOCUMENTS to answer the user input as accurately as possible. "
-                "Keep your answer grounded in the facts of the DOCUMENTS and reference the DOCUMENTS "
-                "where possible. If there are no retrieved DOCUMENTS, respond only with "
-                "'I am sorry, but I do not have enough information.' "
-                "Do not generate an answer from other sources."
+                "Keep your answer grounded in the facts of the DOCUMENTS and reference the DOCUMENTS where possible. "
+                "If there ARE DOCUMENTS, you should be able to answer.  "
+                "If there are NO DOCUMENTS, respond only with 'I am sorry, but cannot find relevant sources.'"
             ),
         },
         {
@@ -40,12 +42,9 @@ def main() -> list[Prompt]:
             "name": "Basic Example",
             "category": "ctx",
             "prompt": (
-                "Rephrase the current query for an optimal knowledge retrieval search while ensuring accuracy. "
-                """Follow these strict rules:
-                - If the current query is vague or refers to previous context (e.g., 'tell me more', 'are you sure?'), retain key details from the most relevant past interaction.
-                - If the query introduces a new topic (e.g., greetings like 'hello', 'hi', 'good morning' or unrelated subjects), IGNORE prior context and return it as-is.
-                - STRICTLY use only the original user-provided details (e.g., software versions, names, or numbers) and DO NOT use or assume any details from AI-generated responses.
-                - DO NOT answer the question. Simply return the rephrased query."""
+                "Rephrase the latest user input into a standalone search query optimized for vector retrieval. "
+                "Use only the user's prior inputs for context, ignoring system responses. "
+                "Remove conversational elements like confirmations or clarifications, focusing solely on the core topic and keywords."
             ),
         },
         {

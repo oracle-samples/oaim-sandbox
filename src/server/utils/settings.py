@@ -11,7 +11,7 @@ import server.utils.databases as databases
 from common.schema import ClientIdType
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("server.testbed")
+logger = logging_config.logging.getLogger("server.utils.testbed")
 
 
 def create_settings_objects(db_conn: Connection) -> None:

@@ -7,7 +7,9 @@ import os
 import server.utils.databases as databases
 import server.utils.embedding as embedding
 from common.schema import Database
+import common.logging_config as logging_config
 
+logger = logging_config.logging.getLogger("server.bootstrap.database_def")
 
 def main() -> list[Database]:
     """Define Default Database"""  
@@ -21,7 +23,8 @@ def main() -> list[Database]:
             "config_dir": os.environ.get("TNS_ADMIN", default="tns_admin"),
         },
     ]
-    if "wallet_password" in database_list[0] and database_list[0]["wallet_password"]:
+    if database_list[0]["wallet_password"]:
+        logger.info("Setting WALLET_LOCATION: %s", database_list[0]["config_dir"])
         database_list[0]["wallet_location"] = database_list[0]["config_dir"]
 
     # Check for Duplicates
