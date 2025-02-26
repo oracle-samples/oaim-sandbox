@@ -8,6 +8,8 @@
 !app/sandbox/requirements.txt
 app/THIRD_PARTY_LICENSES.txt
 helm/values*.yaml
+helm/service.yaml
+helm/ingress.yaml
 sbin/**
 **/*.bak
 **/tmp/**

@@ -17,8 +17,9 @@ RUN microdnf -y update && \
     groupadd $RUNUSER && \
     useradd -u 10001 -g $RUNUSER -md /app $RUNUSER && \
     install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/.oci && \
-    install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/tmp && \
-    mkdir -p /opt/server/ && \
+    install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/TEMP
+
+RUN mkdir -p /opt/server/ && \
     touch /opt/server/requirements.txt
 
 # Avoid re-installs of python modules if the reqs haven't changed

@@ -171,10 +171,10 @@ ollama:
 
   autoscaling:
     enabled: false
-    minReplicas: 1
-    maxReplicas: 100
-    targetCPUUtilizationPercentage: 80
-    targetMemoryUtilizationPercentage: 80
+    # minReplicas: 1
+    # maxReplicas: 100
+    # targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
 
   resources: {}
     # We usually recommend not to specify default resources and to leave this as a conscious
@@ -187,6 +187,8 @@ ollama:
     # requests:
     #   cpu: 100m
     #   memory: 128Mi
+
+  tolerations: {}
 
   serviceAccount:
     create: false
