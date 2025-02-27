@@ -7,54 +7,50 @@ Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
 
-The **Oracle AI Microservices Sandbox** (the **Sandbox**) provides a 
+The **Oracle AI Microservices Sandbox** (the **Sandbox**) provides a Chatbot to experiment with different Language settings and Embeddings.  It allows you to manually find the optimal configuration for your AI project before launching it into Production. 
 
+There are a number of configurations you can experiment with to explore AI and RAG capabilities to understand their behavior without requiring deep technical knowledge.
 
-Differently from a common LLM playground, that helps to test an LLM on the information on which has been trained on, the OAIM Sandbox works on the chunks retrieved in the Oracle DB 23ai by similarity with the question provided, like in this example:
+## History and Context
 
-![Chatbot](images/chatbot.png)
+Interactions with the AI models are stored inside a "context window".  When *History and Context* is enabled, the full context window is provided to the model so that it can use previous interactions to guide the next response.  When *History and Context* is disabled, only the last user input is provided.
 
-The playground could be used with or without the vector stores available, to check if a pure LLM configured is aware or not about information you are looking for.
+![History and Context](images/chatbot_history_context.png)
 
-You can, first of all:
+Use the "Clear History" button to reset the "context window" and start a fresh interaction with a model.
 
-- **Enable History and Context**: in this way any further question & answer provided will be re-sent in the context to help the LLM to answer with a better grounded info, if it's checked;
-- **Clear History**: this button clear the context to better understand the LLM behaviour after a long conversation;
+## Language Model Parameters
 
-## Chat Model
-Depending on the configuration done in the **Configuration**/**Models** page, you can choose one of the **Chat model** enlisted. For each of them you can modify the most important hyper-parameters like:
-- Temperature
-- Maximum Tokens
-- Top P
-- Frequency penalty
-- Presence penalty
+![Language Parameters](images/language_parameters.png#floatleft)
 
-To understand each of them, refers for example on this document: [Concepts for Generative AI](https://docs.oracle.com/en-us/iaas/Content/generative-ai/concepts.htm).
+You can select different, enabled models to experiment with.  To enable, disable, or add models, use the [Configuration - Models](../configuration/model_config) page.  Choose a Language Model based on your requirements, which may include:
 
-## RAG params
+**Privacy Concerns** - Local, Open-Source models offer more control over your data.
 
-Clicking on the **RAG** checkbox you can quickly turn on/off the knowledge base behind the chatbot, exploiting the Retrieval Augentened Generation pattern implemented into the Oracle AI Microserves Sandbox.
+**Accuracy & Knowledge** - Some models excel in factual correctness, however when using Retrieval Augmented Generation, this is less important when grounding the responses to retrieved sources.
 
-![Playground](images/playground.png)
+**Speed & Efficiency** - Smaller models run faster and require fewer resources.  When using Retrieval Augmented Generation, smaller models with good Natural Language capabilities is often more important than larger models with lots of knowledge.
 
-Then you can set:
+**Cost & Accessibility** - Some models are free, cheaper, or available for local use.
 
-- **Enable Re-Ranking**: *under development*;
-- **Search Type**: it reflects the two options available on the **Oracle DB 23ai**: 
-    - **Similarity search**
-    - **Maximal Marginal Relevance**.
-- **Top K**: define the number of nearest chunks, found comparing the embedding vector derived by the question with the vectors associated in the vectorstore with each chunk. Take in consideration that a large number of chunk could fill the maximum context size accepted by the LLM becoming useless the text that exceeds that limit.
+Once you've selected a model, you can change the different model parameters to help control the model’s behavior, improving response quality, creativity, and relevance.  Hover over the {{% icon circle-question %}} for more information as to what the parameters do.  Here are some general guidelines:
 
-To search and select one of the vectorstore tables created into the DB and use it for the RAG, you could use one, or the combination of more than one parameter adopted in the chunking process, to filter the desired vectorstore: 
+**Response Quality** - Parameters like *Maximum Tokens* and *Frequency penalty* ensure clear, well-structured, and non-repetitive answers.
 
-- **Embedding Alias**
-- **Embedding Model**
-- **Chunk Size**
-- **Chunk Overlap**
-- **Distance Strategy**
+**Creativity** - *Temperature* and *Top P* influence how unpredictable or original the models output is.  Higher values make responses more varied, lower values make them more focused.
 
-Until the following message will not disappear, it means that the final vectorstore is not yet selected:
+**Relevance** - *Presence penalty* help the model stay on-topic and maintain coherence, especially in longer interactions.
 
-![Rag Error message](images/ragmessage.png)
+For more details on the parameters, ask the Chatbot or review [Concepts for Generative AI](https://docs.oracle.com/en-us/iaas/Content/generative-ai/concepts.htm).
 
-The **Reset RAG** button allows you to restart the selection of another vectorestore table.
+## Retrieval Augmented Generation (RAG)
+
+Once you've created embeddings using [Split/Embed](../tools/split_embed), the option to enable and disable RAG will be available.  Once you've enabled RAG, if you have more than one [Vector Store](#vector-store) you will need select the one you want to work with.
+
+![Chatbot RAG](images/chatbot_rag.png)
+
+Choose the type of Search you want performed and the additional parameters associated with that search.
+
+## Vector Store
+
+With RAG enabled, if you have more than one Vector Store, you can select which one will be used for searching, otherwise it will default to the only one available.  To choose a different Vector Store, click the "Reset" button to open up the available options.

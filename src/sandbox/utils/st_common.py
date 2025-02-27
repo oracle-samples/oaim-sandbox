@@ -402,7 +402,7 @@ def rag_sidebar() -> None:
             state.user_settings["rag"]["distance_metric"] = distance_metric
             state.user_settings["rag"]["index_type"] = index_type
         else:
-            st.error("Please select Embedding options or disable RAG to continue.", icon="❌")
+            st.error("Please select Vector Store options or disable RAG to continue.", icon="❌")
             state.enable_sandbox = False
 
         # Reset button

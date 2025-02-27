@@ -101,7 +101,7 @@ async def get_client(
                 model=model_name, base_url=model_url, api_key=model_api_key or "api_compat", **ll_common_params
             ),
             "Cohere": lambda: ChatCohere(model=model_name, cohere_api_key=model_api_key, **ll_common_params),
-            "ChatOllama": lambda: ChatOllama(model=model_name, base_url=model_url, model_kwargs=ll_common_params),
+            "ChatOllama": lambda: ChatOllama(model=model_name, base_url=model_url, **ll_common_params),
             "Perplexity": lambda: ChatOpenAI(
                 model=model_name, base_url=model_url, api_key=model_api_key, **ll_common_params
             ),
