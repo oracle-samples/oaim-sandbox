@@ -149,9 +149,8 @@ def qa_delete() -> None:
     api_url = f"{API_ENDPOINT}/testset_delete"
     api_params = {"client": state["user_settings"]["client"], "tid": tid}
     api_call.patch(url=api_url, params=api_params)
+    st.success(f"Test Set and Evaluations Deleted: {state.testbed['testset_name']}")
     reset_testset(True)
-    st.success(f"Test Set and Evaluations Deleted for {tid}")
-
 
 def qa_update_db() -> None:
     """Update QA in Database"""
