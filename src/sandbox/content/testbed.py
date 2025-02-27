@@ -143,6 +143,16 @@ def get_testbed_db_testsets() -> dict:
     return api_call.get(url=f"{API_ENDPOINT}/testsets", params=api_params)
 
 
+def qa_delete() -> None:
+    """Delete QA from Database"""
+    tid = state.testbed["testset_id"]
+    api_url = f"{API_ENDPOINT}/testset_delete"
+    api_params = {"client": state["user_settings"]["client"], "tid": tid}
+    api_call.patch(url=api_url, params=api_params)
+    reset_testset(True)
+    st.success(f"Test Set and Evaluations Deleted for {tid}")
+
+
 def qa_update_db() -> None:
     """Update QA in Database"""
     update_record(0)  # Ensure any changes made to current record are recorded
@@ -363,7 +373,7 @@ def main():
         }
     # Process Q&A Request
     button_load_disabled = button_load_disabled or state.testbed["testset_id"] == "" or "testbed_qa" in state
-    col_left, col_center, _ = st.columns([3, 3, 4])
+    col_left, col_center, _, col_right = st.columns([3, 3, 4, 3])
     if not button_load_disabled:
         if "load_tests" in state and state.load_tests is True:
             state.running = True
@@ -428,6 +438,14 @@ def main():
         use_container_width=True,
         on_click=reset_testset,
         kwargs={"cache": True},
+    )
+    col_right.button(
+        "⚠ Delete Test Set",
+        key="delete_test_set",
+        type="tertiary",
+        use_container_width=True,
+        disabled=not state.testbed["testset_id"],
+        on_click=qa_delete,
     )
 
     ###################################

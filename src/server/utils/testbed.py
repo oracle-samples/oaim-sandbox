@@ -141,6 +141,17 @@ def get_evaluations(db_conn: Connection, tid: TestSetsIdType) -> list:
     return evaluations
 
 
+def delete_qa(
+    db_conn: Connection,
+    tid: TestSetsIdType,
+) -> None:
+    """Delete Q&A"""
+    binds = {"tid": tid}
+    sql = "DELETE FROM OAIM_TESTSETS WHERE TID = :tid"
+    databases.execute_sql(db_conn, sql, binds)
+    db_conn.commit()
+
+
 def upsert_qa(
     db_conn: Connection,
     name: TestSetsNameType,

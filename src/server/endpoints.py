@@ -701,6 +701,15 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         """Get TestSet Q&A"""
         return testbed.get_testset_qa(db_conn=get_client_db(client).connection, tid=tid.upper())
 
+    @auth.patch("/v1/testbed/testset_delete", description="Delete a TestSet")
+    async def testbed_delete_testset(
+        client: schema.ClientIdType,
+        tid: Optional[schema.TestSetsIdType] = None,
+    ) -> Response:
+        """Delete TestSet"""
+        testbed.delete_qa(get_client_db(client).connection, tid.upper())
+        return Response(status_code=204)
+
     @auth.post("/v1/testbed/testset_load", description="Upsert TestSets.", response_model=schema.TestSetQA)
     async def testbed_upsert_testsets(
         client: schema.ClientIdType,
