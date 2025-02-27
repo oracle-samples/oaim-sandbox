@@ -87,9 +87,9 @@ async def main() -> None:
     if not REMOTE_SERVER:
         st.button("Restart Server", type="primary", on_click=server_restart)
 
-    st.header("Server Configuration", divider="red")
+    st.header("Server Settings", divider="red")
     st.write("""
-             The API Server maintains its own configuration, independent of the Sandbox.
+             The API Server maintains its own settings, independent of the Sandbox.
              You can copy the Sandbox settings to the API Server below.
              """)
     st.json(state.server_settings, expanded=False)

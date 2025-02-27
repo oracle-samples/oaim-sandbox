@@ -37,7 +37,7 @@ Additionally, OCI GenAI services can be used for both private-cloud based LLM an
 
 For more information on configuring OCI, please read about [OCI Configuration](oci_config/).
 
-## 💾 Import Settings
+## 💾 Settings
 
 Once you have configured the **Oracle AI Microservices Sandbox**, you can export the settings and import them after a restart or new deployment.
 

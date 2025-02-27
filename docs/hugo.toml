@@ -7,6 +7,7 @@ title = 'AI Microservices Sandbox'
 theme = "relearn"
 sectionPagesMenu = 'main'
 tableOfContents = true
+enableGitInfo = true
 
 # Required if you want to render robots.txt template
 enableRobotsTXT = true
@@ -26,7 +27,8 @@ enableRobotsTXT = true
   showVisitedLinks = true
   themeVariant = ['auto', 'sandbox-light', 'sandbox-dark']
   disableInlineCopyToClipBoard = true
-
+  hideAuthorName = true
+  
 [menu]
   [[menu.shortcuts]]
     identifier = 'ds'
