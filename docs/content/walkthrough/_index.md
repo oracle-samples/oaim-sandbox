@@ -169,7 +169,7 @@ The **Sandbox** provides an easy to use front-end for experimenting with **LLM**
 
    ```bash
    cd oaim-sandbox/src
-   podman build -t localhost/oaim-sandbox-aio:latest .
+   podman build --arch amd64 -t localhost/oaim-sandbox-aio:latest .
    ```
 
 1. Start the **Sandbox**:

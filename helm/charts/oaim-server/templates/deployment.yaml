@@ -76,17 +76,17 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.adb.authN.secretName | quote }}
-                  key: {{ .Values.adb.authN.usernameKey | quote }}
+                  key: {{ .Values.adb.authN.usernameKey | default "username" | quote }}
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.adb.authN.secretName | quote }}
-                  key: {{ .Values.adb.authN.passwordKey | quote }}
+                  key: {{ .Values.adb.authN.passwordKey | default "password" | quote }}
             - name: DB_DSN
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.adb.authN.secretName | quote }}
-                  key: {{ .Values.adb.authN.serviceKey | quote }}
+                  key: {{ .Values.adb.authN.serviceKey | default "service" | quote }}
             {{- $mtlsWallet := include "getMtlsWallet" . | fromJson }}
             {{- if $mtlsWallet.secretName }}
             - name: DB_WALLET_PASSWORD

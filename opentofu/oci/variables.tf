@@ -1,4 +1,4 @@
-# Copyright © 2023, 2024, Oracle and/or its affiliates.
+# Copyright (c) 2024-2025, Oracle and/or its affiliates.
 # All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
 variable "tenancy_ocid" {
@@ -89,7 +89,7 @@ variable "k8s_worker_os_ver" {
 variable "k8s_node_pool_cpu_size" {
   description = "Number of Workers in the CPU Node Pool."
   type        = number
-  default     = 3
+  default     = 2
 }
 
 variable "k8s_worker_cpu_shape" {
@@ -168,7 +168,7 @@ variable "service_lb_allowed_cidrs" {
 variable "service_lb_allowed_ports" {
   description = "Comma separated string of ports from which the Load Balancer will listen."
   type        = string
-  default     = "80, 443"
+  default     = "80, 8000"
   validation {
     condition     = can(regex("^(((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))(,?)( ?)){1,}$", var.service_lb_allowed_ports))
     error_message = "Must be a comma separated string of valid ports."
@@ -176,64 +176,13 @@ variable "service_lb_allowed_ports" {
 }
 
 // Database
-variable "byo_db" {
-  description = "Use a pre-created database?"
-  type        = bool
-  default     = false
-}
-
-variable "byo_db_type" {
-  description = "Bring Your Own Database - Type"
-  type        = string
-  default     = "ADB-S"
-  validation {
-    condition     = contains(["ADB-S", "Other"], var.byo_db_type)
-    error_message = "Must be either ADB-S or Other."
-  }
-}
-
-variable "byo_adb_ocid" {
-  description = "Bring Your Own Database - ADB OCID"
-  type        = string
-  default     = ""
-}
-
-variable "byo_db_username" {
-  description = "Bring Your Own Database - Username"
-  type        = string
-  default     = ""
-}
-
-variable "byo_db_password" {
-  description = "Bring Your Own Database - Password"
-  type        = string
-  default     = ""
-  sensitive   = true
-}
-
-variable "byo_db_connstr" {
-  description = "Bring Your Own Database - Connect String"
-  type        = string
-  default     = ""
-}
-
 variable "adb_version" {
   description = "Autonomous Database Version"
   type        = string
   default     = "23ai"
   validation {
-    condition     = contains(["19c", "23ai"], var.adb_version)
-    error_message = "Must be either 19c or 23ai."
-  }
-}
-
-variable "adb_compute_model" {
-  description = "Choose the Autonomous Database Compute Model."
-  type        = string
-  default     = "ECPU"
-  validation {
-    condition     = contains(["OCPU", "ECPU"], var.adb_compute_model)
-    error_message = "Must be either OCPU or ECPU."
+    condition     = contains(["23ai"], var.adb_version)
+    error_message = "Must be 23ai."
   }
 }
 
@@ -257,16 +206,6 @@ variable "adb_ecpu_core_count" {
   }
 }
 
-variable "adb_ocpu_core_count" {
-  description = "Choose how many OCPU cores will be allocated."
-  type        = number
-  default     = 1
-  validation {
-    condition     = var.adb_ocpu_core_count >= 1
-    error_message = "Must be equal or greater than 1."
-  }
-}
-
 variable "adb_data_storage_size_in_gb" {
   description = "Choose ADB Database Data Storage Size in gigabytes."
   type        = number
@@ -274,16 +213,6 @@ variable "adb_data_storage_size_in_gb" {
   validation {
     condition     = var.adb_data_storage_size_in_gb >= 20 && var.adb_data_storage_size_in_gb <= 393216
     error_message = "Must be equal or greater than 20 and equal or less than 393216."
-  }
-}
-
-variable "adb_data_storage_size_in_tbs" {
-  description = "Choose ADB Database Data Storage Size in terabytes."
-  type        = number
-  default     = 1
-  validation {
-    condition     = var.adb_data_storage_size_in_tbs >= 1 && var.adb_data_storage_size_in_tbs <= 384
-    error_message = "Must be equal or greater than 1 and equal or less than 384."
   }
 }
 
@@ -338,9 +267,4 @@ variable "adb_bastion_cidrs" {
     condition     = can(regex("$|((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(3[0-2]|[1-2]?[0-9])(,?)( ?)){1,}$", var.adb_bastion_cidrs))
     error_message = "Must be a comma separated string of valid CIDRs."
   }
-}
-
-variable "adb_create_bucket" {
-  type    = bool
-  default = false
 }

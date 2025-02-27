@@ -17,7 +17,7 @@ import sandbox.utils.st_common as st_common
 import sandbox.utils.api_call as api_call
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("config.tools.prompt_eng")
+logger = logging_config.logging.getLogger("sandbox.tools.prompt_eng")
 
 # Set endpoint if server has been established
 API_ENDPOINT = None

@@ -21,7 +21,7 @@ import sandbox.utils.st_common as st_common
 
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("config.oci")
+logger = logging_config.logging.getLogger("sandbox.content.config.oci")
 
 
 #####################################################

@@ -1,4 +1,4 @@
-# Copyright © 2023, 2024, Oracle and/or its affiliates.
+# Copyright (c) 2024-2025, Oracle and/or its affiliates.
 # All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
 // House-Keeping
@@ -58,13 +58,12 @@ locals {
 
 // Tags
 locals {
-  # tag_clusterNameKey = format("%s.%s", local.label_prefix, oci_identity_tag.identity_tag_clusterName.name)
+  tag_clusterNameKey = format("%s.%s", local.label_prefix, oci_identity_tag.identity_tag_clusterName.name)
   tag_clusterNameVal = local.k8s_cluster_name
 }
 
 // Region Mapping
 locals {
-  registries = ["oaim-server", "oaim-sandbox"]
   region_map = {
     for r in data.oci_identity_regions.identity_regions.regions : r.name => r.key
   }
@@ -94,12 +93,6 @@ locals {
   rule_type_nsg     = "NETWORK_SECURITY_GROUP"
   rule_type_cidr    = "CIDR_BLOCK"
   rule_type_service = "SERVICE_CIDR_BLOCK"
-}
-
-// Database
-locals {
-  db_compartment  = var.byo_db ? var.byo_db_type == "ADB-S" ? data.oci_database_autonomous_database.byo_db[0].compartment_id : local.compartment_ocid : oci_database_autonomous_database.default_adb[0].compartment_id
-  adb_bucket_name = lower(format("%s-ADB", local.label_prefix))
 }
 
 // IAM

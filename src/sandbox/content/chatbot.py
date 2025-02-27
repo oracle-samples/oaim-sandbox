@@ -19,7 +19,7 @@ import sandbox.utils.client as client
 from sandbox.content.config.models import get_model
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("content.chatbot")
+logger = logging_config.logging.getLogger("sandbox.content.chatbot")
 
 
 #############################################################################

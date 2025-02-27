@@ -338,7 +338,7 @@ def main():
         test_gen_questions = col_left.number_input(
             "Number of Q&A:",
             key="selected_test_gen_questions",
-            min_value=0,
+            min_value=1,
             max_value=100,
             value=2,
         )

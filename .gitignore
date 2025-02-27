@@ -1,3 +1,4 @@
+# spell-checker: disable
 ##############################################################################
 # Project/User Specific
 ##############################################################################
@@ -7,7 +8,9 @@
 !app/server/requirements.txt
 !app/sandbox/requirements.txt
 app/THIRD_PARTY_LICENSES.txt
-helm/values.yaml
+helm/values*.yaml
+helm/service.yaml
+helm/ingress.yaml
 sbin/**
 **/*.bak
 **/tmp/**
@@ -15,7 +18,7 @@ sbin/**
 sonar.sh
 
 ##############################################################################
-# Enviroment (PyVen, IDE, etc.)
+# Environment (PyVen, IDE, etc.)
 ##############################################################################
 **/.venv
 **/.vscode

@@ -1,4 +1,4 @@
-# Copyright © 2023, 2024, Oracle and/or its affiliates.
+# Copyright (c) 2024-2025, Oracle and/or its affiliates.
 # All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
 // oci_artifacts
@@ -68,12 +68,6 @@ data "oci_identity_domain" "user_domain" {
 // oci_objectstorage
 data "oci_objectstorage_namespace" "objectstorage_namespace" {
   compartment_id = local.compartment_ocid
-}
-
-// oci_database_autonomous_database
-data "oci_database_autonomous_database" "byo_db" {
-  count                  = var.byo_db ? var.byo_db_type == "ADB-S" ? 1 : 0 : 0
-  autonomous_database_id = var.byo_adb_ocid
 }
 
 // Look for where the GPU workers can be placed

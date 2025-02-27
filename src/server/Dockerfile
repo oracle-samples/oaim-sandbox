@@ -5,10 +5,10 @@
 # Build from the app/ directory:
 #  podman build -f server/Dockerfile -t oaim-server:0.1.0 .
 #############################################################
+# spell-checker: disable
 FROM container-registry.oracle.com/os/oraclelinux:8-slim AS server_pyenv
 
-ENV TOKENIZERS_PARALLELISM=true \
-    RUNUSER=oracleaim
+ENV RUNUSER=oracleaim
 
 # Combine related commands into a single RUN layer to minimize image layers
 RUN microdnf -y update && \
@@ -18,8 +18,9 @@ RUN microdnf -y update && \
     groupadd $RUNUSER && \
     useradd -u 10001 -g $RUNUSER -md /app $RUNUSER && \
     install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/.oci && \
-    install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/tmp && \
-    mkdir -p /opt/sandbox && \
+    install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/tmp
+
+RUN mkdir -p /opt/sandbox && \
     touch /opt/sandbox/requirements.txt
 
 # Avoid re-installs of python modules if the reqs haven't changed
@@ -35,9 +36,12 @@ RUN source /opt/.venv/bin/activate && \
 ##################################################
 FROM server_pyenv AS oaim_server
 ENV PATH=/opt/.venv/bin:$PATH
+ENV TOKENIZERS_PARALLELISM=true
 ENV TEMP=/app/tmp
 ENV NUMBA_CACHE_DIR=/app/tmp
 ENV MPLCONFIGDIR=/app/tmp
+ENV TIKTOKEN_CACHE_DIR=/app/tmp
+ENV NLTK_DATA=/app/tmp
 
 COPY --chown=$RUNUSER:$RUNUSER . /app
 RUN rm -rf /app/sandbox /app/.streamlit /app/oaim_sandbox.py

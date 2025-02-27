@@ -31,7 +31,7 @@ from sandbox.content.config.models import patch_model
 
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("config.settings")
+logger = logging_config.logging.getLogger("sandbox.content.config.settings")
 
 # This is set for inclusion so that exported state is intentional
 INCLUDE_KEYS = [

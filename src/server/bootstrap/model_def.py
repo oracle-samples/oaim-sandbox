@@ -9,6 +9,9 @@ added via the APIs
 
 import os
 from common.schema import Model
+import common.logging_config as logging_config
+
+logger = logging_config.logging.getLogger("server.bootstrap.model_def")
 
 
 def main() -> list[Model]:
