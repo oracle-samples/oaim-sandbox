@@ -23,9 +23,9 @@ logger = logging_config.logging.getLogger("sandbox.content.config.database")
 #####################################################
 # Functions
 #####################################################
-def get_databases() -> dict[str, dict]:
+def get_databases(force: bool=False) -> dict[str, dict]:
     """Get a dictionary of all Databases and Store Vector Store Tables"""
-    if "database_config" not in state or state["database_config"] == {}:
+    if "database_config" not in state or state["database_config"] == {} or force:
         try:
             api_url = f"{state.server['url']}:{state.server['port']}/v1/databases"
             response = api_call.get(url=api_url)
@@ -68,9 +68,11 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
             state.database_error = None
         except api_call.ApiError as ex:
             logger.error("Database Update failed: %s", ex)
+            st.error(ex, icon="🚨")
             state.database_error = str(ex)
             state.database_config[name]["connected"] = False
-        st.rerun()
+        if inspect.stack()[1].filename == __file__:
+            st.rerun()
     else:
         st.info(f"{name} Database Configuration - No Changes Detected.", icon="ℹ️")
 

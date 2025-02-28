@@ -14,6 +14,7 @@ Session States Set:
 # spell-checker:ignore selectbox
 
 import inspect
+
 import time
 from typing import Literal
 import urllib.parse
@@ -44,11 +45,11 @@ def clear_model_state(model_type: ModelTypeType) -> None:
     st.rerun()
 
 
-def get_model(model_type: ModelTypeType, only_enabled: bool = False) -> dict[str, dict]:
+def get_model(model_type: ModelTypeType, only_enabled: bool = False, force: bool = False) -> dict[str, dict]:
     """Get a dictionary of either all Language/Embed Models or only enabled ones."""
 
     state_key = f"{model_type}_model_enabled" if only_enabled else f"{model_type}_model_config"
-    if state_key not in state or state[state_key] == {}:
+    if state_key not in state or state[state_key] == {} or force:
         try:
             api_url = f"{state.server['url']}:{state.server['port']}/v1/models"
             api_params = {"only_enabled": only_enabled, "model_type": model_type}
@@ -68,8 +69,11 @@ def create_model(model: Model) -> None:
 
 def patch_model(model: Model) -> None:
     """Update Model Configuration for either Language Models or Embed Models"""
-    api_url = f"{state.server['url']}:{state.server['port']}/v1/models/update"
-    api_call.patch(url=api_url, params={"name": model.name}, payload={"json": model.model_dump()})
+    try:
+        api_url = f"{state.server['url']}:{state.server['port']}/v1/models/update"
+        api_call.patch(url=api_url, params={"name": model.name}, payload={"json": model.model_dump()})
+    except api_call.ApiError:
+        create_model(model)
 
 
 def delete_model(model: Model) -> None:

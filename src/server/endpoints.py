@@ -302,7 +302,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.patch("/v1/models/update", description="Update a model")
     async def models_update(name: schema.ModelNameType, payload: schema.Model) -> Response:
         """Update a model"""
-        logger.debug("Received model payload: %s", payload)
+        logger.debug("Received update model payload: %s", payload)
         model_upd = await models.apply_filter(MODEL_OBJECTS, model_name=name)
         if not model_upd:
             raise HTTPException(status_code=404, detail=f"Model {name}: not found")
@@ -326,7 +326,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.post("/v1/models/create", description="Create a model", response_model=schema.Model)
     async def model_create(payload: schema.Model) -> schema.Model:
         """Update a model"""
-        logger.debug("Received model payload: %s", payload)
+        logger.debug("Received create model payload: %s", payload)
         if payload.name == "new" or payload.api == "unknown":
             raise HTTPException(status_code=406, detail="Model name and API must be specified.")
         if payload.name in MODEL_OBJECTS:

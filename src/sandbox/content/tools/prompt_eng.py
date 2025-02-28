@@ -28,9 +28,9 @@ if "server" in state:
 #####################################################
 # Functions
 #####################################################
-def get_prompts() -> dict[str, dict]:
+def get_prompts(force: bool=False) -> dict[str, dict]:
     """Get a dictionary of all Prompts"""
-    if "prompts_config" not in state or state["prompts_config"] == {}:
+    if "prompts_config" not in state or state["prompts_config"] == {} or force:
         try:
             api_url = f"{state.server['url']}:{state.server['port']}/v1/prompts"
             state["prompts_config"] = api_call.get(url=api_url)

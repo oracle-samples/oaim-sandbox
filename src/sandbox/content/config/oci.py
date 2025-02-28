@@ -27,9 +27,9 @@ logger = logging_config.logging.getLogger("sandbox.content.config.oci")
 #####################################################
 # Functions
 #####################################################
-def get_oci() -> dict[str, dict]:
+def get_oci(force: bool=False) -> dict[str, dict]:
     """Get a dictionary of all OCI Configurations"""
-    if "oci_config" not in state or state["oci_config"] == {}:
+    if "oci_config" not in state or state["oci_config"] == {} or force:
         try:
             api_url = f"{state.server['url']}:{state.server['port']}/v1/oci"
             response = api_call.get(url=api_url)
@@ -90,7 +90,8 @@ def patch_oci(
                 state.oci_config[auth_profile]["namespace"] = None
             except AttributeError:
                 pass
-        st.rerun()
+        if inspect.stack()[1].filename == __file__:
+            st.rerun()
     else:
         st.info(f"{auth_profile} OCI Configuration - No Changes Detected.", icon="ℹ️")
 
@@ -133,7 +134,8 @@ def patch_oci_genai(
                 state.oci_config[auth_profile]["namespace"] = None
             except AttributeError:
                 pass
-        st.rerun()
+        if inspect.stack()[1].filename == __file__:
+            st.rerun()
     else:
         st.info(f"{auth_profile} OCI GenAI Configuration - No Changes Detected.", icon="ℹ️")
 

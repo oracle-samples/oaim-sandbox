@@ -7,6 +7,7 @@ This script allows importing/exporting configurations using Streamlit (`st`).
 # spell-checker:ignore streamlit, mvnw, obaas, ollama
 
 import inspect
+import time
 import os
 import io
 import json
@@ -23,11 +24,13 @@ import streamlit as st
 from streamlit import session_state as state
 
 # Utilities
-from sandbox.content.config.database import patch_database
-from sandbox.content.config.oci import patch_oci
-from sandbox.content.tools.prompt_eng import get_prompts
-from sandbox.content.tools.prompt_eng import patch_prompt
-from sandbox.content.config.models import patch_model
+from sandbox.content.config.database import patch_database, get_databases
+from sandbox.content.config.oci import patch_oci, get_oci
+from sandbox.content.tools.prompt_eng import patch_prompt, get_prompts
+from sandbox.content.config.models import patch_model, get_model
+
+# Schema
+from common.schema import Model
 
 import common.logging_config as logging_config
 
@@ -109,7 +112,7 @@ def compare_with_uploaded_json(current_state, uploaded_json):
                 nested_diff = compare_dicts_recursive(current_state[key], uploaded_json[key])
                 if nested_diff:
                     diff[key] = nested_diff
-            elif current_state[key] != uploaded_json[key]:
+            elif (current_state[key] or "") != (uploaded_json[key] or ""):
                 diff[key] = {"current": current_state[key], "uploaded": uploaded_json[key]}
 
     return diff
@@ -167,22 +170,11 @@ def update_server(updates):
                 patch_prompt(**prompt)
             continue
 
-        if key == "ll_model_config" or "embed_model_config":
-            model_type = key.split("_model_config")[0]
+        if key in {"ll_model_config", "embed_model_config"}:
             for model_name, config in value.items():
-                state[f"{model_type}_{model_name}_enabled"] = False
-                state[f"{model_type}_{model_name}_url"] = ""
-                state[f"{model_type}_{model_name}_api_key"] = ""
-                if isinstance(config, dict) and "enabled" in config:
-                    state[f"{model_type}_{model_name}_enabled"] = config["enabled"]
-                if isinstance(config, dict) and "url" in config:
-                    state[f"{model_type}_{model_name}_url"] = config["url"]
-                if isinstance(config, dict) and "api_key" in config:
-                    state[f"{model_type}_{model_name}_api_key"] = config["api_key"]
-
-    # Don't patch models until all keys are set
-    patch_model(model_type)
-
+                model = Model(**config, name=model_name)
+                patch_model(model)
+            continue
 
 def spring_ai_conf_check(ll_model, embed_model) -> str:
     """Check if configuration is valid for SpringAI package"""
@@ -278,6 +270,11 @@ def spring_ai_zip(provider, ll_model):
 def main():
     """Streamlit GUI"""
     st.header("Sandbox Settings", divider="red")
+    get_model(model_type="ll", force=True)
+    get_model(model_type="embed", force=True)
+    get_databases(force=True)
+    get_oci(force=True)
+    get_prompts(force=True)
     state_dict = copy.deepcopy(state)
     upload_settings = st.toggle(
         "Upload",
@@ -317,6 +314,7 @@ def main():
                         # Update session state; this is primarily for user_settings
                         update_session_state_recursive(state, uploaded_settings_dict)
                         st.success("Configuration has been updated with the uploaded settings.", icon="✅")
+                        time.sleep(5)
                         st.rerun()
                     st.subheader("Differences found:")
                     st.json(differences)
@@ -328,8 +326,6 @@ def main():
             st.info("Please upload a Settings file.")
 
     st.header("SpringAI Settings", divider="red")
-    get_prompts()  # Load Prompt Text
-
     ll_model = state["user_settings"]["ll_model"]["model"]
     embed_model = state["user_settings"]["rag"]["model"]
     spring_ai_conf = spring_ai_conf_check(ll_model, embed_model)

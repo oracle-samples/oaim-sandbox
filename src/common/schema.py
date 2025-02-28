@@ -60,9 +60,11 @@ class Database(DatabaseAuth):
 
     @property
     def connection(self) -> Optional[oracledb.Connection]:
+        """Connection String"""
         return self._connection
 
     def set_connection(self, connection: oracledb.Connection) -> None:
+        """Connection String"""
         self._connection = connection
 
 
@@ -91,8 +93,8 @@ class ModelAccess(BaseModel):
     """Patch'able Model Parameters"""
 
     enabled: Optional[bool] = Field(default=False, description="Model is available for use.")
-    url: Optional[str] = Field(default="", description="URL to Model API.")
-    api_key: Optional[str] = Field(default="", description="Model API Key.")
+    url: Optional[str] = Field(default=None, description="URL to Model API.")
+    api_key: Optional[str] = Field(default=None, description="Model API Key.")
 
 
 class Model(ModelAccess, LanguageModelParameters, EmbeddingModelParameters):
