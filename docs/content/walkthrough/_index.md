@@ -69,11 +69,15 @@ To enable the _ChatBot_ functionality, access to a **LLM** is required. The walk
    {{% tab title="MacOS (Silicon)" %}}
    The Container Runtime is backed by a virtual machine.  The VM should be started with **12G memory** and **100G disk space** allocated.
 
-   AI Runners like Ollama, LM Studio, etc. won’t utilize Apple Silicon's "Metal" GPU when running in a container. This may change as the landscape evolves.
-
    ```bash
    podman run -d -e OLLAMA_NUM_PARALLEL=1 -v ollama:$HOME/.ollama -p 11434:11434 --name ollama docker.io/ollama/ollama
    ```
+
+   **Note:**
+   AI Runners like Ollama, LM Studio, etc. will not utilize Apple Silicon's "Metal" GPU when running in a container. This may change as the landscape evolves.
+
+   You can install and run Ollama natively outside a container and it will take advantage of the "Metal" GPU.  Later in the Walkthrough, when configuring the models, the API URL for the Ollama model will be your hosts IP address.
+
    {{% /tab %}}
    {{% tab title="Windows" %}}
    The Container Runtime is backed by a virtual machine.  The VM should be started with **12G memory** and **100G disk space** allocated.
@@ -81,6 +85,11 @@ To enable the _ChatBot_ functionality, access to a **LLM** is required. The walk
    ```bash
    podman run -d --gpus=all -v ollama:$HOME/.ollama -p 11434:11434 --name ollama docker.io/ollama/ollama
    ```
+
+   **Note:**
+   AI Runners like Ollama, LM Studio, etc. will not utilize non-NVIDIA GPUs when running in a container. This may change as the landscape evolves.
+
+   You can install and run Ollama natively outside a container and it will take advantage of non-NVIDIA GPU.  Later in the Walkthrough, when configuring the models, the API URL for the Ollama model will be your hosts IP address.
    {{% /tab %}}
    {{< /tabs >}}
 

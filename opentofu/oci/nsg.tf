@@ -22,11 +22,21 @@ resource "oci_core_network_security_group" "k8s_workers" {
 }
 
 // Load Balancer
-resource "oci_core_network_security_group" "service_lb" {
+resource "oci_core_network_security_group" "service_lb_http" {
   count          = var.service_lb_is_public ? 1 : 0
   compartment_id = local.compartment_ocid
   vcn_id         = module.network.vcn_ocid
-  display_name   = format("%s-service-lb", local.label_prefix)
+  display_name   = format("%s-service-lb-http", local.label_prefix)
+  lifecycle {
+    ignore_changes = [defined_tags, freeform_tags]
+  }
+}
+
+resource "oci_core_network_security_group" "service_lb_api" {
+  count          = var.service_lb_is_public ? 1 : 0
+  compartment_id = local.compartment_ocid
+  vcn_id         = module.network.vcn_ocid
+  display_name   = format("%s-service-lb-api", local.label_prefix)
   lifecycle {
     ignore_changes = [defined_tags, freeform_tags]
   }

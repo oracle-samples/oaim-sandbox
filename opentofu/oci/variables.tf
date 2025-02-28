@@ -155,22 +155,42 @@ variable "service_lb_max_shape" {
   default     = 100
 }
 
-variable "service_lb_allowed_cidrs" {
+variable "service_lb_allowed_http_cidrs" {
   description = "Comma separated string of CIDR blocks from which the Load Balancer can be accessed."
   type        = string
   default     = "0.0.0.0/0"
   validation {
-    condition     = can(regex("((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(3[0-2]|[1-2]?[0-9])(,?)( ?)){1,}$", var.service_lb_allowed_cidrs))
+    condition     = can(regex("((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(3[0-2]|[1-2]?[0-9])(,?)( ?)){1,}$", var.service_lb_allowed_http_cidrs))
     error_message = "Must be a comma separated string of valid CIDRs."
   }
 }
 
-variable "service_lb_allowed_ports" {
-  description = "Comma separated string of ports from which the Load Balancer will listen."
+variable "service_lb_allowed_http_ports" {
+  description = "Comma separated string of ports from which the Load Balancer allow access."
   type        = string
-  default     = "80, 8000"
+  default     = "80"
   validation {
-    condition     = can(regex("^(((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))(,?)( ?)){1,}$", var.service_lb_allowed_ports))
+    condition     = can(regex("^(((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))(,?)( ?)){1,}$", var.service_lb_allowed_http_ports))
+    error_message = "Must be a comma separated string of valid ports."
+  }
+}
+
+variable "service_lb_allowed_api_cidrs" {
+  description = "Comma separated string of CIDR blocks from which the Load Balancer can be accessed."
+  type        = string
+  default     = "0.0.0.0/0"
+  validation {
+    condition     = can(regex("((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(3[0-2]|[1-2]?[0-9])(,?)( ?)){1,}$", var.service_lb_allowed_api_cidrs))
+    error_message = "Must be a comma separated string of valid CIDRs."
+  }
+}
+
+variable "service_lb_allowed_api_ports" {
+  description = "Comma separated string of ports from which the Load Balancer allow access."
+  type        = string
+  default     = "8000"
+  validation {
+    condition     = can(regex("^(((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))(,?)( ?)){1,}$", var.service_lb_allowed_api_ports))
     error_message = "Must be a comma separated string of valid ports."
   }
 }

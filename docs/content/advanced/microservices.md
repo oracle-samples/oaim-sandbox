@@ -61,50 +61,42 @@ These will be output as part of the **IaC** but can be removed from the code if 
 
 1. Create a `service.yaml` file (replace `<...>` values or remove):
     ```yaml
-    apiVersion: v1
-    kind: Service
-    metadata:
-      annotations:
-        meta.helm.sh/release-name: ingress-nginx
-        meta.helm.sh/release-namespace: ingress-nginx
-        oci.oraclecloud.com/load-balancer-type: lb
-        service.beta.kubernetes.io/oci-load-balancer-shape: flexible
-        service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "100"
-        service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
-        oci.oraclecloud.com/oci-network-security-groups: "<lb_nsg_ocid>"
-      finalizers:
-      - service.kubernetes.io/load-balancer-cleanup
-      labels:
-        app.kubernetes.io/component: controller
-        app.kubernetes.io/instance: ingress-nginx
-        app.kubernetes.io/name: ingress-nginx
-      name: ingress-nginx-controller
-      namespace: ingress-nginx
-    spec:
-      allocateLoadBalancerNodePorts: true
-      externalTrafficPolicy: Cluster
-      internalTrafficPolicy: Cluster
-      ipFamilies:
-      - IPv4
-      ipFamilyPolicy: SingleStack
-      loadBalancerIP: <lb_reserved_ip>
-      ports:
-      - appProtocol: http
-        name: sandbox
-        port: 80
-        protocol: TCP
-        targetPort: http
-      - appProtocol: http
-        name: server
-        port: 8000
-        protocol: TCP
-        targetPort: http
-      selector:
-        app.kubernetes.io/component: controller
-        app.kubernetes.io/instance: ingress-nginx
-        app.kubernetes.io/name: ingress-nginx
-      sessionAffinity: None
-      type: LoadBalancer
+      apiVersion: v1
+      kind: Service
+      metadata:
+        annotations:
+          oci.oraclecloud.com/load-balancer-type: lb
+          service.beta.kubernetes.io/oci-load-balancer-shape: flexible
+          service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "100"
+          service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
+          oci.oraclecloud.com/oci-network-security-groups: "<lb_nsg_ocid>"
+          service.beta.kubernetes.io/oci-load-balancer-security-list-management-mode: None
+        name: ingress-nginx-controller
+        namespace: ingress-nginx
+      spec:
+        allocateLoadBalancerNodePorts: true
+        externalTrafficPolicy: Cluster
+        internalTrafficPolicy: Cluster
+        ipFamilies:
+        - IPv4
+        ipFamilyPolicy: SingleStack
+        loadBalancerIP: "<lb_reserved_ip>"
+        ports:
+        - appProtocol: http
+          name: sandbox
+          port: 80
+          protocol: TCP
+          targetPort: http
+        - appProtocol: http
+          name: server
+          port: 8000
+          protocol: TCP
+          targetPort: http
+        selector:
+          app.kubernetes.io/component: controller
+          app.kubernetes.io/instance: ingress-nginx
+          app.kubernetes.io/name: ingress-nginx
+        type: LoadBalancer
       ```
 
 1. Apply the Service:
@@ -146,11 +138,11 @@ You will need to build the **Sandbox** container images and stage them in a cont
 
     Example (the values for `<server_repository>` and `<server_repository>` are provided from the **IaC**):
     ```bash
-    podman tag oaim-server:latest <server_repository>:latest
-    podman push <server_repository>:latest
-    
     podman tag oaim-sandbox:latest <sandbox_repository>:latest
     podman push <sandbox_repository>:latest
+
+    podman tag oaim-server:latest <server_repository>:latest
+    podman push <server_repository>:latest
     ```
 
 ### Oracle AI Microservices Sandbox

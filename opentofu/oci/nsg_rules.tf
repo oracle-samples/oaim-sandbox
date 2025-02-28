@@ -6,8 +6,10 @@
 #########################################################################
 locals {
   k8s_api_endpoint_allowed_cidrs = split(",", replace(var.k8s_api_endpoint_allowed_cidrs, "/\\s+/", ""))
-  service_lb_allowed_cidrs       = split(",", replace(var.service_lb_allowed_cidrs, "/\\s+/", ""))
-  service_lb_allowed_ports       = split(",", replace(var.service_lb_allowed_ports, "/\\s+/", ""))
+  service_lb_allowed_http_cidrs  = split(",", replace(var.service_lb_allowed_http_cidrs, "/\\s+/", ""))
+  service_lb_allowed_http_ports  = split(",", replace(var.service_lb_allowed_http_ports, "/\\s+/", ""))
+  service_lb_allowed_api_cidrs   = split(",", replace(var.service_lb_allowed_api_cidrs, "/\\s+/", ""))
+  service_lb_allowed_api_ports   = split(",", replace(var.service_lb_allowed_api_ports, "/\\s+/", ""))
 }
 
 locals {
@@ -18,13 +20,24 @@ locals {
     }
   } : {}
 
-  service_lb_rules = flatten([for cidr in local.service_lb_allowed_cidrs : [
-    for port in local.service_lb_allowed_ports :
+  service_lb_http_rules = flatten([for cidr in local.service_lb_allowed_http_cidrs : [
+    for port in local.service_lb_allowed_http_ports :
     { cidr = cidr, port = port }]
   ])
-  service_lb_cidr_port_rules = var.service_lb_is_public ? {
-    for rule in local.service_lb_rules :
-    "Allow custom ingress to Load Balancer port ${rule.port} from ${rule.cidr}" => {
+  service_lb_api_rules = flatten([for cidr in local.service_lb_allowed_api_cidrs : [
+    for port in local.service_lb_allowed_api_ports :
+    { cidr = cidr, port = port }]
+  ])
+
+  service_lb_cidr_port_http_rules = var.service_lb_is_public ? {
+    for rule in local.service_lb_http_rules :
+    "Allow custom ingress to Load Balancer HTTP port ${rule.port} from ${rule.cidr}" => {
+      protocol = local.tcp_protocol, port = rule.port, source = rule.cidr, source_type = local.rule_type_cidr
+    }
+  } : {}
+  service_lb_cidr_port_api_rules = var.service_lb_is_public ? {
+    for rule in local.service_lb_api_rules :
+    "Allow custom ingress to Load Balancer API port ${rule.port} from ${rule.cidr}" => {
       protocol = local.tcp_protocol, port = rule.port, source = rule.cidr, source_type = local.rule_type_cidr
     }
   } : {}
@@ -35,7 +48,7 @@ locals {
 #########################################################################
 locals {
   k8s_api_endpoint_default_rules = {
-    "API Endpoint from Workers." : {
+    "K8s API Endpoint from Workers." : {
       protocol = local.tcp_protocol, port = local.apiserver_port,
       source   = module.network.private_subnet_cidr_block, source_type = local.rule_type_cidr
     },
@@ -43,18 +56,18 @@ locals {
       protocol = local.tcp_protocol, port = local.control_plane_port,
       source   = module.network.private_subnet_cidr_block, source_type = local.rule_type_cidr
     },
-    "API Endpoint Path Discovery - Ingress." : {
+    "K8s API Endpoint Path Discovery - Ingress." : {
       protocol = local.icmp_protocol, source = module.network.private_subnet_cidr_block, source_type = local.rule_type_cidr
     },
     "Control Plane to K8s Services." : {
       protocol    = local.tcp_protocol, port = 443,
       destination = data.oci_core_services.core_services.services.0.cidr_block, destination_type = local.rule_type_service
     },
-    "API Endpoint to Workers" : {
+    "K8s API Endpoint to Workers" : {
       protocol    = local.tcp_protocol, port = local.all_ports
       destination = module.network.private_subnet_cidr_block, destination_type = local.rule_type_cidr
     },
-    "API Endpoint Path Discovery - Egress." : {
+    "K8s API Endpoint Path Discovery - Egress." : {
       protocol = local.icmp_protocol, destination = module.network.private_subnet_cidr_block, destination_type = local.rule_type_cidr
     },
   }
@@ -83,7 +96,7 @@ locals {
       protocol    = local.all_protocols, port = local.all_ports,
       destination = module.network.private_subnet_cidr_block, destination_type = local.rule_type_cidr
     },
-    "Workers to API Endpoint." : {
+    "Workers to K8s API Endpoint." : {
       protocol    = local.tcp_protocol, port = local.apiserver_port,
       destination = module.network.public_subnet_cidr_block, destination_type = local.rule_type_cidr
     },
@@ -104,12 +117,23 @@ locals {
     },
   }
 
-  service_lb_default_rules = var.service_lb_is_public ? {
-    "Load Balancer from Workers (Health Checks)." : {
+  service_lb_default_http_rules = var.service_lb_is_public ? {
+    "Load Balancer HTTP from Workers (Health Checks)." : {
       protocol    = local.tcp_protocol, port = local.health_check_port,
       destination = module.network.private_subnet_cidr_block, destination_type = local.rule_type_cidr
     },
-    "Load Balancer from Workers." : {
+    "Load Balancer HTTP from Workers." : {
+      protocol    = local.tcp_protocol, port_min = local.node_port_min, port_max = local.node_port_max,
+      destination = module.network.private_subnet_cidr_block, destination_type = local.rule_type_cidr
+    },
+  } : {}
+
+  service_lb_default_api_rules = var.service_lb_is_public ? {
+    "Load Balancer API from Workers (Health Checks)." : {
+      protocol    = local.tcp_protocol, port = local.health_check_port,
+      destination = module.network.private_subnet_cidr_block, destination_type = local.rule_type_cidr
+    },
+    "Load Balancer API from Workers." : {
       protocol    = local.tcp_protocol, port_min = local.node_port_min, port_max = local.node_port_max,
       destination = module.network.private_subnet_cidr_block, destination_type = local.rule_type_cidr
     },
@@ -136,8 +160,10 @@ locals {
     { for k, v in local.k8s_api_endpoint_default_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.k8s_api_endpoint.id }) },
     { for k, v in local.k8s_api_endpoint_cidr_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.k8s_api_endpoint.id }) },
     { for k, v in local.k8s_workers_default_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.k8s_workers.id }) },
-    { for k, v in local.service_lb_default_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb[0].id }) },
-    { for k, v in local.service_lb_cidr_port_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb[0].id }) },
+    { for k, v in local.service_lb_default_http_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb_http[0].id }) },
+    { for k, v in local.service_lb_cidr_port_http_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb_http[0].id }) },
+    { for k, v in local.service_lb_default_api_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb_api[0].id }) },
+    { for k, v in local.service_lb_cidr_port_api_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb_api[0].id }) },
     { for k, v in local.adb_private_endpoint_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.adb[0].id }) },
     ) : x => merge(y, {
       description               = x

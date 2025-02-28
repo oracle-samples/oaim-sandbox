@@ -6,7 +6,7 @@ output "lb_reserved_ip" {
 }
 
 output "lb_nsg_ocid" {
-  value = oci_core_network_security_group.service_lb[0].id
+  value = format("%s, %s", oci_core_network_security_group.service_lb_http[0].id, oci_core_network_security_group.service_lb_api[0].id)
 }
 
 output "adb_ocid" {
