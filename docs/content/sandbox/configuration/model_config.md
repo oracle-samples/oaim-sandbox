@@ -10,10 +10,10 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 ## Supported Models
 
-At a minimum, a Large _Language Model_ (LLM) must be configured in **Oracle AI Microservices Sandbox** for basic functionality. For Retrieval-Augmented Generation (**RAG**), an _Embedding Model_ will also need to be configured.
+At a minimum, a Large _Language Model_ (LLM) must be configured in **Oracle AI Explorer for Apps** for basic functionality. For Retrieval-Augmented Generation (**RAG**), an _Embedding Model_ will also need to be configured.
 
 {{% notice style="default" title="10-Sept-2024: Documentation In-Progress..." icon="pen" %}}
-If there is a specific model that you would like to use with the **Oracle AI Microservices Sandbox**, please [open an issue in GitHub](https://github.com/oracle-samples/oaim-sandbox/issues/new).
+If there is a specific model that you would like to use with the **Oracle AI Explorer for Apps**, please [open an issue in GitHub](https://github.com/oracle-samples/oaim-sandbox/issues/new).
 {{% /notice %}}
 
 | Model                           | Type  | API                                                      | On-Premises |
@@ -38,9 +38,9 @@ If there is a specific model that you would like to use with the **Oracle AI Mic
 
 ## Configuration
 
-The models can either be configured using environment variables or through the **Sandbox** interface. To configure models through environment variables, please read the [Additional Information](#additional-information) about the specific model you would like to configure.
+The models can either be configured using environment variables or through the **Explorer** interface. To configure models through environment variables, please read the [Additional Information](#additional-information) about the specific model you would like to configure.
 
-To configure an LLM or embedding model from the **Sandbox**, navigate to `Configuration -> Models`:
+To configure an LLM or embedding model from the **Explorer**, navigate to `Configuration -> Models`:
 
 ![Model Config](../images/model_config.png)
 
@@ -58,7 +58,7 @@ On-Premises models, such as those from [Ollama](https://ollama.com/) or [Hugging
 
 ### API URL
 
-When using an on-premises model, for performance purposes, they should be running on hosts with GPUs. As the **Sandbox** does not require GPUs, often is the case that the API URL for these models will be the IP or hostname address of a remote host. Specify the API URL and Port of the remote host.
+When using an on-premises model, for performance purposes, they should be running on hosts with GPUs. As the **Explorer** does not require GPUs, often is the case that the API URL for these models will be the IP or hostname address of a remote host. Specify the API URL and Port of the remote host.
 
 ![On-Premises Model API URL](../images/model_on-prem-api-url.png)
 
@@ -70,7 +70,7 @@ When using an on-premises model, for performance purposes, they should be runnin
 
 [Ollama](https://ollama.com/) is an open-source project that simplifies the running of LLMs and Embedding Models On-Premises.
 
-When configuring an Ollama model in the **Sandbox**, set the `API Server` URL (e.g `http://127.0.0.1:11434`) and leave the API Key blank. Substitute the IP Address with the IP of where Ollama is running.
+When configuring an Ollama model in the **Explorer**, set the `API Server` URL (e.g `http://127.0.0.1:11434`) and leave the API Key blank. Substitute the IP Address with the IP of where Ollama is running.
 
 >[!code]Skip the GUI!
 >You can set the following environment variable to automatically set the `API Server` URL and enable Ollama models (change the IP address and Port, as applicable to your environment):
@@ -155,9 +155,9 @@ Example of running thenlper/gte-base in a container:
 {{% tab title="Cohere" %}}
 # Cohere
 
-[Cohere](https://cohere.com/) is an AI-powered answer engine. To use Cohere, you will need to sign-up and provide the **Sandbox** an API Key.  Cohere offers a free-trial, rate-limited API Key.
+[Cohere](https://cohere.com/) is an AI-powered answer engine. To use Cohere, you will need to sign-up and provide the **Explorer** an API Key.  Cohere offers a free-trial, rate-limited API Key.
 
-**WARNING:** Cohere is a cloud model and you should familiarize yourself with their Privacy Policies if using it to experiment with private, sensitive data in the **Sandbox**.
+**WARNING:** Cohere is a cloud model and you should familiarize yourself with their Privacy Policies if using it to experiment with private, sensitive data in the **Explorer**.
 
 >[!code]Skip the GUI!
 >You can set the following environment variable to automatically set the `API Key` and enable Perplexity models:
@@ -169,9 +169,9 @@ Example of running thenlper/gte-base in a container:
 {{% tab title="OpenAI" %}}
 # OpenAI
 
-[OpenAI](https://openai.com/api/) is an AI research organization behind the popular, online ChatGPT chatbot. To use OpenAI models, you will need to sign-up, purchase credits, and provide the **Sandbox** an API Key.
+[OpenAI](https://openai.com/api/) is an AI research organization behind the popular, online ChatGPT chatbot. To use OpenAI models, you will need to sign-up, purchase credits, and provide the **Explorer** an API Key.
 
-**WARNING:** OpenAI is a cloud model and you should familiarize yourself with their Privacy Policies if using it to experiment with private, sensitive data in the **Sandbox**.
+**WARNING:** OpenAI is a cloud model and you should familiarize yourself with their Privacy Policies if using it to experiment with private, sensitive data in the **Explorer**.
 
 >[!code]Skip the GUI!
 >You can set the following environment variable to automatically set the `API Key` and enable OpenAI models:
@@ -184,9 +184,9 @@ Example of running thenlper/gte-base in a container:
 {{% tab title="Perplexity AI" %}}
 # Perplexity AI
 
-[Perplexity AI](https://docs.perplexity.ai/getting-started) is an AI-powered answer engine. To use Perplexity AI models, you will need to sign-up, purchase credits, and provide the **Sandbox** an API Key.
+[Perplexity AI](https://docs.perplexity.ai/getting-started) is an AI-powered answer engine. To use Perplexity AI models, you will need to sign-up, purchase credits, and provide the **Explorer** an API Key.
 
-**WARNING:** Perplexity AI is a cloud model and you should familiarize yourself with their Privacy Policies if using it to experiment with private, sensitive data in the **Sandbox**.
+**WARNING:** Perplexity AI is a cloud model and you should familiarize yourself with their Privacy Policies if using it to experiment with private, sensitive data in the **Explorer**.
 
 >[!code]Skip the GUI!
 >You can set the following environment variable to automatically set the `API Key` and enable Perplexity models:

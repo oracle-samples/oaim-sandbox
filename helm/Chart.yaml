@@ -3,7 +3,7 @@
 
 apiVersion: v2
 name: oaim-sandbox
-description: A Helm chart Oracle AI Microservice Sandbox
+description: A Helm chart Oracle AI Explorer for Apps
 type: application
 version: 0.1.0
 appVersion: "0.1.0"

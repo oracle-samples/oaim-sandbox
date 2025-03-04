@@ -10,7 +10,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 -->
 <!--spell-checker: ignore mxbai, ollama, oaim, sqlplus, sysdba, spfile, freepdb, tablespace, firewalld -->
 
-This walkthrough will guide you through a basic installation of the **Oracle AI Microservices Sandbox** (the **Sandbox**). It will allow you to experiment with GenAI, using Retrieval-Augmented Generation (**RAG**) with Oracle Database 23ai at the core.
+This walkthrough will guide you through a basic installation of the **Oracle AI Explorer for Apps** (the **Explorer**). It will allow you to experiment with GenAI, using Retrieval-Augmented Generation (**RAG**) with Oracle Database 23ai at the core.
 
 By the end of the walkthrough you will be familiar with:
 
@@ -18,7 +18,7 @@ By the end of the walkthrough you will be familiar with:
 - Configuring an Embedding Model
 - Configuring the Vector Storage
 - Splitting, Embedding, and Storing vectors for **RAG**
-- Experimenting with the **Sandbox**
+- Experimenting with the **Explorer**
 
 What you'll need for the walkthrough:
 
@@ -28,7 +28,7 @@ What you'll need for the walkthrough:
 - Sufficient GPU/CPU resources to run the **LLM**, embedding model, and database (see below).
 
 {{% notice style="code" title="Performance: A Word of Caution" icon="fire" %}}
-The performance of the **Sandbox** will vary depending on the infrastructure.
+The performance of the **Explorer** will vary depending on the infrastructure.
 
 **LLM**s and Embedding Models are designed to use GPUs, but this walkthrough _can work_ on machines with just CPUs; albeit _much_ slower!
 When testing the **LLM**, if you don't get a response in a couple of minutes; your hardware is not sufficient to continue with the walkthrough.
@@ -48,7 +48,7 @@ You will run four container images to establish the "Infrastructure":
 - On-Premises **LLM** - llama3.1
 - On-Premises Embedding Model - mxbai-embed-large
 - Vector Storage - Oracle Database 23ai Free
-- The **Sandbox**
+- The **Explorer**
 
 ### LLM - llama3.1
 
@@ -93,7 +93,7 @@ To enable the **RAG** functionality, access to an embedding model is required. T
 
 ### Vector Storage - Oracle Database 23ai Free
 
-AI Vector Search in Oracle Database 23ai provides the ability to store and query private business data using a natural language interface. The **Sandbox** uses these capabilities to provide more accurate and relevant **LLM** responses via Retrieval-Augmented Generation (**RAG**). [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) provides an ideal, no-cost vector store for this walkthrough.
+AI Vector Search in Oracle Database 23ai provides the ability to store and query private business data using a natural language interface. The **Explorer** uses these capabilities to provide more accurate and relevant **LLM** responses via Retrieval-Augmented Generation (**RAG**). [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) provides an ideal, no-cost vector store for this walkthrough.
 
 To start Oracle Database 23ai Free:
 
@@ -129,11 +129,11 @@ To start Oracle Database 23ai Free:
    podman container restart oaim-db
    ```
 
-### Oracle AI Microservices Sandbox
+### Oracle AI Explorer for Apps
 
-The **Sandbox** provides an easy to use front-end for experimenting with **LLM** parameters and **RAG**.
+The **Explorer** provides an easy to use front-end for experimenting with **LLM** parameters and **RAG**.
 
-1. Download and Unzip the latest version of the **Sandbox**:
+1. Download and Unzip the latest version of the **Explorer**:
 
    ```bash
    wget -O oaim-sandbox.tar.gz https://github.com/oracle-samples/oaim-sandbox/archive/refs/heads/main.tar.gz
@@ -149,13 +149,13 @@ The **Sandbox** provides an easy to use front-end for experimenting with **LLM**
 
    ```
 
-1. Start the **Sandbox**:
+1. Start the **Explorer**:
 
    ```bash
    podman run -d --name oaim-sandbox --net="host" localhost/oaim-sandbox:latest
    ```
 
-If you are running the **Sandbox** on a remote host, you may need to allow access to the `8501` port.
+If you are running the **Explorer** on a remote host, you may need to allow access to the `8501` port.
 
 For example, in Oracle Linux 8/9 with `firewalld`:
 
@@ -165,9 +165,9 @@ firewall-cmd --zone=public --add-port=8501/tcp --permanent
 
 ## Configuration
 
-With the "Infrastructure" in-place, you're ready to configure the **Sandbox**. In a web browser, navigate to your host's `8501` port:
+With the "Infrastructure" in-place, you're ready to configure the **Explorer**. In a web browser, navigate to your host's `8501` port:
 
-![Sandbox](images/sandbox.png)
+![Explorer](images/sandbox.png)
 
 Notice that neither the database nor models are configured for use. Let's start the configuration.
 
@@ -181,7 +181,7 @@ To configure the On-Premises **LLM**, navigate to the _Configuration -> Models_ 
 
 ![Configure LLM](images/llm-config.png)
 
-{{% icon star %}} More information about configuring **LLM**s in the **Sandbox** can be found in the [Model Configuration](../configuration/model_config) documentation.
+{{% icon star %}} More information about configuring **LLM**s in the **Explorer** can be found in the [Model Configuration](../configuration/model_config) documentation.
 
 #### Say "Hello?"
 
@@ -208,7 +208,7 @@ To configure the On-Premises Embedding Model, navigate back to the _Configuratio
 
 ![Configure Embedding Model](images/embed-config.png)
 
-{{% icon star %}}  More information about configuring embedding models in the **Sandbox** can be found in the [Model Configuration](../configuration/model_config) documentation.
+{{% icon star %}}  More information about configuring embedding models in the **Explorer** can be found in the [Model Configuration](../configuration/model_config) documentation.
 
 ### Configure the Database
 
@@ -221,7 +221,7 @@ To configure Oracle Database 23ai Free, navigate to the _Configuration -> Databa
 
 ![Configure Database](images/db-config.png)
 
-{{% icon star %}} More information about configuring the database in the **Sandbox** can be found in the [Database Configuration](../configuration/db_config) documentation.
+{{% icon star %}} More information about configuring the database in the **Explorer** can be found in the [Database Configuration](../configuration/db_config) documentation.
 
 ## Split and Embed
 
@@ -242,9 +242,9 @@ Depending on the infrastructure, the embedding process can take a few minutes. A
 ![Split and Embed](images/split-embed.png)
 
 {{% notice style="code" title="Thumb Twiddling" icon="circle-info" %}}
-You can watch the progress of the embedding by streaming the **Sandbox** logs: `podman logs -f oaim-sandbox`
+You can watch the progress of the embedding by streaming the **Explorer** logs: `podman logs -f oaim-sandbox`
 
-Chunks are processed in batches of 1,000. Wait until the **Sandbox** logs output: `SQL Executed` before continuing.
+Chunks are processed in batches of 1,000. Wait until the **Explorer** logs output: `SQL Executed` before continuing.
 {{% /notice %}}
 
 ### Query the Vector Store
@@ -267,7 +267,7 @@ From the command line:
 
 ## Experiment
 
-With the **Oracle AI Microservices Sandbox** configured, you're ready for some experimentation.
+With the **Oracle AI Explorer for Apps** configured, you're ready for some experimentation.
 
 Navigate back to the _ChatBot_. There will be no more configuration warnings and `RAG?` will be automatically enabled:
 
@@ -301,12 +301,12 @@ With **RAG** enabled, all the services (**LLM**/Embedding Models and Database) a
 Depending on your hardware, this may cause the response to be significantly delayed.
 {{% /notice %}}
 
-By asking `Are you sure?`, you are taking advantage of the **Sandbox**'s history and context functionality.  
+By asking `Are you sure?`, you are taking advantage of the **Explorer**'s history and context functionality.  
 The response should be significantly different and include references to `DBMS_VECTOR` and links to the embedded documentation where this information can be found. It might even include an apology!
 
 ## What's Next?
 
-You should now have a solid foundation in utilizing the **Oracle AI Microservices Sandbox**.
+You should now have a solid foundation in utilizing the **Oracle AI Explorer for Apps**.
 To take your experiments to the next level, consider exploring these additional bits of functionality:
 
 - Turn On/Off/Clear history

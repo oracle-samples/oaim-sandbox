@@ -8,15 +8,15 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
 
-To use the Retrieval-Augmented Generation (RAG) functionality of the Sandbox, you will need to setup/enable an [embedding model](../model_config) and have access to an **Oracle Database 23ai**. Both the [Always Free Oracle Autonomous Database Serverless (ADB-S)](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/autonomous-always-free.html) and the [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) are supported. They are a great, no-cost, way to get up and running quickly.
+To use the Retrieval-Augmented Generation (RAG) functionality of the Explorer, you will need to setup/enable an [embedding model](../model_config) and have access to an **Oracle Database 23ai**. Both the [Always Free Oracle Autonomous Database Serverless (ADB-S)](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/autonomous-always-free.html) and the [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) are supported. They are a great, no-cost, way to get up and running quickly.
 
 ## Configuration
 
-The database can either be configured using environment variables or through the **Sandbox** interface.
+The database can either be configured using environment variables or through the **Explorer** interface.
 
-### Sandbox Interface
+### Explorer Interface
 
-To configure the Database from the Sandbox, navigate to `Configuration -> Database`:
+To configure the Database from the Explorer, navigate to `Configuration -> Database`:
 
 ![Database Config](../images/db_config.png)
 
@@ -31,7 +31,7 @@ Once all fields are set, click the `Save` button.
 
 ### Environment Variables
 
-The following environment variables can be set, prior to starting the Sandbox, to automatically configure the database:
+The following environment variables can be set, prior to starting the Explorer, to automatically configure the database:
 
 - **DB_USERNAME**: The pre-created [database username](#database-user) where the embeddings will be stored
 - **DB_PASSWORD**: The password for the `DB Username`

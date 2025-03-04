@@ -7,7 +7,7 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
 
-Differently from a common LLM playground, that helps to test an LLM on the information on which has been trained on, the OAIM Sandbox works on the chunks retrieved in the Oracle DB 23ai by similarity with the question provided, like in this example:
+Differently from a common LLM playground, that helps to test an LLM on the information on which has been trained on, the Oracle AI Explorer for Apps works on the chunks retrieved in the Oracle DB 23ai by similarity with the question provided, like in this example:
 
 ![Chatbot](images/chatbot.png)
 
@@ -30,7 +30,7 @@ To understand each of them, refers for example on this document: [Concepts for G
 
 ## RAG params
 
-Clicking on the **RAG** checkbox you can quickly turn on/off the knowledge base behind the chatbot, exploiting the Retrieval Augentened Generation pattern implemented into the Oracle AI Microserves Sandbox.
+Clicking on the **RAG** checkbox you can quickly turn on/off the knowledge base behind the chatbot, exploiting the Retrieval Augentened Generation pattern implemented into the Oracle AI Explorer for Apps.
 
 ![Playground](images/playground.png)
 
