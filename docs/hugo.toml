@@ -1,0 +1,49 @@
+## Copyright (c) 2024-2025, Oracle and/or its affiliates.
+## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
+
+baseURL = 'https://oracle-samples.github.io/oaim-sandbox'
+languageCode = 'en-us'
+title = 'AI Microservices Sandbox'
+theme = "relearn"
+sectionPagesMenu = 'main'
+tableOfContents = true
+enableGitInfo = true
+
+# Required if you want to render robots.txt template
+enableRobotsTXT = true
+
+[markup]
+  [markup.goldmark]
+    duplicateResourceFiles = false
+    [markup.goldmark.extensions]
+      strikethrough = false
+      [markup.goldmark.extensions.extras]
+        [markup.goldmark.extensions.extras.subscript]
+          enable = true
+
+# Parameters
+[params]
+  collapsibleMenu = true
+  showVisitedLinks = true
+  themeVariant = ['auto', 'sandbox-light', 'sandbox-dark']
+  disableInlineCopyToClipBoard = true
+  hideAuthorName = true
+  
+[menu]
+  [[menu.shortcuts]]
+    identifier = 'ds'
+    name = "<i class='fa-fw fab fa-github'></i> GitHub Repository"
+    url = 'https://github.com/oracle-samples/oaim-sandbox'
+    weight = 10
+  [[menu.shortcuts]]
+    name = "<i class='fa-fw fab fa-youtube'></i>Building a Chatbot"
+    url = 'https://www.youtube.com/watch?v=oG9MPCpwUlU'
+    weight = 11
+#   [[menu.shortcuts]]
+#     name = "<i class='fa-fw fas fa-bullhorn'></i> Credits"
+#     url = 'more/credits/'
+#     weight = 30
+#   [[menu.shortcuts]]
+#     name = "<i class='fa-fw fas fa-tags'></i> Tags"
+#     url = 'tags/'
+#     weight = 40
