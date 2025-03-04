@@ -10,10 +10,10 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 ## Startup Time
 
 **_Problem_**:
-After starting the **Sandbox**, it takes a long time to load the first page.
+After starting the **Explorer**, it takes a long time to load the first page.
 
 **_Solution_**:
-This is normally the result of a configured database that is inaccessible. Depending on how you've configured the database, if `retry_count`, and `retry_delay` is set but the database is inaccessible, the **Sandbox** will appear to hang for the duration of `retry_count * retry_delay` during the startup.
+This is normally the result of a configured database that is inaccessible. Depending on how you've configured the database, if `retry_count`, and `retry_delay` is set but the database is inaccessible, the **Explorer** will appear to hang for the duration of `retry_count * retry_delay` during the startup.
 
 ## Embedding Rate Limits
 

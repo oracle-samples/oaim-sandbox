@@ -8,15 +8,15 @@ Copyright (c) 2023, 2024, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
 
-When using the split/embed functionality of the Sandbox, you can use the OCI Object storage. In this page we provide how to configure the OAIM Sandbox to use it.
+When using the split/embed functionality of the Explorer, you can use the OCI Object storage. In this page we provide how to configure the OAIM Explorer to use it.
 
 ## Configuration
 
-The OCI credentials can either be configured using an /.oci/config file or through the **Sandbox** interface.
+The OCI credentials can either be configured using an /.oci/config file or through the **Explorer** interface.
 
-### Sandbox Interface
+### Explorer Interface
 
-To configure the OCI credentials from the Sandbox, navigate to `Configuration -> OCI`:
+To configure the OCI credentials from the Explorer, navigate to `Configuration -> OCI`:
 
 ![OCI config](images/oci-config.png)
 
@@ -32,7 +32,7 @@ Once all fields are set, click the `Save` button.
 
 ### /.oci/config file
 
-If you have the related /.oci/config file configured, the Sandbox will read from the **DEFAULT** profile at startup and load the credentials as follows:
+If you have the related /.oci/config file configured, the Explorer will read from the **DEFAULT** profile at startup and load the credentials as follows:
 
 - **User OCID**: Your personal User OCID [User OCID](#OCI-credentials) that can be retrieved on your OCI tenancy interface
 - **Fingerprint**: The **Fingerprint** associated to your OCI private API key
