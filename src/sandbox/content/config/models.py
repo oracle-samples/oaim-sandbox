@@ -45,7 +45,7 @@ def clear_model_state(model_type: ModelTypeType) -> None:
     st.rerun()
 
 
-def get_model(model_type: ModelTypeType, only_enabled: bool = False, force: bool = False) -> dict[str, dict]:
+def get_models(model_type: ModelTypeType, only_enabled: bool = False, force: bool = False) -> dict[str, dict]:
     """Get a dictionary of either all Language/Embed Models or only enabled ones."""
 
     state_key = f"{model_type}_model_enabled" if only_enabled else f"{model_type}_model_config"
@@ -203,7 +203,7 @@ def main() -> None:
 
     st.divider()
     st.subheader("Language Models")
-    get_model(model_type="ll")
+    get_models(model_type="ll")
     # Table Headers
 
     table_col_format = st.columns(data_col_widths, vertical_alignment="center")
@@ -253,7 +253,7 @@ def main() -> None:
 
     st.divider()
     st.subheader("Embedding Models")
-    get_model(model_type="embed")
+    get_models(model_type="embed")
     # Create table rows
     table_col_format = st.columns(data_col_widths, vertical_alignment="center")
     embed_col1, embed_col2, embed_col3, embed_col4, embed_col5 = table_col_format

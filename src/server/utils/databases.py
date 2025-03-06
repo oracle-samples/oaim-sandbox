@@ -35,6 +35,8 @@ def connect(config: Database) -> oracledb.Connection:
     except oracledb.DatabaseError as ex:
         if "ORA-01017" in str(ex):
             raise DbException(status_code=401, detail="Invalid database credentials.") from ex
+        if "DPY-6005" in str(ex):
+            raise DbException(status_code=503, detail="Unable to connect to database.") from ex
         else:
             raise DbException(status_code=500, detail=str(ex)) from ex
     return conn

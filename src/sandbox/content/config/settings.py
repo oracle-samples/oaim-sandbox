@@ -27,7 +27,7 @@ from streamlit import session_state as state
 from sandbox.content.config.database import patch_database, get_databases
 from sandbox.content.config.oci import patch_oci, get_oci
 from sandbox.content.tools.prompt_eng import patch_prompt, get_prompts
-from sandbox.content.config.models import patch_model, get_model
+from sandbox.content.config.models import patch_model, get_models
 
 # Schema
 from common.schema import Model
@@ -270,8 +270,8 @@ def spring_ai_zip(provider, ll_model):
 def main():
     """Streamlit GUI"""
     st.header("Sandbox Settings", divider="red")
-    get_model(model_type="ll", force=True)
-    get_model(model_type="embed", force=True)
+    get_models(model_type="ll", force=True)
+    get_models(model_type="embed", force=True)
     get_databases(force=True)
     get_oci(force=True)
     get_prompts(force=True)

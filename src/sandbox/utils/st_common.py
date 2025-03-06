@@ -13,7 +13,7 @@ import pandas as pd
 import streamlit as st
 from streamlit import session_state as state
 
-from sandbox.content.config.models import get_model
+from sandbox.content.config.models import get_models
 from sandbox.content.config.database import get_databases
 import sandbox.utils.api_call as api_call
 
@@ -223,7 +223,7 @@ def ll_sidebar() -> None:
 def rag_sidebar() -> None:
     """RAG Sidebar Settings, conditional if Database/Embeddings are configured"""
     st.sidebar.subheader("Retrieval Augmented Generation", divider="red")
-    get_model(model_type="embed", only_enabled=True)
+    get_models(model_type="embed", only_enabled=True)
     available_embed_models = list(state.embed_model_enabled.keys())
     if not available_embed_models:
         logger.debug("RAG Disabled (no Embedding Models)")

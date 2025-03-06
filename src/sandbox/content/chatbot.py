@@ -16,7 +16,7 @@ from streamlit import session_state as state
 
 import sandbox.utils.st_common as st_common
 import sandbox.utils.client as client
-from sandbox.content.config.models import get_model
+from sandbox.content.config.models import get_models
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("sandbox.content.chatbot")
@@ -60,7 +60,7 @@ async def main() -> None:
     # Sidebar Settings
     #########################################################################
     # Get a list of available language models, if none, then stop
-    get_model(model_type="ll", only_enabled=True)
+    get_models(model_type="ll", only_enabled=True)
     available_ll_models = list(state.ll_model_enabled.keys())
     if not available_ll_models:
         st.error("No language models are configured and/or enabled. Disabling Sandbox.", icon="🛑")

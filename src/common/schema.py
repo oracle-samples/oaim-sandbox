@@ -100,9 +100,9 @@ class ModelAccess(BaseModel):
 class Model(ModelAccess, LanguageModelParameters, EmbeddingModelParameters):
     """Model Object"""
 
-    name: str = Field(..., description="The model to use")
+    name: str = Field(..., min_length=1, description="The model to use")
     type: Literal["ll", "embed", "re-rank"] = Field(..., description="Type of Model.")
-    api: str = Field(..., description="API for Model.", examples=["ChatOllama", "OpenAI", "OpenAIEmbeddings"])
+    api: str = Field(..., min_length=1, description="API for Model.", examples=["ChatOllama", "OpenAI", "OpenAIEmbeddings"])
     openai_compat: bool = Field(default=True, description="Is the API OpenAI compatible?")
     status: Statuses = Field(default="UNVERIFIED", description="Status (read-only)", readOnly=True)
 
@@ -136,7 +136,7 @@ class OracleCloudSettings(BaseModel):
 class PromptText(BaseModel):
     """Patch'able Prompt Parameters"""
 
-    prompt: str = Field(..., description="Prompt Text")
+    prompt: str = Field(..., min_length=1, description="Prompt Text")
 
 
 class Prompt(PromptText):
@@ -194,6 +194,7 @@ class Settings(BaseModel):
 
     client: str = Field(
         ...,
+        min_length=1,
         description="Unique Client Identifier",
     )
     ll_model: Optional[LargeLanguageSettings] = Field(

@@ -27,7 +27,7 @@ logger = logging_config.logging.getLogger("sandbox.content.config.oci")
 #####################################################
 # Functions
 #####################################################
-def get_oci(force: bool=False) -> dict[str, dict]:
+def get_oci(force: bool = False) -> dict[str, dict]:
     """Get a dictionary of all OCI Configurations"""
     if "oci_config" not in state or state["oci_config"] == {} or force:
         try:
@@ -90,8 +90,6 @@ def patch_oci(
                 state.oci_config[auth_profile]["namespace"] = None
             except AttributeError:
                 pass
-        if inspect.stack()[1].filename == __file__:
-            st.rerun()
     else:
         st.info(f"{auth_profile} OCI Configuration - No Changes Detected.", icon="ℹ️")
 
@@ -134,8 +132,6 @@ def patch_oci_genai(
                 state.oci_config[auth_profile]["namespace"] = None
             except AttributeError:
                 pass
-        if inspect.stack()[1].filename == __file__:
-            st.rerun()
     else:
         st.info(f"{auth_profile} OCI GenAI Configuration - No Changes Detected.", icon="ℹ️")
 
@@ -213,6 +209,7 @@ def main() -> None:
                 st.error("All fields are required.", icon="🛑")
                 st.stop()
             patch_oci(auth_profile, fingerprint, tenancy, region, key_file, user, security_token_file)
+            st.rerun()
 
     st.subheader("OCI GenAI", divider="red")
     st.write(
@@ -242,6 +239,7 @@ def main() -> None:
                 st.error("All fields are required.", icon="🛑")
                 st.stop()
             patch_oci_genai(auth_profile, genai_compartment, genai_region)
+            st.rerun()
 
 
 if __name__ == "__main__" or "page.py" in inspect.stack()[1].filename:

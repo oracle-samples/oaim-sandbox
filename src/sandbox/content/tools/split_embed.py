@@ -16,7 +16,7 @@ import streamlit as st
 from streamlit import session_state as state
 
 from sandbox.content.config.oci import get_oci
-from sandbox.content.config.models import get_model
+from sandbox.content.config.models import get_models
 import sandbox.utils.api_call as api_call
 import sandbox.utils.st_common as st_common
 from common.schema import DistanceMetrics, IndexTypes, DatabaseVectorStorage
@@ -123,7 +123,7 @@ def main() -> None:
         logger.debug("Embedding Disabled (Database not configured)")
         st.error("Database is not configured. Disabling Embedding.", icon="🛑")
 
-    get_model(model_type="embed", only_enabled=True)
+    get_models(model_type="embed", only_enabled=True)
     available_embed_models = list(state.embed_model_enabled.keys())
     if not available_embed_models:
         logger.debug("Embedding Disabled (no Embedding Models)")
