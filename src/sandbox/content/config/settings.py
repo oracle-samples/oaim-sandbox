@@ -314,7 +314,7 @@ def main():
                         # Update session state; this is primarily for user_settings
                         update_session_state_recursive(state, uploaded_settings_dict)
                         st.success("Configuration has been updated with the uploaded settings.", icon="✅")
-                        time.sleep(5)
+                        time.sleep(3)
                         st.rerun()
                     st.subheader("Differences found:")
                     st.json(differences)

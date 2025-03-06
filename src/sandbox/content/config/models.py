@@ -50,6 +50,7 @@ def get_model(model_type: ModelTypeType, only_enabled: bool = False, force: bool
 
     state_key = f"{model_type}_model_enabled" if only_enabled else f"{model_type}_model_config"
     if state_key not in state or state[state_key] == {} or force:
+        clear_model_state(model_type)
         try:
             api_url = f"{state.server['url']}:{state.server['port']}/v1/models"
             api_params = {"only_enabled": only_enabled, "model_type": model_type}
