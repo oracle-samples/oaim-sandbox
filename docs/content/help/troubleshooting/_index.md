@@ -3,7 +3,7 @@ title = 'Troubleshooting'
 +++
 
 <!--
-Copyright (c) 2023, 2024, Oracle and/or its affiliates.
+Copyright (c) 2024-2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
 
@@ -29,10 +29,10 @@ data=None message='trial token rate limit exceeded, limit is 100000 tokens per m
 Set a rate limit based on the API Key restrictions.
 
 
-## Test Framework Evaluation
+## Testbed Evaluation
 
 **_Problem_**:
-During the Evaluation in the test framework, a database error occurs: `DPY-4011: the database or network closed the connection`
+During the Evaluation in the **Testbed**, a database error occurs: `DPY-4011: the database or network closed the connection`
 
 **_Solution_**:
 Increase the memory of the vector_memory_size.  If this is an Oracle Autonomous Database, scale up the CPU.

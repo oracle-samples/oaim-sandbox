@@ -1,30 +1,31 @@
-## Copyright (c) 2023, 2024, Oracle and/or its affiliates.
-## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
-##############################################################################
-# Developer Custom
-##############################################################################
-assets/docos/samples/oracle-ai-vector-search-users-guide-qa.jsonl
-assets/docos/oracle-ai-vector-search-users-guide.pdf
-
+# spell-checker: disable
 ##############################################################################
 # Project/User Specific
 ##############################################################################
+**/*.log
 **/requirements.txt
-!app/requirements.txt
+!requirements.txt
+!app/server/requirements.txt
+!app/sandbox/requirements.txt
 app/THIRD_PARTY_LICENSES.txt
-rag/**
+helm/values*.yaml
+helm/service.yaml
+helm/ingress.yaml
 sbin/**
-helm/values.yaml
 **/*.bak
+**/tmp/**
+**/chatbot_graph.png
+sonar.sh
 
 ##############################################################################
-# Enviroment (PyVen, IDE, etc.)
+# Environment (PyVen, IDE, etc.)
 ##############################################################################
 **/.venv
 **/.vscode
 **/.DS_Store
 **/*.swp
 **/.scannerwork
+**/tns_admin
 sonar-project.properties
 
 ##############################################################################
@@ -33,6 +34,11 @@ sonar-project.properties
 __pycache__/
 *.py[cod]
 *$py.class
+
+##############################################################################
+# Random
+##############################################################################
+**/demo*.sh
 spring_ai/src/main/resources/data/sandbox_settings.json
 spring_ai/target/**
 spring_ai/create_user.sql
@@ -43,5 +49,7 @@ temp/rag_agent.ipynb
 temp/tools.ipynb
 temp/tools.py
 temp/json-dual.sql
-env.sh
-temp/oci_genai.py
+sandbox.sh
+server.sh
+temp/genai_work.py
+temp/test_oci.py

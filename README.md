@@ -12,10 +12,9 @@ The **Oracle AI Microservices Sandbox** provides a streamlined environment where
 
 - [Configuring Embedding and Chat Models](https://oracle-samples.github.io/oaim-sandbox/sandbox/configuration/model_config)
 - [Splitting and Embedding Documentation](https://oracle-samples.github.io/oaim-sandbox/sandbox/tools/split_embed)
-- [Storing Embedded Documents into the Oracle Database](https://oracle-samples.github.io/oaim-sandbox/sandbox/tools/split_embed)
 - [Modifying System Prompts (Prompt Engineering)](https://oracle-samples.github.io/oaim-sandbox/sandbox/tools/prompt_eng)
 - [Experimenting with **LLM** Parameters](https://oracle-samples.github.io/oaim-sandbox/sandbox/chatbot)
-- [Testing Framework on auto-generated or existing Q&A datasets](https://oracle-samples.github.io/oaim-sandbox/sandbox/test_framework)
+- [Testbed for auto-generated or existing Q&A datasets](https://oracle-samples.github.io/oaim-sandbox/sandbox/testbed)
 
 ## Getting Started
 
@@ -36,33 +35,28 @@ For more information, including more details on **Setup and Configuration** plea
 
 #### Bare-Metal Installation
 
-To run the application on bare-metal; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the top-level directory:
+To run the application on bare-metal; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from `src/`:
 
 1. Create and activate a Python Virtual Environment:
 
    ```bash
+   cd src/
    python3.11 -m venv .venv
    source .venv/bin/activate
-   pip3 install --upgrade pip wheel
+   pip3.11 install --upgrade pip wheel
    ```
 
 1. Install the Python modules:
 
    ```bash
-   pip3 install -r app/requirements.txt
-   ```
-
-1. Exit from your shell and run again:
-
-   ```bash
+   pip3.11 install -r requirements.txt
    source .venv/bin/activate
    ```
 
 1. Start Streamlit:
 
    ```bash
-   cd app/src
-   streamlit run oaim-sandbox.py --server.port 8501
+   streamlit run oaim_sandbox.py --server.port 8501
    ```
 
 1. Navigate to `http://localhost:8501`.
@@ -71,13 +65,14 @@ To run the application on bare-metal; download the [source](https://github.com/o
 
 #### Container Installation
 
-To run the application in a container; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the top-level directory:
+To run the application in a container; download the [source](https://github.com/oracle-samples/oaim-sandbox):
 
-1. Build the image.
+1. Build the all-in-one image.
 
-   From the root of the project, build Image:
+   From the `src/` directory, build image:
 
    ```bash
+   cd src/
    podman build -t oaim-sandbox .
    ```
 
