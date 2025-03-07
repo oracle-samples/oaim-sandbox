@@ -45,7 +45,7 @@ from streamlit.testing.v1 import AppTest
 def test_main_config():
     """Main Database Config"""
     at = AppTest.from_file("oaim_sandbox.py", default_timeout=30)
-    time.sleep(30)
+    at.
     at.switch_page("sandbox/content/config/database.py").run()
     print("==============================")
     if at.header:
