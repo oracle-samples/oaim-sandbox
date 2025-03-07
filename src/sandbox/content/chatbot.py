@@ -60,7 +60,7 @@ async def main() -> None:
     # Sidebar Settings
     #########################################################################
     # Get a list of available language models, if none, then stop
-    get_models(model_type="ll", only_enabled=True)
+    get_models(model_type="ll", force=True, only_enabled=True)
     available_ll_models = list(state.ll_model_enabled.keys())
     if not available_ll_models:
         st.error("No language models are configured and/or enabled. Disabling Sandbox.", icon="🛑")

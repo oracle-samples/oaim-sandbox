@@ -6,3 +6,4 @@
 ## Additional requirements for running tests; venv from src/ should already be in place
 ## pip3.11 install -r requirements.txt
 pytest
+docker

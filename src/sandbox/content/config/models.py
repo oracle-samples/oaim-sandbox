@@ -14,7 +14,6 @@ Session States Set:
 # spell-checker:ignore selectbox
 
 import inspect
-
 import time
 from typing import Literal
 import urllib.parse
@@ -35,14 +34,6 @@ logger = logging_config.logging.getLogger("sandbox.content.config.models")
 ###################################
 # Functions
 ###################################
-def clear_model_state(model_type: ModelTypeType) -> None:
-    """Remove model configuration from session state"""
-    state_config_key = f"{model_type}_model_config"
-    state_enabled_key = f"{model_type}_model_enabled"
-    st_common.clear_state_key(state_config_key)
-    st_common.clear_state_key(state_enabled_key)
-    time.sleep(2)  # So user can see updates
-    st.rerun()
 
 
 def get_models(model_type: ModelTypeType, only_enabled: bool = False, force: bool = False) -> dict[str, dict]:
@@ -50,37 +41,50 @@ def get_models(model_type: ModelTypeType, only_enabled: bool = False, force: boo
 
     state_key = f"{model_type}_model_enabled" if only_enabled else f"{model_type}_model_config"
     if state_key not in state or state[state_key] == {} or force:
-        clear_model_state(model_type)
         try:
             api_url = f"{state.server['url']}:{state.server['port']}/v1/models"
-            api_params = {"only_enabled": only_enabled, "model_type": model_type}
-            response = api_call.get(url=api_url, params=api_params)
+            response = api_call.get(
+                url=api_url,
+                params={"only_enabled": only_enabled, "model_type": model_type},
+            )
             state[state_key] = {item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response}
             logger.info("State created: state['%s']", state_key)
         except api_call.ApiError as ex:
-            st.error(f"Unable to retrieve models: {ex}", icon="🚨")
+            logger.error("Unable to retrieve models: %s", ex)
             state[state_key] = {}
 
 
 def create_model(model: Model) -> None:
     """Add either Language Model or Embed Model"""
-    api_url = f"{state.server['url']}:{state.server['port']}/v1/models/create"
-    api_call.post(url=api_url, params={"name": model.name}, payload={"json": model.model_dump()})
+    api_url = f"{state.server['url']}:{state.server['port']}/v1/models"
+    api_call.post(
+        url=api_url,
+        params={"name": model.name},
+        payload={"json": model.model_dump()},
+    )
 
 
 def patch_model(model: Model) -> None:
     """Update Model Configuration for either Language Models or Embed Models"""
     try:
-        api_url = f"{state.server['url']}:{state.server['port']}/v1/models/update"
-        api_call.patch(url=api_url, params={"name": model.name}, payload={"json": model.model_dump()})
+        api_url = f"{state.server['url']}:{state.server['port']}/v1/models/{model.name}"
+        api_call.patch(
+            url=api_url,
+            payload={"json": model.model_dump()},
+        )
+        logger.info("Model updated: %s", model.name)
     except api_call.ApiError:
         create_model(model)
+        logger.info("Model created: %s", model.name)
 
 
 def delete_model(model: Model) -> None:
     """Update Model Configuration for either Language Models or Embed Models"""
-    api_url = f"{state.server['url']}:{state.server['port']}/v1/models/delete"
-    api_call.patch(url=api_url, params={"name": model.name})
+    api_url = f"{state.server['url']}:{state.server['port']}/v1/models/{model.name}"
+    api_call.delete(
+        url=api_url,
+    )
+    logger.info("Model deleted: %s", model.name)
 
 
 @st.dialog("Model Configuration", width="large")
@@ -89,7 +93,10 @@ def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_
     # Initialize our model request
     if action == "edit":
         name = urllib.parse.quote(model_name, safe="")
-        request = api_call.get(url=f"{state.server['url']}:{state.server['port']}/v1/models/{name}")
+        api_url = f"{state.server['url']}:{state.server['port']}/v1/models/{name}"
+        request = api_call.get(
+            url=api_url,
+        )
         model = Model.model_validate(request)
     else:
         model = Model(name="unset", type=model_type, api="unset", status="CUSTOM")
@@ -169,15 +176,18 @@ def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_
         action_button, delete_button, cancel_button, _ = button_col_format
         if action == "add" and action_button.form_submit_button(label="Add", type="primary", use_container_width=True):
             create_model(model=model)
-            clear_model_state(model_type)
+            get_models(model_type, force=True)
+            st.rerun()
         if action == "edit" and action_button.form_submit_button(
             label="Save", type="primary", use_container_width=True
         ):
             patch_model(model=model)
-            clear_model_state(model_type)
+            get_models(model_type, force=True)
+            st.rerun()
         if delete_button.form_submit_button(label="Delete", type="secondary", use_container_width=True):
             delete_model(model=model)
-            clear_model_state(model_type)
+            get_models(model_type, force=True)
+            st.rerun()
         if cancel_button.form_submit_button(label="Cancel", type="secondary"):
             st.rerun()
 

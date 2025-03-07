@@ -10,6 +10,8 @@ Session States Set:
 # spell-checker:ignore selectbox
 
 import inspect
+import time
+
 import streamlit as st
 from streamlit import session_state as state
 
@@ -19,16 +21,11 @@ import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("sandbox.tools.prompt_eng")
 
-# Set endpoint if server has been established
-API_ENDPOINT = None
-if "server" in state:
-    API_ENDPOINT = f"{state.server['url']}:{state.server['port']}/v1/prompts"
-
 
 #####################################################
 # Functions
 #####################################################
-def get_prompts(force: bool=False) -> dict[str, dict]:
+def get_prompts(force: bool = False) -> dict[str, dict]:
     """Get a dictionary of all Prompts"""
     if "prompts_config" not in state or state["prompts_config"] == {} or force:
         try:
@@ -37,15 +34,12 @@ def get_prompts(force: bool=False) -> dict[str, dict]:
             logger.info("State created: state['prompts_config']")
         except api_call.ApiError as ex:
             logger.error("Unable to retrieve prompts: %s", ex)
-            st.error(f"Unable to retrieve prompts: {ex}", icon="🚨")
             state["prompts_config"] = {}
 
 
 def patch_prompt(category: str, name: str, prompt: str) -> None:
     """Update Prompt Instructions"""
-    if "prompts_config" not in state:
-        get_prompts()
-
+    get_prompts()
     # Check if the prompt instructions are changed
     configured_prompt = next(
         item["prompt"] for item in state["prompts_config"] if item["name"] == name and item["category"] == category
@@ -57,18 +51,16 @@ def patch_prompt(category: str, name: str, prompt: str) -> None:
                 url=api_url,
                 payload={"json": {"prompt": prompt}},
             )
-            # Success
-            logger.info("Prompt instructions updated for: %s (%s)", name, category)
-            st.success(f"{name} ({category}) Prompt Instructions - Updated", icon="✅")
+            logger.info("Prompt updated: %s (%s)", name, category)
             st_common.clear_state_key(f"selected_prompt_{category}_name")
             st_common.clear_state_key(f"prompt_{category}_prompt")
             st_common.clear_state_key("prompts_config")
-            get_prompts()  # Refresh the Config
+            get_prompts(force=True)  # Refresh the Config
         except api_call.ApiError as ex:
-            logger.info("Unable to perform prompt update for %s (%s): %s", name, category, ex)
-            st.error(f"Unable to perform prompt update: {ex}", icon="🚨")
+            logger.error("Prompt not updated: %s (%s): %s", name, category, ex)
     else:
         st.info(f"{name} ({category}) Prompt Instructions - No Changes Detected.", icon="ℹ️")
+        time.sleep(2)
 
 
 #############################################################################
@@ -78,7 +70,10 @@ def main():
     """Streamlit GUI"""
     st.header("Prompt Engineering")
     st.write("Select which prompts to use and their instructions.  Currently selected prompts are used.")
-    get_prompts()  # Create/Rebuild state
+    try:
+        get_prompts()  # Create/Rebuild state
+    except api_call.ApiError:
+        st.stop()
 
     st.subheader("System Prompt")
     sys_dict = {item["name"]: item["prompt"] for item in state.prompts_config if item["category"] == "sys"}
