@@ -11,9 +11,12 @@ import docker
 import pytest
 from fastapi.testclient import TestClient
 
+os.environ["API_SERVER_KEY"] = "testing-token"
+os.environ["API_SERVER_URL"] = "http://localhost"
+os.environ["API_SERVER_PORT"] = "8001"
+
 # Import the API Server
 from oaim_server import app
-
 
 @pytest.fixture(scope="session")
 def db_container():
@@ -32,11 +35,8 @@ def db_container():
     container.stop()
     container.remove()
 
-
-os.environ["API_SERVER_KEY"] = "testing-token"
 API_CLIENT = TestClient(app)
 HEADERS = {
     "Authorization": f"Bearer {os.getenv('API_SERVER_KEY')}",
     "Client": "test-client",
-    "Content-Type": "application/json",
 }
