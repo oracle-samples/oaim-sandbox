@@ -6,7 +6,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # pylint: disable=import-error
 
 import pytest
-from conftest import HEADERS, API_CLIENT
+from conftest import HEADERS, API_CLIENT, COMMON_VARS
 
 
 # All endpoints require AuthN
@@ -56,10 +56,14 @@ def test_databases_list_before(db_container):
 
 params = [
     (
-        "FREEPDB1",
+        COMMON_VARS["database_name"],
         404,
-        {"user": "PDBADMIN", "password": "T35t_D4t4-B4s3", "dsn": "//localhost:1521/FREEPDB1"},
-        {"detail": "Database: FREEPDB1 not found."},
+        {
+            "user": COMMON_VARS["database_user"],
+            "password": COMMON_VARS["database_password"],
+            "dsn": COMMON_VARS["database_dsn"],
+        },
+        {"detail": f"Database: {COMMON_VARS['database_name']} not found."},
     ),
     (
         "DEFAULT",
@@ -91,14 +95,26 @@ params = [
     (
         "DEFAULT",
         401,
-        {"user": "PDBADMIN", "password": "WrongPassword", "dsn": "//localhost:1521/FREEPDB1"},
+        {
+            "user": COMMON_VARS["database_user"],
+            "password": "Wr0ng_P4sswOrd",
+            "dsn": COMMON_VARS["database_dsn"],
+        },
         {"detail": "Invalid database credentials."},
     ),
     (
         "DEFAULT",
         200,
-        {"user": "PDBADMIN", "password": "T35t_D4t4-B4s3", "dsn": "//localhost:1521/FREEPDB1"},
-        {"user": "PDBADMIN", "password": "T35t_D4t4-B4s3", "dsn": "//localhost:1521/FREEPDB1"},
+        {
+            "user": COMMON_VARS["database_user"],
+            "password": COMMON_VARS["database_password"],
+            "dsn": COMMON_VARS["database_dsn"],
+        },
+        {
+            "user": COMMON_VARS["database_user"],
+            "password": COMMON_VARS["database_password"],
+            "dsn": COMMON_VARS["database_dsn"],
+        },
     ),
 ]
 
@@ -116,11 +132,11 @@ def test_databases_update(db_container, database, payload, status_code, details)
         data.pop("config_dir", None)  # Remove "config_dir" if it exists
         assert data == {
             "connected": True,
-            "dsn": "//localhost:1521/FREEPDB1",
+            "dsn": COMMON_VARS["database_dsn"],
             "name": "DEFAULT",
-            "password": "T35t_D4t4-B4s3",
+            "password": COMMON_VARS["database_password"],
             "tcp_connect_timeout": 5,
-            "user": "PDBADMIN",
+            "user": COMMON_VARS["database_user"],
             "vector_stores": [],
             "wallet_location": None,
             "wallet_password": None,
@@ -137,11 +153,11 @@ def test_databases_get_after(db_container):
     data.pop("config_dir", None)  # Remove "config_dir" if it exists
     assert data == {
         "connected": True,
-        "dsn": "//localhost:1521/FREEPDB1",
+        "dsn": COMMON_VARS["database_dsn"],
         "name": "DEFAULT",
-        "password": "T35t_D4t4-B4s3",
+        "password": COMMON_VARS["database_password"],
         "tcp_connect_timeout": 5,
-        "user": "PDBADMIN",
+        "user": COMMON_VARS["database_user"],
         "vector_stores": [],
         "wallet_location": None,
         "wallet_password": None,
@@ -155,8 +171,8 @@ def test_databases_list_after(db_container):
     assert response.status_code == 200
     data = response.json()
     assert data[0]["connected"] is True
-    assert data[0]["dsn"] == "//localhost:1521/FREEPDB1"
+    assert data[0]["dsn"] == COMMON_VARS["database_dsn"]
     assert data[0]["name"] == "DEFAULT"
-    assert data[0]["password"] == "T35t_D4t4-B4s3"
-    assert data[0]["user"] == "PDBADMIN"
+    assert data[0]["password"] == COMMON_VARS["database_password"]
+    assert data[0]["user"] == COMMON_VARS["database_user"]
     assert data[0]["vector_stores"] == []
