@@ -1,5 +1,5 @@
 # Workflow for running tests on server code
-name: Run Tests
+name: Test Suite
 
 on:
   pull_request:
@@ -52,40 +52,10 @@ jobs:
           pip install -r requirements.txt
           pip install pytest docker
 
-      - name: Determine changed files
-        id: changes
-        run: |
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
-          echo "Changed files: $CHANGED_FILES"
-
-          if echo "$CHANGED_FILES" | grep -q '^src/sandbox/'; then
-            echo "client=true" >> $GITHUB_ENV
-          fi
-
-          if echo "$CHANGED_FILES" | grep -q '^src/server/'; then
-            echo "server=true" >> $GITHUB_ENV
-          fi
-
-      - name: Run Server Tests
-        if: env.server == 'true'
-        continue-on-error: true
+      - name: Run All Tests
         run: |
           cd src/
-          pytest server || echo "Server tests failed" >> result.txt
-
-      - name: Run Client Tests
-        if: env.client == 'true'
-        continue-on-error: true
-        run: |
-          cd src/
-          pytest sandbox || echo "Client tests failed" >> result.txt
-
-      - name: Fail on Server or Client Tests
-        run: |
-          if grep -q "failed" src/result.txt; then
-            echo "Tests failed. Blocking PR."
-            exit 1
-          fi
+          pytest
 
     # Block merging if the job fails
     permissions:
