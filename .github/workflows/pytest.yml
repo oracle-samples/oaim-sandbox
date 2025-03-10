@@ -17,13 +17,33 @@ on:
 jobs:
   check:
     runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:latest
+        options: --privileged
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 2
+
+      - uses: docker/setup-buildx-action@v3
+        with:
+          version: latest
+
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cache/pip
+            src/.tox
+          key: ${{ runner.os }}-pip-${{ hashFiles('src/requirements.txt', 'src/server/requirements.txt', 'src/sandbox/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
 
       - name: Install dependencies
         run: |
@@ -48,15 +68,24 @@ jobs:
 
       - name: Run Server Tests
         if: env.server == 'true'
+        continue-on-error: true
         run: |
           cd src/
-          pytest server
+          pytest server || echo "Server tests failed" >> result.txt
 
       - name: Run Client Tests
         if: env.client == 'true'
+        continue-on-error: true
         run: |
           cd src/
-          pytest sandbox
+          pytest sandbox || echo "Client tests failed" >> result.txt
+
+      - name: Fail the job if any tests failed
+        run: |
+          if grep -q "failed" result.txt; then
+            echo "Tests failed. Blocking PR."
+            exit 1
+          fi
 
     # Block merging if the job fails
     permissions:
