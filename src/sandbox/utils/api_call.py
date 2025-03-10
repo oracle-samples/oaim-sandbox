@@ -26,6 +26,13 @@ class ApiError(Exception):
     def __str__(self):
         return self.message
 
+def sanitize_sensitive_data(data):
+    """Use to sanitize sensitive data for logging"""
+    if isinstance(data, dict):
+        return {k: "*****" if "password" in k.lower() else sanitize_sensitive_data(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [sanitize_sensitive_data(i) for i in data]
+    return data
 
 def send_request(
     method: str,
@@ -59,7 +66,7 @@ def send_request(
     }
     args = {k: v for k, v in args.items() if v is not None}
     # Avoid logging out binary data in files
-    log_args = args.copy()
+    log_args = sanitize_sensitive_data(args.copy())
     try:
         if log_args.get("files"):
             log_args["files"] = [(field_name, (f[0], "<binary_data>", f[2])) for field_name, f in log_args["files"]]

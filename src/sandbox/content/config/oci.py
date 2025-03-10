@@ -38,7 +38,6 @@ def get_oci(force: bool = False) -> dict[str, dict]:
                 for item in response
             }
             logger.info("State created: state['oci_config']")
-            print(state["oci_config"])
         except api_call.ApiError as ex:
             st.error(f"Unable to retrieve oci_configuration: {ex}", icon="🚨")
             state["oci_config"] = {}
