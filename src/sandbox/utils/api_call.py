@@ -7,6 +7,8 @@ import time
 import json
 from typing import Optional, Dict
 import requests
+
+import streamlit as st
 from streamlit import session_state as state
 import common.logging_config as logging_config
 
@@ -24,6 +26,13 @@ class ApiError(Exception):
     def __str__(self):
         return self.message
 
+def sanitize_sensitive_data(data):
+    """Use to sanitize sensitive data for logging"""
+    if isinstance(data, dict):
+        return {k: "*****" if "password" in k.lower() else sanitize_sensitive_data(v) for k, v in data.items()}
+    elif isinstance(data, list):
+        return [sanitize_sensitive_data(i) for i in data]
+    return data
 
 def send_request(
     method: str,
@@ -38,7 +47,11 @@ def send_request(
     payload = payload or {}
     token = state.server["key"]
     headers = {"Authorization": f"Bearer {token}"}
-    method_map = {"GET": requests.get, "POST": requests.post, "PATCH": requests.patch}
+    # Send client in header if it exists
+    if getattr(state, "user_settings", {}).get("client"):
+        headers["Client"] = state.user_settings["client"]
+
+    method_map = {"GET": requests.get, "POST": requests.post, "PATCH": requests.patch, "DELETE": requests.delete}
 
     if method not in method_map:
         raise ApiError(f"Unsupported HTTP method: {method}")
@@ -49,11 +62,11 @@ def send_request(
         "timeout": timeout,
         "params": params,
         "files": payload.get("files") if method == "POST" else None,
-        "json": payload.get("json") if method in ["POST", "PATCH"] else None,
+        "json": payload.get("json") if method in ["POST", "PATCH", "DELETE"] else None,
     }
     args = {k: v for k, v in args.items() if v is not None}
     # Avoid logging out binary data in files
-    log_args = args.copy()
+    log_args = sanitize_sensitive_data(args.copy())
     try:
         if log_args.get("files"):
             log_args["files"] = [(field_name, (f[0], "<binary_data>", f[2])) for field_name, f in log_args["files"]]
@@ -70,6 +83,7 @@ def send_request(
 
         except requests.exceptions.HTTPError as ex:
             failure = ex.response.json()["detail"]
+            st.error(ex, icon="🚨")
             raise ApiError(failure) from ex
         except requests.exceptions.RequestException as ex:
             logger.error("Attempt %d: Error: %s", attempt + 1, ex)
@@ -94,8 +108,8 @@ def post(
     params: Optional[dict] = None,
     payload: Optional[Dict] = None,
     timeout: int = 60,
-    retries: int = 3,
-    backoff_factor: float = 2.0,
+    retries: int = 5,
+    backoff_factor: float = 1.5,
 ) -> json:
     """POST Requests"""
     response = send_request(
@@ -109,10 +123,26 @@ def patch(
     params: Optional[dict] = None,
     payload: Optional[dict] = None,
     timeout: int = 60,
-    retries: int = 3,
-    backoff_factor: float = 2.0,
+    retries: int = 5,
+    backoff_factor: float = 1.5,
 ) -> None:
     """PATCH Requests"""
     send_request(
         "PATCH", url, payload=payload, params=params, timeout=timeout, retries=retries, backoff_factor=backoff_factor
     )
+    st.toast("Update Successful.", icon="✅")
+
+
+def delete(
+    url: str,
+    payload: Optional[dict] = None,
+    timeout: int = 60,
+    retries: int = 5,
+    backoff_factor: float = 1.5,
+) -> None:
+    """DELETE Requests"""
+    response = send_request(
+        "DELETE", url, payload=payload, timeout=timeout, retries=retries, backoff_factor=backoff_factor
+    )
+    success = response.json()["message"]
+    st.toast(success, icon="✅")

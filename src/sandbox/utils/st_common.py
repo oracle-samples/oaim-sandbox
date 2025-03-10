@@ -14,7 +14,7 @@ import streamlit as st
 from streamlit import session_state as state
 
 from sandbox.content.config.models import get_models
-from sandbox.content.config.database import get_databases
+from sandbox.content.config.databases import get_databases
 import sandbox.utils.api_call as api_call
 
 import common.help_text as help_text

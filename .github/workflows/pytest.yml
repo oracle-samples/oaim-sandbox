@@ -1,0 +1,62 @@
+# Workflow for running tests on server code
+name: Test Suite
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - "src/server/**"
+      - "src/sandbox/**"
+
+  # Allows running this workflow manually
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    services:
+      docker:
+        image: docker:latest
+        options: --privileged
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - uses: docker/setup-buildx-action@v3
+        with:
+          version: latest
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/pip
+            src/.tox
+          key: ${{ runner.os }}-pip-${{ hashFiles('src/requirements.txt', 'src/server/requirements.txt', 'src/sandbox/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          cd src/
+          python -m pip install --upgrade pip wheel setuptools
+          pip install -r requirements.txt
+          pip install pytest docker
+
+      - name: Run All Tests
+        run: |
+          cd src/
+          pytest
+
+    # Block merging if the job fails
+    permissions:
+      pull-requests: write

@@ -54,13 +54,15 @@ def main() -> None:
         </style>
         """,
     )
-    st.logo("sandbox/media/logo_light.png")
+    st.logo("sandbox/media/logo.png")
     # Setup Settings State
     api_endpoint = f"{state.server['url']}:{state.server['port']}/v1/settings"
     api_down = False
     if "user_settings" not in state:
         try:
-            state.user_settings = api_call.post(url=api_endpoint, params={"client": client_gen_id()}, backoff_factor=4)
+            state.user_settings = api_call.post(
+                url=api_endpoint, params={"client": client_gen_id()}, retries=10, backoff_factor=1.5
+            )
         except api_call.ApiError:
             logger.error("Unable to contact API Server; setting as Down!")
             api_down = True
@@ -111,7 +113,7 @@ def main() -> None:
     if not state.disabled["tools"]:
         navigation["Configuration"] = []
         if not state.disabled["db_cfg"]:
-            db_config = st.Page("sandbox/content/config/database.py", title="Database", icon="🗄️")
+            db_config = st.Page("sandbox/content/config/databases.py", title="Databases", icon="🗄️")
             navigation["Configuration"].append(db_config)
         if not state.disabled["model_cfg"]:
             model_config = st.Page("sandbox/content/config/models.py", title="Models", icon="🤖")

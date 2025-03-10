@@ -24,7 +24,7 @@ import streamlit as st
 from streamlit import session_state as state
 
 # Utilities
-from sandbox.content.config.database import patch_database, get_databases
+from sandbox.content.config.databases import patch_database, get_databases
 from sandbox.content.config.oci import patch_oci, get_oci
 from sandbox.content.tools.prompt_eng import patch_prompt, get_prompts
 from sandbox.content.config.models import patch_model, get_models

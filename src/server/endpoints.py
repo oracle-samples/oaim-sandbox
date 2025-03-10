@@ -22,8 +22,8 @@ from langchain_core.runnables import RunnableConfig
 from giskard.rag import evaluate, QATestset
 from litellm import APIConnectionError
 
-from fastapi import FastAPI, Query, HTTPException, UploadFile, Response
-from fastapi.responses import StreamingResponse
+from fastapi import FastAPI, Header, Query, HTTPException, UploadFile, Response
+from fastapi.responses import StreamingResponse, JSONResponse
 
 import server.bootstrap as bootstrap
 import server.utils.databases as databases
@@ -108,12 +108,12 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.get("/v1/databases", description="Get all database configurations", response_model=list[schema.Database])
     async def databases_list() -> list[schema.Database]:
         """List all databases"""
+        logger.debug("Received databases_list")
         for db in DATABASE_OBJECTS:
-            logger.debug("Checking database: %s", db)
             try:
                 db_conn = databases.connect(db)
-            except databases.DbException:
-                logger.debug("Unable to connect to database: %s", db)
+            except databases.DbException as ex:
+                logger.debug("Skipping %s - exception: %s", db.name, str(ex))
                 continue
             db.vector_stores = embedding.get_vs(db_conn)
 
@@ -126,54 +126,59 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     )
     async def databases_get(name: schema.DatabaseNameType) -> schema.Database:
         """Get single database"""
+        logger.debug("Received databases_get - name: %s", name)
         db = next((db for db in DATABASE_OBJECTS if db.name == name), None)
         if not db:
-            raise HTTPException(status_code=404, detail=f"schema.Database: {name} not found")
-
-        db_conn = databases.connect(db)
-        db.vector_stores = embedding.get_vs(db_conn)
+            raise HTTPException(status_code=404, detail=f"Database: {name} not found")
+        try:
+            db_conn = databases.connect(db)
+            db.vector_stores = embedding.get_vs(db_conn)
+        except databases.DbException as ex:
+            raise HTTPException(status_code=406, detail=f"Database: {name} - {str(ex)}") from ex
         return db
 
     @auth.patch(
         "/v1/databases/{name}",
         description="Update, Test, Set as default database configuration",
+        response_model=schema.Database,
     )
-    async def databases_update(name: schema.DatabaseNameType, payload: schema.DatabaseAuth) -> Response:
+    async def databases_update(name: schema.DatabaseNameType, payload: schema.DatabaseAuth) -> schema.Database:
         """Update schema.Database"""
-        logger.debug("Received Database Payload: %s", payload)
+        logger.debug("Received databases_update - name: %s; payload: %s", name, payload)
         db = next((db for db in DATABASE_OBJECTS if db.name == name), None)
-        if db:
-            try:
-                payload.config_dir = db.config_dir
-                payload.wallet_location = db.wallet_location
-                db_conn = databases.connect(payload)
-            except databases.DbException as ex:
-                db.connected = False
-                logger.debug("Raising Exception: %s", str(ex))
-                raise HTTPException(status_code=ex.status_code, detail=ex.detail) from ex
-            db.user = payload.user
-            db.password = payload.password
-            db.dsn = payload.dsn
-            db.wallet_password = payload.wallet_password
-            db.connected = True
-            db.vector_stores = embedding.get_vs(db_conn)
-            db.set_connection(db_conn)
-            # Unset and disconnect other databases
-            for other_db in DATABASE_OBJECTS:
-                if other_db.name != name and other_db.connection:
-                    other_db.set_connection(databases.disconnect(db.connection))
-                    other_db.connected = False
-            return Response(status_code=204)
-        raise HTTPException(status_code=404, detail=f"schema.Database: {name} not found")
+        if not db:
+            raise HTTPException(status_code=404, detail=f"Database: {name} not found.")
+        try:
+            payload.config_dir = db.config_dir
+            payload.wallet_location = db.wallet_location
+            db_conn = databases.connect(payload)
+        except databases.DbException as ex:
+            db.connected = False
+            raise HTTPException(status_code=ex.status_code, detail=ex.detail) from ex
+        db.user = payload.user
+        db.password = payload.password
+        db.dsn = payload.dsn
+        db.wallet_password = payload.wallet_password
+        db.connected = True
+        db.set_connection(db_conn)
+        # Unset and disconnect other databases
+        for other_db in DATABASE_OBJECTS:
+            if other_db.name != name and other_db.connection:
+                other_db.set_connection(databases.disconnect(db.connection))
+                other_db.connected = False
+        return await databases_get(name)
 
     #################################################
     # embed Endpoints
     #################################################
-    @auth.patch("/v1/embed/drop_vs", description="Drop Vector Store")
-    async def embed_drop_vs(client: schema.ClientIdType, vs: schema.DatabaseVectorStorage) -> Response:
+    @auth.delete("/v1/embed/vs", description="Drop Vector Store")
+    async def embed_drop_vs(
+        vs: schema.DatabaseVectorStorage, client: schema.ClientIdType = Header(...)
+    ) -> JSONResponse:
         """Drop Vector Storage"""
+        logger.debug("Received %s embed_drop_vs: %s", client, vs)
         embedding.drop_vs(get_client_db(client).connection, vs)
-        return Response(status_code=204)
+        return JSONResponse(status_code=200, content={"message": f"Vector Store: {vs.vector_store} dropped."})
 
     @auth.post(
         "/v1/embed/web/store",
@@ -286,6 +291,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         only_enabled: bool = False,
     ) -> list[schema.Model]:
         """List all models after applying filters if specified"""
+        logger.debug("Received models_list - type: %s; only_enabled: %s", model_type, only_enabled)
         models_ret = await models.apply_filter(MODEL_OBJECTS, model_type=model_type, only_enabled=only_enabled)
 
         return models_ret
@@ -293,51 +299,51 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.get("/v1/models/{name:path}", description="Get a single model", response_model=schema.Model)
     async def models_get(name: schema.ModelNameType) -> schema.Model:
         """List a specific model"""
+        logger.debug("Received models_get - name: %s", name)
         models_ret = await models.apply_filter(MODEL_OBJECTS, model_name=name)
         if not models_ret:
-            raise HTTPException(status_code=404, detail=f"schema.Model {name}: not found")
+            raise HTTPException(status_code=404, detail=f"Model: {name} not found.")
 
         return models_ret[0]
 
-    @auth.patch("/v1/models/update", description="Update a model")
-    async def models_update(name: schema.ModelNameType, payload: schema.Model) -> Response:
+    @auth.patch("/v1/models/{name:path}", description="Update a model", response_model=schema.Model)
+    async def models_update(name: schema.ModelNameType, payload: schema.Model) -> schema.Model:
         """Update a model"""
-        logger.debug("Received update model payload: %s", payload)
-        model_upd = await models.apply_filter(MODEL_OBJECTS, model_name=name)
-        if not model_upd:
-            raise HTTPException(status_code=404, detail=f"Model {name}: not found")
+        logger.debug("Received models_update - name: %s; payload: %s", name, payload)
 
+        model_upd = await models_get(name)
         for key, value in payload:
-            if hasattr(model_upd[0], key):
-                setattr(model_upd[0], key, value)
+            if hasattr(model_upd, key):
+                setattr(model_upd, key, value)
             else:
-                raise HTTPException(status_code=404, detail=f"Invalid model setting: {key}")
+                raise HTTPException(status_code=404, detail=f"Model: Invalid setting - {key}")
 
-        return Response(status_code=204)
+        return await models_get(name)
 
-    @auth.patch("/v1/models/delete", description="Delete a model")
-    async def models_delete(name: schema.ModelNameType) -> Response:
+    @auth.post("/v1/models", description="Create a model", response_model=schema.Model)
+    async def model_create(payload: schema.Model) -> schema.Model:
         """Update a model"""
+        logger.debug("Received model_create - payload: %s", payload)
+        if any(d.name == payload.name for d in MODEL_OBJECTS):
+            raise HTTPException(status_code=409, detail=f"Model: {payload.name} already exists.")
+        if not payload.openai_compat:
+            openai_compat = next(
+                (model_config.openai_compat for model_config in MODEL_OBJECTS if model_config.api == payload.api),
+                False,
+            )
+            payload.openai_compat = openai_compat
+        MODEL_OBJECTS.append(payload)
+
+        return await models_get(payload.name)
+
+    @auth.delete("/v1/models/{name:path}", description="Delete a model")
+    async def models_delete(name: schema.ModelNameType) -> JSONResponse:
+        """Delete a model"""
+        logger.debug("Received models_delete - name: %s", name)
         global MODEL_OBJECTS
         MODEL_OBJECTS = [model for model in MODEL_OBJECTS if model.name != name]
 
-        return Response(status_code=204)
-
-    @auth.post("/v1/models/create", description="Create a model", response_model=schema.Model)
-    async def model_create(payload: schema.Model) -> schema.Model:
-        """Update a model"""
-        logger.debug("Received create model payload: %s", payload)
-        if payload.name == "new" or payload.api == "unknown":
-            raise HTTPException(status_code=406, detail="Model name and API must be specified.")
-        if payload.name in MODEL_OBJECTS:
-            raise HTTPException(status_code=409, detail=f"Model {payload.name}: already exists.")
-        openai_compat = next(
-            (model_config.openai_compat for model_config in MODEL_OBJECTS if model_config.api == payload.api), False
-        )
-        payload.openai_compat = openai_compat
-        MODEL_OBJECTS.append(payload)
-
-        return payload
+        return JSONResponse(status_code=200, content={"message": f"Model: {name} deleted."})
 
     #################################################
     # oci Endpoints
@@ -470,27 +476,24 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             (prompt for prompt in PROMPT_OBJECTS if prompt.category == category and prompt.name == name), None
         )
         if not prompt:
-            raise HTTPException(status_code=404, detail=f"Prompt {category}-{name}: not found")
+            raise HTTPException(status_code=404, detail=f"Prompt: {name} ({category}) not found.")
 
         return prompt
 
     @auth.patch(
         "/v1/prompts/{category}/{name}",
-        description="Update schema.Prompt Configuration",
+        description="Update Prompt Configuration",
+        response_model=schema.Prompt,
     )
     async def prompts_update(
         category: schema.PromptCategoryType, name: schema.PromptNameType, payload: schema.PromptText
-    ) -> Response:
-        """Update a single schema.Prompt"""
-        logger.debug("Received %s (%s) schema.Prompt Payload: %s", name, category, payload)
-        for prompt in PROMPT_OBJECTS:
-            if prompt.name == name and prompt.category == category:
-                # Update the prompt with the new text
-                prompt.prompt = payload.prompt
+    ) -> schema.Prompt:
+        """Update a single Prompt"""
+        logger.debug("Received %s (%s) Prompt Payload: %s", name, category, payload)
+        prompt_upd = await prompts_get(category, name)
+        prompt_upd.prompt = payload.prompt
 
-                return Response(status_code=204)
-
-        raise HTTPException(status_code=404, detail=f"Prompt {category}:{name} not found")
+        return await prompts_get(category, name)
 
     #################################################
     # settings Endpoints
@@ -514,9 +517,9 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
 
     @auth.post("/v1/settings", description="Create new client settings", response_model=schema.Settings)
     async def settings_create(client: schema.ClientIdType) -> schema.Settings:
-        """Get settings for a specific client by name"""
+        """Create a new client, initialise client settings"""
         if any(settings.client == client for settings in SETTINGS_OBJECTS):
-            raise HTTPException(status_code=400, detail=f"Client {client}: already exists")
+            raise HTTPException(status_code=409, detail=f"Client {client}: already exists")
         default_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == "default"), None)
 
         # Copy the default settings
