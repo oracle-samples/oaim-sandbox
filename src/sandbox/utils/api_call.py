@@ -101,8 +101,8 @@ def post(
     params: Optional[dict] = None,
     payload: Optional[Dict] = None,
     timeout: int = 60,
-    retries: int = 3,
-    backoff_factor: float = 2.0,
+    retries: int = 5,
+    backoff_factor: float = 1.5,
 ) -> json:
     """POST Requests"""
     response = send_request(
@@ -116,8 +116,8 @@ def patch(
     params: Optional[dict] = None,
     payload: Optional[dict] = None,
     timeout: int = 60,
-    retries: int = 3,
-    backoff_factor: float = 2.0,
+    retries: int = 5,
+    backoff_factor: float = 1.5,
 ) -> None:
     """PATCH Requests"""
     send_request(
@@ -130,8 +130,8 @@ def delete(
     url: str,
     payload: Optional[dict] = None,
     timeout: int = 60,
-    retries: int = 3,
-    backoff_factor: float = 2.0,
+    retries: int = 5,
+    backoff_factor: float = 1.5,
 ) -> None:
     """DELETE Requests"""
     response = send_request(

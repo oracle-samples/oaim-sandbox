@@ -61,7 +61,7 @@ def main() -> None:
     if "user_settings" not in state:
         try:
             state.user_settings = api_call.post(
-                url=api_endpoint, params={"client": client_gen_id()}, retries=8, backoff_factor=2
+                url=api_endpoint, params={"client": client_gen_id()}, retries=10, backoff_factor=1.5
             )
         except api_call.ApiError:
             logger.error("Unable to contact API Server; setting as Down!")
