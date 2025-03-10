@@ -60,7 +60,9 @@ def main() -> None:
     api_down = False
     if "user_settings" not in state:
         try:
-            state.user_settings = api_call.post(url=api_endpoint, params={"client": client_gen_id()}, backoff_factor=4)
+            state.user_settings = api_call.post(
+                url=api_endpoint, params={"client": client_gen_id()}, retries=8, backoff_factor=2
+            )
         except api_call.ApiError:
             logger.error("Unable to contact API Server; setting as Down!")
             api_down = True
@@ -128,6 +130,7 @@ def main() -> None:
 
     pg = st.navigation(navigation, position="sidebar", expanded=False)
     pg.run()
+
 
 if __name__ == "__main__":
     set_server_state()

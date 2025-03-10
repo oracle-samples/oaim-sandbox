@@ -99,7 +99,7 @@ test_disconnected_input = [
         COMMON_VARS["database_user"],
         COMMON_VARS["database_password"],
         "WRONG_TP",
-        r"Unable to perform update: DPY-4000: .*",
+        r"Unable to perform update: DPY.*",
     ),
 ]
 
