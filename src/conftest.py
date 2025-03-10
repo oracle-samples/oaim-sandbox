@@ -7,6 +7,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 
 import os
 import time
+import socket
 import subprocess
 import docker
 import requests
@@ -39,25 +40,43 @@ HEADERS = {
     "Client": COMMON_VARS["api_client_id"],
 }
 
-def wait_for_container(container, timeout=60):
+
+def wait_for_container(container, timeout=60, delay=5):
     """Wait for the container to be in the 'running' state"""
     start_time = time.time()
     while time.time() - start_time < timeout:
         container.reload()
-        if container.status == 'running':
+        if container.status == "running":
             return
-        time.sleep(5)
+        time.sleep(delay)
     raise TimeoutError("Timed out waiting for container to be 'running'.")
 
-def wait_for_db(container, timeout=60):
+
+def wait_for_db(container, timeout=60, delay=5):
     """Wait for the Oracle DB container to be ready to accept connections"""
     start_time = time.time()
     while time.time() - start_time < timeout:
-        logs = container.logs(tail=100).decode('utf-8')
+        logs = container.logs(tail=100).decode("utf-8")
         if "DATABASE IS READY TO USE!" in logs:
             return
-        time.sleep(5)
+        time.sleep(delay)
     raise TimeoutError("Timed out waiting for database to be ready.")
+
+
+def wait_for_server(timeout=60, delay=5):
+    """Wait until the server to be accessible"""
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        try:
+            # Try to establish a socket connection to the host and port
+            with socket.create_connection(("127.0.0.1", os.environ.get("API_SERVER_PORT")), timeout=delay):
+                return True  # Port is accessible
+        except (socket.timeout, socket.error):
+            print("Server not accessible. Retrying...")
+            time.sleep(delay)  # Wait before retrying
+
+    raise TimeoutError("Server is not accessible within the timeout period.")
+
 
 ############ Fixtures ############
 @pytest.fixture(scope="session")
@@ -93,6 +112,7 @@ def app_test():
             "url": os.environ.get("API_SERVER_URL"),
             "port": os.environ.get("API_SERVER_PORT"),
         }
+        wait_for_server()
         response = requests.get(
             url=f"{at.session_state.server['url']}:{at.session_state.server['port']}/v1/settings",
             headers=HEADERS,
@@ -117,7 +137,7 @@ def app_test():
 def start_fastapi_server():
     """Start the FastAPI server for Streamlit"""
     server_process = subprocess.Popen(["python", "oaim_server.py"])
-    time.sleep(10)
+    wait_for_server()
     yield
     # Terminate the server after tests
     server_process.terminate()
