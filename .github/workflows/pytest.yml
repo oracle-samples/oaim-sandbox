@@ -1,0 +1,67 @@
+# Workflow for running tests on server code
+name: Test Server
+
+on:
+  pull_request:
+    types: 
+      - opened
+      - synchronize
+      - reopened
+    paths:
+      - 'src/server/**'
+      - 'src/sandbox/**'
+
+  # Allows running this workflow manually
+  workflow_dispatch:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          cd src/
+          python -m pip install --upgrade pip wheel setuptools
+          pip install -r requirements.txt
+          pip install pytest docker
+
+      - name: Determine changed files
+        id: changes
+        run: |
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          echo "Changed files: $CHANGED_FILES"
+          
+          if echo "$CHANGED_FILES" | grep -q '^src/sandbox/'; then
+            echo "client=true" >> $GITHUB_ENV
+          fi
+          
+          if echo "$CHANGED_FILES" | grep -q '^src/server/'; then
+            echo "server=true" >> $GITHUB_ENV
+          fi
+
+      - name: Run client tests
+        if: env.client == 'true' && env.server != 'true'
+        run: |
+          cd src/
+          pytest sandbox
+
+      - name: Run server tests
+        if: env.server == 'true' && env.client != 'true'
+        run: |
+          cd src/
+          pytest server
+
+      - name: Run all tests
+        if: env.client == 'true' && env.server == 'true'
+        run: |
+          cd src/
+          pytest
+
+    # Block merging if the job fails
+    permissions:
+      pull-requests: write
