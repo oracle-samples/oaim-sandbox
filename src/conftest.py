@@ -10,6 +10,7 @@ import time
 import subprocess
 from time import sleep
 import docker
+import requests
 
 
 COMMON_VARS = {
@@ -33,7 +34,14 @@ from fastapi.testclient import TestClient
 from streamlit.testing.v1 import AppTest
 from oaim_server import app
 
+API_CLIENT = TestClient(app)
+HEADERS = {
+    "Authorization": f"Bearer {os.getenv('API_SERVER_KEY')}",
+    "Client": COMMON_VARS["api_client_id"],
+}
 
+
+############ Fixtures ############
 @pytest.fixture(scope="session")
 def db_container():
     """Establish an Oracle DB Test Container"""
@@ -66,7 +74,21 @@ def app_test():
             "url": os.environ.get("API_SERVER_URL"),
             "port": os.environ.get("API_SERVER_PORT"),
         }
-        at.session_state.user_settings = {"client": COMMON_VARS["api_client_id"]}
+        response = requests.get(
+            url=f"{at.session_state.server['url']}:{at.session_state.server['port']}/v1/settings",
+            headers=HEADERS,
+            params={"client": COMMON_VARS["api_client_id"]},
+            timeout=10,
+        )
+        if response.status_code == 404:
+            response = requests.post(
+                url=f"{at.session_state.server['url']}:{at.session_state.server['port']}/v1/settings",
+                headers=HEADERS,
+                params={"client": COMMON_VARS["api_client_id"]},
+                timeout=10,
+            )
+        at.session_state.user_settings = response.json()
+
         return at
 
     return _app_test
@@ -81,11 +103,3 @@ def start_fastapi_server():
     # Terminate the server after tests
     server_process.terminate()
     server_process.wait()
-
-
-##### MAIN #####
-API_CLIENT = TestClient(app)
-HEADERS = {
-    "Authorization": f"Bearer {os.getenv('API_SERVER_KEY')}",
-    "Client": COMMON_VARS["api_client_id"],
-}

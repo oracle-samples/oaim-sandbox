@@ -135,6 +135,8 @@ def verify_key(
 #############################################################################
 _ = os.getenv("API_SERVER_KEY") or generate_auth_key()
 logger.info("Auth Key: %s", os.getenv("API_SERVER_KEY"))
+port = os.getenv("API_SERVER_PORT", "8000")
+logger.info("API Server Using port: %i", int(port))
 
 app = FastAPI(title="Oracle AI Microservices Server", docs_url="/v1/docs", openapi_url="/v1/openapi.json")
 noauth = APIRouter()
@@ -145,6 +147,4 @@ app.include_router(noauth)
 app.include_router(auth)
 
 if __name__ == "__main__":
-    port = os.getenv("API_SERVER_PORT", "8000")
-    logger.info("API Server Using port: %i", int(port))
     uvicorn.run(app, host="0.0.0.0", port=int(port), log_level="info")

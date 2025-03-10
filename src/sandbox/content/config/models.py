@@ -14,14 +14,13 @@ Session States Set:
 # spell-checker:ignore selectbox
 
 import inspect
-import time
+from time import sleep
 from typing import Literal
 import urllib.parse
 
 import streamlit as st
 from streamlit import session_state as state
 
-import sandbox.utils.st_common as st_common
 import sandbox.utils.api_call as api_call
 
 import common.help_text as help_text
@@ -62,6 +61,10 @@ def create_model(model: Model) -> None:
         params={"name": model.name},
         payload={"json": model.model_dump()},
     )
+    st.success(f"Model created: {model.name}")
+    sleep(1)
+    logger.info("Model created: %s", model.name)
+    get_models(model.type, force=True)
 
 
 def patch_model(model: Model) -> None:
@@ -72,10 +75,12 @@ def patch_model(model: Model) -> None:
             url=api_url,
             payload={"json": model.model_dump()},
         )
+        st.success(f"Model updated: {model.name}")
+        sleep(1)
         logger.info("Model updated: %s", model.name)
+        get_models(model.type, force=True)
     except api_call.ApiError:
         create_model(model)
-        logger.info("Model created: %s", model.name)
 
 
 def delete_model(model: Model) -> None:
@@ -84,7 +89,10 @@ def delete_model(model: Model) -> None:
     api_call.delete(
         url=api_url,
     )
+    st.success(f"Model deleted: {model.name}")
+    sleep(1)
     logger.info("Model deleted: %s", model.name)
+    get_models(model.type, force=True)
 
 
 @st.dialog("Model Configuration", width="large")
@@ -176,17 +184,14 @@ def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_
         action_button, delete_button, cancel_button, _ = button_col_format
         if action == "add" and action_button.form_submit_button(label="Add", type="primary", use_container_width=True):
             create_model(model=model)
-            get_models(model_type, force=True)
             st.rerun()
         if action == "edit" and action_button.form_submit_button(
             label="Save", type="primary", use_container_width=True
         ):
             patch_model(model=model)
-            get_models(model_type, force=True)
             st.rerun()
         if delete_button.form_submit_button(label="Delete", type="secondary", use_container_width=True):
             delete_model(model=model)
-            get_models(model_type, force=True)
             st.rerun()
         if cancel_button.form_submit_button(label="Cancel", type="secondary"):
             st.rerun()

@@ -152,6 +152,7 @@ def qa_delete() -> None:
     st.success(f"Test Set and Evaluations Deleted: {state.testbed['testset_name']}")
     reset_testset(True)
 
+
 def qa_update_db() -> None:
     """Update QA in Database"""
     update_record(0)  # Ensure any changes made to current record are recorded
@@ -196,14 +197,14 @@ def qa_update_gui(qa_testset: list) -> None:
         disabled=prev_disabled,
         use_container_width=True,
         on_click=update_record,
-        kwargs=dict(direction=-1),
+        kwargs={"direction": -1},
     )
     next_col.button(
         "Next →",
         disabled=next_disabled,
         use_container_width=True,
         on_click=update_record,
-        kwargs=dict(direction=1),
+        kwargs={"direction": 1},
     )
     st.text_area(
         "Question:",
@@ -307,7 +308,7 @@ def main():
             key="radio_test_source",
             horizontal=True,
             on_change=reset_testset,
-            kwargs=dict(cache=True),
+            kwargs={"cache": True},
         )
         if testset_source == "Local":
             # Upload a TestSet from client host
@@ -498,7 +499,7 @@ def main():
                 type="primary",
                 use_container_width=True,
                 on_click=evaluation_report,
-                kwargs=dict(eid=evaluation_eid),
+                kwargs={"eid": evaluation_eid},
                 disabled=evaluation_eid is None,
             )
 

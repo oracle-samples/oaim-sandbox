@@ -24,9 +24,12 @@ logger = logging_config.logging.getLogger("sandbox.content.server")
 
 try:
     import oaim_server
+
     REMOTE_SERVER = False
 except ImportError:
     REMOTE_SERVER = True
+
+
 #####################################################
 # Functions
 #####################################################
@@ -75,14 +78,14 @@ async def main() -> None:
         key="user_server_port",
         min_value=1,
         max_value=65535,
-        disabled=REMOTE_SERVER
+        disabled=REMOTE_SERVER,
     )
     right.text_input(
         "API Server Key:",
         value=state.server["key"],
         key="user_server_key",
         type="password",
-        disabled=REMOTE_SERVER
+        disabled=REMOTE_SERVER,
     )
     if not REMOTE_SERVER:
         st.button("Restart Server", type="primary", on_click=server_restart)
@@ -97,7 +100,7 @@ async def main() -> None:
         "Copy Sandbox Settings",
         type="primary",
         on_click=copy_user_settings,
-        kwargs=dict(new_client="server"),
+        kwargs={"new_client": "server"},
         help="Copy your settings, from the ChatBot, by clicking here.",
     )
 

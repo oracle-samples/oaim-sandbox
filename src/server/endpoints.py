@@ -108,12 +108,12 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.get("/v1/databases", description="Get all database configurations", response_model=list[schema.Database])
     async def databases_list() -> list[schema.Database]:
         """List all databases"""
+        logger.debug("Received databases_list")
         for db in DATABASE_OBJECTS:
-            logger.debug("Checking database: %s", db)
             try:
                 db_conn = databases.connect(db)
-            except databases.DbException:
-                logger.debug("Unable to connect to database: %s", db)
+            except databases.DbException as ex:
+                logger.debug("Skipping %s - exception: %s", db.name, str(ex))
                 continue
             db.vector_stores = embedding.get_vs(db_conn)
 
@@ -126,6 +126,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     )
     async def databases_get(name: schema.DatabaseNameType) -> schema.Database:
         """Get single database"""
+        logger.debug("Received databases_get - name: %s", name)
         db = next((db for db in DATABASE_OBJECTS if db.name == name), None)
         if not db:
             raise HTTPException(status_code=404, detail=f"Database: {name} not found")
@@ -143,18 +144,16 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     )
     async def databases_update(name: schema.DatabaseNameType, payload: schema.DatabaseAuth) -> schema.Database:
         """Update schema.Database"""
-        logger.debug("Received Database Payload: %s", payload)
+        logger.debug("Received databases_update - name: %s; payload: %s", name, payload)
         db = next((db for db in DATABASE_OBJECTS if db.name == name), None)
         if not db:
             raise HTTPException(status_code=404, detail=f"Database: {name} not found.")
-
         try:
             payload.config_dir = db.config_dir
             payload.wallet_location = db.wallet_location
             db_conn = databases.connect(payload)
         except databases.DbException as ex:
             db.connected = False
-            logger.debug("Raising Exception: %s", str(ex))
             raise HTTPException(status_code=ex.status_code, detail=ex.detail) from ex
         db.user = payload.user
         db.password = payload.password
@@ -177,7 +176,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         vs: schema.DatabaseVectorStorage, client: schema.ClientIdType = Header(...)
     ) -> JSONResponse:
         """Drop Vector Storage"""
-        logger.debug("Received %s embed_drop_vs payload: %s", client, vs)
+        logger.debug("Received %s embed_drop_vs: %s", client, vs)
         embedding.drop_vs(get_client_db(client).connection, vs)
         return JSONResponse(status_code=200, content={"message": f"Vector Store: {vs.vector_store} dropped."})
 
@@ -292,7 +291,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         only_enabled: bool = False,
     ) -> list[schema.Model]:
         """List all models after applying filters if specified"""
-        logger.debug("Received get all models")
+        logger.debug("Received models_list - type: %s; only_enabled: %s", model_type, only_enabled)
         models_ret = await models.apply_filter(MODEL_OBJECTS, model_type=model_type, only_enabled=only_enabled)
 
         return models_ret
@@ -300,7 +299,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.get("/v1/models/{name:path}", description="Get a single model", response_model=schema.Model)
     async def models_get(name: schema.ModelNameType) -> schema.Model:
         """List a specific model"""
-        logger.debug("Received get model: %s", name)
+        logger.debug("Received models_get - name: %s", name)
         models_ret = await models.apply_filter(MODEL_OBJECTS, model_name=name)
         if not models_ret:
             raise HTTPException(status_code=404, detail=f"Model: {name} not found.")
@@ -310,7 +309,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.patch("/v1/models/{name:path}", description="Update a model", response_model=schema.Model)
     async def models_update(name: schema.ModelNameType, payload: schema.Model) -> schema.Model:
         """Update a model"""
-        logger.debug("Received update model payload: %s", payload)
+        logger.debug("Received models_update - name: %s; payload: %s", name, payload)
 
         model_upd = await models_get(name)
         for key, value in payload:
@@ -324,7 +323,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.post("/v1/models", description="Create a model", response_model=schema.Model)
     async def model_create(payload: schema.Model) -> schema.Model:
         """Update a model"""
-        logger.debug("Received create model payload: %s", payload)
+        logger.debug("Received model_create - payload: %s", payload)
         if any(d.name == payload.name for d in MODEL_OBJECTS):
             raise HTTPException(status_code=409, detail=f"Model: {payload.name} already exists.")
         if not payload.openai_compat:
@@ -340,7 +339,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.delete("/v1/models/{name:path}", description="Delete a model")
     async def models_delete(name: schema.ModelNameType) -> JSONResponse:
         """Delete a model"""
-        logger.debug("Received delete model: %s", name)
+        logger.debug("Received models_delete - name: %s", name)
         global MODEL_OBJECTS
         MODEL_OBJECTS = [model for model in MODEL_OBJECTS if model.name != name]
 
@@ -518,9 +517,9 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
 
     @auth.post("/v1/settings", description="Create new client settings", response_model=schema.Settings)
     async def settings_create(client: schema.ClientIdType) -> schema.Settings:
-        """Get settings for a specific client by name"""
+        """Create a new client, initialise client settings"""
         if any(settings.client == client for settings in SETTINGS_OBJECTS):
-            raise HTTPException(status_code=400, detail=f"Client {client}: already exists")
+            raise HTTPException(status_code=409, detail=f"Client {client}: already exists")
         default_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == "default"), None)
 
         # Copy the default settings

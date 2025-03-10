@@ -54,7 +54,7 @@ def main() -> None:
         </style>
         """,
     )
-    st.logo("sandbox/media/logo_light.png")
+    st.logo("sandbox/media/logo.png")
     # Setup Settings State
     api_endpoint = f"{state.server['url']}:{state.server['port']}/v1/settings"
     api_down = False
@@ -111,7 +111,7 @@ def main() -> None:
     if not state.disabled["tools"]:
         navigation["Configuration"] = []
         if not state.disabled["db_cfg"]:
-            db_config = st.Page("sandbox/content/config/database.py", title="Database", icon="🗄️")
+            db_config = st.Page("sandbox/content/config/databases.py", title="Databases", icon="🗄️")
             navigation["Configuration"].append(db_config)
         if not state.disabled["model_cfg"]:
             model_config = st.Page("sandbox/content/config/models.py", title="Models", icon="🤖")
@@ -128,7 +128,6 @@ def main() -> None:
 
     pg = st.navigation(navigation, position="sidebar", expanded=False)
     pg.run()
-
 
 if __name__ == "__main__":
     set_server_state()
