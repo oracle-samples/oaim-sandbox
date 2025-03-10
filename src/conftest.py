@@ -8,7 +8,6 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 import os
 import time
 import subprocess
-from time import sleep
 import docker
 import requests
 
@@ -40,6 +39,25 @@ HEADERS = {
     "Client": COMMON_VARS["api_client_id"],
 }
 
+def wait_for_container(container, timeout=60):
+    """Wait for the container to be in the 'running' state"""
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        container.reload()
+        if container.status == 'running':
+            return
+        time.sleep(5)
+    raise TimeoutError("Timed out waiting for container to be 'running'.")
+
+def wait_for_db(container, timeout=60):
+    """Wait for the Oracle DB container to be ready to accept connections"""
+    start_time = time.time()
+    while time.time() - start_time < timeout:
+        logs = container.logs(tail=100).decode('utf-8')
+        if "DATABASE IS READY TO USE!" in logs:
+            return
+        time.sleep(5)
+    raise TimeoutError("Timed out waiting for database to be ready.")
 
 ############ Fixtures ############
 @pytest.fixture(scope="session")
@@ -55,7 +73,8 @@ def db_container():
         ports={"1521/tcp": 1521},
         detach=True,
     )
-    time.sleep(15)
+    wait_for_container(container)
+    wait_for_db(container)
     yield container
 
     # Cleanup: After session
@@ -98,7 +117,7 @@ def app_test():
 def start_fastapi_server():
     """Start the FastAPI server for Streamlit"""
     server_process = subprocess.Popen(["python", "oaim_server.py"])
-    sleep(10)
+    time.sleep(10)
     yield
     # Terminate the server after tests
     server_process.terminate()

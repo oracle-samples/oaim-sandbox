@@ -80,9 +80,9 @@ jobs:
           cd src/
           pytest sandbox || echo "Client tests failed" >> result.txt
 
-      - name: Fail the job if any tests failed
+      - name: Fail on Server or Client Tests
         run: |
-          if grep -q "failed" result.txt; then
+          if grep -q "failed" src/result.txt; then
             echo "Tests failed. Blocking PR."
             exit 1
           fi
