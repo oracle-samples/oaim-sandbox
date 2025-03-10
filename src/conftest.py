@@ -97,14 +97,14 @@ def app_test():
             url=f"{at.session_state.server['url']}:{at.session_state.server['port']}/v1/settings",
             headers=HEADERS,
             params={"client": COMMON_VARS["api_client_id"]},
-            timeout=10,
+            timeout=120,
         )
         if response.status_code == 404:
             response = requests.post(
                 url=f"{at.session_state.server['url']}:{at.session_state.server['port']}/v1/settings",
                 headers=HEADERS,
                 params={"client": COMMON_VARS["api_client_id"]},
-                timeout=10,
+                timeout=120,
             )
         at.session_state.user_settings = response.json()
 
