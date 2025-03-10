@@ -1,15 +1,15 @@
 # Workflow for running tests on server code
-name: Test Server
+name: Run Tests
 
 on:
   pull_request:
-    types: 
+    types:
       - opened
       - synchronize
       - reopened
     paths:
-      - 'src/server/**'
-      - 'src/sandbox/**'
+      - "src/server/**"
+      - "src/sandbox/**"
 
   # Allows running this workflow manually
   workflow_dispatch:
@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
@@ -35,32 +37,26 @@ jobs:
         run: |
           CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
           echo "Changed files: $CHANGED_FILES"
-          
+
           if echo "$CHANGED_FILES" | grep -q '^src/sandbox/'; then
             echo "client=true" >> $GITHUB_ENV
           fi
-          
+
           if echo "$CHANGED_FILES" | grep -q '^src/server/'; then
             echo "server=true" >> $GITHUB_ENV
           fi
 
-      - name: Run client tests
-        if: env.client == 'true' && env.server != 'true'
-        run: |
-          cd src/
-          pytest sandbox
-
-      - name: Run server tests
-        if: env.server == 'true' && env.client != 'true'
+      - name: Run Server Tests
+        if: env.server == 'true'
         run: |
           cd src/
           pytest server
 
-      - name: Run all tests
-        if: env.client == 'true' && env.server == 'true'
+      - name: Run Client Tests
+        if: env.client == 'true'
         run: |
           cd src/
-          pytest
+          pytest sandbox
 
     # Block merging if the job fails
     permissions:
