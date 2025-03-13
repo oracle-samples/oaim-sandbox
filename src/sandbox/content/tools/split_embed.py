@@ -123,7 +123,7 @@ def main() -> None:
         logger.debug("Embedding Disabled (Database not configured)")
         st.error("Database is not configured. Disabling Embedding.", icon="🛑")
 
-    get_models(model_type="embed", only_enabled=True)
+    get_models(model_type="embed")
     available_embed_models = list(state.embed_model_enabled.keys())
     if not available_embed_models:
         logger.debug("Embedding Disabled (no Embedding Models)")

@@ -234,7 +234,7 @@ def main():
         st.error("Database is not configured. Disabling Testbed.", icon="🛑")
 
     # If there is no eligible (OpenAI Compat.) LL Models; then disable ALL functionality
-    get_models(model_type="ll", only_enabled=True)
+    get_models(model_type="ll")
     available_ll_models = [key for key, value in state.ll_model_enabled.items() if value.get("openai_compat")]
     if not available_ll_models:
         st.error(
@@ -247,7 +247,7 @@ def main():
 
     # If there is no eligible (OpenAI Compat.) Embedding Model; disable Generate Test Set
     gen_testset_disabled = False
-    get_models(model_type="embed", only_enabled=True)
+    get_models(model_type="embed")
     available_embed_models = [key for key, value in state.embed_model_enabled.items() if value.get("openai_compat")]
     if not available_embed_models:
         st.warning(

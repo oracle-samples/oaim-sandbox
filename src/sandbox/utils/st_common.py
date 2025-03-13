@@ -223,7 +223,7 @@ def ll_sidebar() -> None:
 def rag_sidebar() -> None:
     """RAG Sidebar Settings, conditional if Database/Embeddings are configured"""
     st.sidebar.subheader("Retrieval Augmented Generation", divider="red")
-    get_models(model_type="embed", only_enabled=True)
+    get_models(model_type="embed")
     available_embed_models = list(state.embed_model_enabled.keys())
     if not available_embed_models:
         logger.debug("RAG Disabled (no Embedding Models)")

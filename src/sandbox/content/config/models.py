@@ -41,18 +41,21 @@ def get_models(model_type: ModelTypeType = None, force: bool = False) -> dict[st
     for indy_model in ("ll", "embed"):
         if model_type and indy_model != model_type:
             continue
-        state_key = f"{indy_model}_model_config"
-        if state_key not in state or state[state_key] == {} or force:
+        config_key = f"{indy_model}_model_config"
+        enable_key = f"{indy_model}_model_enabled"
+        if config_key not in state or state[config_key] == {} or force:
             try:
                 response = api_call.get(
                     url=f"{state.server['url']}:{state.server['port']}/v1/models",
                     params={"model_type": indy_model},
                 )
-                state[state_key] = {item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response}
-                logger.info("State created: state['%s']", state_key)
+                state[config_key] = {item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response}
+                state[enable_key] = {k: v for k, v in state[config_key].items() if v["enabled"]}
+                logger.info("State created: state['%s']", config_key)
             except api_call.ApiError as ex:
                 logger.error("Unable to retrieve models: %s", ex)
-                state[state_key] = {}
+                state[config_key] = {}
+                state[enable_key] = {}
 
 
 def create_model(model: Model) -> None:
