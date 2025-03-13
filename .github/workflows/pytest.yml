@@ -53,9 +53,7 @@ jobs:
           pip install pytest docker
 
       - name: Run All Tests
-        run: |
-          cd src/
-          pytest
+        run: pytest
 
     # Block merging if the job fails
     permissions:

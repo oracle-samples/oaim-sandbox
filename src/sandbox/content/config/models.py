@@ -35,22 +35,24 @@ logger = logging_config.logging.getLogger("sandbox.content.config.models")
 ###################################
 
 
-def get_models(model_type: ModelTypeType, only_enabled: bool = False, force: bool = False) -> dict[str, dict]:
-    """Get a dictionary of either all Language/Embed Models or only enabled ones."""
+def get_models(model_type: ModelTypeType = None, force: bool = False) -> dict[str, dict]:
+    """Get a dictionary of Language/Embed Models."""
 
-    state_key = f"{model_type}_model_enabled" if only_enabled else f"{model_type}_model_config"
-    if state_key not in state or state[state_key] == {} or force:
-        try:
-            api_url = f"{state.server['url']}:{state.server['port']}/v1/models"
-            response = api_call.get(
-                url=api_url,
-                params={"only_enabled": only_enabled, "model_type": model_type},
-            )
-            state[state_key] = {item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response}
-            logger.info("State created: state['%s']", state_key)
-        except api_call.ApiError as ex:
-            logger.error("Unable to retrieve models: %s", ex)
-            state[state_key] = {}
+    for indy_model in ("ll", "embed"):
+        if model_type and indy_model != model_type:
+            continue
+        state_key = f"{indy_model}_model_config"
+        if state_key not in state or state[state_key] == {} or force:
+            try:
+                response = api_call.get(
+                    url=f"{state.server['url']}:{state.server['port']}/v1/models",
+                    params={"model_type": indy_model},
+                )
+                state[state_key] = {item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response}
+                logger.info("State created: state['%s']", state_key)
+            except api_call.ApiError as ex:
+                logger.error("Unable to retrieve models: %s", ex)
+                state[state_key] = {}
 
 
 def create_model(model: Model) -> None:

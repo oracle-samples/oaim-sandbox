@@ -34,7 +34,6 @@ import server.utils.testbed as testbed
 import server.agents.chatbot as chatbot
 
 import common.schema as schema
-import common.functions as functions
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("server.endpoints")
@@ -51,11 +50,21 @@ SETTINGS_OBJECTS = bootstrap.settings_def.main()
 #####################################################
 # Helpers
 #####################################################
+def get_temp_directory(client: schema.ClientIdType, function: str) -> Path:
+    """Return the path to store temporary files"""
+    if Path("/app/tmp").exists() and Path("/app/tmp").is_dir():
+        client_folder = Path("/app/tmp") / client / function
+    else:
+        client_folder = Path("/tmp") / client / function
+    client_folder.mkdir(parents=True, exist_ok=True)
+    return client_folder
+
+
 def get_client_settings(client: schema.ClientIdType) -> schema.Settings:
     """Return schema.Settings Object based on client ID"""
     client_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == client), None)
     if not client_settings:
-        raise HTTPException(status_code=404, detail=f"Client {client}: not found")
+        raise HTTPException(status_code=404, detail=f"Client {client}: not found.")
     return client_settings
 
 
@@ -134,7 +143,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             db_conn = databases.connect(db)
             db.vector_stores = embedding.get_vs(db_conn)
         except databases.DbException as ex:
-            raise HTTPException(status_code=406, detail=f"Database: {name} - {str(ex)}") from ex
+            raise HTTPException(status_code=406, detail=f"Database: {name} {str(ex)}") from ex
         return db
 
     @auth.patch(
@@ -154,7 +163,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             db_conn = databases.connect(payload)
         except databases.DbException as ex:
             db.connected = False
-            raise HTTPException(status_code=ex.status_code, detail=ex.detail) from ex
+            raise HTTPException(status_code=ex.status_code, detail=f"Database: {name} {ex.detail}") from ex
         db.user = payload.user
         db.password = payload.password
         db.dsn = payload.dsn
@@ -184,9 +193,9 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         "/v1/embed/web/store",
         description="Store Web Files for Embedding.",
     )
-    async def store_web_file(client: schema.ClientIdType, request: list[HttpUrl]) -> Response:
+    async def store_web_file(request: list[HttpUrl], client: schema.ClientIdType = Header(...)) -> Response:
         """Store contents from a web URL"""
-        temp_directory = functions.get_temp_directory(client, "embedding")
+        temp_directory = get_temp_directory(client, "embedding")
 
         # Save the file temporarily
         for url in request:
@@ -214,9 +223,9 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         "/v1/embed/local/store",
         description="Store Local Files for Embedding.",
     )
-    async def store_local_file(client: schema.ClientIdType, files: list[UploadFile]) -> Response:
+    async def store_local_file(files: list[UploadFile], client: schema.ClientIdType = Header(...)) -> Response:
         """Store contents from a local file uploaded to streamlit"""
-        temp_directory = functions.get_temp_directory(client, "embedding")
+        temp_directory = get_temp_directory(client, "embedding")
         for file in files:
             filename = temp_directory / file.filename
             file_content = await file.read()
@@ -237,7 +246,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     ) -> Response:
         """Perform Split and Embed"""
         oci_config = get_client_oci(client)
-        temp_directory = functions.get_temp_directory(client, "embedding")
+        temp_directory = get_temp_directory(client, "embedding")
 
         try:
             files = [f for f in temp_directory.iterdir() if f.is_file()]
@@ -288,11 +297,10 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.get("/v1/models", description="Get all models", response_model=list[schema.Model])
     async def models_list(
         model_type: Optional[schema.ModelTypeType] = Query(None),
-        only_enabled: bool = False,
     ) -> list[schema.Model]:
         """List all models after applying filters if specified"""
-        logger.debug("Received models_list - type: %s; only_enabled: %s", model_type, only_enabled)
-        models_ret = await models.apply_filter(MODEL_OBJECTS, model_type=model_type, only_enabled=only_enabled)
+        logger.debug("Received models_list - type: %s", model_type)
+        models_ret = await models.apply_filter(MODEL_OBJECTS, model_type=model_type)
 
         return models_ret
 
@@ -321,7 +329,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         return await models_get(name)
 
     @auth.post("/v1/models", description="Create a model", response_model=schema.Model)
-    async def model_create(payload: schema.Model) -> schema.Model:
+    async def models_create(payload: schema.Model) -> schema.Model:
         """Update a model"""
         logger.debug("Received model_create - payload: %s", payload)
         if any(d.name == payload.name for d in MODEL_OBJECTS):
@@ -340,7 +348,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     async def models_delete(name: schema.ModelNameType) -> JSONResponse:
         """Delete a model"""
         logger.debug("Received models_delete - name: %s", name)
-        global MODEL_OBJECTS
+        global MODEL_OBJECTS  # pylint: disable=global-statement
         MODEL_OBJECTS = [model for model in MODEL_OBJECTS if model.name != name]
 
         return JSONResponse(status_code=200, content={"message": f"Model: {name} deleted."})
@@ -351,7 +359,21 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     @auth.get("/v1/oci", description="View OCI Configuration", response_model=list[schema.OracleCloudSettings])
     async def oci_list() -> list[schema.OracleCloudSettings]:
         """List OCI Configuration"""
+        logger.debug("Received oci_list")
         return OCI_OBJECTS
+
+    @auth.get(
+        "/v1/oci/{auth_profile}",
+        description="View OCI Profile Configuration",
+        response_model=schema.OracleCloudSettings,
+    )
+    async def oci_get(auth_profile: schema.OCIProfileType) -> schema.OracleCloudSettings:
+        """List OCI Configuration"""
+        logger.debug("Received oci_get - auth_profile: %s", auth_profile)
+        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.auth_profile == auth_profile), None)
+        if not oci_config:
+            raise HTTPException(status_code=404, detail=f"OCI: Profile {auth_profile} not found.")
+        return oci_config
 
     @auth.get(
         "/v1/oci/compartments/{auth_profile}",
@@ -360,19 +382,23 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     )
     async def oci_list_compartments(auth_profile: schema.OCIProfileType) -> dict:
         """Return a list of compartments"""
-        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.auth_profile == auth_profile), None)
+        logger.debug("Received oci_list_compartments - auth_profile: %s", auth_profile)
+        oci_config = await oci_get(auth_profile)
         compartments = server_oci.get_compartments(oci_config)
         return compartments
 
     @auth.get(
-        "/v1/oci/buckets/{compartment}/{auth_profile}",
+        "/v1/oci/buckets/{compartment_ocid}/{auth_profile}",
         description="Get OCI Object Storage buckets in Compartment OCID",
         response_model=list,
     )
-    async def oci_list_buckets(auth_profile: schema.OCIProfileType, compartment: str) -> list:
+    async def oci_list_buckets(auth_profile: schema.OCIProfileType, compartment_ocid: str) -> list:
         """Return a list of buckets; Validate OCID using Pydantic class"""
-        compartment_obj = schema.OracleResource(ocid=compartment)
-        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.auth_profile == auth_profile), None)
+        logger.debug(
+            "Received oci_list_buckets - auth_profile: %s; compartment_ocid: %s", auth_profile, compartment_ocid
+        )
+        compartment_obj = schema.OracleResource(ocid=compartment_ocid)
+        oci_config = await oci_get(auth_profile)
         buckets = server_oci.get_buckets(compartment_obj.ocid, oci_config)
         return buckets
 
@@ -383,20 +409,28 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     )
     async def oci_list_bucket_objects(auth_profile: schema.OCIProfileType, bucket_name: str) -> list:
         """Return a list of bucket objects; Validate OCID using Pydantic class"""
-        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.auth_profile == auth_profile), None)
+        logger.debug("Received oci_list_bucket_objects - auth_profile: %s; bucket_name: %s", auth_profile, bucket_name)
+        oci_config = await oci_get(auth_profile)
         objects = server_oci.get_bucket_objects(bucket_name, oci_config)
         return objects
 
-    @auth.patch("/v1/oci/{auth_profile}", description="Update, Test, Set as Default OCI Configuration")
-    async def oci_update(auth_profile: schema.OCIProfileType, payload: schema.OracleCloudSettings) -> Response:
+    @auth.patch(
+        "/v1/oci/{auth_profile}",
+        description="Update, Test, Set as Default OCI Configuration",
+        response_model=schema.OracleCloudSettings,
+    )
+    async def oci_profile_update(
+        auth_profile: schema.OCIProfileType, payload: schema.OracleCloudSettings
+    ) -> schema.OracleCloudSettings:
         """Update OCI Configuration"""
-        logger.debug("Received OCI Payload: %s", payload)
-        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.auth_profile == auth_profile), None)
-        if oci_config:
-            try:
-                namespace = server_oci.get_namespace(payload)
-            except server_oci.OciException as ex:
-                raise HTTPException(status_code=401, detail=str(ex)) from ex
+        logger.debug("Received oci_update - auth_profile: %s; payload %s", auth_profile, payload)
+        try:
+            namespace = server_oci.get_namespace(payload)
+        except server_oci.OciException as ex:
+            raise HTTPException(status_code=401, detail=str(ex)) from ex
+
+        oci_config = await oci_get(auth_profile)
+        try:
             oci_config.namespace = namespace
             oci_config.tenancy = payload.tenancy if payload.tenancy else oci_config.tenancy
             oci_config.region = payload.region if payload.region else oci_config.region
@@ -406,44 +440,49 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             oci_config.security_token_file = (
                 payload.security_token_file if payload.security_token_file else oci_config.security_token_file
             )
-            # OCI GenAI
-            try:
-                oci_config.service_endpoint = (
-                    payload.service_endpoint if payload.service_endpoint else oci_config.service_endpoint
-                )
-                oci_config.compartment_id = (
-                    payload.compartment_id if payload.compartment_id else oci_config.compartment_id
-                )
-                if oci_config.service_endpoint != "" and oci_config.compartment_id != "":
-                    for model in MODEL_OBJECTS:
-                        if "OCI" in model.api:
-                            model.enabled = True
-                            model.url = oci_config.service_endpoint
-            except AttributeError:
-                pass
-            return Response(status_code=204)
+        except AttributeError as ex:
+            raise HTTPException(status_code=400, detail="OCI: Invalid Payload") from ex
 
-        raise HTTPException(status_code=404, detail=f"OCI Profile {auth_profile}: not found")
+        # OCI GenAI
+        try:
+            oci_config.service_endpoint = (
+                payload.service_endpoint if payload.service_endpoint else oci_config.service_endpoint
+            )
+            oci_config.compartment_id = payload.compartment_id if payload.compartment_id else oci_config.compartment_id
+            if oci_config.service_endpoint != "" and oci_config.compartment_id != "":
+                for model in MODEL_OBJECTS:
+                    if "OCI" in model.api:
+                        model.enabled = True
+                        model.url = oci_config.service_endpoint
+        except AttributeError:
+            pass
+        return oci_config
 
     @auth.post(
         "/v1/oci/objects/download/{bucket_name}/{auth_profile}",
         description="Download files from Object Storage",
     )
     async def oci_download_objects(
-        client: schema.ClientIdType,
         bucket_name: str,
         auth_profile: schema.OCIProfileType,
         request: list[str],
-    ) -> Response:
+        client: schema.ClientIdType = Header(...),
+    ) -> JSONResponse:
         """Download files from Object Storage"""
+        logger.debug(
+            "Received oci_download_objects - auth_profile: %s; bucket_name: %s; request: %s",
+            auth_profile,
+            bucket_name,
+            request,
+        )
+        oci_config = await oci_get(auth_profile)
         # Files should be placed in the embedding folder
-        temp_directory = functions.get_temp_directory(client, "embedding")
-        oci_config = next((oci_config for oci_config in OCI_OBJECTS if oci_config.auth_profile == auth_profile), None)
+        temp_directory = get_temp_directory(client, "embedding")
         for object_name in request:
             server_oci.get_object(temp_directory, object_name, bucket_name, oci_config)
 
         downloaded_files = [f.name for f in temp_directory.iterdir() if f.is_file()]
-        return Response(content=json.dumps(downloaded_files), media_type="application/json")
+        return JSONResponse(status_code=200, content=downloaded_files)
 
     #################################################
     # prompts Endpoints
@@ -653,7 +692,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         description="Get Chat History",
         response_model=list[schema.ChatMessage],
     )
-    async def chat_history_get(client: schema.ClientIdType) -> list[ChatMessage]:
+    async def chat_history(client: schema.ClientIdType) -> list[ChatMessage]:
         """Return Chat History"""
         agent: CompiledStateGraph = chatbot.chatbot_graph
         try:
@@ -674,15 +713,13 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     # testbed Endpoints
     #################################################
     @auth.get("/v1/testbed/testsets", description="Get Stored TestSets.", response_model=list[schema.TestSets])
-    async def testbed_get_testsets(client: schema.ClientIdType) -> list[schema.TestSets]:
+    async def testbed_testsets(client: schema.ClientIdType) -> list[schema.TestSets]:
         """Get a list of stored TestSets, create TestSet objects if they don't exist"""
         testsets = testbed.get_testsets(db_conn=get_client_db(client).connection)
         return testsets
 
     @auth.get("/v1/testbed/evaluations", description="Get Stored Evaluations.", response_model=list[schema.Evaluation])
-    async def testbed_get_evaluations(
-        client: schema.ClientIdType, tid: schema.TestSetsIdType
-    ) -> list[schema.Evaluation]:
+    async def testbed_evaluations(client: schema.ClientIdType, tid: schema.TestSetsIdType) -> list[schema.Evaluation]:
         """Get Evaluations"""
         evaluations = testbed.get_evaluations(db_conn=get_client_db(client).connection, tid=tid.upper())
         return evaluations
@@ -692,26 +729,23 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         description="Get Stored Single schema.Evaluation.",
         response_model=schema.EvaluationReport,
     )
-    async def testbed_get_evaluation(
-        client: schema.ClientIdType, eid: schema.TestSetsIdType
-    ) -> schema.EvaluationReport:
+    async def testbed_evaluation(client: schema.ClientIdType, eid: schema.TestSetsIdType) -> schema.EvaluationReport:
         """Get Evaluations"""
         evaluation = testbed.process_report(db_conn=get_client_db(client).connection, eid=eid.upper())
         return evaluation
 
     @auth.get("/v1/testbed/testset_qa", description="Get Stored schema.TestSets Q&A.", response_model=schema.TestSetQA)
-    async def testbed_get_testset_qa(client: schema.ClientIdType, tid: schema.TestSetsIdType) -> schema.TestSetQA:
+    async def testbed_testset_qa(client: schema.ClientIdType, tid: schema.TestSetsIdType) -> schema.TestSetQA:
         """Get TestSet Q&A"""
         return testbed.get_testset_qa(db_conn=get_client_db(client).connection, tid=tid.upper())
 
-    @auth.patch("/v1/testbed/testset_delete", description="Delete a TestSet")
+    @auth.delete("/v1/testbed/testset_delete/{tid}", description="Delete a TestSet")
     async def testbed_delete_testset(
-        client: schema.ClientIdType,
-        tid: Optional[schema.TestSetsIdType] = None,
-    ) -> Response:
+        tid: Optional[schema.TestSetsIdType] = None, client: schema.ClientIdType = Header(...)
+    ) -> JSONResponse:
         """Delete TestSet"""
         testbed.delete_qa(get_client_db(client).connection, tid.upper())
-        return Response(status_code=204)
+        return JSONResponse(status_code=200, content={"message": f"TestSet: {tid} deleted."})
 
     @auth.post("/v1/testbed/testset_load", description="Upsert TestSets.", response_model=schema.TestSetQA)
     async def testbed_upsert_testsets(
@@ -733,7 +767,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             logger.error("An exception occurred: %s", ex)
             raise HTTPException(status_code=500, detail="Unexpected error") from ex
 
-        testset_qa = await testbed_get_testset_qa(client=client, tid=db_id)
+        testset_qa = await testbed_testset_qa(client=client, tid=db_id)
         return testset_qa
 
     @auth.post("/v1/testbed/testset_generate", description="Generate Q&A Test Set.", response_model=schema.TestSetQA)
@@ -747,19 +781,9 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     ) -> schema.TestSetQA:
         """Retrieve contents from a local file uploaded and generate Q&A"""
         # Setup Models
-        giskard_ll_model = await models.apply_filter(
-            MODEL_OBJECTS,
-            model_name=ll_model,
-            model_type="ll",
-            only_enabled=True,
-        )
-        giskard_embed_model = await models.apply_filter(
-            MODEL_OBJECTS,
-            model_name=embed_model,
-            model_type="embed",
-            only_enabled=True,
-        )
-        temp_directory = functions.get_temp_directory(client, "testbed")
+        giskard_ll_model = await models.apply_filter(MODEL_OBJECTS, model_name=ll_model, model_type="ll")
+        giskard_embed_model = await models.apply_filter(MODEL_OBJECTS, model_name=embed_model, model_type="embed")
+        temp_directory = get_temp_directory(client, "testbed")
         full_testsets = temp_directory / "all_testsets.jsonl"
 
         for file in files:
@@ -829,7 +853,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         db_conn = get_client_db(client).connection
         testset = testbed.get_testset_qa(db_conn=db_conn, tid=tid.upper())
         qa_test = "\n".join(json.dumps(item) for item in testset.qa_data)
-        temp_directory = functions.get_temp_directory(client, "testbed")
+        temp_directory = get_temp_directory(client, "testbed")
 
         with open(temp_directory / f"{tid}_output.txt", "w", encoding="utf-8") as file:
             file.write(qa_test)

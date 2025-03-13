@@ -20,12 +20,13 @@ def main() -> list[OracleCloudSettings]:
     config = []
     try:
         file = os.path.expanduser(os.environ.get("OCI_CLI_CONFIG_FILE", default=oci.config.DEFAULT_LOCATION))
+        logger.debug("Using oci config file: %s", file)
         config_parser = configparser.ConfigParser()
         config_parser.read(file)
         for section in config_parser.sections() + ["DEFAULT"]:
             logger.debug("Evaluating OCI Profile: %s", section)
             try:
-                profile_data = oci.config.from_file(profile_name=section)
+                profile_data = oci.config.from_file(file_location=file, profile_name=section)
             except oci.exceptions.InvalidKeyFilePath:
                 continue
             profile_data["auth_profile"] = section

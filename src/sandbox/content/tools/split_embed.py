@@ -360,7 +360,6 @@ def main() -> None:
                 st.warning("Populating Vector Store... please be patient.", icon="⚠️")
 
             api_url = None
-            api_params = {"client": state.user_settings["client"], "directory": "split_embed"}
             api_payload = []
             # Place files on Server for Embedding
             if file_source == "Local":
@@ -381,7 +380,7 @@ def main() -> None:
                 api_payload = {"json": process_list["File"].tolist()}
 
             # Post Files to Server
-            response = api_call.post(url=api_url, params=api_params, payload=api_payload)
+            response = api_call.post(url=api_url, payload=api_payload)
 
             # All files are now on Server... Run Embeddings
             embed_params = {

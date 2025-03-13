@@ -22,8 +22,8 @@ import socket
 import subprocess
 import threading
 from typing import Annotated
-
 import uvicorn
+
 import psutil
 
 from fastapi import FastAPI, HTTPException, Depends, status, APIRouter
@@ -70,7 +70,8 @@ def start_server(port: int = 8000) -> int:
         process = subprocess.Popen(
             [
                 "uvicorn",
-                "oaim_server:app",
+                "oaim_server:create_app",
+                "--factory",
                 "--host",
                 "0.0.0.0",
                 "--port",
@@ -113,10 +114,19 @@ def stop_server(pid: int) -> None:
 ##########################################
 # Server App and API Key
 ##########################################
-def generate_auth_key(length: int = 32) -> None:
-    """Generates a URL-safe, base64-encoded random string with the given length"""
-    logger.info("API_SERVER_KEY not set; generating")
-    os.environ["API_SERVER_KEY"] = secrets.token_urlsafe(length)
+
+
+def generate_auth_key(length: int = 32) -> str:
+    """Generate and return a URL-safe API key."""
+    return secrets.token_urlsafe(length)
+
+
+def get_api_key() -> str:
+    """Retrieve API key from environment or generate one."""
+    if not os.getenv("API_SERVER_KEY"):
+        logger.info("API_SERVER_KEY not set; generating.")
+        os.environ["API_SERVER_KEY"] = generate_auth_key()
+    return os.getenv("API_SERVER_KEY")
 
 
 def verify_key(
@@ -125,26 +135,32 @@ def verify_key(
         Depends(HTTPBearer(description="Please provide API_SERVER_KEY.")),
     ],
 ) -> None:
-    """Verify the API Key is correct"""
-    if http_auth.credentials != os.getenv("API_SERVER_KEY"):
+    """Verify that the provided API key is correct."""
+    if http_auth.credentials != get_api_key():
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED)
 
 
 #############################################################################
-# MAIN
+# APP FACTORY
 #############################################################################
-_ = os.getenv("API_SERVER_KEY") or generate_auth_key()
-logger.info("Auth Key: %s", os.getenv("API_SERVER_KEY"))
-port = os.getenv("API_SERVER_PORT", "8000")
-logger.info("API Server Using port: %i", int(port))
+def create_app() -> FastAPI:
+    """Create and configure the FastAPI app."""
+    app = FastAPI(title="Oracle AI Microservices Server", docs_url="/v1/docs", openapi_url="/v1/openapi.json")
 
-app = FastAPI(title="Oracle AI Microservices Server", docs_url="/v1/docs", openapi_url="/v1/openapi.json")
-noauth = APIRouter()
-auth = APIRouter(dependencies=[Depends(verify_key)])
-# Register Endpoints
-register_endpoints(noauth, auth)
-app.include_router(noauth)
-app.include_router(auth)
+    noauth = APIRouter()
+    auth = APIRouter(dependencies=[Depends(verify_key)])
+
+    # Register Endpoints
+    register_endpoints(noauth, auth)
+    app.include_router(noauth)
+    app.include_router(auth)
+
+    return app
+
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=int(port), log_level="info")
+    PORT = int(os.getenv("API_SERVER_PORT", "8000"))
+    logger.info("API Server Using port: %i", PORT)
+
+    app = create_app()
+    uvicorn.run(app, host="0.0.0.0", port=PORT, log_level="info")

@@ -123,7 +123,7 @@ def main() -> None:
         else:
             st.error("Current Status: Disconnected")
             if "database_error" in state:
-                st.error(f"Unable to perform update: {state.database_error}", icon="🚨")
+                st.error(f"Update Failed - {state.database_error}", icon="🚨")
 
         if st.form_submit_button("Save"):
             patch_database(name, user, password, dsn, wallet_password)

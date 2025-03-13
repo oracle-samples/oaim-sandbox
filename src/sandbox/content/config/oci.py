@@ -11,6 +11,7 @@ Session States Set:
 # spell-checker:ignore streamlit, ocid, selectbox, genai, oraclecloud
 
 import inspect
+import time
 import re
 
 import streamlit as st
@@ -18,6 +19,7 @@ from streamlit import session_state as state
 
 import sandbox.utils.api_call as api_call
 import sandbox.utils.st_common as st_common
+from sandbox.content.config.models import get_models
 
 import common.logging_config as logging_config
 
@@ -54,7 +56,7 @@ def patch_oci(
 ) -> None:
     """Update OCI"""
     get_oci()
-
+    # Check if the OIC configuration is changed, or no namespace
     if (
         state.oci_config[auth_profile]["user"] != user
         or state.oci_config[auth_profile]["fingerprint"] != fingerprint
@@ -79,18 +81,16 @@ def patch_oci(
                     }
                 },
             )
-            st.success(f"{auth_profile} OCI Configuration - Updated", icon="✅")
-            st_common.clear_state_key("oci_config")
+            logger.info("OCI Profile updated: %s", auth_profile)
             st_common.clear_state_key("oci_error")
+            get_oci(force=True)
         except api_call.ApiError as ex:
             logger.error("OCI Update failed: %s", ex)
+            state.oci_config[auth_profile]["namespace"] = None
             state.oci_error = ex
-            try:
-                state.oci_config[auth_profile]["namespace"] = None
-            except AttributeError:
-                pass
     else:
         st.info(f"{auth_profile} OCI Configuration - No Changes Detected.", icon="ℹ️")
+        time.sleep(2)
 
 
 def patch_oci_genai(
@@ -118,12 +118,9 @@ def patch_oci_genai(
                 },
             )
             st.success(f"{auth_profile} OCI GenAI Configuration - Updated", icon="✅")
-            st_common.clear_state_key("oci_config")
             st_common.clear_state_key("oci_error")
-            st_common.clear_state_key("ll_model_config")
-            st_common.clear_state_key("embed_model_config")
-            st_common.clear_state_key("ll_model_enabled")
-            st_common.clear_state_key("embed_model_enabled")
+            get_oci(force=True)
+            get_models(force=True)
         except api_call.ApiError as ex:
             logger.error("OCI Update failed: %s", ex)
             state.oci_error = ex
@@ -133,7 +130,7 @@ def patch_oci_genai(
                 pass
     else:
         st.info(f"{auth_profile} OCI GenAI Configuration - No Changes Detected.", icon="ℹ️")
-
+        time.sleep(2)
 
 #####################################################
 # MAIN
@@ -159,7 +156,11 @@ def main() -> None:
             key="selected_oci_profile",
             on_change=st_common.update_user_settings("oci"),
         )
-    token_auth = st.checkbox("Use token authentication?", value=False)
+    token_auth = st.checkbox(
+        "Use token authentication?",
+        key="oci_token_auth",
+        value=False,
+    )
     with st.form("update_oci_config"):
         user = st.text_input(
             "User OCID:",
@@ -197,16 +198,13 @@ def main() -> None:
         if not state.oci_config[auth_profile]["namespace"]:
             st.error("Current Status: Unverified")
             if "oci_error" in state:
-                st.error(f"Unable to perform update: {state.oci_error}", icon="🚨")
+                st.error(f"Update Failed - {state.oci_error}", icon="🚨")
         else:
             st.success(f"Current Status: Validated - Namespace: {state.oci_config[auth_profile]['namespace']}")
 
         if st.form_submit_button(label="Save"):
             security_token_file = None if not token_auth else security_token_file
             user = None if token_auth else user
-            if not (fingerprint and tenancy and region and key_file and (user or security_token_file)):
-                st.error("All fields are required.", icon="🛑")
-                st.stop()
             patch_oci(auth_profile, fingerprint, tenancy, region, key_file, user, security_token_file)
             st.rerun()
 

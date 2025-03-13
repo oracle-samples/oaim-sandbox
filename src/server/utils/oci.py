@@ -81,19 +81,19 @@ def get_namespace(config: OracleCloudSettings = None) -> str:
     try:
         client = init_client(client_type, config)
         namespace = client.get_namespace().data
-        logger.info("Succeeded - Namespace = %s", namespace)
+        logger.info("OCI: Namespace = %s", namespace)
     except oci.exceptions.InvalidConfig as ex:
-        raise OciException("Invalid Config - Disabling OCI") from ex
+        raise OciException("OCI: Invalid Config") from ex
     except oci.exceptions.ServiceError as ex:
-        raise OciException("AuthN Error - Disabling OCI") from ex
+        raise OciException("OCI: AuthN Error") from ex
     except oci.exceptions.RequestException as ex:
-        raise OciException("No Network Access - Disabling OCI") from ex
+        raise OciException("OCI: No Network Access") from ex
     except FileNotFoundError as ex:
-        raise OciException("Invalid Key Path") from ex
+        raise OciException("OCI: Invalid Key Path") from ex
     except UnboundLocalError as ex:
-        raise OciException("No Configuration - Disabling OCI") from ex
+        raise OciException("OCI: No Configuration") from ex
     except Exception as ex:
-        raise OciException("Uncaught Exception - Disabling OCI") from ex
+        raise OciException(f"OCI: {ex}") from ex
 
     return namespace
 

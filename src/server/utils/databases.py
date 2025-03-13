@@ -27,16 +27,16 @@ def connect(config: Database) -> oracledb.Connection:
     db_config = config.model_dump(include=include_fields)
     # Check if connection settings are configured
     if any(not db_config[key] for key in ("user", "password", "dsn")):
-        raise DbException(status_code=400, detail="Not all connection details supplied.")
+        raise DbException(status_code=400, detail="missing connection details.")
 
     # Attempt to Connect
     try:
         conn = oracledb.connect(**db_config)
     except oracledb.DatabaseError as ex:
         if "ORA-01017" in str(ex):
-            raise DbException(status_code=401, detail="Invalid database credentials.") from ex
+            raise DbException(status_code=401, detail="invalid credentials.") from ex
         if "DPY-6005" in str(ex):
-            raise DbException(status_code=503, detail="Unable to connect to database.") from ex
+            raise DbException(status_code=503, detail="unable to connect.") from ex
         else:
             raise DbException(status_code=500, detail=str(ex)) from ex
     return conn

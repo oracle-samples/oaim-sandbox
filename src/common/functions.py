@@ -7,27 +7,12 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 from typing import Tuple
 import math
 import re
-from pathlib import Path
 
 import requests
 
 import common.logging_config as logging_config
-from common.schema import ClientIdType
 
 logger = logging_config.logging.getLogger("common.functions")
-
-
-#############################################################################
-# General
-#############################################################################
-def get_temp_directory(client: ClientIdType, function: str) -> Path:
-    """Return the path to store temporary files"""
-    if Path("/app/tmp").exists() and Path("/app/tmp").is_dir():
-        client_folder = Path("/app/tmp") / client / function
-    else:
-        client_folder = Path("/tmp") / client / function
-    client_folder.mkdir(parents=True, exist_ok=True)
-    return client_folder
 
 
 #############################################################################
