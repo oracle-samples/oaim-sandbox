@@ -1,12 +1,12 @@
-# Oracle AI Microservices Sandbox - Documentation
+# Oracle AI Explorer for Apps - Documentation
 
 ## Description
 
-This directory contains the documentation for the the [**Oracle AI Microservices Sandbox**](https://github.com/oracle-samples/oaim-sandbox).
+This directory contains the documentation for the the [**Oracle AI Explorer for Apps**](https://github.com/oracle-samples/oaim-sandbox).
 
 ## Getting Started - Documentation
 
-The **Oracle AI Microservices Sandbox** documentation is powered by [Hugo](https://gohugo.io/) using the [Relearn](https://github.com/McShelby/hugo-theme-relearn) theme.
+The **Oracle AI Explorer for Apps** documentation is powered by [Hugo](https://gohugo.io/) using the [Relearn](https://github.com/McShelby/hugo-theme-relearn) theme.
 
 To contribute to the documentation, install [Hugo](https://gohugo.io/installation/). Installation instructions vary per Operating System.
 
