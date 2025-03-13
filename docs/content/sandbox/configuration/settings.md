@@ -8,15 +8,15 @@ Copyright (c) 2024, 2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
 
-Once you are happy with the specific configuration of your {{ .Site.Params.ShortName | markdownify }}, the settings can be exported in **.json** format.  Those settings can then be loaded in later to return the {{ .Site.Params.ShortName | markdownify }} to your previous configuration.  The settings an also be imported into another instance of the {{ .Site.Params.ShortName | markdownify }}.
+Once you are happy with the specific configuration of your **{{< param "ShortName" >}}**, the settings can be exported in **.json** format.  Those settings can then be loaded in later to return the **{{< param "ShortName" >}}** to your previous configuration.  The settings an also be imported into another instance of the **{{< param "ShortName" >}}**.
 
 ## View and Download
 
-To view and download the {{ .Site.Params.ShortName | markdownify }} configuration, navigate to `Configuration -> Settings`:
+To view and download the **{{< param "ShortName" >}}** configuration, navigate to `Configuration -> Settings`:
 
 ![Download Settings](../images/settings_download.png)
 
-{{< icon "triangle-exclamation" >}} Settings contain sensitive information such as database passwords and API Keys.  By default, these settings will not be exported and will have to be re-entered after uploading the settings in a new instance of the {{ .Site.Params.ShortName | markdownify }}.  If have a secure way to store the settings and would would like to export the sensitive data, tick the "Include Sensitive Settings" box.
+{{< icon "triangle-exclamation" >}} Settings contain sensitive information such as database passwords and API Keys.  By default, these settings will not be exported and will have to be re-entered after uploading the settings in a new instance of the **{{< param "ShortName" >}}**.  If have a secure way to store the settings and would would like to export the sensitive data, tick the "Include Sensitive Settings" box.
 
 ## Upload
 
@@ -40,4 +40,4 @@ If your configuration has both OLLAMA or OpenAI as providers for chat and embedd
 Currently mixed configurations, like Ollama for embeddings and OpenAI for chat completion are not allowed.
 {{% /notice %}}
 
-For more information, about the {{ .Site.Params.ShortName | markdownify }} and **SpringAI**, please view the [Advanced - SpringAI](/oaim-sandbox/advanced/springai) documentation.
+For more information, about the **{{< param "ShortName" >}}** and **SpringAI**, please view the [Advanced - SpringAI](/oaim-sandbox/advanced/springai) documentation.

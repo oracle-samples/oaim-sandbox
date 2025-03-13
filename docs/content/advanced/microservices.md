@@ -10,11 +10,11 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 spell-checker: ignore opentofu ocid oraclecloud oaim  ollama crds ADBDB finalizers mxbai sandboxdb
 -->
 
-The {{ .Site.Params.LongName | markdownify }} (the {{ .Site.Params.ShortName | markdownify }}) was specifically designed to run on infrastructure supporting microservices architecture, including [Kubernetes](https://kubernetes.io/).
+The **{{< param "LongName" >}}** (the **{{< param "ShortName" >}}**) was specifically designed to run on infrastructure supporting microservices architecture, including [Kubernetes](https://kubernetes.io/).
 
 ## Oracle Kubernetes Engine
 
-The following example shows running the {{ .Site.Params.ShortName | markdownify }} in [Oracle Kubernetes Engine](https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengoverview.htm) (**OKE**).  The Infrastructure as Code (**IaC**) provided in the source [opentofu](https://github.com/oracle-samples/oaim-sandbox/tree/main/opentofu) directory was used to provision the infrastructure in Oracle Cloud Infrastructure (**OCI**).
+The following example shows running the **{{< param "ShortName" >}}** in [Oracle Kubernetes Engine](https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengoverview.htm) (**OKE**).  The Infrastructure as Code (**IaC**) provided in the source [opentofu](https://github.com/oracle-samples/oaim-sandbox/tree/main/opentofu) directory was used to provision the infrastructure in Oracle Cloud Infrastructure (**OCI**).
 
 ![OCI OKE](../images/infra_oci.png)
 
@@ -22,9 +22,9 @@ The command to connect to the **OKE** cluster will be output as part of the **Ia
 
 ### Ingress
 
-To access the {{ .Site.Params.ShortName | markdownify }} GUI and API Server, you can either use a port-forward or an Ingress service.  For demonstration purposes, the [Ingress-Nginx Controller](https://kubernetes.github.io/ingress-nginx/deploy/) will be used to create a [Flexible LoadBalancer](https://docs.oracle.com/en-us/iaas/Content/NetworkLoadBalancer/overview.htm) in **OCI**.
+To access the **{{< param "ShortName" >}}** GUI and API Server, you can either use a port-forward or an Ingress service.  For demonstration purposes, the [Ingress-Nginx Controller](https://kubernetes.github.io/ingress-nginx/deploy/) will be used to create a [Flexible LoadBalancer](https://docs.oracle.com/en-us/iaas/Content/NetworkLoadBalancer/overview.htm) in **OCI**.
 
-This example will create the loadbalancer exposing port 80 for the {{ .Site.Params.ShortName | markdownify }} GUI and port 8000 for the {{ .Site.Params.ShortName | markdownify }} API Server.  It is _HIGHLY_ recommended to protect these ports with [Network Security Groups](https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/networksecuritygroups.htm)(**NSG**).
+This example will create the loadbalancer exposing port 80 for the **{{< param "ShortName" >}}** GUI and port 8000 for the **{{< param "ShortName" >}}** API Server.  It is _HIGHLY_ recommended to protect these ports with [Network Security Groups](https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/networksecuritygroups.htm)(**NSG**).
 
 The service manifest has two values that should be supplied:
 
@@ -106,9 +106,9 @@ These will be output as part of the **IaC** but can be removed from the code if 
 
 ### Images
 
-You will need to build the {{ .Site.Params.ShortName | markdownify }} container images and stage them in a container registry, such as the [OCI Container Registry](https://docs.oracle.com/en-us/iaas/Content/Registry/Concepts/registryoverview.htm) (**OCIR**).
+You will need to build the **{{< param "ShortName" >}}** container images and stage them in a container registry, such as the [OCI Container Registry](https://docs.oracle.com/en-us/iaas/Content/Registry/Concepts/registryoverview.htm) (**OCIR**).
 
-1. Build the {{ .Site.Params.ShortName | markdownify }} images:
+1. Build the **{{< param "ShortName" >}}** images:
 
     From the code source `src/` directory:
     ```bash
@@ -132,7 +132,7 @@ You will need to build the {{ .Site.Params.ShortName | markdownify }} container 
 
     You will be prompted for a username and token password.
 
-1. Push the {{ .Site.Params.ShortName | markdownify }} images:
+1. Push the **{{< param "ShortName" >}}** images:
 
     More information on pushing images to **OCIR** can be found [here](https://docs.oracle.com/en-us/iaas/Content/Registry/Tasks/registrypushingimagesusingthedockercli.htm).
 
@@ -145,10 +145,10 @@ You will need to build the {{ .Site.Params.ShortName | markdownify }} container 
     podman push <server_repository>:latest
     ```
 
-### {{ .Site.Params.LongName | markdownify }}
+### **{{< param "LongName" >}}**
 
-The {{ .Site.Params.ShortName | markdownify }} can be deployed using the [Helm](https://helm.sh/) chart provided with the source:
-[{{ .Site.Params.ShortName | markdownify }} Helm Chart](https://github.com/oracle-samples/oaim-sandbox/tree/main/helm).  A list of all values can be found in [values_summary.md](https://github.com/oracle-samples/oaim-sandbox/tree/main/helm/values_summary.md).
+The **{{< param "ShortName" >}}** can be deployed using the [Helm](https://helm.sh/) chart provided with the source:
+[**{{< param "ShortName" >}}** Helm Chart](https://github.com/oracle-samples/oaim-sandbox/tree/main/helm).  A list of all values can be found in [values_summary.md](https://github.com/oracle-samples/oaim-sandbox/tree/main/helm/values_summary.md).
 
 If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama and enable a Large Language and Embedding Model out-of-the-box.
 
@@ -192,7 +192,7 @@ If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama an
 
     - `<lb_reserved_ip>` - A reserved IP address for the Loadbalancer
     - `<adb_ocid>` - Autonomous Database OCID
-    - `<sandbox_repository>` - Full path to the repository for the {{ .Site.Params.ShortName | markdownify }} Image 
+    - `<sandbox_repository>` - Full path to the repository for the **{{< param "ShortName" >}}** Image 
     - `<server_repository>` - Full path to the repository for the API Server Image
 
     These will be output as part of the **IaC**.
@@ -268,7 +268,7 @@ If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama an
 
 ### Cleanup
 
-To remove the {{ .Site.Params.ShortName | markdownify }} from the OKE Cluster:
+To remove the **{{< param "ShortName" >}}** from the OKE Cluster:
 
 1. Uninstall the Helm Chart:
 

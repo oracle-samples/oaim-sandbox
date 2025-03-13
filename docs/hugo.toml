@@ -28,8 +28,8 @@ enableRobotsTXT = true
   themeVariant = ['auto', 'sandbox-light', 'sandbox-dark']
   disableInlineCopyToClipBoard = true
   hideAuthorName = true
-  LongName = "**Oracle AI Explorer for Apps**"
-  ShortName = "**AI Explorer**"
+  LongName = "Oracle AI Explorer for Apps"
+  ShortName = "AI Explorer"
   
 [menu]
   [[menu.shortcuts]]

@@ -7,19 +7,19 @@ Copyright (c) 2024, 2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
 
-The {{ .Site.Params.LongName | markdownify }} (the {{ .Site.Params.ShortName | markdownify }}) is powered by an API Server to allow for any client to access its features.  The API Server can be run as part of the provided {{ .Site.Params.ShortName | markdownify }} GUI client or as a separate, independent process.  
+The **{{< param "LongName" >}}** (the **{{< param "ShortName" >}}**) is powered by an API Server to allow for any client to access its features.  The API Server can be run as part of the provided **{{< param "ShortName" >}}** GUI client or as a separate, independent process.  
 
-Each client connected to the API Server, including those from the {{ .Site.Params.ShortName | markdownify }} GUI client, share the same configuration but maintain their own settings.  Database, Model, OCI, and Prompt configurations are used across all clients; but which database, models, OCI profile, and prompts set are specific to each client.
+Each client connected to the API Server, including those from the **{{< param "ShortName" >}}** GUI client, share the same configuration but maintain their own settings.  Database, Model, OCI, and Prompt configurations are used across all clients; but which database, models, OCI profile, and prompts set are specific to each client.
 
-When started as part of the {{ .Site.Params.ShortName | markdownify }} client, you can change the Port it listens on and the API Server Key.  A restart is required for the changes to take effect.
+When started as part of the **{{< param "ShortName" >}}** client, you can change the Port it listens on and the API Server Key.  A restart is required for the changes to take effect.
 
 ![Server Configuration](images/api_server_config.png)
 
-If the API Server is started independently of the {{ .Site.Params.ShortName | markdownify }} client, the configuration is shown, but cannot be modified from the client.
+If the API Server is started independently of the **{{< param "ShortName" >}}** client, the configuration is shown, but cannot be modified from the client.
 
 ## Server Configuration
 
-During the startup of the API Server, a `server` client is created and populated with minimal settings.  The `server` client is the default when calling the API Server outside of the {{ .Site.Params.ShortName | markdownify }} GUI client.  To copy your {{ .Site.Params.ShortName | markdownify }} GUI client settings to the `server` client for use with external application clients, click the "Copy AI Explorer Settings".  
+During the startup of the API Server, a `server` client is created and populated with minimal settings.  The `server` client is the default when calling the API Server outside of the **{{< param "ShortName" >}}** GUI client.  To copy your **{{< param "ShortName" >}}** GUI client settings to the `server` client for use with external application clients, click the "Copy AI Explorer Settings".  
 
 ![Server Settings](images/api_server_settings.png)
 
@@ -27,6 +27,6 @@ You can review how the `server` client is configured by expanding the `{...}` br
 
 ## Server Activity
 
-All interactions with the API Server using the `server` client can be seen in the Server Activity.  Toggle the "Auto Refresh" or manually refresh the Activity to see interactions from outside the {{ .Site.Params.ShortName | markdownify }} GUI client.
+All interactions with the API Server using the `server` client can be seen in the Server Activity.  Toggle the "Auto Refresh" or manually refresh the Activity to see interactions from outside the **{{< param "ShortName" >}}** GUI client.
 
 ![Server Settings](images/api_server_activity.png)
