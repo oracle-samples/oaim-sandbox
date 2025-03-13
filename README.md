@@ -56,7 +56,7 @@ To run the application on bare-metal; download the [source](https://github.com/o
 1. Start Streamlit:
 
    ```bash
-   streamlit run oaim_sandbox.py --server.port 8501
+   streamlit run oai_client.py --server.port 8501
    ```
 
 1. Navigate to `http://localhost:8501`.
@@ -73,13 +73,13 @@ To run the application in a container; download the [source](https://github.com/
 
    ```bash
    cd src/
-   podman build -t oaim-sandbox .
+   podman build -t oai-client .
    ```
 
 1. Start the Container:
 
    ```bash
-   podman run -p 8501:8501 -it --rm oaim-sandbox
+   podman run -p 8501:8501 -it --rm oai-client
    ```
 
 1. Navigate to `http://localhost:8501`.
