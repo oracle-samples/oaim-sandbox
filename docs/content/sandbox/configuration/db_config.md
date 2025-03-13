@@ -10,15 +10,15 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 spell-checker: ignore tablespace mycomplexsecret mycomplexwalletsecret sandboxdb oaim
 -->
 
-To use the Retrieval-Augmented Generation (RAG) functionality of the **Sandbox**, you will need to setup/enable an [embedding model](../model_config) and have access to an **Oracle Database 23ai**. Both the [Always Free Oracle Autonomous Database Serverless (ADB-S)](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/autonomous-always-free.html) and the [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) are supported. They are a great, no-cost, way to get up and running quickly.
+To use the Retrieval-Augmented Generation (RAG) functionality of the {{ .Site.Params.ShortName | markdownify }}, you will need to setup/enable an [embedding model](../model_config) and have access to an **Oracle Database 23ai**. Both the [Always Free Oracle Autonomous Database Serverless (ADB-S)](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/autonomous-always-free.html) and the [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) are supported. They are a great, no-cost, way to get up and running quickly.
 
 ## Configuration
 
-The database can either be configured through the [**Sandbox** interface](#sandbox-interface) or by using [environment variables](#environment-variables).
+The database can either be configured through the [{{ .Site.Params.ShortName | markdownify }} interface](#sandbox-interface) or by using [environment variables](#environment-variables).
 
-### Sandbox Interface
+### {{ .Site.Params.ShortName | markdownify }} Interface
 
-To configure the Database from the Sandbox, navigate to `Configuration -> Database`:
+To configure the Database from the {{ .Site.Params.ShortName | markdownify }}, navigate to `Configuration -> Database`:
 
 ![Database Config](../images/database_config.png)
 
@@ -41,7 +41,7 @@ Once all fields are set, click the `Save` button.
 
 ### Environment Variables
 
-The following environment variables can be set, prior to starting the Sandbox, to automatically configure the database:
+The following environment variables can be set, prior to starting the {{ .Site.Params.ShortName | markdownify }}, to automatically configure the database:
 
 - **DB_USERNAME**: The pre-created [database username](#database-user) where the embeddings will be stored
 - **DB_PASSWORD**: The password for the `DB Username`
@@ -68,7 +68,7 @@ If using and ADB-S wallet, unzip the contents into the `TNS_ADMIN` directory. Th
 
 ### Bare-Metal Installation
 
-For bare-metal installations, set the `TNS_ADMIN` environment variable, or copy the contents of your current TNS_ADMIN to `src/tns_admin` before starting the **Sandbox**.
+For bare-metal installations, set the `TNS_ADMIN` environment variable, or copy the contents of your current TNS_ADMIN to `src/tns_admin` before starting the {{ .Site.Params.ShortName | markdownify }}.
 
 ### Container Installation
 

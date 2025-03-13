@@ -9,13 +9,13 @@ Copyright (c) 2024, 2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 -->
 
-The **Oracle AI Microservices Sandbox** is not configured out-of-the-box. To enable functionality, an embedding model, language model, database, and optionally, Oracle Cloud Infrastructure (OCI) will need to be configured.
+The {{ .Site.Params.LongName | markdownify }} is not configured out-of-the-box. To enable functionality, an embedding model, language model, database, and optionally, Oracle Cloud Infrastructure (OCI) will need to be configured.
 
-Once you have configured the Sandbox, the settings can be exported to be imported into another deployment or after a restart.
+Once you have configured the {{ .Site.Params.ShortName | markdownify }}, the settings can be exported to be imported into another deployment or after a restart.
 
 ## 🤖 Model Configuration
 
-At a minimum, a large language model (LLM) will need to be configured to experiment with the **Oracle AI Microservices Sandbox**. The LLM can be a third-party LLM, such as ChatGPT or Perplexity, or an on-premises LLM.
+At a minimum, a large language model (LLM) will need to be configured to experiment with the {{ .Site.Params.LongName | markdownify }}. The LLM can be a third-party LLM, such as ChatGPT or Perplexity, or an on-premises LLM.
 
 Additionally, to enable Retrieval-Augmented Generation (RAG) capabilities, an embedding model will need to be configured and enabled.
 
@@ -39,6 +39,6 @@ For more information on configuring OCI, please read about [OCI Configuration](o
 
 ## 💾 Settings
 
-Once you have configured the **Oracle AI Microservices Sandbox**, you can export the settings and import them after a restart or new deployment.
+Once you have configured the {{ .Site.Params.LongName | markdownify }}, you can export the settings and import them after a restart or new deployment.
 
 For more information on importing (and exporting) settings, please read about [Settings](settings/).

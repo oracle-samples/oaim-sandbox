@@ -10,19 +10,19 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 spell-checker: ignore genai ocid
 -->
 
-Oracle Cloud Infrastructure (OCI) can _optionally_ be configured to enable additional **Sandbox** functionality including:
+Oracle Cloud Infrastructure (OCI) can _optionally_ be configured to enable additional {{ .Site.Params.ShortName | markdownify }} functionality including:
 
 - Document Source for Splitting and Embedding from [Object Storage](https://docs.oracle.com/en-us/iaas/Content/Object/Concepts/objectstorageoverview.htm)
 - Private Cloud Large Language and Embedding models from [OCI Generative AI service](https://docs.oracle.com/en-us/iaas/Content/generative-ai/home.htm)
 
 ## Configuration
 
-OCI can either be configured through the [**Sandbox** interface](#sandbox-interface), a [CLI Configuration File](#config-file), or by using [environment variables](#environment-variables).  
+OCI can either be configured through the [{{ .Site.Params.ShortName | markdownify }} interface](#{{ .Site.Params.ShortName | markdownify }}-interface), a [CLI Configuration File](#config-file), or by using [environment variables](#environment-variables).  
 You will need to [generate an API Key](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm#two) to obtain the required configuration values.
 
-### Sandbox Interface
+### {{ .Site.Params.ShortName | markdownify }} Interface
 
-To configure the Database from the Sandbox, navigate to `Configuration -> OCI`:
+To configure the Database from the {{ .Site.Params.ShortName | markdownify }}, navigate to `Configuration -> OCI`:
 
 ![OCI Config](../images/oci_config.png)
 
@@ -34,7 +34,7 @@ Provide the values obtained by [generating an API Key](https://docs.oracle.com/e
 
 ### Config File
 
-During startup, the **Sandbox** will look for and consume a [CLI Configuration File](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdkconfig.htm) for configuring OCI access.
+During startup, the {{ .Site.Params.ShortName | markdownify }} will look for and consume a [CLI Configuration File](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/sdkconfig.htm) for configuring OCI access.
 
 In addition to the standard entries, two additional entries are required to enable OCI GenAI Services:
 
@@ -44,7 +44,7 @@ In addition to the standard entries, two additional entries are required to enab
 
 ### Environment Variables
 
-During start, the **Sandbox** will use environment variables to configure OCI.  Environment variables will take precedence over the CLI Configuration file.
+During start, the {{ .Site.Params.ShortName | markdownify }} will use environment variables to configure OCI.  Environment variables will take precedence over the CLI Configuration file.
 
 In addition to the [standard environment variables](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/clienvironmentvariables.htm#CLI_Environment_Variables), the following variables can be set to enable OCI GenAI Services:
 
