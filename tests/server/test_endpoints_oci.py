@@ -25,6 +25,13 @@ def _mock_init_client():
         yield mock_client  # Yield the mocked client itself
 
 
+@pytest.fixture(name="mock_get_namespace")
+def _mock_get_namespace():
+    """Mock server_oci.get_namespace"""
+    with patch("server.utils.oci.get_namespace", return_value="test_namespace") as mock:
+        yield mock
+
+
 @pytest.fixture(name="mock_get_compartments")
 def _mock_get_compartments():
     """Mock server_oci.get_compartments"""

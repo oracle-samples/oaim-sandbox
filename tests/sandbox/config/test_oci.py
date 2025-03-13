@@ -6,9 +6,14 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # pylint: disable=unused-argument
 
 import pytest
-# from conftest import TEST_CONFIG
 
+#####################################################
+# Mocks
+#####################################################
 
+#####################################################
+# Tests
+#####################################################
 class TestOCI:
     """Test OCI"""
 

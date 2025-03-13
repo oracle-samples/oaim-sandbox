@@ -91,15 +91,6 @@ def _mock_get_temp_directory():
     with patch("server.endpoints.get_temp_directory", return_value=fake_path) as mock:
         yield mock
 
-@pytest.fixture(name="mock_get_namespace")
-def _mock_get_namespace():
-    """Mock server_oci.get_namespace"""
-    with patch(
-        "server.utils.oci.get_namespace",
-        return_value="test_namespace",
-    ) as mock:
-        yield mock
-
 #####################################################
 # Fixtures
 #####################################################

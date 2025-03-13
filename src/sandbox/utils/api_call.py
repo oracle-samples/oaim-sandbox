@@ -26,6 +26,7 @@ class ApiError(Exception):
     def __str__(self):
         return self.message
 
+
 def sanitize_sensitive_data(data):
     """Use to sanitize sensitive data for logging"""
     if isinstance(data, dict):
@@ -33,6 +34,7 @@ def sanitize_sensitive_data(data):
     elif isinstance(data, list):
         return [sanitize_sensitive_data(i) for i in data]
     return data
+
 
 def send_request(
     method: str,
@@ -77,7 +79,9 @@ def send_request(
     for attempt in range(retries + 1):
         try:
             response = method_map[method](**args)
+            data = response.json()
             logger.info("%s Response: %s", method, response)
+            logger.debug("%s Data: %s", method, data)
             response.raise_for_status()
             return response
 
