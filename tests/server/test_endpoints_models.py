@@ -14,8 +14,8 @@ from conftest import TEST_HEADERS, TEST_BAD_HEADERS
 #############################################################################
 # Test AuthN required and Valid
 #############################################################################
-class TestModelsNoAuthEndpoints:
-    """Test endpoints without Auth"""
+class TestNoAuthEndpoints:
+    """Test endpoints without AuthN"""
 
     test_cases = [
         pytest.param(
@@ -52,8 +52,8 @@ class TestModelsNoAuthEndpoints:
 #############################################################################
 # Test AuthN
 #############################################################################
-class TestModelsAuthEndpoints:
-    """Test Models endpoints with Auth"""
+class TestEndpoints:
+    """Test endpoints with AuthN"""
 
     def models_list(self, client: TestClient):
         """Get a list of bootstrapped models to use with tests"""

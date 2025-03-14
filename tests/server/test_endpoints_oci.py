@@ -15,23 +15,6 @@ from conftest import TEST_HEADERS, TEST_BAD_HEADERS
 #####################################################
 # Mocks
 #####################################################
-@pytest.fixture(name="mock_init_client")
-def _mock_init_client():
-    """Mock init_client to return a fake OCI client"""
-    mock_client = MagicMock()
-    mock_client.get_object.return_value.data.raw.stream.return_value = [b"fake-data"]  # Fake response stream
-
-    with patch("server.utils.oci.init_client", return_value=mock_client):
-        yield mock_client  # Yield the mocked client itself
-
-
-@pytest.fixture(name="mock_get_namespace")
-def _mock_get_namespace():
-    """Mock server_oci.get_namespace"""
-    with patch("server.utils.oci.get_namespace", return_value="test_namespace") as mock:
-        yield mock
-
-
 @pytest.fixture(name="mock_get_compartments")
 def _mock_get_compartments():
     """Mock server_oci.get_compartments"""
@@ -84,8 +67,8 @@ def _mock_get_object(mock_init_client):
 #####################################################
 # Test AuthN required and Valid
 #####################################################
-class TestOCINoAuthEndpoints:
-    """Test endpoints without Auth"""
+class TestNoAuthEndpoints:
+    """Test endpoints without AuthN"""
 
     test_cases = [
         pytest.param(
@@ -130,8 +113,8 @@ class TestOCINoAuthEndpoints:
 #############################################################################
 # Test AuthN - No OS Env
 #############################################################################
-class TestOCIAuthEndpoints:
-    """Test Prompt endpoints without Auth"""
+class TestEndpoints:
+    """Test endpoints with AuthN"""
 
     DEFAULT_CONFIG = {
         "auth_profile": "DEFAULT",

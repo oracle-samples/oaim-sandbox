@@ -14,8 +14,8 @@ from conftest import TEST_CONFIG, TEST_HEADERS, TEST_BAD_HEADERS
 #############################################################################
 # Test AuthN required and Valid
 #############################################################################
-class TestChatNoAuthEndpoints:
-    """Test endpoints without Auth"""
+class TestNoAuthEndpoints:
+    """Test endpoints without AuthN"""
 
     test_cases = [
         pytest.param(
@@ -39,3 +39,10 @@ class TestChatNoAuthEndpoints:
         assert response.status_code == 403
         response = getattr(client, test_case["method"])(test_case["endpoint"], headers=TEST_BAD_HEADERS)
         assert response.status_code == 401
+
+
+#############################################################################
+# Test AuthN required and Valid
+#############################################################################
+class TestAuthEndpoints:
+    """Test endpoints with AuthN"""

@@ -14,8 +14,8 @@ from conftest import TEST_CONFIG, TEST_HEADERS, TEST_BAD_HEADERS
 #############################################################################
 # Test AuthN required and Valid
 #############################################################################
-class TestTestbedNoAuthEndpoints:
-    """Test endpoints without Auth"""
+class TestNoAuthEndpoints:
+    """Test endpoints without AuthN"""
 
     test_cases = [
         pytest.param(
@@ -64,8 +64,8 @@ class TestTestbedNoAuthEndpoints:
 #############################################################################
 # Test AuthN
 #############################################################################
-class TestTestbedAuthEndpoints:
-    """Test endpoints with Auth"""
+class TestEndpoints:
+    """Test endpoints with AuthN"""
 
     def test_testbed_delete_testset(self, client: TestClient, db_container):
         """Delete Testset"""

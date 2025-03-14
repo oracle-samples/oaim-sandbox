@@ -8,8 +8,8 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 from fastapi.testclient import TestClient
 
 
-class TestKubernetesEndpoints:
-    """Test Kubernetes endpoints"""
+class TestNoAuthEndpoints:
+    """Test endpoints without AuthN"""
 
     def test_liveness(self, client: TestClient) -> None:
         """Test liveness endpoint"""

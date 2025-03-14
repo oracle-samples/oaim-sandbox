@@ -15,8 +15,8 @@ from conftest import TEST_CONFIG, TEST_HEADERS, TEST_BAD_HEADERS
 #############################################################################
 # Test AuthN required and Valid
 #############################################################################
-class TestDatabaseNoAuthEndpoints:
-    """Test endpoints without Auth"""
+class TestNoAuthEndpoints:
+    """Test endpoints without AuthN"""
 
     test_cases = [
         pytest.param(
@@ -45,8 +45,8 @@ class TestDatabaseNoAuthEndpoints:
 #############################################################################
 # Test AuthN without an Accessible Database
 #############################################################################
-class TestDatabaseAuthEndpointsNoDB:
-    """Test Database endpoints with Auth and non-accessible DB"""
+class TestEndpointsNoDB:
+    """Test endpoints with AuthN and No Database"""
 
     def test_databases_list_initial(self, client: TestClient) -> None:
         """Test initial database listing before any updates"""
@@ -100,8 +100,8 @@ class TestDatabaseAuthEndpointsNoDB:
 #############################################################################
 # Test AuthN with an Accessible Database - No OS Env
 #############################################################################
-class TestDatabaseAuthEndpointsContainerDB:
-    """Test Database endpoints with Auth and Container SIDB"""
+class TestEndpoints:
+    """Test endpoints with AuthN and Database"""
 
     @pytest.mark.parametrize(
         "test_case",

@@ -91,6 +91,25 @@ def _mock_get_temp_directory():
     with patch("server.endpoints.get_temp_directory", return_value=fake_path) as mock:
         yield mock
 
+
+@pytest.fixture(name="mock_get_namespace")
+def _mock_get_namespace():
+    """Mock server_oci.get_namespace"""
+    with patch("server.utils.oci.get_namespace", return_value="test_namespace") as mock:
+        yield mock
+
+
+@pytest.fixture(name="mock_init_client")
+def _mock_init_client():
+    """Mock init_client to return a fake OCI client"""
+    mock_client = MagicMock()
+    mock_client.get_namespace.return_value.data = "test_namespace"
+    mock_client.get_object.return_value.data.raw.stream.return_value = [b"fake-data"]
+
+    with patch("server.utils.oci.init_client", return_value=mock_client):
+        yield mock_client
+
+
 #####################################################
 # Fixtures
 #####################################################

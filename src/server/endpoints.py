@@ -64,7 +64,7 @@ def get_client_settings(client: schema.ClientIdType) -> schema.Settings:
     """Return schema.Settings Object based on client ID"""
     client_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == client), None)
     if not client_settings:
-        raise HTTPException(status_code=404, detail=f"Client {client}: not found.")
+        raise HTTPException(status_code=404, detail=f"Client: {client} not found.")
     return client_settings
 
 
@@ -538,12 +538,12 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     # settings Endpoints
     #################################################
     @auth.get("/v1/settings", description="Get client settings", response_model=schema.Settings)
-    async def settings_get(client: schema.ClientIdType) -> schema.Settings:
+    async def settings_get(client: schema.ClientIdType = Header(...)) -> schema.Settings:
         """Get settings for a specific client by name"""
         return get_client_settings(client)
 
     @auth.patch("/v1/settings", description="Update client settings")
-    async def settings_update(client: schema.ClientIdType, payload: schema.Settings) -> Response:
+    async def settings_update(payload: schema.Settings, client: schema.ClientIdType = Header(...)) -> schema.Settings:
         """Update a single client settings"""
         logger.debug("Received %s Client Payload: %s", client, payload)
         client_settings = get_client_settings(client)
@@ -552,13 +552,13 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         payload.client = client
         SETTINGS_OBJECTS.append(payload)
 
-        return Response(status_code=204)
+        return get_client_settings(client)
 
     @auth.post("/v1/settings", description="Create new client settings", response_model=schema.Settings)
     async def settings_create(client: schema.ClientIdType) -> schema.Settings:
         """Create a new client, initialise client settings"""
         if any(settings.client == client for settings in SETTINGS_OBJECTS):
-            raise HTTPException(status_code=409, detail=f"Client {client}: already exists")
+            raise HTTPException(status_code=409, detail=f"Client: {client} already exists.")
         default_settings = next((settings for settings in SETTINGS_OBJECTS if settings.client == "default"), None)
 
         # Copy the default settings
