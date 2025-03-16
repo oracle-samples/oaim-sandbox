@@ -8,7 +8,7 @@ run as part of opening a new Pull Requests.  All tests must pass to enable mergi
 All tests can be run by using the following command from the project root:
 
 ```bash
-pytest tests -v
+pytest tests -v [--log-cli-level=DEBUG]
 ```
 
 ### Server Endpoint Tests
@@ -16,7 +16,7 @@ pytest tests -v
 To run the server endpoint tests, use the following command from the project root:
 
 ```bash
-pytest tests/server -v
+pytest tests/server -v [--log-cli-level=DEBUG]
 ```
 
 These tests verify the functionality of the endpoints by establishing:
@@ -29,7 +29,7 @@ These tests verify the functionality of the endpoints by establishing:
 To run the Streamlit page tests, use the following command from the project root:
 
 ```bash
-pytest tests/sandbox -v
+pytest tests/sandbox -v [--log-cli-level=DEBUG]
 ```
 
 These tests verify the functionality of the Streamlit app by establishing:

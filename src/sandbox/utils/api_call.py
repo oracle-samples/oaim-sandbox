@@ -64,7 +64,7 @@ def send_request(
         "timeout": timeout,
         "params": params,
         "files": payload.get("files") if method == "POST" else None,
-        "json": payload.get("json") if method in ["POST", "PATCH", "DELETE"] else None,
+        "json": payload.get("json") if method in ["POST", "PATCH"] else None,
     }
     args = {k: v for k, v in args.items() if v is not None}
     # Avoid logging out binary data in files
@@ -139,14 +139,13 @@ def patch(
 
 def delete(
     url: str,
-    payload: Optional[dict] = None,
     timeout: int = 60,
     retries: int = 5,
     backoff_factor: float = 1.5,
 ) -> None:
     """DELETE Requests"""
     response = send_request(
-        "DELETE", url, payload=payload, timeout=timeout, retries=retries, backoff_factor=backoff_factor
+        "DELETE", url, timeout=timeout, retries=retries, backoff_factor=backoff_factor
     )
     success = response.json()["message"]
     st.toast(success, icon="✅")

@@ -109,7 +109,7 @@ class TestEndpoints:
         # First get the current settings
         response = client.get("/v1/settings", headers=TEST_HEADERS)
         assert response.status_code == 200
-        current_settings = response.json()
+        _ = response.json()
 
         # Modify some settings
         updated_settings = Settings(

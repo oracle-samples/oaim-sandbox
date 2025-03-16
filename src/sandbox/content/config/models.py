@@ -90,10 +90,7 @@ def patch_model(model: Model) -> None:
 
 def delete_model(model: Model) -> None:
     """Update Model Configuration for either Language Models or Embed Models"""
-    api_url = f"{state.server['url']}:{state.server['port']}/v1/models/{model.name}"
-    api_call.delete(
-        url=api_url,
-    )
+    api_call.delete(url=f"{state.server['url']}:{state.server['port']}/v1/models/{model.name}")
     st.success(f"Model deleted: {model.name}")
     sleep(1)
     logger.info("Model deleted: %s", model.name)
@@ -106,10 +103,7 @@ def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_
     # Initialize our model request
     if action == "edit":
         name = urllib.parse.quote(model_name, safe="")
-        api_url = f"{state.server['url']}:{state.server['port']}/v1/models/{name}"
-        request = api_call.get(
-            url=api_url,
-        )
+        request = api_call.get(url=f"{state.server['url']}:{state.server['port']}/v1/models/{name}")
         model = Model.model_validate(request)
     else:
         model = Model(name="unset", type=model_type, api="unset", status="CUSTOM")

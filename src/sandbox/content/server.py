@@ -36,11 +36,9 @@ except ImportError:
 def copy_user_settings(new_client: ClientIdType) -> None:
     """Copy User Setting to a new client (e.g. the Server)"""
     logger.info("Copying user settings to: %s", new_client)
-    api_url = f"{state.server['url']}:{state.server['port']}/v1/settings"
     try:
         api_call.patch(
-            url=api_url,
-            params={"client": new_client},
+            url=f"{state.server['url']}:{state.server['port']}/v1/settings",
             payload={"json": state.user_settings},
         )
         st.success(f"Settings for {new_client} - Updated", icon="✅")

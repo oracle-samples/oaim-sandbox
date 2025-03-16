@@ -10,9 +10,11 @@ import pytest
 
 from conftest import TEST_CONFIG
 
-
+#############################################################################
+# Test Streamlit UI
+#############################################################################
 class TestDatabase:
-    """Test Database"""
+    """Test the Streamlit UI for OCI"""
 
     # Streamlit File
     ST_FILE = "../src/sandbox/content/config/databases.py"

@@ -31,8 +31,12 @@ class SandboxClient:
         self.agent = agent
 
         self.request_defaults = {
+            "headers": {
+                "Authorization": f"Bearer {server['key']}",
+                "Client": self.settings["client"],
+                "Content-Type": "application/json",
+            },
             "params": {"client": self.settings["client"]},
-            "headers": {"Authorization": f"Bearer {server['key']}", "Content-Type": "application/json"},
             "timeout": timeout,
         }
 
@@ -47,7 +51,7 @@ class SandboxClient:
                 )
 
         response = settings_request("PATCH")
-        if response.status_code != 204:
+        if response.status_code != 200:
             logger.error("Error updating settings with PATCH: %i - %s", response.status_code, response.text)
             # Retry with POST if PATCH fails
             response = settings_request("POST")

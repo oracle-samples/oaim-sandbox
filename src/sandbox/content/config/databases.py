@@ -75,8 +75,7 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
 
 def drop_vs(vs: dict):
     """Drop a Vector Storage Table"""
-    api_url = f"{state.server['url']}:{state.server['port']}/v1/embed/vs"
-    api_call.delete(url=api_url, payload={"json": vs})
+    api_call.delete(url=f"{state.server['url']}:{state.server['port']}/v1/embed/{vs['vector_store']}")
     get_databases(force=True)
 
 

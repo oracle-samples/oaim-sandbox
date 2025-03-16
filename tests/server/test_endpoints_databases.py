@@ -70,14 +70,14 @@ class TestEndpointsNoDB:
         """Test getting non-existent database"""
         response = client.get("/v1/databases/NONEXISTENT", headers=TEST_HEADERS)
         assert response.status_code == 404
-        assert "Database: NONEXISTENT not found" in response.json()["detail"]
+        assert response.json() == {"detail": "Database: NONEXISTENT not found."}
 
     def test_databases_update_nonexistent(self, client: TestClient) -> None:
         """Test updating non-existent database"""
         payload = {"user": "test_user", "password": "test_pass", "dsn": "test_dsn", "wallet_password": "test_wallet"}
         response = client.patch("/v1/databases/NONEXISTENT", headers=TEST_HEADERS, json=payload)
         assert response.status_code == 404
-        assert "Database: NONEXISTENT not found" in response.json()["detail"]
+        assert response.json() == {"detail": "Database: NONEXISTENT not found."}
 
     def test_databases_get_before_update(self, client: TestClient) -> None:
         """Test getting DEFAULT database before update"""
@@ -88,7 +88,7 @@ class TestEndpointsNoDB:
     def test_databases_update_db_down(self, client: TestClient) -> None:
         """Test updating the DB when it is down"""
         payload = {
-            "user": TEST_CONFIG["db_name"],
+            "user": TEST_CONFIG["db_username"],
             "password": TEST_CONFIG["db_password"],
             "dsn": "//localhost:1521/DOWNDB_TP",
         }

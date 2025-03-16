@@ -23,13 +23,6 @@ import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("sandbox.content.testbed")
 
-# Set endpoint if server has been established
-API_ENDPOINT = None
-EMBED_API_ENDPOINT = None
-if "server" in state:
-    API_ENDPOINT = f"{state.server['url']}:{state.server['port']}/v1/testbed"
-    EMBED_API_ENDPOINT = f"{state.server['url']}:{state.server['port']}/v1/embed"
-
 
 #####################################################
 # Functions
@@ -84,8 +77,8 @@ def evaluation_report(eid=None, report=None) -> None:
 
     # Get the Report
     if eid:
-        api_url = f"{API_ENDPOINT}/evaluation"
-        api_params = {"client": state.user_settings["client"], "eid": eid}
+        api_url = f"{state.server['url']}:{state.server['port']}/v1/testbed/evaluation"
+        api_params = {"eid": eid}
         report = api_call.get(url=api_url, params=api_params)
 
     # Settings
@@ -139,14 +132,13 @@ def evaluation_report(eid=None, report=None) -> None:
 @st.cache_data
 def get_testbed_db_testsets() -> dict:
     """Get Database TestSets; this is cached"""
-    api_params = {"client": state["user_settings"]["client"]}
-    return api_call.get(url=f"{API_ENDPOINT}/testsets", params=api_params)
+    return api_call.get(url=f"{state.server['url']}:{state.server['port']}/v1/testbed/testsets")
 
 
 def qa_delete() -> None:
     """Delete QA from Database"""
     tid = state.testbed["testset_id"]
-    api_call.delete(url=f"{API_ENDPOINT}/testset_delete/{tid}")
+    api_call.delete(url=f"{state.server['url']}:{state.server['port']}/v1/testbed/testset_delete/{tid}")
     st.success(f"Test Set and Evaluations Deleted: {state.testbed['testset_name']}")
     reset_testset(True)
 
@@ -154,9 +146,8 @@ def qa_delete() -> None:
 def qa_update_db() -> None:
     """Update QA in Database"""
     update_record(0)  # Ensure any changes made to current record are recorded
-    api_url = f"{API_ENDPOINT}/testset_load"
+    api_url = f"{state.server['url']}:{state.server['port']}/v1/testbed/testset_load"
     api_params = {
-        "client": state.user_settings["client"],
         "name": state.selected_new_testset_name,
         "tid": state.testbed["testset_id"],
     }
@@ -295,7 +286,6 @@ def main():
     button_load_disabled = True
     button_text, api_url, testset_source = None, None, None
     # Initialise the API Parameters (Increase Timeout)
-    client_api_params = {"client": state.user_settings["client"]}
     if not state.selected_generate_test:
         st.subheader("Run Existing Q&A Test Set", divider="red")
         button_text = "Load Q&A"
@@ -310,7 +300,7 @@ def main():
         )
         if testset_source == "Local":
             # Upload a TestSet from client host
-            api_url = f"{API_ENDPOINT}/testset_load"
+            api_url = f"{state.server['url']}:{state.server['port']}/v1/testbed/testset_load"
             test_upload_file = st.file_uploader(
                 "Select a local, existing Q&A Test Set",
                 key=f"selected_uploader_{state.testbed['uploader_key']}",
@@ -320,7 +310,7 @@ def main():
             button_load_disabled = len(test_upload_file) == 0
         else:
             # Select existing TestSet from Database
-            api_url = f"{API_ENDPOINT}/testset_qa"
+            api_url = f"{state.server['url']}:{state.server['port']}/v1/testbed/testset_qa"
             testset_list = [f"{item['name']} -- Created: {item['created']}" for item in state.testbed_db_testsets]
             db_testset = st.selectbox(
                 "Test Set:", options=testset_list, key="selected_db_testset", on_change=reset_testset
@@ -331,7 +321,7 @@ def main():
     if state.selected_generate_test:
         st.subheader("Generate new Q&A Test Set", divider="red")
         button_text = "Generate Q&A"
-        api_url = f"{API_ENDPOINT}/testset_generate"
+        api_url = f"{state.server['url']}:{state.server['port']}/v1/testbed/testset_generate"
         test_upload_file = st.file_uploader(
             (
                 "Select a local PDF file to build a temporary Knowledge Base. "
@@ -387,7 +377,6 @@ def main():
             st.info("Processing Q&A... please be patient.", icon="⚠️")
         if testset_source != "Database":
             api_params["name"] = (state.testbed["testset_name"],)
-            api_params.update(client_api_params)
             files = st_common.local_file_payload(state[f"selected_uploader_{state.testbed['uploader_key']}"])
             api_payload = {"files": files}
             try:
@@ -418,7 +407,6 @@ def main():
                 None,
             )
             api_params = {"tid": state.testbed["testset_id"]}
-            api_params.update(client_api_params)
             # Retrieve TestSet Data
             response = api_call.get(url=api_url, params=api_params)
         try:
@@ -474,8 +462,7 @@ def main():
         if "testbed_evaluations" not in state and "testset_id" in state.testbed and state.testbed["testset_id"]:
             # Retrieve Evaluations
             api_params = {"tid": state.testbed["testset_id"]}
-            api_params.update(client_api_params)
-            api_url = f"{API_ENDPOINT}/evaluations"
+            api_url = f"{state.server['url']}:{state.server['port']}/v1/testbed/evaluations"
             state.testbed_evaluations = api_call.get(url=api_url, params=api_params)
         if state.testbed_evaluations:
             st.subheader(f"Previous Evaluations for {state.selected_new_testset_name}", divider="red")
@@ -526,9 +513,8 @@ def main():
             with placeholder:
                 st.warning("Starting Q&A evaluation... please be patient.", icon="⚠️")
             st_common.patch_settings()
-            api_url = f"{API_ENDPOINT}/evaluate"
+            api_url = f"{state.server['url']}:{state.server['port']}/v1/testbed/evaluate"
             api_params = {"tid": state.testbed["testset_id"], "judge": state.selected_evaluate_judge}
-            api_params.update(client_api_params)
             evaluate = api_call.post(url=api_url, params=api_params, timeout=1200)
             st.success("Evaluation Complete!", icon="✅")
             placeholder.empty()

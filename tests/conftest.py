@@ -11,7 +11,7 @@ import subprocess
 import socket
 from typing import Generator
 from unittest.mock import patch, MagicMock
-from pathlib import Path
+import shutil
 from streamlit.testing.v1 import AppTest
 import docker
 from docker.errors import DockerException
@@ -19,6 +19,7 @@ from docker.models.containers import Container
 import requests
 import pytest
 from fastapi.testclient import TestClient
+from pathlib import Path
 
 
 # This contains all the environment variables we consume on startup (add as required)
@@ -64,8 +65,8 @@ os.environ["API_SERVER_PORT"] = "8012"
 # Test constants
 TEST_CONFIG = {
     # Database configuration
-    "db_username": "PDBADMIN",
-    "db_password": "Welcome12345#",
+    "db_username": "PYTEST",
+    "db_password": "OrA_41_3xPl0d3r",
     "db_name": "FREEPDB1",
     "db_port": "1525",
     "db_dsn": "//localhost:1525/FREEPDB1",
@@ -81,15 +82,55 @@ CHECK_DELAY = 10  # 10 seconds between checks
 
 
 #####################################################
+# Helpers
+#####################################################
+def wait_for_container_ready(container, ready_output, since=None):
+    """Helper function to wait for container to be ready"""
+    start_time = time.time()
+    while time.time() - start_time < TIMEOUT:
+        try:
+            # Get logs, optionally only those since a specific timestamp
+            logs = container.logs(tail=100, since=since).decode("utf-8")
+            if ready_output in logs:
+                return
+        except DockerException as e:
+            container.remove(force=True)
+            raise DockerException(f"Failed to get container logs: {str(e)}") from e
+        time.sleep(CHECK_DELAY)
+
+    if container:
+        container.remove(force=True)
+    raise TimeoutError(f"Container did not become ready within {TIMEOUT} seconds")
+
+
+#####################################################
 # Mocks
 #####################################################
-@pytest.fixture(name="mock_get_temp_directory")
-def _mock_get_temp_directory():
-    """Mock get_temp_directory to return a fake path"""
-    fake_path = Path("/mock/tmp/client/function")
+@pytest.fixture(name="mock_get_temp_directory", scope="session")
+def _mock_get_temp_directory(tmp_path_factory):
+    """Mock get_temp_directory to return a writable temporary path for each client/function combination.
 
-    with patch("server.endpoints.get_temp_directory", return_value=fake_path) as mock:
+    This fixture maintains the same directories across different tests within a session,
+    allowing tests to build upon each other's file operations. Directories are cleaned up
+    after the entire test session is complete.
+    """
+    temp_dirs = {}
+
+    def _get_temp_directory(client, function):
+        """Mock implementation that creates unique directories for each client/function pair"""
+        key = f"{client}_{function}"
+        if key not in temp_dirs:
+            temp_dirs[key] = tmp_path_factory.mktemp(key)
+        temp_dirs[key].mkdir(parents=True, exist_ok=True)
+        return temp_dirs[key]
+
+    with patch("server.endpoints.get_temp_directory", side_effect=_get_temp_directory) as mock:
         yield mock
+
+    # Clean up all temporary directories after the test session
+    for temp_dir in temp_dirs.values():
+        if temp_dir.exists():
+            shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 @pytest.fixture(name="mock_get_namespace")
@@ -137,9 +178,34 @@ def db_container() -> Generator[Container, None, None]:
     """
     db_client = docker.from_env()
     container = None
+    temp_dir = Path("tests/db_startup_temp")
 
     try:
-        # Start the container
+        # Create a temporary directory for our generated SQL files
+        temp_dir.mkdir(exist_ok=True)
+
+        # Generate the SQL file with values from TEST_CONFIG
+        sql_content = f"""
+        alter system set vector_memory_size=512M scope=spfile;
+
+        alter session set container=FREEPDB1;
+        CREATE TABLESPACE IF NOT EXISTS USERS DATAFILE '/opt/oracle/oradata/FREE/FREEPDB1/users_01.dbf' SIZE 100M;
+        CREATE USER IF NOT EXISTS "{TEST_CONFIG["db_username"]}" IDENTIFIED BY {TEST_CONFIG["db_password"]}
+            DEFAULT TABLESPACE "USERS"
+            TEMPORARY TABLESPACE "TEMP";
+        GRANT "DB_DEVELOPER_ROLE" TO "{TEST_CONFIG["db_username"]}";
+        ALTER USER "{TEST_CONFIG["db_username"]}" DEFAULT ROLE ALL;
+        ALTER USER "{TEST_CONFIG["db_username"]}" QUOTA UNLIMITED ON USERS;
+
+        EXIT;
+        """
+
+        # Write the SQL file
+        temp_sql_file = temp_dir / "01_db_user.sql"
+        with open(temp_sql_file, "w", encoding="UTF-8") as f:
+            f.write(sql_content)
+
+        # Start the container with volume mount
         container = db_client.containers.run(
             "container-registry.oracle.com/database/free:latest-lite",
             environment={
@@ -147,25 +213,23 @@ def db_container() -> Generator[Container, None, None]:
                 "ORACLE_PDB": TEST_CONFIG["db_name"],
             },
             ports={"1521/tcp": int(TEST_CONFIG["db_port"])},
+            volumes={str(temp_dir.absolute()): {"bind": "/opt/oracle/scripts/startup", "mode": "ro"}},
             detach=True,
         )
 
         # Wait for database to be ready
-        start_time = time.time()
-        while time.time() - start_time < TIMEOUT:
-            try:
-                logs = container.logs(tail=100).decode("utf-8")
-                if "DATABASE IS READY TO USE!" in logs:
-                    break
-            except DockerException as e:
-                container.remove(force=True)
-                raise DockerException(f"Failed to get container logs: {str(e)}") from e
-            time.sleep(CHECK_DELAY)
-        else:
-            if container:
-                container.remove(force=True)
-            raise TimeoutError(f"Database did not become ready within {TIMEOUT} seconds")
+        wait_for_container_ready(container, "DATABASE IS READY TO USE!")
 
+        # Restart the container to apply the vector_memory_size
+        container.restart()
+        restart_time = int(time.time())
+
+        # Wait for database to be ready again after restart
+        wait_for_container_ready(container, "DATABASE IS READY TO USE!", since=restart_time)
+
+        if temp_dir.exists():
+            shutil.rmtree(temp_dir)
+            print(f"Removed temporary directory: {temp_dir}")
         yield container
 
     except DockerException as e:
@@ -182,6 +246,74 @@ def db_container() -> Generator[Container, None, None]:
             except DockerException as e:
                 # Log error but don't fail tests if cleanup has issues
                 print(f"Warning: Failed to cleanup database container: {str(e)}")
+
+
+@pytest.fixture(scope="session")
+def embedding_container() -> Generator[Container, None, None]:
+    """
+    This fixture creates and manages an Ollama container for embedding model testing.
+    The container is created at the start of the test session and removed after all tests complete.
+    """
+    docker_client = docker.from_env()
+    container = None
+
+    try:
+        # Start the Ollama container
+        container = docker_client.containers.run(
+            "ollama/ollama:latest",
+            ports={"11434/tcp": 11434},
+            detach=True,
+        )
+
+        # Wait for Ollama to be ready
+        start_time = time.time()
+        while time.time() - start_time < TIMEOUT:
+            try:
+                # Try to connect to Ollama API
+                response = requests.get("http://localhost:11434/api/version")
+                if response.status_code == 200:
+                    # Pull the embedding model
+                    subprocess.run(["ollama", "pull", "nomic-embed-text"], check=True)
+                    break
+            except (requests.exceptions.ConnectionError, subprocess.CalledProcessError):
+                time.sleep(CHECK_DELAY)
+        else:
+            if container:
+                container.remove(force=True)
+            raise TimeoutError(f"Embedding model did not become ready within {TIMEOUT} seconds")
+
+        yield container
+
+    except DockerException as e:
+        if container:
+            container.remove(force=True)
+        raise DockerException(f"Docker operation failed: {str(e)}") from e
+
+    finally:
+        # Cleanup: After session
+        if container:
+            try:
+                container.stop(timeout=30)  # Give 30 seconds for graceful shutdown
+                container.remove()
+            except DockerException as e:
+                # Log error but don't fail tests if cleanup has issues
+                print(f"Warning: Failed to cleanup embedding container: {str(e)}")
+
+
+@pytest.fixture
+def mock_embedding_model():
+    """
+    This fixture provides a mock embedding model for testing.
+    It returns a function that simulates embedding generation by returning random vectors.
+    """
+
+    def mock_embed_documents(texts: list[str]) -> list[list[float]]:
+        """Mock function that returns random embeddings for testing"""
+        import numpy as np
+
+        return [np.random.rand(384).tolist() for _ in texts]  # 384 is a common embedding dimension
+
+    return mock_embed_documents
 
 
 def wait_for_server():

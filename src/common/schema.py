@@ -26,7 +26,7 @@ class DatabaseVectorStorage(BaseModel):
     """Database Vector Storage Tables"""
 
     database: Optional[str] = Field(default="DEFAULT", description="Name of Database (Alias)")
-    vector_store: Optional[str] = Field(default=None, description="Vector Store Table Name")
+    vector_store: Optional[str] = Field(default=None, description="Vector Store Table Name (auto-generated, do not set)", readOnly=True)
     alias: Optional[str] = Field(default=None, description="Identifiable Alias")
     model: Optional[str] = Field(default=None, description="Embedding Model")
     chunk_size: Optional[int] = Field(default=None, description="Chunk Size")
@@ -325,6 +325,7 @@ class EvaluationReport(Evaluation):
 #####################################################
 ClientIdType = Settings.__annotations__["client"]
 DatabaseNameType = Database.__annotations__["name"]
+VectorStoreTableType = DatabaseVectorStorage.__annotations__["vector_store"]
 ModelNameType = Model.__annotations__["name"]
 ModelTypeType = Model.__annotations__["type"]
 ModelEnabledType = ModelAccess.__annotations__["enabled"]

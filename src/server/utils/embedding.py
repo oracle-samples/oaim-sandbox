@@ -27,17 +27,17 @@ from langchain_text_splitters import HTMLSectionSplitter, CharacterTextSplitter
 import server.utils.databases as databases
 
 import common.functions
-from common.schema import DatabaseVectorStorage, Database
+from common.schema import DatabaseVectorStorage, VectorStoreTableType, Database
 
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("server.utils.embedding")
 
 
-def drop_vs(conn: oracledb.Connection, vs: DatabaseVectorStorage) -> None:
+def drop_vs(conn: oracledb.Connection, vs: VectorStoreTableType) -> None:
     """Drop Vector Storage"""
-    logger.info("Dropping Vector Store: %s", vs.vector_store)
-    LangchainVS.drop_table_purge(conn, vs.vector_store)
+    logger.info("Dropping Vector Store: %s", vs)
+    LangchainVS.drop_table_purge(conn, vs)
 
 
 def get_vs(conn: oracledb.Connection) -> DatabaseVectorStorage:
@@ -53,6 +53,7 @@ def get_vs(conn: oracledb.Connection) -> DatabaseVectorStorage:
     for table_name, comments in results:
         comments_dict = json.loads(comments)
         vector_stores.append(DatabaseVectorStorage(vector_store=table_name, **comments_dict))
+    logger.debug("Found Vector Stores: %s", vector_stores)
 
     return vector_stores
 
@@ -143,10 +144,10 @@ def split_document(
                 logger.exception(ex)
                 html_split = document
             doc_split = text_splitter.split_documents(html_split)
-        case "md":
+        case "pdf" | "md" | "txt" | "csv":
             doc_split = text_splitter.split_documents(document)
-        case "csv":
-            doc_split = text_splitter.split_documents(document)
+        case _:
+            raise ValueError(f"Unsupported file type: {extension.lower()}")
 
     logger.info("Number of Chunks: %i", len(doc_split))
     return doc_split
@@ -306,14 +307,14 @@ def populate_vs(
     # Establish a dedicated connection to the database
     db_conn = databases.connect(db_details)
     # This is to allow re-using an existing VS; will merge this over later
-    drop_vs(conn=db_conn, vs=vector_store_tmp)
+    drop_vs(conn=db_conn, vs=vector_store_tmp.vector_store)
     logger.info("Establishing initial vector store")
     vs_tmp = OracleVS(
         client=db_conn,
         embedding_function=embed_client,
         table_name=vector_store_tmp.vector_store,
         distance_strategy=vector_store.distance_metric,
-        query="Oracle AI Microservices Sandbox - Powered by Oracle"
+        query="AI Explorer for Apps - Powered by Oracle",
     )
 
     # Batch Size does not have a measurable impact on performance
@@ -342,7 +343,7 @@ def populate_vs(
         embedding_function=embed_client,
         table_name=vector_store.vector_store,
         distance_strategy=vector_store.distance_metric,
-        query="Oracle AI Microservices Sandbox - Powered by Oracle"
+        query="AI Explorer for Apps - Powered by Oracle",
     )
     vector_store_idx = f"{vector_store.vector_store}_IDX"
     if vector_store.index_type == "HNSW":
@@ -355,7 +356,7 @@ def populate_vs(
     """
     logger.info("Merging %s into %s", vector_store_tmp.vector_store, vector_store.vector_store)
     databases.execute_sql(db_conn, merge_sql)
-    drop_vs(conn=db_conn, vs=vector_store_tmp)
+    drop_vs(conn=db_conn, vs=vector_store_tmp.vector_store)
 
     # Build the Index
     logger.info("Creating index on: %s", vector_store.vector_store)
