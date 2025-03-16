@@ -126,10 +126,10 @@ class TestEndpoints:
     def setup_mock_embeddings(self, mock_embedding_model):
         """Create mock embeddings and get_client function"""
         mock_embeddings = self.MockEmbeddings(mock_embedding_model)
-        
+
         async def mock_get_client(*args, **kwargs):
             return mock_embeddings
-            
+
         return mock_get_client
 
     def create_test_file(self, mock_get_temp_directory, filename="test_document.md", content=DEFAULT_TEST_CONTENT):
@@ -154,7 +154,7 @@ class TestEndpoints:
             chunk_overlap=DEFAULT_EMBED_PARAMS["chunk_overlap"],
             distance_metric=DEFAULT_EMBED_PARAMS["distance_metric"],
             index_type=DEFAULT_EMBED_PARAMS["index_type"],
-            alias=alias
+            alias=alias,
         )
         return vector_store_name
 
@@ -163,14 +163,16 @@ class TestEndpoints:
         db_response = client.get("/v1/databases/DEFAULT", headers=TEST_HEADERS)
         assert db_response.status_code == 200
         db_data = db_response.json()
-        
+
         vector_stores = db_data.get("vector_stores", [])
         vector_store_names = [vs["vector_store"] for vs in vector_stores]
-        
+
         if should_exist:
             assert vector_store_name in vector_store_names, f"Vector store {vector_store_name} not found in database"
         else:
-            assert vector_store_name not in vector_store_names, f"Vector store {vector_store_name} still exists after dropping"
+            assert vector_store_name not in vector_store_names, (
+                f"Vector store {vector_store_name} still exists after dropping"
+            )
 
     def test_drop_vs(self, client: TestClient, db_container: Container) -> None:
         """Test dropping vector store"""
@@ -405,7 +407,7 @@ class TestEndpoints:
         # Test data for embedding
         alias = "test_lifecycle"
         test_data = self.create_embed_params(alias)
-        
+
         # Calculate the expected vector store name
         expected_vector_store_name = self.get_vector_store_name(alias)
 
@@ -446,7 +448,7 @@ class TestEndpoints:
             for alias in aliases:
                 # Create a test file for each request (since previous ones were cleaned up)
                 self.create_test_file(mock_get_temp_directory)
-                
+
                 test_data = self.create_embed_params(alias)
                 response = client.post("/v1/embed", headers=TEST_HEADERS, json=test_data)
                 assert response.status_code == 200

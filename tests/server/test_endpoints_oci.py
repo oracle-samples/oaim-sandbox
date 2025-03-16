@@ -233,7 +233,13 @@ class TestEndpoints:
             assert data["namespace"] == mock_get_namespace.return_value
 
     def test_oci_download_objects(
-        self, client: TestClient, mock_get_compartments, mock_get_buckets, mock_get_bucket_objects, mock_get_object, mock_get_temp_directory
+        self,
+        client: TestClient,
+        mock_get_compartments,
+        mock_get_buckets,
+        mock_get_bucket_objects,
+        mock_get_object,
+        mock_get_temp_directory,
     ):
         """OCI Object Download"""
         # Get Compartments
@@ -259,6 +265,6 @@ class TestEndpoints:
         response = client.post(f"/v1/oci/objects/download/{bucket}/DEFAULT", headers=TEST_HEADERS, json=payload)
         assert response.status_code == 200
         assert set(response.json()) == set(mock_get_bucket_objects.return_value)
-        
+
         # Verify the mock was called (accessing the mock object)
         assert mock_get_temp_directory.called
