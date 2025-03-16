@@ -6,9 +6,12 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 # pylint: disable=import-error
 
 from typing import Any, Dict
+from unittest.mock import patch, MagicMock
 import pytest
 from fastapi.testclient import TestClient
-from conftest import TEST_CONFIG, TEST_HEADERS, TEST_BAD_HEADERS
+from conftest import TEST_HEADERS, TEST_BAD_HEADERS
+from langchain_core.messages import ChatMessage
+from common.schema import ChatRequest
 
 
 #############################################################################
@@ -42,7 +45,147 @@ class TestNoAuthEndpoints:
 
 
 #############################################################################
-# Test AuthN required and Valid
+# Test Chat Completions
 #############################################################################
-class TestAuthEndpoints:
-    """Test endpoints with AuthN"""
+class TestChatCompletions:
+    """Test chat completion endpoints"""
+
+    @pytest.mark.asyncio
+    async def test_chat_completion_valid(self, client: TestClient):
+        """Test valid chat completion request"""
+        with (
+            patch("server.utils.models.get_client", return_value=MagicMock()),
+            patch("server.agents.chatbot.chatbot_graph") as mock_graph,
+        ):
+            # Create an async generator for the mock response
+            async def mock_astream_events(**kwargs):
+                yield {
+                    "event": "on_chat_model_stream",
+                    "data": {
+                        "chunk": MagicMock(content="Test response"),
+                        "output": {
+                            "final_response": {
+                                "id": "test-id",
+                                "choices": [
+                                    {
+                                        "message": {"role": "assistant", "content": "Test response"},
+                                        "index": 0,
+                                        "finish_reason": "stop",
+                                    }
+                                ],
+                                "created": 1234567890,
+                                "model": "test-model",
+                                "object": "chat.completion",
+                                "usage": {"prompt_tokens": 10, "completion_tokens": 20, "total_tokens": 30},
+                            }
+                        },
+                    },
+                    "metadata": {"langgraph_triggers": [], "langgraph_node": ""},
+                }
+
+            mock_graph.astream_events = mock_astream_events
+
+            request = ChatRequest(
+                messages=[ChatMessage(content="Hello", role="user")],
+                model="test-model",
+                temperature=1.0,
+                max_completion_tokens=256,
+            )
+
+            response = client.post("/v1/chat/completions", headers=TEST_HEADERS, json=request.model_dump())
+            assert response.status_code == 200
+            assert "choices" in response.json()
+            assert response.json()["choices"][0]["message"]["content"] == "Test response"
+
+    @pytest.mark.asyncio
+    async def test_chat_completion_model_error(self, client: TestClient):
+        """Test chat completion with model initialization error"""
+        with patch("server.utils.models.get_client", return_value=None):
+            request = ChatRequest(
+                messages=[ChatMessage(content="Hello", role="user")],
+                model="invalid-model",
+                temperature=1.0,
+                max_completion_tokens=256,
+            )
+
+            response = client.post("/v1/chat/completions", headers=TEST_HEADERS, json=request.model_dump())
+            assert response.status_code == 200
+            assert (
+                "I'm sorry, I'm unable to initialise the Language Model"
+                in response.json()["choices"][0]["message"]["content"]
+            )
+
+
+#############################################################################
+# Test Chat Streaming
+#############################################################################
+class TestChatStreaming:
+    """Test chat streaming endpoints"""
+
+    @pytest.mark.asyncio
+    async def test_chat_stream_valid(self, client: TestClient):
+        """Test valid chat stream request"""
+        with (
+            patch("server.utils.models.get_client", return_value=MagicMock()),
+            patch("server.agents.chatbot.chatbot_graph") as mock_graph,
+        ):
+            # Create an async generator for the mock response
+            async def mock_astream_events(**kwargs):
+                yield {
+                    "event": "on_chat_model_stream",
+                    "data": {"chunk": MagicMock(content="Test streaming"), "output": {}},
+                    "metadata": {"langgraph_triggers": [], "langgraph_node": ""},
+                }
+                yield {
+                    "event": "on_chat_model_stream",
+                    "data": {"chunk": MagicMock(content=" response"), "output": {}},
+                    "metadata": {"langgraph_triggers": [], "langgraph_node": ""},
+                }
+
+            mock_graph.astream_events = mock_astream_events
+
+            request = ChatRequest(
+                messages=[ChatMessage(content="Hello", role="user")],
+                model="test-model",
+                temperature=1.0,
+                max_completion_tokens=256,
+                streaming=True,
+            )
+
+            response = client.post("/v1/chat/streams", headers=TEST_HEADERS, json=request.model_dump())
+            assert response.status_code == 200
+            content = b"".join(response.iter_bytes())
+            assert b"Test streaming response" in content
+
+
+#############################################################################
+# Test Chat History
+#############################################################################
+class TestChatHistory:
+    """Test chat history endpoints"""
+
+    @pytest.mark.asyncio
+    async def test_chat_history_valid(self, client: TestClient):
+        """Test valid chat history request"""
+        with patch("server.agents.chatbot.chatbot_graph") as mock_graph:
+            mock_graph.get_state.return_value.values = {
+                "messages": [{"role": "user", "content": "Hello"}, {"role": "assistant", "content": "Hi there!"}]
+            }
+            response = client.get("/v1/chat/history", headers=TEST_HEADERS)
+            assert response.status_code == 200
+            history = response.json()
+            assert len(history) == 2
+            assert history[0]["role"] == "user"
+            assert history[0]["content"] == "Hello"
+
+    @pytest.mark.asyncio
+    async def test_chat_history_empty(self, client: TestClient):
+        """Test chat history with no history"""
+        with patch("server.agents.chatbot.chatbot_graph") as mock_graph:
+            mock_graph.get_state.side_effect = KeyError()
+            response = client.get("/v1/chat/history", headers=TEST_HEADERS)
+            assert response.status_code == 200
+            history = response.json()
+            assert len(history) == 1
+            assert history[0]["role"] == "system"
+            assert "no history" in history[0]["content"].lower()

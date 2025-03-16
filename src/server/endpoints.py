@@ -15,6 +15,7 @@ import shutil
 from typing import AsyncGenerator, Literal, Optional
 from pydantic import HttpUrl
 import requests
+import time
 
 from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import HumanMessage, AnyMessage, convert_to_openai_messages, ChatMessage
@@ -601,10 +602,19 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         # Setup Client schema.Model
         ll_client = await models.get_client(MODEL_OBJECTS, model, oci_config)
         if not ll_client:
-            yield "I'm sorry, I'm unable to initialise the Language Model.  Please refresh the application."
-        # except Exception as ex:
-        #     logger.error("An exception initializing model: %s", ex)
-        #     raise HTTPException(status_code=500, detail="Unexpected Error.") from ex
+            error_response = {
+                "id": "error",
+                "choices": [{
+                    "message": {"role": "assistant", "content": "I'm sorry, I'm unable to initialise the Language Model. Please refresh the application."},
+                    "index": 0,
+                    "finish_reason": "stop"
+                }],
+                "created": int(time.time()),
+                "model": model.get("model", "unknown"),
+                "object": "chat.completion"
+            }
+            yield error_response
+            return
 
         # Get Prompts
         try:
@@ -680,7 +690,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         description="Submit a message for full completion.",
         response_model=schema.ChatResponse,
     )
-    async def chat_post(client: schema.ClientIdType, request: schema.ChatRequest) -> schema.ChatResponse:
+    async def chat_post(request: schema.ChatRequest, client: schema.ClientIdType = Header(...)) -> schema.ChatResponse:
         """Full Completion Requests"""
         last_message = None
         async for chunk in completion_generator(client, request, "completions"):
@@ -693,7 +703,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         response_class=StreamingResponse,
         include_in_schema=False,
     )
-    async def chat_stream(client: schema.ClientIdType, request: schema.ChatRequest) -> StreamingResponse:
+    async def chat_stream(request: schema.ChatRequest, client: schema.ClientIdType = Header(...)) -> StreamingResponse:
         """Completion Requests"""
         return StreamingResponse(
             completion_generator(client, request, "streams"),
@@ -705,7 +715,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         description="Get Chat History",
         response_model=list[schema.ChatMessage],
     )
-    async def chat_history(client: schema.ClientIdType) -> list[ChatMessage]:
+    async def chat_history(client: schema.ClientIdType = Header(...)) -> list[ChatMessage]:
         """Return Chat History"""
         agent: CompiledStateGraph = chatbot.chatbot_graph
         try:

@@ -40,21 +40,25 @@ class SandboxClient:
             "timeout": timeout,
         }
 
-        def settings_request(method):
+        def settings_request(method, extra_params=None):
             """Send Settings to Server"""
+            request_options = self.request_defaults.copy()  # Copy defaults to avoid modifying the original
+            if extra_params:
+                request_options.update(extra_params)
+
             with httpx.Client() as client:
                 return client.request(
                     method=method,
                     url=f"{self.server_url}/v1/settings",
                     json=self.settings,
-                    **self.request_defaults,
+                    **request_options,
                 )
 
         response = settings_request("PATCH")
         if response.status_code != 200:
             logger.error("Error updating settings with PATCH: %i - %s", response.status_code, response.text)
             # Retry with POST if PATCH fails
-            response = settings_request("POST")
+            response = settings_request("POST", {"params": {"client": self.settings["client"]}})
             if response.status_code != 200:
                 logger.error("Error updating settings with POST: %i - %s", response.status_code, response.text)
         logger.info("Established SandboxClient")
