@@ -5,4 +5,5 @@
 
 # Additional requirements for tests
 pytest
+pytest-asyncio
 docker
