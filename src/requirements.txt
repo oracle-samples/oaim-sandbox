@@ -13,8 +13,8 @@
 ### source .venv/bin/activate
 ### pip3.11 install --upgrade pip wheel setuptools
 ### pip3.11 install -r requirements.txt
-langchain-core==0.3.37
+langchain-core==0.3.45
 httpx==0.28.1
-oracledb~=2.0
+oracledb~=3.0
 -r server/requirements.txt
 -r sandbox/requirements.txt

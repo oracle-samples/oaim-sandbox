@@ -25,6 +25,7 @@ sonar.sh
 **/.DS_Store
 **/*.swp
 **/.scannerwork
+**/.cursorignore
 **/tns_admin
 sonar-project.properties
 
