@@ -46,7 +46,7 @@ def get_models(model_type: ModelTypeType = None, force: bool = False) -> dict[st
         if config_key not in state or state[config_key] == {} or force:
             try:
                 response = api_call.get(
-                    url=f"{state.server['url']}:{state.server['port']}/v1/models",
+                    endpoint="v1/models",
                     params={"model_type": indy_model},
                 )
                 state[config_key] = {item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response}
@@ -60,9 +60,8 @@ def get_models(model_type: ModelTypeType = None, force: bool = False) -> dict[st
 
 def create_model(model: Model) -> None:
     """Add either Language Model or Embed Model"""
-    api_url = f"{state.server['url']}:{state.server['port']}/v1/models"
     api_call.post(
-        url=api_url,
+        endpoint="v1/models",
         params={"name": model.name},
         payload={"json": model.model_dump()},
     )
@@ -75,9 +74,8 @@ def create_model(model: Model) -> None:
 def patch_model(model: Model) -> None:
     """Update Model Configuration for either Language Models or Embed Models"""
     try:
-        api_url = f"{state.server['url']}:{state.server['port']}/v1/models/{model.name}"
         api_call.patch(
-            url=api_url,
+            endpoint=f"v1/models/{model.name}",
             payload={"json": model.model_dump()},
         )
         st.success(f"Model updated: {model.name}")
@@ -90,7 +88,7 @@ def patch_model(model: Model) -> None:
 
 def delete_model(model: Model) -> None:
     """Update Model Configuration for either Language Models or Embed Models"""
-    api_call.delete(url=f"{state.server['url']}:{state.server['port']}/v1/models/{model.name}")
+    api_call.delete(endpoint=f"v1/models/{model.name}")
     st.success(f"Model deleted: {model.name}")
     sleep(1)
     logger.info("Model deleted: %s", model.name)
@@ -103,7 +101,7 @@ def edit_model(model_type: ModelTypeType, action: Literal["add", "edit"], model_
     # Initialize our model request
     if action == "edit":
         name = urllib.parse.quote(model_name, safe="")
-        request = api_call.get(url=f"{state.server['url']}:{state.server['port']}/v1/models/{name}")
+        request = api_call.get(endpoint=f"v1/models/{name}")
         model = Model.model_validate(request)
     else:
         model = Model(name="unset", type=model_type, api="unset", status="CUSTOM")

@@ -56,19 +56,18 @@ def main() -> None:
     )
     st.logo("sandbox/media/logo.png")
     # Setup Settings State
-    api_endpoint = f"{state.server['url']}:{state.server['port']}/v1/settings"
     api_down = False
     if "user_settings" not in state:
         try:
             state.user_settings = api_call.post(
-                url=api_endpoint, params={"client": client_gen_id()}, retries=10, backoff_factor=1.5
+                endpoint="v1/settings", params={"client": client_gen_id()}, retries=10, backoff_factor=1.5
             )
         except api_call.ApiError:
             logger.error("Unable to contact API Server; setting as Down!")
             api_down = True
     if not api_down and "server_settings" not in state:
         try:
-            state.server_settings = api_call.get(url=api_endpoint, params={"client": "server"})
+            state.server_settings = api_call.get(endpoint="v1/settings", params={"client": "server"})
         except api_call.ApiError:
             logger.error("Unable to contact API Server; setting as Down!")
             api_down = True

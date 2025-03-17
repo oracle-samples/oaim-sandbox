@@ -61,7 +61,7 @@ def patch_settings() -> None:
     """Patch user settings on Server"""
     try:
         api_call.patch(
-            url=f"{state.server['url']}:{state.server['port']}/v1/settings",
+            endpoint="v1/settings",
             payload={"json": state.user_settings},
         )
     except api_call.ApiError as ex:

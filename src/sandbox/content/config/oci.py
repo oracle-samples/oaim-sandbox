@@ -33,8 +33,7 @@ def get_oci(force: bool = False) -> dict[str, dict]:
     """Get a dictionary of all OCI Configurations"""
     if "oci_config" not in state or state["oci_config"] == {} or force:
         try:
-            api_url = f"{state.server['url']}:{state.server['port']}/v1/oci"
-            response = api_call.get(url=api_url)
+            response = api_call.get(endpoint="v1/oci")
             state["oci_config"] = {
                 item["auth_profile"]: {k: v if v is not None else None for k, v in item.items() if k != "auth_profile"}
                 for item in response
@@ -67,9 +66,8 @@ def patch_oci(
         or not state.oci_config[auth_profile]["namespace"]
     ):
         try:
-            api_url = f"{state.server['url']}:{state.server['port']}/v1/oci/{auth_profile}"
             api_call.patch(
-                url=api_url,
+                endpoint=f"v1/oci/{auth_profile}",
                 payload={
                     "json": {
                         "user": user,
@@ -106,9 +104,8 @@ def patch_oci_genai(
         or state.oci_config[auth_profile]["service_endpoint"] != service_endpoint
     ):
         try:
-            api_url = f"{state.server['url']}:{state.server['port']}/v1/oci/{auth_profile}"
             api_call.patch(
-                url=api_url,
+                endpoint=f"v1/oci/{auth_profile}",
                 payload={
                     "json": {
                         **state.oci_config[auth_profile],
@@ -131,6 +128,7 @@ def patch_oci_genai(
     else:
         st.info(f"{auth_profile} OCI GenAI Configuration - No Changes Detected.", icon="ℹ️")
         time.sleep(2)
+
 
 #####################################################
 # MAIN

@@ -6,6 +6,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 import time
 import json
 from typing import Optional, Dict
+from urllib.parse import urljoin
 import requests
 
 import streamlit as st
@@ -38,7 +39,7 @@ def sanitize_sensitive_data(data):
 
 def send_request(
     method: str,
-    url: str,
+    endpoint: str,
     params: Optional[dict] = None,
     payload: Optional[Dict] = None,
     timeout: int = 60,
@@ -46,6 +47,7 @@ def send_request(
     backoff_factor: float = 2.0,
 ) -> dict:
     """Send API requests with retry logic."""
+    url = urljoin(f"{state.server['url']}:{state.server['port']}/", endpoint)
     payload = payload or {}
     token = state.server["key"]
     headers = {"Authorization": f"Bearer {token}"}
@@ -101,14 +103,14 @@ def send_request(
     raise ApiError("An unexpected error occurred.")
 
 
-def get(url: str, params: Optional[dict] = None, retries: int = 3, backoff_factor: float = 2.0) -> json:
+def get(endpoint: str, params: Optional[dict] = None, retries: int = 3, backoff_factor: float = 2.0) -> json:
     """GET Requests"""
-    response = send_request("GET", url, params=params, retries=retries, backoff_factor=backoff_factor)
+    response = send_request("GET", endpoint, params=params, retries=retries, backoff_factor=backoff_factor)
     return response.json()
 
 
 def post(
-    url: str,
+    endpoint: str,
     params: Optional[dict] = None,
     payload: Optional[Dict] = None,
     timeout: int = 60,
@@ -117,13 +119,19 @@ def post(
 ) -> json:
     """POST Requests"""
     response = send_request(
-        "POST", url, params=params, payload=payload, timeout=timeout, retries=retries, backoff_factor=backoff_factor
+        "POST",
+        endpoint,
+        params=params,
+        payload=payload,
+        timeout=timeout,
+        retries=retries,
+        backoff_factor=backoff_factor,
     )
     return response.json()
 
 
 def patch(
-    url: str,
+    endpoint: str,
     params: Optional[dict] = None,
     payload: Optional[dict] = None,
     timeout: int = 60,
@@ -132,20 +140,24 @@ def patch(
 ) -> None:
     """PATCH Requests"""
     send_request(
-        "PATCH", url, payload=payload, params=params, timeout=timeout, retries=retries, backoff_factor=backoff_factor
+        "PATCH",
+        endpoint,
+        payload=payload,
+        params=params,
+        timeout=timeout,
+        retries=retries,
+        backoff_factor=backoff_factor,
     )
     st.toast("Update Successful.", icon="✅")
 
 
 def delete(
-    url: str,
+    endpoint: str,
     timeout: int = 60,
     retries: int = 5,
     backoff_factor: float = 1.5,
 ) -> None:
     """DELETE Requests"""
-    response = send_request(
-        "DELETE", url, timeout=timeout, retries=retries, backoff_factor=backoff_factor
-    )
+    response = send_request("DELETE", endpoint, timeout=timeout, retries=retries, backoff_factor=backoff_factor)
     success = response.json()["message"]
     st.toast(success, icon="✅")

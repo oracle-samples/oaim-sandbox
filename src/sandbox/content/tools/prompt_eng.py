@@ -29,8 +29,7 @@ def get_prompts(force: bool = False) -> dict[str, dict]:
     """Get a dictionary of all Prompts"""
     if "prompts_config" not in state or state["prompts_config"] == {} or force:
         try:
-            api_url = f"{state.server['url']}:{state.server['port']}/v1/prompts"
-            state["prompts_config"] = api_call.get(url=api_url)
+            state["prompts_config"] = api_call.get(endpoint="v1/prompts")
             logger.info("State created: state['prompts_config']")
         except api_call.ApiError as ex:
             logger.error("Unable to retrieve prompts: %s", ex)
@@ -46,9 +45,8 @@ def patch_prompt(category: str, name: str, prompt: str) -> None:
     )
     if configured_prompt != prompt:
         try:
-            api_url = f"{state.server['url']}:{state.server['port']}/v1/prompts/{category}/{name}"
             api_call.patch(
-                url=api_url,
+                endpoint=f"v1/prompts/{category}/{name}",
                 payload={"json": {"prompt": prompt}},
             )
             logger.info("Prompt updated: %s (%s)", name, category)

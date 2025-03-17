@@ -33,24 +33,21 @@ logger = logging_config.logging.getLogger("sandbox.tools.split_embed")
 @st.cache_data
 def get_compartments() -> dict:
     """Get OCI Compartments; function for Streamlit caching"""
-    api_url = f"{state.server['url']}:{state.server['port']}/v1/oci/compartments/{state.user_settings['oci']['auth_profile']}"
-    response = api_call.get(url=api_url)
+    response = api_call.get(endpoint=f"v1/oci/compartments/{state.user_settings['oci']['auth_profile']}")
     return response
 
 
 @st.cache_data
 def get_buckets(compartment: str) -> list:
     """Get OCI Buckets in selected compartment; function for Streamlit caching"""
-    api_url = f"{state.server['url']}:{state.server['port']}/v1/oci/buckets/{compartment}/{state.user_settings['oci']['auth_profile']}"
-    response = api_call.get(url=api_url)
+    response = api_call.get(endpoint=f"v1/oci/buckets/{compartment}/{state.user_settings['oci']['auth_profile']}")
     return response
 
 
 @st.cache_data
 def get_bucket_objects(bucket: str) -> list:
     """Get OCI Buckets in selected compartment; function for Streamlit caching"""
-    api_url = f"{state.server['url']}:{state.server['port']}/v1/oci/objects/{bucket}/{state.user_settings['oci']['auth_profile']}"
-    response = api_call.get(url=api_url)
+    response = api_call.get(endpoint=f"v1/oci/objects/{bucket}/{state.user_settings['oci']['auth_profile']}")
     return response
 
 
@@ -352,26 +349,26 @@ def main() -> None:
             with placeholder:
                 st.warning("Populating Vector Store... please be patient.", icon="⚠️")
 
-            api_url = None
+            endpoint = None
             api_payload = []
             # Place files on Server for Embedding
             if file_source == "Local":
-                api_url = f"{state.server['url']}:{state.server['port']}/v1/embed/local/store"
+                endpoint = "v1/embed/local/store"
                 files = st_common.local_file_payload(state["local_file_uploader"])
                 api_payload = {"files": files}
 
             if file_source == "Web":
-                api_url = f"{state.server['url']}:{state.server['port']}/v1/embed/web/store"
+                endpoint = "v1/embed/web/store"
                 api_payload = {"json": [web_url]}
 
             if file_source == "OCI":
                 # Download OCI Objects for Processing
-                api_url = f"{state.server['url']}:{state.server['port']}/v1/oci/objects/download/{src_bucket}/{state.user_settings['oci']['auth_profile']}"
+                endpoint = f"v1/oci/objects/download/{src_bucket}/{state.user_settings['oci']['auth_profile']}"
                 process_list = src_files_selected[src_files_selected["Process"]].reset_index(drop=True)
                 api_payload = {"json": process_list["File"].tolist()}
 
             # Post Files to Server
-            response = api_call.post(url=api_url, payload=api_payload)
+            response = api_call.post(endpoint=endpoint, payload=api_payload)
 
             # All files are now on Server... Run Embeddings
             embed_params = {
@@ -379,7 +376,7 @@ def main() -> None:
                 "rate_limit": rate_limit,
             }
             response = api_call.post(
-                url=f"{state.server['url']}:{state.server['port']}/v1/embed",
+                endpoint="v1/embed",
                 params=embed_params,
                 payload={"json": embed_request.model_dump()},
                 timeout=7200,

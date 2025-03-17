@@ -26,8 +26,8 @@ def get_databases(force: bool = False) -> dict[str, dict]:
     """Get a dictionary of all Databases and Store Vector Store Tables"""
     if "database_config" not in state or state["database_config"] == {} or force:
         try:
-            api_url = f"{state.server['url']}:{state.server['port']}/v1/databases"
-            response = api_call.get(url=api_url)
+            endpoint = "v1/databases"
+            response = api_call.get(endpoint=endpoint)
             state["database_config"] = {
                 item["name"]: {k: v for k, v in item.items() if k != "name"} for item in response
             }
@@ -49,9 +49,9 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
         or not state.database_config[name]["connected"]
     ):
         try:
-            api_url = f"{state.server['url']}:{state.server['port']}/v1/databases/{name}"
+            endpoint = f"v1/databases/{name}"
             api_call.patch(
-                url=api_url,
+                endpoint=endpoint,
                 payload={
                     "json": {
                         "user": user,
@@ -75,7 +75,7 @@ def patch_database(name: str, user: str, password: str, dsn: str, wallet_passwor
 
 def drop_vs(vs: dict):
     """Drop a Vector Storage Table"""
-    api_call.delete(url=f"{state.server['url']}:{state.server['port']}/v1/embed/{vs['vector_store']}")
+    api_call.delete(endpoint=f"v1/embed/{vs['vector_store']}")
     get_databases(force=True)
 
 
