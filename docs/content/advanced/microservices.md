@@ -10,11 +10,11 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 spell-checker: ignore opentofu ocid oraclecloud oaim  ollama crds ADBDB finalizers mxbai sandboxdb
 -->
 
-The Oracle AI Microservices Sandbox (the **Sandbox**) was specifically designed to run on infrastructure supporting microservices architecture, including [Kubernetes](https://kubernetes.io/).
+The **{{< param "LongName" >}}** (the **{{< param "ShortName" >}}**) was specifically designed to run on infrastructure supporting microservices architecture, including [Kubernetes](https://kubernetes.io/).
 
 ## Oracle Kubernetes Engine
 
-The following example shows running the **Sandbox** in [Oracle Kubernetes Engine](https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengoverview.htm) (**OKE**).  The Infrastructure as Code (**IaC**) provided in the source [opentofu](https://github.com/oracle-samples/oaim-sandbox/tree/main/opentofu) directory was used to provision the infrastructure in Oracle Cloud Infrastructure (**OCI**).
+The following example shows running the **{{< param "ShortName" >}}** in [Oracle Kubernetes Engine](https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengoverview.htm) (**OKE**).  The Infrastructure as Code (**IaC**) provided in the source [opentofu](https://github.com/oracle-samples/oaim-sandbox/tree/main/opentofu) directory was used to provision the infrastructure in Oracle Cloud Infrastructure (**OCI**).
 
 ![OCI OKE](../images/infra_oci.png)
 
@@ -22,9 +22,9 @@ The command to connect to the **OKE** cluster will be output as part of the **Ia
 
 ### Ingress
 
-To access the Sandbox GUI and API Server, you can either use a port-forward or an Ingress service.  For demonstration purposes, the [Ingress-Nginx Controller](https://kubernetes.github.io/ingress-nginx/deploy/) will be used to create a [Flexible LoadBalancer](https://docs.oracle.com/en-us/iaas/Content/NetworkLoadBalancer/overview.htm) in **OCI**.
+To access the **{{< param "ShortName" >}}** GUI and API Server, you can either use a port-forward or an Ingress service.  For demonstration purposes, the [Ingress-Nginx Controller](https://kubernetes.github.io/ingress-nginx/deploy/) will be used to create a [Flexible LoadBalancer](https://docs.oracle.com/en-us/iaas/Content/NetworkLoadBalancer/overview.htm) in **OCI**.
 
-This example will create the loadbalancer exposing port 80 for the Sandbox GUI and port 8000 for the Sandbox API Server.  It is _HIGHLY_ recommended to protect these ports with [Network Security Groups](https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/networksecuritygroups.htm)(**NSG**).
+This example will create the loadbalancer exposing port 80 for the **{{< param "ShortName" >}}** GUI and port 8000 for the **{{< param "ShortName" >}}** API Server.  It is _HIGHLY_ recommended to protect these ports with [Network Security Groups](https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/networksecuritygroups.htm)(**NSG**).
 
 The service manifest has two values that should be supplied:
 
@@ -106,9 +106,9 @@ These will be output as part of the **IaC** but can be removed from the code if 
 
 ### Images
 
-You will need to build the **Sandbox** container images and stage them in a container registry, such as the [OCI Container Registry](https://docs.oracle.com/en-us/iaas/Content/Registry/Concepts/registryoverview.htm) (**OCIR**).
+You will need to build the **{{< param "ShortName" >}}** container images and stage them in a container registry, such as the [OCI Container Registry](https://docs.oracle.com/en-us/iaas/Content/Registry/Concepts/registryoverview.htm) (**OCIR**).
 
-1. Build the **Sandbox** images:
+1. Build the **{{< param "ShortName" >}}** images:
 
     From the code source `src/` directory:
     ```bash
@@ -132,7 +132,7 @@ You will need to build the **Sandbox** container images and stage them in a cont
 
     You will be prompted for a username and token password.
 
-1. Push the **Sandbox** images:
+1. Push the **{{< param "ShortName" >}}** images:
 
     More information on pushing images to **OCIR** can be found [here](https://docs.oracle.com/en-us/iaas/Content/Registry/Tasks/registrypushingimagesusingthedockercli.htm).
 
@@ -145,25 +145,25 @@ You will need to build the **Sandbox** container images and stage them in a cont
     podman push <server_repository>:latest
     ```
 
-### Oracle AI Microservices Sandbox
+### **{{< param "LongName" >}}**
 
-The **Sandbox** can be deployed using the [Helm](https://helm.sh/) chart provided with the source:
-[**Sandbox** Helm Chart](https://github.com/oracle-samples/oaim-sandbox/tree/main/helm).  A list of all values can be found in [values_summary.md](https://github.com/oracle-samples/oaim-sandbox/tree/main/helm/values_summary.md).
+The **{{< param "ShortName" >}}** can be deployed using the [Helm](https://helm.sh/) chart provided with the source:
+[**{{< param "ShortName" >}}** Helm Chart](https://github.com/oracle-samples/oaim-sandbox/tree/main/helm).  A list of all values can be found in [values_summary.md](https://github.com/oracle-samples/oaim-sandbox/tree/main/helm/values_summary.md).
 
 If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama and enable a Large Language and Embedding Model out-of-the-box.
 
-1. Create the `oaim-sandbox` namespace:
+1. Create the `oai-client` namespace:
     
     ```bash
-    kubectl create namespace oaim-sandbox
+    kubectl create namespace oai-client
     ```
 
 1. Create a secret to hold the API Key:
 
     ```bash
-    kubectl create secret generic sandbox-api-key \
+    kubectl create secret generic client-api-key \
       --from-literal=apiKey=$(openssl rand -hex 32) \
-      --namespace=oaim-sandbox
+      --namespace=oai-client
     ```
 
 1. Create a secret to hold the Database Authentication:
@@ -192,7 +192,7 @@ If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama an
 
     - `<lb_reserved_ip>` - A reserved IP address for the Loadbalancer
     - `<adb_ocid>` - Autonomous Database OCID
-    - `<sandbox_repository>` - Full path to the repository for the Sandbox Image 
+    - `<sandbox_repository>` - Full path to the repository for the **{{< param "ShortName" >}}** Image 
     - `<server_repository>` - Full path to the repository for the API Server Image
 
     These will be output as part of the **IaC**.
@@ -268,7 +268,7 @@ If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama an
 
 ### Cleanup
 
-To remove the **Sandbox** from the OKE Cluster:
+To remove the **{{< param "ShortName" >}}** from the OKE Cluster:
 
 1. Uninstall the Helm Chart:
 

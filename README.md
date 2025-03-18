@@ -6,9 +6,9 @@
 
 ## Description
 
-The **Oracle AI Explorer for Apps** (the **Explorer**) provides a streamlined environment where developers and data scientists can explore the potential of Generative Artificial Intelligence (GenAI) combined with Retrieval-Augmented Generation (RAG) capabilities. By integrating **Oracle Database 23ai** AI Vector Search, the Sandbox enables users to enhance existing Large Language Models (LLMs) through RAG.
+The **Oracle AI Explorer for Apps** (the **AI Explorer**) provides a streamlined environment where developers and data scientists can explore the potential of Generative Artificial Intelligence (GenAI) combined with Retrieval-Augmented Generation (RAG) capabilities. By integrating **Oracle Database 23ai** AI Vector Search, the Sandbox enables users to enhance existing Large Language Models (LLMs) through RAG.
 
-## Explorer Features
+## AI Explorer Features
 
 - [Configuring Embedding and Chat Models](https://oracle-samples.github.io/oaim-sandbox/sandbox/configuration/model_config)
 - [Splitting and Embedding Documentation](https://oracle-samples.github.io/oaim-sandbox/sandbox/tools/split_embed)
@@ -18,7 +18,7 @@ The **Oracle AI Explorer for Apps** (the **Explorer**) provides a streamlined en
 
 ## Getting Started
 
-The **Explorer** is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on bare-metal, within a container, or in a Kubernetes Cluster.
+The **AI Explorer** is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on bare-metal, within a container, or in a Kubernetes Cluster.
 
 For more information, including more details on **Setup and Configuration** please visit the [documentation](https://oracle-samples.github.io/oaim-sandbox).
 
