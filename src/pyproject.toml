@@ -1,0 +1,84 @@
+[build-system]
+requires = ["setuptools>=61.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oai-explorer"
+version = "0.1.0"
+description = "Oracle AI Explorer for Apps"
+requires-python = ">=3.11"
+license = {text = "Universal Permissive License v1.0"}
+authors = [
+    {name = "Oracle", email = "obaas_ww@oracle.com"}
+]
+
+# Common dependencies that are always needed
+dependencies = [
+    "langchain-core==0.3.45",
+    "httpx==0.28.1",
+    "oracledb~=3.0",
+]
+
+[project.optional-dependencies]
+# Server component dependencies
+server = [
+    "bokeh==3.7.0",
+    "evaluate==0.4.3",
+    "fastapi==0.115.11",
+    "faiss-cpu==1.10.0",
+    "giskard==2.16.1",
+    "IPython==9.0.2",
+    "langchain-cohere==0.4.3",
+    "langchain-community==0.3.19",
+    "langchain-huggingface==0.1.2",
+    "langchain-ollama==0.2.3",
+    "langchain-openai==0.3.9",
+    "langgraph==0.3.14",
+    "litellm==1.63.11",
+    "llama_index==0.12.24",
+    "lxml==5.3.1",
+    "matplotlib==3.10.1",
+    "oci~=2.0",
+    "plotly==6.0.1",
+    "psutil==7.0.0",
+    "python-multipart==0.0.20",
+    "umap-learn==0.5.7",
+    "uvicorn==0.34.0",
+]
+
+# GUI component dependencies
+client = [
+    "streamlit==1.43.2",
+]
+
+# Test dependencies
+test = [
+    "pytest",
+    "pytest-asyncio",
+    "docker",
+]
+
+# All-in-one installation (server + client)
+all = [
+    "oai-explorer[server]",
+    "oai-explorer[client]",
+]
+
+# All-in-one with tests
+all-test = [
+    "oai-explorer[server]",
+    "oai-explorer[client]",
+    "oai-explorer[test]",
+]
+
+[tool.setuptools]
+packages = ["server", "client", "common"]
+
+# Ensure torch is installed correctly based on platform
+[tool.setuptools.package-data]
+"*" = ["*.txt", "*.md"]
+
+# Platform-specific torch installation
+# Note: This is handled at install time with a conditional in requirements.txt
+# For Linux: torch==2.6.0+cpu
+# For macOS: torch==2.6.0 

@@ -15,14 +15,14 @@ Expand the name of the chart.
 {{- end }}
 
 {{/*
-Define the ServiceName of the API Server for Sandbox Access.
+Define the ServiceName of the API Server for Client Access.
 */}}
-{{- define "oaim-server.serviceName" -}}
-{{ include "release.name" . }}-oaim-server-http
+{{- define "oai-server.serviceName" -}}
+{{ include "release.name" . }}-oai-server-http
 {{- end -}}
 
-{{- define "oaim-server.serviceUrl" -}}
-http://{{ include "oaim-server.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local
+{{- define "oai-server.serviceUrl" -}}
+http://{{ include "oai-server.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local
 {{- end -}}
 
 {{/*
@@ -41,7 +41,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "oaim.fullname" -}}
+{{- define "oai.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -57,16 +57,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "oaim.chart" -}}
+{{- define "oai.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "oaim.labels" -}}
-helm.sh/chart: {{ include "oaim.chart" . }}
-{{ include "oaim.selectorLabels" . }}
+{{- define "oai.labels" -}}
+helm.sh/chart: {{ include "oai.chart" . }}
+{{ include "oai.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -76,7 +76,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "oaim.selectorLabels" -}}
+{{- define "oai.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "chart.name" . }}
 app.kubernetes.io/instance: {{ include "release.name" . }}
 {{- end }}
@@ -84,9 +84,9 @@ app.kubernetes.io/instance: {{ include "release.name" . }}
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "oaim.serviceAccountName" -}}
+{{- define "oai.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "oaim.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "oai.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}

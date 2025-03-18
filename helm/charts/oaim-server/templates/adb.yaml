@@ -7,25 +7,25 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: {{ include "oaim.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}
+  name: {{ include "oai.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}
   labels:
     app.kubernetes.io/name: {{ .Chart.Name }}
 stringData:
-  {{ include "oaim.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}: {{ randAlphaNum 16 | quote }}
+  {{ include "oai.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}: {{ randAlphaNum 16 | quote }}
 {{- end }}
 ---
 apiVersion: database.oracle.com/v1alpha1
 kind: AutonomousDatabase
 metadata:
-  name: {{ include "oaim.fullname" . }}-adb
+  name: {{ include "oai.fullname" . }}-adb
   labels: 
-    {{- include "oaim.labels" . | nindent 4 }}
+    {{- include "oai.labels" . | nindent 4 }}
 spec:
   details:
     autonomousDatabaseOCID: {{ .Values.adb.ocid }}
     wallet:
-      name: {{ include "oaim.fullname" . }}-adb-tns-admin-{{ .Release.Revision }}
+      name: {{ include "oai.fullname" . }}-adb-tns-admin-{{ .Release.Revision }}
       password:
         k8sSecret:
-          name: {{ include "oaim.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}
+          name: {{ include "oai.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}
 {{ end }}

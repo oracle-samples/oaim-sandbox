@@ -1,14 +1,14 @@
-# Oracle AI Microservices Sandbox
+# Oracle AI Explorer for Apps
 
-<!-- spell-checker:ignore streamlit, venv, oaim -->
+<!-- spell-checker:ignore streamlit, venv, setuptools -->
 
-🚧 Developer Preview
+🚧 The **AI Explorer** is currently in *Beta*
 
 ## Description
 
-The **Oracle AI Microservices Sandbox** provides a streamlined environment where developers and data scientists can explore the potential of Generative Artificial Intelligence (GenAI) combined with Retrieval-Augmented Generation (RAG) capabilities. By integrating **Oracle Database 23ai** AI Vector Search, the Sandbox enables users to enhance existing Large Language Models (LLMs) through RAG.
+The **Oracle AI Explorer for Apps** (the **Explorer**) provides a streamlined environment where developers and data scientists can explore the potential of Generative Artificial Intelligence (GenAI) combined with Retrieval-Augmented Generation (RAG) capabilities. By integrating **Oracle Database 23ai** AI Vector Search, the Sandbox enables users to enhance existing Large Language Models (LLMs) through RAG.
 
-## Sandbox Features
+## Explorer Features
 
 - [Configuring Embedding and Chat Models](https://oracle-samples.github.io/oaim-sandbox/sandbox/configuration/model_config)
 - [Splitting and Embedding Documentation](https://oracle-samples.github.io/oaim-sandbox/sandbox/tools/split_embed)
@@ -18,7 +18,7 @@ The **Oracle AI Microservices Sandbox** provides a streamlined environment where
 
 ## Getting Started
 
-The **Oracle AI Microservices Sandbox** is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on bare-metal, within a container, or in a Kubernetes Cluster.
+The **Explorer** is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on bare-metal, within a container, or in a Kubernetes Cluster.
 
 For more information, including more details on **Setup and Configuration** please visit the [documentation](https://oracle-samples.github.io/oaim-sandbox).
 
@@ -41,27 +41,27 @@ To run the application on bare-metal; download the [source](https://github.com/o
 
    ```bash
    cd src/
-   python3.11 -m venv .venv
+   python3.11 -m venv .venv --copies
    source .venv/bin/activate
-   pip3.11 install --upgrade pip wheel
+   pip3.11 install --upgrade pip wheel setuptools
    ```
 
 1. Install the Python modules:
 
    ```bash
-   pip3.11 install -r requirements.txt
+   pip3.11 install -e ".[all]"
    source .venv/bin/activate
    ```
 
 1. Start Streamlit:
 
    ```bash
-   streamlit run oaim_sandbox.py --server.port 8501
+   streamlit run oai_client.py --server.port 8501
    ```
 
 1. Navigate to `http://localhost:8501`.
 
-1. [Configure](https://oracle-samples.github.io/oaim-sandbox/sandbox/configuration) the Sandbox.
+1. [Configure](https://oracle-samples.github.io/oaim-sandbox/sandbox/configuration) the **Explorer**.
 
 #### Container Installation
 
@@ -73,18 +73,18 @@ To run the application in a container; download the [source](https://github.com/
 
    ```bash
    cd src/
-   podman build -t oaim-sandbox .
+   podman build -t oai-explorer .
    ```
 
 1. Start the Container:
 
    ```bash
-   podman run -p 8501:8501 -it --rm oaim-sandbox
+   podman run -p 8501:8501 -it --rm oai-explorer
    ```
 
 1. Navigate to `http://localhost:8501`.
 
-1. [Configure](https://oracle-samples.github.io/oaim-sandbox/sandbox/configuration/index.html) the Sandbox.
+1. [Configure](https://oracle-samples.github.io/oaim-sandbox/sandbox/configuration/index.html) the **Explorer**.
 
 ## Contributing
 

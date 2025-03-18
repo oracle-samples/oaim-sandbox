@@ -1,4 +1,4 @@
-# oaim-sandbox Helm Chart
+# Oracle AI Explorer for Apps Helm Chart
 
 ## Secret Pre-Requisites
 
@@ -33,7 +33,7 @@ Example:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: sandbox-api-keys
+  name: client-api-keys
 type: Opaque
 stringData:
   api_server_key: ...
@@ -49,7 +49,7 @@ Example:
 apiVersion: v1
 kind: Secret
 metadata:
-  name: sandboxdb-authn
+  name: explorerdb-authn
 type: Opaque
 stringData:
   password: ...
@@ -60,11 +60,11 @@ stringData:
 ## Install
 
 ```bash
-helm upgrade --install oaim-sandbox .
+helm upgrade --install oai-explorer .
 ```
 
 ## Uninstall
 
 ```bash
-helm uninstall oaim-sandbox
+helm uninstall oai-explorer
 ```

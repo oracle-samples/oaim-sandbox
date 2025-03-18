@@ -3,7 +3,7 @@
 
 replicaCount: 1
 image:
-  repository: localhost/oaim-server
+  repository: localhost/oai-server
   tag: "latest"
 imagePullPolicy: IfNotPresent
 imagePullSecrets: []

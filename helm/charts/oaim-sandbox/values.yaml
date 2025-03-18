@@ -3,7 +3,7 @@
 
 replicaCount: 1
 image:
-  repository: localhost/oaim-sandbox
+  repository: localhost/oai-client
   tag: "latest"
 imagePullPolicy: IfNotPresent
 imagePullSecrets: []
@@ -43,7 +43,7 @@ service:
   http:
     type: "ClusterIP"
 
-sandbox:
+client:
   features:
     disableTestbed: "false"
     disableApi: "false"

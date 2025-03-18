@@ -51,7 +51,7 @@ class TestEndpoints:
     def test_settings_get(self, client: TestClient) -> None:
         """Test getting settings for a client"""
         # Test getting settings for the test client
-        response = client.get("/v1/settings", headers=TEST_HEADERS)
+        response = client.get("/v1/settings", params={"client": TEST_CONFIG["test_client"]}, headers=TEST_HEADERS)
         assert response.status_code == 200
         settings = response.json()
 
@@ -64,9 +64,7 @@ class TestEndpoints:
 
     def test_settings_get_nonexistent_client(self, client: TestClient) -> None:
         """Test getting settings for a non-existent client"""
-        headers = TEST_HEADERS.copy()
-        headers["client"] = "nonexistent_client"
-        response = client.get("/v1/settings", headers=headers)
+        response = client.get("/v1/settings", params={"client": "non_existant_client"}, headers=TEST_HEADERS)
         assert response.status_code == 404
         assert "not found" in response.json()["detail"]
 
@@ -87,9 +85,7 @@ class TestEndpoints:
         assert "oci" in settings
 
         # Verify we can retrieve the settings
-        headers = TEST_HEADERS.copy()
-        headers["client"] = new_client
-        response = client.get("/v1/settings", headers=headers)
+        response = client.get("/v1/settings", params={"client": new_client}, headers=TEST_HEADERS)
         assert response.status_code == 200
         assert response.json()["client"] == new_client
 
@@ -107,7 +103,7 @@ class TestEndpoints:
     def test_settings_update(self, client: TestClient) -> None:
         """Test updating settings for a client"""
         # First get the current settings
-        response = client.get("/v1/settings", headers=TEST_HEADERS)
+        response = client.get("/v1/settings", params={"client": TEST_CONFIG["test_client"]}, headers=TEST_HEADERS)
         assert response.status_code == 200
         _ = response.json()
 

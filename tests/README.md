@@ -1,11 +1,30 @@
 # AI Explorer for Apps Tests
+<!-- spell-checker:ignore streamlit, venv, setuptools, pytest -->
 
 This directory contains Tests for the AI Explorer for Apps.  Tests are automatically
 run as part of opening a new Pull Requests.  All tests must pass to enable merging.
 
+## Installing Test Dependencies
+
+1. Create and activate a Python Virtual Environment:
+
+   ```bash
+   cd src/
+   python3.11 -m venv .venv --copies
+   source .venv/bin/activate
+   pip3.11 install --upgrade pip wheel setuptools
+   ```
+
+1. Install the Python modules:
+
+   ```bash
+   pip3.11 install -e ".[all-test]"
+   source .venv/bin/activate
+   ```
+
 ## Running Tests
 
-All tests can be run by using the following command from the project root:
+All tests can be run by using the following command from the **project root**:
 
 ```bash
 pytest tests -v [--log-cli-level=DEBUG]
@@ -13,7 +32,7 @@ pytest tests -v [--log-cli-level=DEBUG]
 
 ### Server Endpoint Tests
 
-To run the server endpoint tests, use the following command from the project root:
+To run the server endpoint tests, use the following command from the **project root**:
 
 ```bash
 pytest tests/server -v [--log-cli-level=DEBUG]
@@ -26,10 +45,10 @@ These tests verify the functionality of the endpoints by establishing:
 
 ### Streamlit Tests
 
-To run the Streamlit page tests, use the following command from the project root:
+To run the Streamlit page tests, use the following command from the **project root**:
 
 ```bash
-pytest tests/sandbox -v [--log-cli-level=DEBUG]
+pytest tests/client -v [--log-cli-level=DEBUG]
 ```
 
 These tests verify the functionality of the Streamlit app by establishing:
@@ -49,13 +68,6 @@ The server endpoint tests are organized into two classes:
 The Streamlit settings page tests are organized into two classes:
 - `TestFunctions`: Tests for the utility functions
 - `TestUI`: Tests for the Streamlit UI components
-
-## Dependencies
-
-The tests require the following additional dependencies to the default AI Explorer dependencies:
-- pytest
-- pytest-mock
-- docker (for database container tests)
 
 ## Test Environment
 

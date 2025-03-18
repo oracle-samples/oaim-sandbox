@@ -9,7 +9,7 @@ on:
       - reopened
     paths:
       - "src/server/**"
-      - "src/sandbox/**"
+      - "src/client/**"
 
   # Allows running this workflow manually
   workflow_dispatch:
@@ -41,7 +41,7 @@ jobs:
           path: |
             ~/.cache/pip
             src/.tox
-          key: ${{ runner.os }}-pip-${{ hashFiles('src/requirements.txt', 'src/server/requirements.txt', 'src/sandbox/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('src/requirements.txt', 'src/server/requirements.txt', 'src/client/requirements.txt') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 

@@ -18,21 +18,22 @@ RUN microdnf -y update && \
     groupadd $RUNUSER && \
     useradd -u 10001 -g $RUNUSER -md /app $RUNUSER && \
     install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/.oci && \
-    install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/tmp
-
-# Avoid re-installs of python modules if the reqs haven't changed
-COPY ./requirements.txt /opt/requirements.txt
-COPY ./sandbox/requirements.txt /opt/sandbox/requirements.txt
-COPY ./server/requirements.txt /opt/server/requirements.txt
+    install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/tmp && \
+    install -d -m 0700 -o $RUNUSER -g $RUNUSER /opt/package/server && \
+    install -d -m 0700 -o $RUNUSER -g $RUNUSER /opt/package/client && \
+    install -d -m 0700 -o $RUNUSER -g $RUNUSER /opt/package/common
+    
+# Copy only pyproject.toml for dependency installation
+COPY pyproject.toml /opt/package/pyproject.toml
 # Use the virtual environment for pip installations
 RUN source /opt/.venv/bin/activate && \
     pip install --upgrade pip wheel setuptools && \
-    pip install -r /opt/requirements.txt
+    pip install "/opt/package[all]"
 
 ##################################################
 # Application
 ##################################################
-FROM all_in_one_pyenv AS oaim_application
+FROM all_in_one_pyenv AS oai_application
 ENV PATH=/opt/.venv/bin:$PATH
 ENV TEMP=/app/tmp
 

@@ -3,7 +3,7 @@ Copyright (c) 2024, 2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 """
 # spell-checker:ignore langgraph, ocid, docos, giskard, testsets, testset, noauth
-# spell-checker:ignore astream, ainvoke, oaim, litellm
+# spell-checker:ignore astream, ainvoke, litellm
 
 import asyncio
 import json
@@ -13,9 +13,9 @@ from urllib.parse import urlparse
 from pathlib import Path
 import shutil
 from typing import AsyncGenerator, Literal, Optional
-from pydantic import HttpUrl
-import requests
 import time
+import requests
+from pydantic import HttpUrl
 
 from langgraph.graph.state import CompiledStateGraph
 from langchain_core.messages import HumanMessage, AnyMessage, convert_to_openai_messages, ChatMessage
@@ -249,9 +249,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         description="Split and Embed Corpus.",
     )
     async def split_embed(
-        request: schema.DatabaseVectorStorage,
-        rate_limit: int = 0,
-        client: schema.ClientIdType = Header(...)
+        request: schema.DatabaseVectorStorage, rate_limit: int = 0, client: schema.ClientIdType = Header(...)
     ) -> Response:
         """Perform Split and Embed"""
         logger.debug("Received split_embed - rate_limit: %i; request: %s", rate_limit, request)
@@ -283,10 +281,12 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
             embed_client = await models.get_client(
                 MODEL_OBJECTS, {"model": request.model, "rag_enabled": True}, oci_config
             )
-            
+
             # Calculate and set the vector_store name using get_vs_table
-            request.vector_store, _ = functions.get_vs_table(**request.model_dump(exclude={"database", "vector_store"}))
-            
+            request.vector_store, _ = functions.get_vs_table(
+                **request.model_dump(exclude={"database", "vector_store"})
+            )
+
             embedding.populate_vs(
                 vector_store=request,
                 db_details=get_client_db(client),
@@ -552,7 +552,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
     # settings Endpoints
     #################################################
     @auth.get("/v1/settings", description="Get client settings", response_model=schema.Settings)
-    async def settings_get(client: schema.ClientIdType = Header(...)) -> schema.Settings:
+    async def settings_get(client: schema.ClientIdType) -> schema.Settings:
         """Get settings for a specific client by name"""
         return get_client_settings(client)
 
@@ -604,14 +604,19 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         if not ll_client:
             error_response = {
                 "id": "error",
-                "choices": [{
-                    "message": {"role": "assistant", "content": "I'm sorry, I'm unable to initialise the Language Model. Please refresh the application."},
-                    "index": 0,
-                    "finish_reason": "stop"
-                }],
+                "choices": [
+                    {
+                        "message": {
+                            "role": "assistant",
+                            "content": "I'm sorry, I'm unable to initialise the Language Model. Please refresh the application.",
+                        },
+                        "index": 0,
+                        "finish_reason": "stop",
+                    }
+                ],
                 "created": int(time.time()),
                 "model": model.get("model", "unknown"),
-                "object": "chat.completion"
+                "object": "chat.completion",
             }
             yield error_response
             return
@@ -742,7 +747,9 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         return testsets
 
     @auth.get("/v1/testbed/evaluations", description="Get Stored Evaluations.", response_model=list[schema.Evaluation])
-    async def testbed_evaluations(tid: schema.TestSetsIdType, client: schema.ClientIdType = Header(...)) -> list[schema.Evaluation]:
+    async def testbed_evaluations(
+        tid: schema.TestSetsIdType, client: schema.ClientIdType = Header(...)
+    ) -> list[schema.Evaluation]:
         """Get Evaluations"""
         evaluations = testbed.get_evaluations(db_conn=get_client_db(client).connection, tid=tid.upper())
         return evaluations
@@ -752,13 +759,17 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         description="Get Stored Single schema.Evaluation.",
         response_model=schema.EvaluationReport,
     )
-    async def testbed_evaluation(eid: schema.TestSetsIdType, client: schema.ClientIdType = Header(...)) -> schema.EvaluationReport:
+    async def testbed_evaluation(
+        eid: schema.TestSetsIdType, client: schema.ClientIdType = Header(...)
+    ) -> schema.EvaluationReport:
         """Get Evaluations"""
         evaluation = testbed.process_report(db_conn=get_client_db(client).connection, eid=eid.upper())
         return evaluation
 
     @auth.get("/v1/testbed/testset_qa", description="Get Stored schema.TestSets Q&A.", response_model=schema.TestSetQA)
-    async def testbed_testset_qa(tid: schema.TestSetsIdType, client: schema.ClientIdType = Header(...)) -> schema.TestSetQA:
+    async def testbed_testset_qa(
+        tid: schema.TestSetsIdType, client: schema.ClientIdType = Header(...)
+    ) -> schema.TestSetQA:
         """Get TestSet Q&A"""
         return testbed.get_testset_qa(db_conn=get_client_db(client).connection, tid=tid.upper())
 
@@ -775,7 +786,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         files: list[UploadFile],
         name: schema.TestSetsNameType,
         tid: Optional[schema.TestSetsIdType] = None,
-        client: schema.ClientIdType = Header(...)
+        client: schema.ClientIdType = Header(...),
     ) -> schema.TestSetQA:
         """Update stored TestSet data"""
         created = datetime.now().isoformat()
@@ -800,7 +811,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         ll_model: schema.ModelNameType = None,
         embed_model: schema.ModelNameType = None,
         questions: int = 2,
-        client: schema.ClientIdType = Header(...)
+        client: schema.ClientIdType = Header(...),
     ) -> schema.TestSetQA:
         """Retrieve contents from a local file uploaded and generate Q&A"""
         # Setup Models

@@ -2,8 +2,8 @@
 ## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
 apiVersion: v2
-name: oaim-sandbox
-description: A Helm chart Oracle AI Microservice Sandbox
+name: oai-explorer
+description: A Helm chart Oracle AI Explorer for Apps
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
@@ -13,14 +13,14 @@ maintainers:
     url: https://github.com/oracle-samples/oaim-sandbox
 
 dependencies:
-  - name: oaim-server
+  - name: oai-server
     version: 0.1.0
-    repository: file://charts/oaim-server
-    condition: oaim-server.enabled
-  - name: oaim-sandbox
+    repository: file://charts/oai-server
+    condition: oai-server.enabled
+  - name: oai-client
     version: 0.1.0
-    repository: file://charts/oaim-sandbox
-    condition: oaim-sandbox.enabled
+    repository: file://charts/oai-client
+    condition: oai-client.enabled
   - name: ollama
     version: 0.1.0
     repository: file://charts/ollama
