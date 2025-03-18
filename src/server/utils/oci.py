@@ -39,7 +39,7 @@ def init_client(
     # Retries and timeouts should be handled on the client side otherwise they conflict
     client_kwargs = {
         "retry_strategy": oci.retry.NoneRetryStrategy(),
-        "timeout": (1, 60),
+        "timeout": (1, 180),
     }
 
     # OCI GenAI

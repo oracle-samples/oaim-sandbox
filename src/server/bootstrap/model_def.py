@@ -138,7 +138,7 @@ def main() -> list[Model]:
             "url": os.environ.get("OCI_GENAI_SERVICE_ENDPOINT", None),
             "api_key": "",
             "openai_compat": False,
-            "max_chunk_size": 512,
+            "max_chunk_size": 4096,
         },
         {
             "name": "text-embedding-nomic-embed-text-v1.5",
