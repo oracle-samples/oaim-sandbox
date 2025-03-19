@@ -1,10 +1,6 @@
 # Hands-on-lab Guide
 
-* install DB:
-
-  ```bash
-  podman run -d --name db23ai -p 1521:1521 container-registry.oracle.com/database/free:latest
-  ```
+* install [DB](INSTALL_DB23AI.md):
 
 * start DB: 
   ```bash
