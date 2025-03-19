@@ -128,4 +128,37 @@ to start a conversation with the same questions, and compare the answers.
 
 
 ### Prepare vector store
-Proceed as shown [here](SPLIT-EMBED.md) to prepare a vectorstore to empower the answers provided by the chatbot compare with a plain LLM that hasn't enough context info to answer on a topic.
+Proceed as shown [here](SPLIT-EMBED.md) to prepare a vectorstore to augment the answers provided by the chatbot compare with a plain LLM that hasn't enough context info to answer on a topic.
+
+### RAG test
+Now that we have two vector store, let's start to test the first knowledge base created with the local LLMs based on the OLLAMA server:`TEST1`
+
+* Clear history and choose llama3.1 model for initial test.
+
+* Scrolling down the left side pane, **Enable RAG?**. 
+
+* In **Select Alias** dropdown box, select the `TEST1` vector store table. You will see the rest of the fields of **Vector Store** menu automatically populated, since each of them represent a search parameter that could be used to select the vector store created. In this case, the alias is enough to determine what you are looking for but, from the other side, you have the evidence of the parameteres used to create the chunk and related embeddings vector.
+
+* Let's ask again the same questions to which the LLM has provided generic anwers since not related to the document loaded that the LLM ignored in its training or not enough addressed in the questions:
+
+```
+Which kind of database you can use to run the Java Web example application?
+Which Java environment should be used to run this example?
+```
+
+TEST1
+
+```
+ gpt-mini - 4 - similarity - temp 0
+Which Java environment should be used to run this example?
+
+
+The example should be run in a Java environment that includes a servlet and JSP container, specifically using Apache Tomcat as the web server for deploying the JSP pages. Additionally, it requires the appropriate JDBC drivers, which can be downloaded from Maven Central. Make sure to set the PATH environment variable for the JDK as well.
+
+
+gpt-mini - 10 - similarity - temp 0
+
+The example suggests using the Apache Tomcat server as the web server with a servlet and JSP container for deploying the Java web application. Additionally, it recommends using IntelliJ IDEA as the integrated development environment (IDE) for developing the application. You will also need to set the PATH environment variable for the JDK and download necessary JDBC drivers from Maven Central for the application.
+
+
+```
