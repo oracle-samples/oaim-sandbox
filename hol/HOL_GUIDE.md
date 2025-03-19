@@ -1,11 +1,6 @@
 # Hands-on-lab Guide
 
-* install [DB](INSTALL_DB23AI.md):
-
-* start DB: 
-  ```bash
-  colima start x64
-  ```
+* install and start [DB](INSTALL_DB23AI.md):
 
 * install ollama
 
