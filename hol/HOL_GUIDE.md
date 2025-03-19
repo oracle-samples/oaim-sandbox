@@ -18,7 +18,7 @@ We are going to use Oracle Database 23ai to take advantage of the vector search 
 
 
 ### LLM runtime
-We would like to interact with different LLMs localy and we are going to use Ollama for running them. We are going to use it in if Ollama isn't installed in your system already, you can use brew:
+We would like to interact with different LLMs locally and we are going to use Ollama for running them. We are going to use it in if Ollama isn't installed in your system already, you can use brew:
 
 ```bash
   brew install ollama
@@ -80,13 +80,17 @@ and get api-key from logs:
 ## Explore the env
 In a browser, open the link: `http://localhost:8502/`
 
-* let's check if the DB is correctly connected:
+### DB connection
+
+Let's check if the DB is correctly connected:
 
 ![DB](images/db.png)
 
 * You should see the message: `Current Status: Connected`
 
-* let's check models:
+### LLM config:
+
+Let's check models available:
 
 ![models menu](images/models.png)
 
@@ -97,3 +101,27 @@ In a browser, open the link: `http://localhost:8502/`
   * LLMs for embeddings must be:
 
   ![embeddings](images/emb.png)
+
+### Chat
+The two LLMs availble could be tested straightful to understand their behaviour with generic questions. Before to access the chat GUI
+
+![chat](images/chat.png)
+
+scroll down the left side menu to find the **Chat model** menu:
+
+![chat models](images/chatmodel.png)
+
+and, with the **Enable RAG?** check-box not selected, choose the **gpt-4o-mini** and ask generic question like:
+```
+Which kind of database you can use to run the Java Web example application?
+Can I use any kind of development environment to run the example?
+To run the example, how can I check if the dbms it is working correctly?
+```
+As you can see, even if the question mean to refer a specific example, the LLM answer in a generic way. 
+
+* Clear the History, by default checked, and choose the other LLM available, **llama3.1**,
+to start a conversation with the same questions, and compare the answers.
+
+* Play with the **Temperature** parameter, and the others to compare the quality of the answers, for each LLM available. Clear the history after each cycle.
+
+
