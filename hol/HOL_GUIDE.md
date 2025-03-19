@@ -57,8 +57,21 @@ git clone --branch hol --single-branch https://github.com/oracle-samples/oaim-sa
   ```
 
 * open a browser on link `http://localhost:8502/`
+
 * let's check if the DB is correctly connected:
 
 ![DB](images/db.png)
 
 * You should see the message: `Current Status: Connected`
+
+* let's check models:
+
+![models menu](images/models.png)
+
+  * LLMs for chat completions must be:
+
+  ![llms](images/llms.png)
+
+  * LLMs for embeddings must be:
+
+  ![embeddings](images/emb.png)
