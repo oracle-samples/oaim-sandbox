@@ -41,6 +41,8 @@ ollama pull llama3.1
 ollama pull mxbai-embed-large
 ```
 
+For OpenAI you need the OPENAI_API_KEY to authenticate and use their services. 
+
 ### Clone the right branch
 * Make sure to clone the branch `hol`. In a `<project_dir>` proceed in this way:
 ```bash
@@ -56,7 +58,7 @@ git clone --branch hol --single-branch https://github.com/oracle-samples/oaim-sa
   ```
 
 ### Startup 
-The two scripts `server.sh` and `sandbox.sh` hold env variables needed to connect the DB. If for any reasons do you need to adapt to a different setup, change accordingly.
+The two scripts `server.sh` and `sandbox.sh` hold env variables needed to connect the DB and OpenAI. Set the `OPENAI_API_KEY` in the server script. If, for any reasons, you need to adapt the DBMS to a different instance and setup, change the variables accordingly.
 
 * In a separate shell:
 
@@ -125,3 +127,5 @@ to start a conversation with the same questions, and compare the answers.
 * Play with the **Temperature** parameter, and the others to compare the quality of the answers, for each LLM available. Clear the history after each cycle.
 
 
+### Prepare vector store
+Proceed as shown [here](SPLIT-EMBED.md) to prepare a vectorstore to empower the answers provided by the chatbot compare with a plain LLM that hasn't enough context info to answer on a topic.
