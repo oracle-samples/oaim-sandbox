@@ -1,6 +1,6 @@
 export API_SERVER_URL="http://localhost"
 export API_SERVER_PORT=8000
-
+#export OPENAI_API_KEY=
 export DB_USERNAME=vector
 export DB_PASSWORD=vector
 export DB_DSN="localhost:1521/FREEPDB1"
