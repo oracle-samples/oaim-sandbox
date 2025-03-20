@@ -117,7 +117,6 @@ and, with the **Enable RAG?** check-box not selected, choose the **gpt-4o-mini**
 ```
 Which kind of database you can use to run the Java Web example application?
 Can I use any kind of development environment to run the example?
-To run the example, how can I check if the dbms it is working correctly?
 ```
 As you can see, even if the question mean to refer a specific example, the LLM answer in a generic way. 
 
@@ -128,4 +127,80 @@ to start a conversation with the same questions, and compare the answers.
 
 
 ### Prepare vector store
-Proceed as shown [here](SPLIT-EMBED.md) to prepare a vectorstore to empower the answers provided by the chatbot compare with a plain LLM that hasn't enough context info to answer on a topic.
+Proceed as shown [here](SPLIT-EMBED.md) to prepare a vectorstore to augment the answers provided by the chatbot compare with a plain LLM that hasn't enough context info to answer on a topic.
+
+### RAG test
+Now that we have two vector store, let's start to test the first knowledge base created with the local LLMs based on the OLLAMA server:`TEST1`
+
+* Clear history and choose llama3.1 model for initial test.
+
+* Scrolling down the left side pane, **Enable RAG?**. 
+
+* In **Select Alias** dropdown box, select the `TEST1` vector store table. You will see the rest of the fields of **Vector Store** menu automatically populated, since each of them represent a search parameter that could be used to select the vector store created. In this case, the alias is enough to determine what you are looking for but, from the other side, you have the evidence of the parameteres used to create the chunk and related embeddings vector.
+
+* Let's ask again the same questions to which the LLM has provided generic anwers since not related to the document loaded that the LLM ignored in its training or not enough addressed in the questions:
+
+```
+Which kind of database you can use to run the Java Web example application?
+Which Java environment should be used to run this example?
+```
+
+On TEST1 vector store you will try with the main params set in the following way, how will change the quality of the answers.
+
+  * LLM:gpt-4o-mini
+  * TopK: 4
+  * Search Type: Similarity
+  * Temperature: 0
+
+```
+Q: Which Java environment should be used to run this example?
+
+A: The example should be run in a Java environment that includes a servlet and JSP container, specifically using Apache Tomcat as the web server for deploying the JSP pages. Additionally, it requires the appropriate JDBC drivers, which can be downloaded from Maven Central. Make sure to set the PATH environment variable for the JDK as well.
+```
+
+  * LLM: gpt-4o-mini
+  * TopK: 10
+  * Search Type: Similarity
+  * Temperature: 0
+
+```
+Q: Which Java environment should be used to run this example?
+
+A: The example suggests using the Apache Tomcat server as the web server with a servlet and JSP container for deploying the Java web application. Additionally, it recommends using IntelliJ IDEA as the integrated development environment (IDE) for developing the application. You will also need to set the PATH environment variable for the JDK and download necessary JDBC drivers from Maven Central for the application.
+```
+
+**COMMENT**: as you can see with more chunks provided, the bot start to mention also the IDE IntelliJ as part of a Java environment to be used, compared with the previuos one that mention only Java/JDK/Maven.
+
+
+  * LLM: gpt-4o-mini
+  * TopK: 4
+  * Search Type: Similarity
+  * Temperature: 0
+```
+Q: Which kind of database you can use to run the Java Web example application?
+
+A:You can use the Oracle Database to run the Java Web example application. Specifically, you need a working installation of Oracle Database along with the HR schema, as mentioned in the introduction to JDBC and the application structure provided in your documents.
+```
+
+  * LLM: gpt-4o-mini
+  * TopK: 10
+  * Search Type: Similarity
+  * Temperature: 0
+
+```
+Q: Which kind of database you can use to run the Java Web example application?
+
+A:You can use the Oracle Database to run the Java Web example application. The application requires a working installation of Oracle Database along with the HR schema. Additionally, you can opt for Oracle Autonomous Database Cloud Services, which provides access to Oracle Cloud Free Tier for creating databases (as mentioned in the document).
+```
+
+**COMMENT**: In the second answer it mentions the Autonomous Database Cloud Services
+
+* Conclusion: we can suppose that 10 chunks as TopK similar vector represents a better parameters than the deafult 4.
+
+* Play with Temperature to discover how much become reacher in terms of expressions the answers provided.
+
+**<TBD: different vector datastore tests/LLM>**
+
+### Testbed
+We are confident that changing some parameters the quality and accuracy of the answers improve. But are you sure that on a large scale deployment your setup it's reliable on hundreds or thousands of different questions?
+Testbed helps you to massive test your chatbot, generating for you a Q&A test dataset and automatically try on your current configuration.
