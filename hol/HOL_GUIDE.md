@@ -217,4 +217,37 @@ A:You can use the Oracle Database to run the Java Web example application. The a
 
 ### Testbed
 We are confident that changing some parameters the quality and accuracy of the answers improve. But are you sure that on a large scale deployment your setup it's reliable on hundreds or thousands of different questions?
-Testbed helps you to massive test your chatbot, generating for you a Q&A test dataset and automatically try on your current configuration.
+Testbed helps you to massive test your chatbot, generating for you a Q&A test dataset and automatically try on your current configuration. Let's access to the Testbed from left pane menu:
+
+![testbed](./images/tesbed.png)
+
+#### Generate a Q&A Test dataset
+The platform allows to generat as many as you questions and answer you desire, based on a single document that it's part of the knowledge base that you have store as vector store and their own embeddings. Selecting the proper radio button:
+
+![generate](./images/tesbed.png)
+
+you will access to the AI Explorer test dataset generation capabilities:
+
+![generate](./images/generatenew.png)
+
+* Upload the document used to create the vector store, getting from this [this link](https://docs.oracle.com/en/database/oracle/oracle-database/23/tdpjd/get-started-java-development.pdf).
+
+* Increase the number to be generated to 10 or more. Take in consideration that the process it's quite long, especially if you will use local LLM for Q&A generation without enough hardware capacity. In case of OpenAI remote model, the process it's less affected by increasing the number of Q&As than the private LLM approach.
+
+* Leave the default option for:
+  * Q&A Language Model: **gpt-4o-mini**
+  * Q&A Embedding Model: **text-embedding-3-small**
+
+* Click on **Generate Q&A** button and wait up to the process is over.
+
+* Let's examine the result report, starting from the first part:
+
+  ![result](./images/result_topic.png)
+
+It shows:
+  * The chatbot's **Evaluation Settings** as it has been configured in the left side playground, before start the massive test
+  * The **RAG Settings** for the Database and the relative Vector Store selected, with the name of the embedding **model** used and all the parameters set, from **chunk_size**, to the **top_k**.
+  * The **Overall Correctness Score** that represents the percentage between the total number of questions submitted and the answers considered correct by the LLM used to judge the response compared the reference answer.
+  * The **Correctness By Topic**: each question in the test dataset comes with a tag that represents the topic it belongs to. The list of topics it's extracted automatically at the creation step of the Q&A synthetic dataset. 
+
+  
