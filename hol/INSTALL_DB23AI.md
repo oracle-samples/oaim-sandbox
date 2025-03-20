@@ -37,7 +37,7 @@ alter system set vector_memory_size=512M scope=spfile;
 
 alter session set container=FREEPDB1;
 
-CREATE USER "VECTOR" IDENTIFIED BY VECTOR
+CREATE USER "VECTOR" IDENTIFIED BY vector
     DEFAULT TABLESPACE "USERS"
     TEMPORARY TABLESPACE "TEMP";
 GRANT "DB_DEVELOPER_ROLE" TO "VECTOR";

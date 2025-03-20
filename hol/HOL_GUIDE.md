@@ -250,4 +250,10 @@ It shows:
   * The **Overall Correctness Score** that represents the percentage between the total number of questions submitted and the answers considered correct by the LLM used to judge the response compared the reference answer.
   * The **Correctness By Topic**: each question in the test dataset comes with a tag that represents the topic it belongs to. The list of topics it's extracted automatically at the creation step of the Q&A synthetic dataset. 
 
-  
+The second part of the report provides details about the single questions submitted. To show all the fields, scrool from right to left to see. In the following picture the second frame has been scrolled:
+
+  ![result](./images/result_question.png)
+
+  * **question**: question submitted
+  * **reference_asnwer**: represents the anwers that is considered correct an we aspect quite similar to the answer will be provided by the agent
+    
