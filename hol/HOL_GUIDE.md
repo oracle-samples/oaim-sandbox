@@ -152,10 +152,9 @@ On TEST1 vector store you will experience with the main params set in that way, 
   * Temperature: 0
 
 ```
-Which Java environment should be used to run this example?
+Q: Which Java environment should be used to run this example?
 
-
-The example should be run in a Java environment that includes a servlet and JSP container, specifically using Apache Tomcat as the web server for deploying the JSP pages. Additionally, it requires the appropriate JDBC drivers, which can be downloaded from Maven Central. Make sure to set the PATH environment variable for the JDK as well.
+A: The example should be run in a Java environment that includes a servlet and JSP container, specifically using Apache Tomcat as the web server for deploying the JSP pages. Additionally, it requires the appropriate JDBC drivers, which can be downloaded from Maven Central. Make sure to set the PATH environment variable for the JDK as well.
 ```
 
   * LLM: gpt-4o-mini
@@ -164,9 +163,38 @@ The example should be run in a Java environment that includes a servlet and JSP 
   * Temperature: 0
 
 ```
-Which Java environment should be used to run this example?
+Q: Which Java environment should be used to run this example?
 
-The example suggests using the Apache Tomcat server as the web server with a servlet and JSP container for deploying the Java web application. Additionally, it recommends using IntelliJ IDEA as the integrated development environment (IDE) for developing the application. You will also need to set the PATH environment variable for the JDK and download necessary JDBC drivers from Maven Central for the application.
+A: The example suggests using the Apache Tomcat server as the web server with a servlet and JSP container for deploying the Java web application. Additionally, it recommends using IntelliJ IDEA as the integrated development environment (IDE) for developing the application. You will also need to set the PATH environment variable for the JDK and download necessary JDBC drivers from Maven Central for the application.
 ```
 
-NOTE: as you can see with more chunks provided, the bot start to mention also the IDE IntelliJ as part of a Java environment to be used, compared with the previuos one that mention only Java/JDK/Maven.
+COMMENT: as you can see with more chunks provided, the bot start to mention also the IDE IntelliJ as part of a Java environment to be used, compared with the previuos one that mention only Java/JDK/Maven.
+
+
+  * LLM: gpt-4o-mini
+  * TopK: 4
+  * Search Type: Similarity
+  * Temperature: 0
+```
+Q: Which kind of database you can use to run the Java Web example application?
+
+A:You can use the Oracle Database to run the Java Web example application. Specifically, you need a working installation of Oracle Database along with the HR schema, as mentioned in the introduction to JDBC and the application structure provided in your documents.
+```
+
+  * LLM: gpt-4o-mini
+  * TopK: 10
+  * Search Type: Similarity
+  * Temperature: 0
+
+```
+Q: Which kind of database you can use to run the Java Web example application?
+
+A:You can use the Oracle Database to run the Java Web example application. The application requires a working installation of Oracle Database along with the HR schema. Additionally, you can opt for Oracle Autonomous Database Cloud Services, which provides access to Oracle Cloud Free Tier for creating databases (as mentioned in the document).
+```
+
+COMMENT: In the second answer it mentions the Autonomous Database Cloud Services
+
+* Conclusion: we can suppose that 10 chunks as TopK similar vector represents a better parameters than the deafult 4.
+
+* Play with Temperature to discover how much become reacher in terms of expressions the answers provided.
+
