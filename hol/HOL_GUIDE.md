@@ -50,6 +50,20 @@ git clone --branch hol --single-branch https://github.com/oracle-samples/oaim-sa
 ```
 
 ### Install requirements:
+
+#### Python version
+
+AI Explorer for Apps requires exactly Python 3.11, neither older nor newer.  If you are using a recent version of macOS,
+you will need to install that version side by side with the builtin one.
+Install Python 3.11:
+
+  ```bash
+  brew install python@3.11
+  python3.11 --version
+  ```
+
+#### Create environment
+
   ```bash
     python3.11 -m venv .venv
     source .venv/bin/activate
