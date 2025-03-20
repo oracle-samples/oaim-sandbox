@@ -117,7 +117,6 @@ and, with the **Enable RAG?** check-box not selected, choose the **gpt-4o-mini**
 ```
 Which kind of database you can use to run the Java Web example application?
 Can I use any kind of development environment to run the example?
-To run the example, how can I check if the dbms it is working correctly?
 ```
 As you can see, even if the question mean to refer a specific example, the LLM answer in a generic way. 
 
@@ -146,19 +145,28 @@ Which kind of database you can use to run the Java Web example application?
 Which Java environment should be used to run this example?
 ```
 
-TEST1
+On TEST1 vector store you will experience with the main params set in that way, these kind of answers:
+  * LLM:gpt-4o-mini
+  * TopK: 4
+  * Search Type: Similarity
+  * Temperature: 0
 
 ```
- gpt-mini - 4 - similarity - temp 0
 Which Java environment should be used to run this example?
 
 
 The example should be run in a Java environment that includes a servlet and JSP container, specifically using Apache Tomcat as the web server for deploying the JSP pages. Additionally, it requires the appropriate JDBC drivers, which can be downloaded from Maven Central. Make sure to set the PATH environment variable for the JDK as well.
+```
 
-
-gpt-mini - 10 - similarity - temp 0
-
-The example suggests using the Apache Tomcat server as the web server with a servlet and JSP container for deploying the Java web application. Additionally, it recommends using IntelliJ IDEA as the integrated development environment (IDE) for developing the application. You will also need to set the PATH environment variable for the JDK and download necessary JDBC drivers from Maven Central for the application.
-
+  * LLM: gpt-4o-mini
+  * TopK: 10
+  * Search Type: Similarity
+  * Temperature: 0
 
 ```
+Which Java environment should be used to run this example?
+
+The example suggests using the Apache Tomcat server as the web server with a servlet and JSP container for deploying the Java web application. Additionally, it recommends using IntelliJ IDEA as the integrated development environment (IDE) for developing the application. You will also need to set the PATH environment variable for the JDK and download necessary JDBC drivers from Maven Central for the application.
+```
+
+NOTE: as you can see with more chunks provided, the bot start to mention also the IDE IntelliJ as part of a Java environment to be used, compared with the previuos one that mention only Java/JDK/Maven.
