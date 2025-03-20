@@ -20,7 +20,7 @@ You can choose from three different file sources:
 * **Local**: Upload a document directly from your local environment.
 * **Web**: Import a document from a publicly accessible web URL.
 
-In this example, we will embed a document from the web, available at [this link](https://docs.oracle.com/en/database/oracle/oracle-database/23/tdpjd/get-started-java-development.pdf).
+In this example, we will embed a document from the web, available at [this link](https://docs.oracle.com/en/database/oracle/oracle-database/23/tdpjd/get-started-java-development.pdf). We will give the alias ***TEST1*** to this vector store.
 
 You can then click on the **Populate Vector Store** button and start the embedding process.
 
@@ -42,7 +42,8 @@ select * from VECTOR.TEST1_MXBAI_EMBED_LARGE_512_103_COSINE_HNSW;
 
 What you see in the image above are chunks of text from the input document, which have been transformed into vector format and stored in the Oracle database. Essentially, you’ve replicated the knowledge contained in the document within your database!
 
-By following the sames steps, we can creat another vector store using the same document but with a different embedding model, *text-embedding-3-small* from the OpenAI models. In this case, we will get a smaller number of chunks, since the model supports a chunk size of 8191 instead of the 512 given by *mxbai-embed-large*:
+By following the sames steps, we can creat another vector store using the same document but with a different embedding model, *text-embedding-3-small* from the OpenAI models. We will give the alias ***TEST2*** to this vector store. 
+In this case, we will get a smaller number of chunks, since the model supports a chunk size of 8191 instead of the 512 given by *mxbai-embed-large*:
 
 ![text-embedding-3-small](images/text-embedding-3-small.png)
 
