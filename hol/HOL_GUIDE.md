@@ -236,7 +236,7 @@ Testbed helps you to massive test your chatbot, generating for you a Q&A test da
 ![testbed](./images/tesbed.png)
 
 #### Generate a Q&A Test dataset
-The platform allows to generat as many as you questions and answer you desire, based on a single document that it's part of the knowledge base that you have store as vector store and their own embeddings. Selecting the proper radio button:
+The platform allows to generate as many questions and answer you desire, based on a single document, that it's part of the knowledge base you have store as vector store with their own embeddings. Selecting the proper radio button:
 
 ![generate](./images/tesbed.png)
 
