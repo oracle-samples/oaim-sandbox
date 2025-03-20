@@ -104,6 +104,20 @@ Let's check if the DB is correctly connected:
 
 * You should see the message: `Current Status: Connected`
 
+### OCI Credentials
+
+In the OCI configuration tab, you can add your Oracle Cloud Infrastructure (OCI) credentials to authenticate with your OCI tenancy. This will enable access to objects and documents stored in your cloud compartments.
+
+![OCI](images/oci.png)
+
+Detailed information on obtaining the required credentials is available in the [Oracle Cloud Infrastructure Documentation](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm#Required_Keys_and_OCIDs).
+
+If you have previously created a .oci/config file, the AI Explorer will automatically read this file at startup and load the credentials from the Default profile for authentication.
+
+After entering your credentials, click the Save button. If the credentials are correct, a green confirmation pop-up will appear, indicating successful authentication to your tenancy.
+
+![OCI-CREDENTIALS](images/oci-credentials-success.png)
+
 ### LLM config:
 
 Let's check models available:
