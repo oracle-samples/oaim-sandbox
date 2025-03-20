@@ -134,8 +134,8 @@ Can I use any kind of development environment to run the example?
 ```
 As you can see, even if the question mean to refer a specific example, the LLM answer in a generic way. 
 
-* Clear the History, by default checked, and choose the other LLM available, **llama3.1**,
-to start a conversation with the same questions, and compare the answers.
+* Click the button **Clear History**, and choose the other LLM available, **llama3.1**,
+to start a conversation with the same questions, and compare the answers. Note that the History is enabled by default.
 
 * Play with the **Temperature** parameter, and the others to compare the quality of the answers, for each LLM available. Clear the history after each cycle.
 
@@ -256,4 +256,4 @@ The second part of the report provides details about the single questions submit
 
   * **question**: question submitted
   * **reference_asnwer**: represents the anwers that is considered correct an we aspect quite similar to the answer will be provided by the agent
-    
+
