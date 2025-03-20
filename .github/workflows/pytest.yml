@@ -41,7 +41,7 @@ jobs:
           path: |
             ~/.cache/pip
             src/.tox
-          key: ${{ runner.os }}-pip-${{ hashFiles('src/requirements.txt', 'src/server/requirements.txt', 'src/client/requirements.txt') }}
+          key: ${{ runner.os }}-pip-${{ hashFiles('src/pyproject.toml') }}
           restore-keys: |
             ${{ runner.os }}-pip-
 
@@ -49,8 +49,7 @@ jobs:
         run: |
           cd src/
           python -m pip install --upgrade pip wheel setuptools
-          pip install -r requirements.txt
-          pip install pytest docker
+          pip install -e ".[all-test]"
 
       - name: Run All Tests
         run: pytest
