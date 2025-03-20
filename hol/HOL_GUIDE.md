@@ -135,7 +135,7 @@ Can I use any kind of development environment to run the example?
 As you can see, even if the question mean to refer a specific example, the LLM answer in a generic way. 
 
 * Click the button **Clear History**, and choose the other LLM available, **llama3.1**,
-to start a conversation with the same questions, and compare the answers. Note that the History is enabled by default.
+to start a conversation with the same questions, and compare the answers. Note that the History is enabled by default. The **Clear History** button reset the “context window” and start a fresh interaction with a model.
 
 * Play with the **Temperature** parameter, and the others to compare the quality of the answers, for each LLM available. Clear the history after each cycle.
 
