@@ -145,7 +145,8 @@ Which kind of database you can use to run the Java Web example application?
 Which Java environment should be used to run this example?
 ```
 
-On TEST1 vector store you will experience with the main params set in that way, these kind of answers:
+On TEST1 vector store you will try with the main params set in the following way, how will change the quality of the answers.
+
   * LLM:gpt-4o-mini
   * TopK: 4
   * Search Type: Similarity
@@ -168,7 +169,7 @@ Q: Which Java environment should be used to run this example?
 A: The example suggests using the Apache Tomcat server as the web server with a servlet and JSP container for deploying the Java web application. Additionally, it recommends using IntelliJ IDEA as the integrated development environment (IDE) for developing the application. You will also need to set the PATH environment variable for the JDK and download necessary JDBC drivers from Maven Central for the application.
 ```
 
-COMMENT: as you can see with more chunks provided, the bot start to mention also the IDE IntelliJ as part of a Java environment to be used, compared with the previuos one that mention only Java/JDK/Maven.
+**COMMENT**: as you can see with more chunks provided, the bot start to mention also the IDE IntelliJ as part of a Java environment to be used, compared with the previuos one that mention only Java/JDK/Maven.
 
 
   * LLM: gpt-4o-mini
@@ -192,9 +193,14 @@ Q: Which kind of database you can use to run the Java Web example application?
 A:You can use the Oracle Database to run the Java Web example application. The application requires a working installation of Oracle Database along with the HR schema. Additionally, you can opt for Oracle Autonomous Database Cloud Services, which provides access to Oracle Cloud Free Tier for creating databases (as mentioned in the document).
 ```
 
-COMMENT: In the second answer it mentions the Autonomous Database Cloud Services
+**COMMENT**: In the second answer it mentions the Autonomous Database Cloud Services
 
 * Conclusion: we can suppose that 10 chunks as TopK similar vector represents a better parameters than the deafult 4.
 
 * Play with Temperature to discover how much become reacher in terms of expressions the answers provided.
 
+**<TBD: different vector datastore tests/LLM>**
+
+### Testbed
+We are confident that changing some parameters the quality and accuracy of the answers improve. But are you sure that on a large scale deployment your setup it's reliable on hundreds or thousands of different questions?
+Testbed helps you to massive test your chatbot, generating for you a Q&A test dataset and automatically try on your current configuration.
