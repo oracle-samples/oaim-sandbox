@@ -14,7 +14,7 @@ resource "oci_artifacts_container_repository" "server_repository" {
   is_public      = false
 }
 
-resource "oci_artifacts_container_repository" "sandbox_repository" {
+resource "oci_artifacts_container_repository" "explorer_repository" {
   compartment_id = local.compartment_ocid
   display_name   = lower(format("%s/ai-explorer-client", local.label_prefix))
   is_immutable   = false
