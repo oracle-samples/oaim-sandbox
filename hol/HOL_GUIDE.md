@@ -315,7 +315,89 @@ The second part of the report provides details about each single questions submi
 
 * To compare with previous results, click on dropdown list unde **Previous Evaluations for...** and click on **View** button to show the overall report.
 
-  ![previosu](./images/previous.png)
+  ![previous](./images/previous.png)
 
 
 * Repeat the tests as many time you desire changing: **Vector Store**, **Search Type** and **Top K** to execute the same kind of tuning you have done at the previous steps with just a few interactive questions, now on a massive test on curated and comparable assets.
+
+
+### Export and run the chatbot as a Spring AI microservice
+
+The AI Explorer allows to export the chatbot defined as a ready-to-run microservice built in Java, Spring Boot and Spring AI framework, that will run independently by the AI Explorer, leveraging only the vector store table created, and the LLM servers used. In the current relase are supported only fully Ollama configuration (embeddings + chat model) or OpenAI. 
+
+#### Pre-requisites
+To run the microservice exported you need:
+  * JDK 21.x 
+  * Apache Maven 3.8.x
+  * curl command
+
+#### Execute the Ollama version
+
+* If the ChatBot configuration is based on the Ollama LLM server provider for both LLMs, embeddings and chat, go to the **Settings** menu in the left pane side. You'll find the **Download SpringAI** button available. 
+If you'll find a message like this:
+
+  ![notollama](./images/diff_llm_springai.png)
+
+don't worry: choose for the **Chat model:** the **llama3.1** and the button will appear.
+
+
+* Download one of them through the `Download SpringAI` button. 
+
+* Unzip the file in a subdir.
+
+* Open a terminal and set the executable permission on the `env.sh` with `chmod 755 ./env.sh`.
+
+* Drop the table `SPRING_AI_VECTORS` in the Oracle DB, if exists, running in sql:
+
+```
+DROP TABLE SPRING_AI_VECTORS CASCADE CONSTRAINTS;
+COMMIT;
+```
+
+* Start the microservice a with:
+
+```
+./env.sh
+```
+
+* This microservice expose a web service that will accept HTTP GET requests at:
+
+  * `http://localhost:8080/v1/chat/completions`: to use RAG via OpenAI REST API;
+  * `http://localhost:8080/v1/service/llm` : to chat straight with the LLM used;
+  * `http://localhost:8080/v1/service/search/`: to search for document similar to the message provided.
+
+* To test it, run a curl command like this in a new terminal:
+
+  ```
+  curl -X POST "localhost:8080/v1/chat/completions" \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer your_api_key" \
+     -d '{"message": "Can I use any kind of development environment to run the example?"}'  
+  ```
+
+  The response with RAG, on the TEST1 Vector store, it will be like this:
+
+  ``` 
+  {
+    "choices": [
+      {
+        "message": {
+          "content": "Yes, you can use any kind of development environment to run the example, but for ease of development, the guide specifically mentions using an integrated development environment (IDE). It uses IntelliJ IDEA Community version as an example for creating and updating the files for the application (see Document 96EECD7484D3B56C). However, you are not limited to this IDE and can choose any development environment that suits your needs."
+        }
+      }
+    ]
+  }
+  ```
+
+  A request without leverage RAG:
+  ```
+  curl --get --data-urlencode 'message=Can I use any kind of development environment to run the example?' localhost:8080/v1/service/llm | jq .
+  ```
+
+     it will produce a response not grounded like this:
+
+  ```
+  {
+    "completion": "Yes, you can use various development environments to run examples, depending on the programming language and the specific example you are working with. Here are some common options:\n\n1. **Integrated Development Environments (IDEs)**:\n   - **Visual Studio Code**: A versatile code editor that supports many languages through extensions.\n   - **PyCharm**: Great for Python development.\n   - **Eclipse**: Commonly used for Java development.\n   - **IntelliJ IDEA**: Another popular choice for Java and other languages.\n   - **Xcode**: For macOS and iOS development (Swift, Objective-C).\n\n2. **Text Editors**:\n   - **Sublime Text**: A lightweight text editor with support for many languages.\n   - **Atom**: A hackable text editor for the 21st century.\n   - **Notepad++**: A free source code editor for Windows.\n\n3. **Command Line Interfaces**:\n   - You can run"
+  }
+  ```
