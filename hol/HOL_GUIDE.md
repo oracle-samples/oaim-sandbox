@@ -132,7 +132,7 @@ Let's check models available:
 
   ![embeddings](images/emb.png)
 
-  We are going to configure the Ollama models so that they can reach a url endpoint where the models are already configured. For example, click on the *edit* button for llama3.1 LLM and modify the *API URL* field with this endpoint 
+  We are going to configure the Ollama models so that they can reach a url endpoint where the models are already configured. For example, click on the *edit* button for llama3.1 LLM and fill the *API URL* field with this endpoint 
 
  ```plaintext
   http://129.80.103.62:11434 
