@@ -4,18 +4,18 @@
 # --Global Configuration
 global:
   api:
-    # -- OAIM API Key; you must specify either apiKey or name of an existing Secret
+    # -- API Key; you must specify either apiKey or name of an existing Secret
     apiKey: ""
-    # -- The OAIM  Helm chart supports storing the API Key in a secret.
+    # -- The Helm chart supports storing the API Key in a secret.
     # The secret needs to contain one key with its value set
     secretName: "hologram-api-keys"
     # -- Name of the key in the secret containing the API Key, overrides the default key name "apiKey"
     secretKey: ""
 
-oaim-server:
+oai-server:
   replicaCount: 1
   image:
-    repository: localhost/oaim-server
+    repository: localhost/oai-server
     tag: "latest"
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
@@ -94,11 +94,11 @@ oaim-server:
     #   mountPath: "/etc/foo"
     #   readOnly: true
 
-# -- Sandbox GUI configuration
-oaim-sandbox:
+# -- Client GUI configuration
+oai-client:
   replicaCount: 1
   image:
-    repository: localhost/oaim-sandbox
+    repository: localhost/oai-client
     tag: "latest"
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
@@ -138,7 +138,7 @@ oaim-sandbox:
     http:
       type: "ClusterIP"
 
-  sandbox:
+  client:
     features:
       disableTestbed: "false"
       disableApi: "false"

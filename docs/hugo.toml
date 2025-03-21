@@ -3,7 +3,7 @@
 
 baseURL = 'https://oracle-samples.github.io/oaim-sandbox'
 languageCode = 'en-us'
-title = 'AI Microservices Sandbox'
+title = 'Oracle AI Explorer for Apps'
 theme = "relearn"
 sectionPagesMenu = 'main'
 tableOfContents = true
@@ -25,9 +25,12 @@ enableRobotsTXT = true
 [params]
   collapsibleMenu = true
   showVisitedLinks = true
-  themeVariant = ['auto', 'sandbox-light', 'sandbox-dark']
+  themeVariant = ['auto', 'docs-light', 'docs-dark']
   disableInlineCopyToClipBoard = true
   hideAuthorName = true
+  LongName = "Oracle AI Explorer for Apps"
+  ShortName = "AI Explorer"
+  GitHubRepo = "https://github.com/oracle-samples/oaim-sandbox"
   
 [menu]
   [[menu.shortcuts]]

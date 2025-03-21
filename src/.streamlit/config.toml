@@ -8,7 +8,7 @@ gatherUsageStats = false
 serverAddress = "localhost"
 
 [server]
-cookieSecret = "oaim-sandbox-cookie"
+cookieSecret = "oai-client-cookie"
 headless = true
 
 [client]

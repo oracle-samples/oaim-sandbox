@@ -2,8 +2,8 @@
 ## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
 apiVersion: v2
-name: oaim-sandbox
-description: A Helm chart Oracle AI Microservice Sandbox - GUI Sandbox
+name: oai-client
+description: A Helm chart Oracle AI Explorer for Apps - GUI
 type: application
 version: 0.1.0
 appVersion: "0.1.0"

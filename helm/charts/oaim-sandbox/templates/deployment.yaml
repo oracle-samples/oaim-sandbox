@@ -4,16 +4,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "oaim.fullname" . }}
+  name: {{ include "oai.fullname" . }}
   labels:
-    {{- include "oaim.labels" . | nindent 4 }}
+    {{- include "oai.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "oaim.selectorLabels" . | nindent 6 }}
+      {{- include "oai.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -21,7 +21,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "oaim.labels" . | nindent 8 }}
+        {{- include "oai.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -30,7 +30,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "oaim.serviceAccountName" . }}
+      serviceAccountName: {{ include "oai.serviceAccountName" . }}
       securityContext:
         fsGroup: 10001
       containers:
@@ -69,14 +69,14 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- end }}
           env:
-            {{- range $key, $value := .Values.sandbox.features }}
+            {{- range $key, $value := .Values.client.features }}
             {{- if ne $value "false" }}
             - name: {{ snakecase $key | upper }}
               value: {{ $value | quote }}
             {{- end }}
             {{- end }}
             - name: API_SERVER_URL
-              value: {{ include "oaim-server.serviceUrl" . }}
+              value: {{ include "oai-server.serviceUrl" . }}
             - name: API_SERVER_PORT
               value: "8000"
             - name: API_SERVER_KEY
@@ -97,7 +97,7 @@ spec:
           emptyDir: {}
         - name: streamlit-config
           configMap:
-            name: {{ include "oaim.fullname" . }}-st-config
+            name: {{ include "oai.fullname" . }}-st-config
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}

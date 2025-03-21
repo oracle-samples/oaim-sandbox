@@ -6,7 +6,7 @@
 **/requirements.txt
 !requirements.txt
 !app/server/requirements.txt
-!app/sandbox/requirements.txt
+!app/client/requirements.txt
 app/THIRD_PARTY_LICENSES.txt
 helm/values*.yaml
 helm/service.yaml
@@ -25,6 +25,7 @@ sonar.sh
 **/.DS_Store
 **/*.swp
 **/.scannerwork
+**/.cursorignore
 **/tns_admin
 sonar-project.properties
 
@@ -35,12 +36,14 @@ __pycache__/
 .pytest_cache
 *.py[cod]
 *$py.class
+*/*.egg-info
+**/build/
 
 ##############################################################################
 # Random
 ##############################################################################
 **/demo*.sh
-spring_ai/src/main/resources/data/sandbox_settings.json
+spring_ai/src/main/resources/data/explorer_settings.json
 spring_ai/target/**
 spring_ai/create_user.sql
 spring_ai/drop.sql
@@ -50,7 +53,7 @@ temp/rag_agent.ipynb
 temp/tools.ipynb
 temp/tools.py
 temp/json-dual.sql
-sandbox.sh
+client.sh
 server.sh
 temp/genai_work.py
 temp/test_oci.py

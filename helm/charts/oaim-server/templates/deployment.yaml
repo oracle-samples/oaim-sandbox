@@ -4,16 +4,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "oaim.fullname" . }}
+  name: {{ include "oai.fullname" . }}
   labels:
-    {{- include "oaim.labels" . | nindent 4 }}
+    {{- include "oai.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
   selector:
     matchLabels:
-      {{- include "oaim.selectorLabels" . | nindent 6 }}
+      {{- include "oai.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       {{- with .Values.podAnnotations }}
@@ -21,7 +21,7 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "oaim.labels" . | nindent 8 }}
+        {{- include "oai.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -30,7 +30,7 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "oaim.serviceAccountName" . }}
+      serviceAccountName: {{ include "oai.serviceAccountName" . }}
       securityContext:
         fsGroup: 10001
       containers:
@@ -98,8 +98,8 @@ spec:
             - name: DB_WALLET_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "oaim.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}
-                  key: {{ include "oaim.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}
+                  name: {{ include "oai.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}
+                  key: {{ include "oai.fullname" . }}-adb-wallet-pass-{{ .Release.Revision }}
             {{- end }}
             {{- end }}
             - name: API_SERVER_PORT
@@ -160,7 +160,7 @@ spec:
             {{- if $tnsAdmin.secretName }}
             secretName: {{ $tnsAdmin.secretName | quote }}
             {{ else }}
-            secretName: {{ include "oaim.fullname" . }}-adb-tns-admin-{{ .Release.Revision }}
+            secretName: {{ include "oai.fullname" . }}-adb-tns-admin-{{ .Release.Revision }}
             {{- end }}
         {{- end }}
       {{- with .Values.volumes }}

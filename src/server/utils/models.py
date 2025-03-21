@@ -19,7 +19,7 @@ from langchain_community.embeddings.oci_generative_ai import OCIGenAIEmbeddings
 from giskard.llm.client.openai import OpenAIClient
 
 from server.utils.oci import init_genai_client
-from common.schema import ModelNameType, ModelTypeType, ModelEnabledType, Model, ModelAccess, OracleCloudSettings
+from common.schema import ModelNameType, ModelTypeType, Model, ModelAccess, OracleCloudSettings
 import common.logging_config as logging_config
 
 logger = logging_config.logging.getLogger("server.utils.models")
@@ -32,16 +32,13 @@ async def apply_filter(
     models_all: list[Model],
     model_name: Optional[ModelNameType] = None,
     model_type: Optional[ModelTypeType] = None,
-    only_enabled: Optional[ModelEnabledType] = False,
 ) -> list[Model]:
     """Used in direct call from list_models and agents.models"""
     logger.debug("%i models are defined", len(models_all))
     models_all = [
         model
         for model in models_all
-        if (model_name is None or model.name == model_name)
-        and (model_type is None or model.type == model_type)
-        and (only_enabled is False or model.enabled == only_enabled)
+        if (model_name is None or model.name == model_name) and (model_type is None or model.type == model_type)
     ]
     logger.debug("%i models after filtering", len(models_all))
     return models_all
@@ -101,7 +98,14 @@ async def get_client(
                 model=model_name, base_url=model_url, api_key=model_api_key or "api_compat", **ll_common_params
             ),
             "Cohere": lambda: ChatCohere(model=model_name, cohere_api_key=model_api_key, **ll_common_params),
-            "ChatOllama": lambda: ChatOllama(model=model_name, base_url=model_url, **ll_common_params),
+            "ChatOllama": lambda: ChatOllama(
+                model=model_name,
+                base_url=model_url,
+                **ll_common_params,
+                num_predict=ll_common_params["max_completion_tokens"],
+                # repeat_penalty=ll_common_params["frequency_penalty"],
+                # disable_streaming=not ll_common_params["streaming"]
+            ),
             "Perplexity": lambda: ChatOpenAI(
                 model=model_name, base_url=model_url, api_key=model_api_key, **ll_common_params
             ),
