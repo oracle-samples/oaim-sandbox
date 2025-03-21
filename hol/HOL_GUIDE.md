@@ -124,13 +124,21 @@ Let's check models available:
 
 ![models menu](images/models.png)
 
-  * LLMs for chat completions must be:
+  * The default LLMs for chat completions are:
 
   ![llms](images/llms.png)
 
-  * LLMs for embeddings must be:
+  * The default LLMs for embeddings are:
 
   ![embeddings](images/emb.png)
+
+  We are going to configure the Ollama models so that they can reach a url endpoint where the models are already configured. For example, click on the *edit* button for llama3.1 LLM and modify the *API URL* field with this endpoint 
+
+<pre>``` http://129.80.103.62:11434 ```</pre>
+
+  ![llama3.1-endpoint](images/llama3.1-endpoint.png)
+
+  Now repeat this step also for the *mxbai-embed-large* embedding model.
 
 ### Chat
 The two LLMs availble could be tested straightful to understand their behaviour with generic questions. Before to access the chat GUI
