@@ -134,7 +134,9 @@ Let's check models available:
 
   We are going to configure the Ollama models so that they can reach a url endpoint where the models are already configured. For example, click on the *edit* button for llama3.1 LLM and modify the *API URL* field with this endpoint 
 
-<pre>``` http://129.80.103.62:11434 ```</pre>
+ ```plaintext
+  http://129.80.103.62:11434 
+  ```
 
   ![llama3.1-endpoint](images/llama3.1-endpoint.png)
 
