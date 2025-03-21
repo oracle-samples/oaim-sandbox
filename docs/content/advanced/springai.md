@@ -3,7 +3,7 @@ title = 'Spring AI'
 weight = 10
 +++
 
-After having downloaded and unzipped the SpringAI file from the [Settings](/oaim-sandbox/sandbox/configuration/settings) screen, you can open and set the latest two things in the code to be executed. For the detailed description, please refer to the **README.md** file included
+After having downloaded and unzipped the SpringAI file from the [Settings](../client/configuration/settings) screen, you can open and set the latest two things in the code to be executed. For the detailed description, please refer to the **README.md** file included
 
 ### Prerequisites
 Before using a microservice that exploit OpenAI API, make sure you have a developer token from OpenAI. To do this, create an account at [OpenAI Signup](https://platform.openai.com/signup) and generate the token at [API Keys](https://platform.openai.com/account/api-keys).
@@ -117,10 +117,10 @@ kubectl -n ollama exec svc/ollama -- ollama run "llama3.1" "what is spring boot?
 * tunnel:
 
 ```bash
-kubectl -n oaim-sandbox port-forward svc/oaim-sandbox 8181:8501
+kubectl -n oai-explorer port-forward svc/oai-explorer 8181:8501
 ```
 
-* on localhost, connect to : `http://localhost:8181/ai-sandbox`
+* on localhost, connect to : `http://localhost:8181/oai-explorer`
 
 * Deploy with `oractl` on a new schema `vector`:
 
