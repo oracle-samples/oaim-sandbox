@@ -87,7 +87,7 @@ and get api-key from logs:
   ```bash
   export API_SERVER_KEY=<generated_key>
   ```
-  
+
 * in another terminal:
   ```bash
   <project_dir>source ./sandbox.sh
@@ -248,7 +248,41 @@ The platform allows to generate as many questions and answer you desire, based o
   * Q&A Language Model: **gpt-4o-mini**
   * Q&A Embedding Model: **text-embedding-3-small**
 
-* Click on **Generate Q&A** button and wait up to the process is over.
+* Click on **Generate Q&A** button and wait up to the process is over:
+
+  ![patience](./images/patience.png)
+
+* Browse the questions and answers generated:
+
+  ![qa_browse](./images/qa_browse.png)
+
+  Note that the **Question** and the **Answer** fields are editable, since you can correct at your convenience the proposed Q&A pairs based on the **Context** that has been extracted randomly and not editable, as well as the **Metadata** that are set by the Testbed engine. In Metadata field you'll find a **topic** tag that classify the Q&A. The topic list is generated automatically analyzing the text and added to each Q&A. It will used in the final report to drilldown the **Overall Correctness Score** and identify area in which the chatbot lacks of precision.
+  The **Download** allow to export and modify in each part the Q&A dataset generated. Open it in Visual Studio Code to see the content:
+
+  ![qa_json](./images/qa_json.png)
+
+  and, if you want to drop some Q&A that are not meaningful, update it, save and reload as local file, following the steps shown in this snapshot:
+
+  ![load_tests](./images/load_tests.png)
+
+* Update the **Test Set Name**, changing the default one automatically generated, in order to identify more easily later the test dataset for repeated tests on different chatbot configurations. For example, from:
+
+  ![default_test_set](./images/default_test_set.png)
+
+change in :
+
+  ![test_rename](./images/test_rename.png)
+
+* On the left pane menu:
+
+  * Under **Language Model Parameters**, select in the **Chat model** dropdown list **gpt-4o-mini**
+  * **Enable RAG?** if for any reason hasn't been selected
+  * Choose in the **Select Alias** dropdown list the **TEST1** value.
+  * Leave unchanged the default parameters on the left pane.
+
+* Leaving the default one model to judge, **gpt-4o-mini**, click on **Start Evaluation** button and wait a few seconds. All the questions will be submitted to the chatbot as configured in the left pane:
+
+  ![start_eval](./images/start_eval.png)
 
 * Let's examine the result report, starting from the first part:
 
@@ -260,10 +294,19 @@ It shows:
   * The **Overall Correctness Score** that represents the percentage between the total number of questions submitted and the answers considered correct by the LLM used to judge the response compared the reference answer.
   * The **Correctness By Topic**: each question in the test dataset comes with a tag that represents the topic it belongs to. The list of topics it's extracted automatically at the creation step of the Q&A synthetic dataset. 
 
-The second part of the report provides details about the single questions submitted. To show all the fields, scrool from right to left to see. In the following picture the second frame has been scrolled:
+The second part of the report provides details about each single questions submitted, with a focus on the collection by **Failures** and the **Full Report** list. To show all the fields, scrool from the right to left to see all info. In the following picture the second frame has been scrolled:
 
   ![result](./images/result_question.png)
 
   * **question**: question submitted
   * **reference_asnwer**: represents the anwers that is considered correct an we aspect quite similar to the answer will be provided by the agent
+  * **reference_context**: the section of document extracted and used to create the Q&A
+  * **agent_answer**: the answer provided by the chatbot with the current configuration and knowledge base as vectorstore
+  * **correctness_reason**: it reports eventually why has been judged not correct. If the answer 
+  has been considered right you'll see **None** as value.
 
+* You can get a copy of the results as an HTML page reporting the *Overall Correctness Score* and *Correctness By Topic* only, cliccking on the **Download Report** button. Click it to view how is the report. 
+
+* You can also dowload the **Full Report** and **Failures** list as a *.csv* file selecting each frame as shown in the following snapshot:
+
+  ![csv](./images/download_csv.png)
