@@ -72,7 +72,7 @@ Install Python 3.11:
   ```
 
 ### Startup 
-The two scripts `server.sh` and `sandbox.sh` hold env variables needed to connect the DB and OpenAI. Set the `OPENAI_API_KEY` in the server script. If, for any reasons, you need to adapt the DBMS to a different instance and setup, change the variables accordingly.
+The two scripts `server.sh` hold env variables needed to connect the DB and OpenAI, instead the `sandbox.sh` the key to be authorized on the AI Explorer. Set the `OPENAI_API_KEY` in the server script. If, for any reasons, you need to adapt the DBMS to a different instance and setup, change the variables accordingly.
 
 * In a separate shell:
 
@@ -87,7 +87,7 @@ and get api-key from logs:
   ```bash
   export API_SERVER_KEY=<generated_key>
   ```
-
+  
 * in another terminal:
   ```bash
   <project_dir>source ./sandbox.sh
@@ -218,7 +218,7 @@ A:You can use the Oracle Database to run the Java Web example application. Speci
 ```
 Q: Which kind of database you can use to run the Java Web example application?
 
-A:You can use the Oracle Database to run the Java Web example application. The application requires a working installation of Oracle Database along with the HR schema. Additionally, you can opt for Oracle Autonomous Database Cloud Services, which provides access to Oracle Cloud Free Tier for creating databases (as mentioned in the document).
+A: You can use the Oracle Database to run the Java Web example application. The application requires a working installation of Oracle Database along with the HR schema. Additionally, you can opt for Oracle Autonomous Database Cloud Services, which provides access to Oracle Cloud Free Tier for creating databases (as mentioned in the document).
 ```
 
 **COMMENT**: In the second answer it mentions the Autonomous Database Cloud Services
@@ -236,11 +236,7 @@ Testbed helps you to massive test your chatbot, generating for you a Q&A test da
 ![testbed](./images/tesbed.png)
 
 #### Generate a Q&A Test dataset
-The platform allows to generate as many questions and answer you desire, based on a single document, that it's part of the knowledge base you have store as vector store with their own embeddings. Selecting the proper radio button:
-
-![generate](./images/tesbed.png)
-
-you will access to the AI Explorer test dataset generation capabilities:
+The platform allows to generate as many questions and answer you desire, based on a single document, that it's part of the knowledge base you have store as vector store with their own embeddings. Selecting the proper radio button you will access to the AI Explorer test dataset generation capabilities:
 
 ![generate](./images/generatenew.png)
 
