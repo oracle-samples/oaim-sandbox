@@ -11,7 +11,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 spell-checker: ignore mxbai, ollama, oaim, sqlplus, sysdba, spfile, freepdb, tablespace, firewalld, hnsw
 -->
 
-This walkthrough will guide you through a basic installation of the **{{< param "LongName" >}}** (the **{{< param "ShortName" >}}**). It will allow you to experiment with GenAI, using Retrieval-Augmented Generation (**RAG**) with Oracle Database 23ai at the core.
+This walkthrough will guide you through a basic installation of the {{< full_app_ref >}}. It will allow you to experiment with GenAI, using Retrieval-Augmented Generation (**RAG**) with Oracle Database 23ai at the core.
 
 By the end of the walkthrough you will be familiar with:
 
@@ -19,7 +19,7 @@ By the end of the walkthrough you will be familiar with:
 - Configuring an Embedding Model
 - Configuring the Vector Storage
 - Splitting, Embedding, and Storing vectors for **RAG**
-- Experimenting with the **{{< param "ShortName" >}}**
+- Experimenting with the {{< short_app_ref >}}
 
 What you'll need for the walkthrough:
 
@@ -30,7 +30,7 @@ What you'll need for the walkthrough:
 - Sufficient GPU/CPU resources to run the **LLM**, embedding model, and database (see below).
 
 {{% notice style="code" title="Performance: A Word of Caution" icon="fire" %}}
-The performance of the **{{< param "ShortName" >}}** will vary depending on the infrastructure.
+The performance will vary depending on the infrastructure.
 
 **LLM**s and Embedding Models are designed to use GPUs, but this walkthrough _can work_ on machines with just CPUs; albeit _much_ slower!
 When testing the **LLM**, if you don't get a response in a couple of minutes; your hardware is not sufficient to continue with the walkthrough.
@@ -47,10 +47,48 @@ If you are using `docker`, make the walkthrough easier by aliasing the `podman` 
 
 You will run four container images to establish the "Infrastructure":
 
+- Vector Storage - Oracle Database 23ai Free
 - On-Premises **LLM** - llama3.1
 - On-Premises Embedding Model - mxbai-embed-large
-- Vector Storage - Oracle Database 23ai Free
-- The **{{< param "ShortName" >}}**
+- The {{< short_app_ref >}}
+
+### Vector Storage - Oracle Database 23ai Free
+
+AI Vector Search in Oracle Database 23ai provides the ability to store and query private business data using a natural language interface. The {{< short_app_ref >}} uses these capabilities to provide more accurate and relevant **LLM** responses via Retrieval-Augmented Generation (**RAG**). [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) provides an ideal, no-cost vector store for this walkthrough.
+
+To start Oracle Database 23ai Free:
+
+1. Start the container:
+
+   ```bash
+   podman run -d --name oaim-db -p 1521:1521 container-registry.oracle.com/database/free:latest
+   ```
+
+1. Alter the `vector_memory_size` parameter and create a [new database user](../client/configuration/db_config#database-user):
+
+   ```bash
+   podman exec -it oaim-db sqlplus '/ as sysdba'
+   ```
+
+   ```sql
+   alter system set vector_memory_size=512M scope=spfile;
+
+   alter session set container=FREEPDB1;
+
+   CREATE USER "WALKTHROUGH" IDENTIFIED BY OrA_41_EXPLORER
+       DEFAULT TABLESPACE "USERS"
+       TEMPORARY TABLESPACE "TEMP";
+   GRANT "DB_DEVELOPER_ROLE" TO "WALKTHROUGH";
+   ALTER USER "WALKTHROUGH" DEFAULT ROLE ALL;
+   ALTER USER "WALKTHROUGH" QUOTA UNLIMITED ON USERS;
+   EXIT;
+   ```
+
+1. Bounce the database for the `vector_memory_size` to take effect:
+
+   ```bash
+   podman container restart oaim-db
+   ```
 
 ### LLM - llama3.1
 
@@ -124,73 +162,35 @@ To enable the **RAG** functionality, access to an embedding model is required. T
    podman exec -it ollama ollama pull mxbai-embed-large
    ```
 
-### Vector Storage - Oracle Database 23ai Free
+### The {{< short_app_ref >}}
 
-AI Vector Search in Oracle Database 23ai provides the ability to store and query private business data using a natural language interface. The **{{< param "ShortName" >}}** uses these capabilities to provide more accurate and relevant **LLM** responses via Retrieval-Augmented Generation (**RAG**). [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) provides an ideal, no-cost vector store for this walkthrough.
+The {{< short_app_ref >}} provides an easy to use front-end for experimenting with **LLM** parameters and **RAG**.
 
-To start Oracle Database 23ai Free:
-
-1. Start the container:
+1. Download and Unzip the latest version of the {{< short_app_ref >}}:
 
    ```bash
-   podman run -d --name oaim-db -p 1521:1521 container-registry.oracle.com/database/free:latest
-   ```
-
-1. Alter the `vector_memory_size` parameter and create a [new database user](../sandbox/configuration/db_config#database-user):
-
-   ```bash
-   podman exec -it oaim-db sqlplus '/ as sysdba'
-   ```
-
-   ```sql
-   alter system set vector_memory_size=512M scope=spfile;
-
-   alter session set container=FREEPDB1;
-
-   CREATE USER "WALKTHROUGH" IDENTIFIED BY OrA_41_M_SANDBOX
-       DEFAULT TABLESPACE "USERS"
-       TEMPORARY TABLESPACE "TEMP";
-   GRANT "DB_DEVELOPER_ROLE" TO "WALKTHROUGH";
-   ALTER USER "WALKTHROUGH" DEFAULT ROLE ALL;
-   ALTER USER "WALKTHROUGH" QUOTA UNLIMITED ON USERS;
-   EXIT;
-   ```
-
-1. Bounce the database for the `vector_memory_size` to take effect:
-
-   ```bash
-   podman container restart oaim-db
-   ```
-
-### **{{< param "LongName" >}}**
-
-The **{{< param "ShortName" >}}** provides an easy to use front-end for experimenting with **LLM** parameters and **RAG**.
-
-1. Download and Unzip the latest version of the **{{< param "ShortName" >}}**:
-
-   ```bash
-   curl -L -o oaim-sandbox.tar.gz https://github.com/oracle-samples/oaim-sandbox/archive/refs/heads/main.tar.gz
-   mkdir oaim-sandbox
-   tar zxf oaim-sandbox.tar.gz --strip-components=1 -C oaim-sandbox
+   curl -L -o oai-explorer.tar.gz https://github.com/oracle-samples/oaim-sandbox/archive/refs/heads/main.tar.gz
+   mkdir oai-explorer
+   tar zxf oai-explorer.tar.gz --strip-components=1 -C oai-explorer
    ```
 
 1. Build the Container Image
 
    ```bash
-   cd oaim-sandbox/src
-   podman build --arch amd64 -t localhost/oaim-sandbox-aio:latest .
+   cd oai-client/src
+   podman build --arch amd64 -t localhost/oai-explorer-aio:latest .
    ```
 
-1. Start the **{{< param "ShortName" >}}**:
+1. Start the {{< short_app_ref >}}:
 
    ```bash
-   podman run -d --name oaim-sandbox-aio --network=host localhost/oaim-sandbox-aio:latest
+   podman run -d --name oai-explorer-aio --network=host localhost/oai-explorer-aio:latest
    ```
 
    Operating System specific instructions:
-   {{< tabs "sandbox" >}}
+   {{< tabs "client" >}}
    {{% tab title="Linux" %}}
-   If you are running the **{{< param "ShortName" >}}** on a remote host, you may need to allow access to the `8501` port.
+   If you are running on a remote host, you may need to allow access to the `8501` port.
 
    For example, in Oracle Linux 8/9 with `firewalld`:
 
@@ -209,10 +209,10 @@ The **{{< param "ShortName" >}}** provides an easy to use front-end for experime
 
 ## Configuration
 
-With the "Infrastructure" in-place, you're ready to configure the **{{< param "ShortName" >}}**. 
+With the "Infrastructure" in-place, you're ready to configure the {{< short_app_ref >}}. 
 
 In a web browser, navigate to `http://localhost:8501`:
-![Sandbox](images/chatbot_no_models.png)
+![Chatbot](images/chatbot_no_models.png)
 
 Notice that there are no language models configured to use. Let's start the configuration.
 
@@ -224,7 +224,7 @@ To configure the On-Premises **LLM**, navigate to the _Configuration -> Models_ 
 ![Configure LLM](images/models_edit.png)
 1. Tick the _Enabled_ checkbox, leave all other settings as-is, and _Save_
 ![Enable LLM](images/models_enable_llm.png)
-{{% icon star %}} More information about configuring **LLM**s in the **{{< param "ShortName" >}}** can be found in the [Model Configuration](../sandbox/configuration/model_config) documentation.
+{{% icon star %}} More information about configuring **LLM**s can be found in the [Model Configuration](../client/configuration/model_config) documentation.
 
 #### Say "Hello?"
 
@@ -247,20 +247,20 @@ To configure the On-Premises Embedding Model, navigate back to the _Configuratio
 1. Enable the `mxbai-embed-large` Embedding Model following the same process as you did for the Language Model.
 ![Configure Embedding Model](images/models_enable_embed.png)
 
-{{% icon star %}}  More information about configuring embedding models in the **{{< param "ShortName" >}}** can be found in the [Model Configuration](../sandbox/configuration/model_config) documentation.
+{{% icon star %}}  More information about configuring embedding models can be found in the [Model Configuration](../client/configuration/model_config) documentation.
 
 ### Configure the Database
 
 To configure Oracle Database 23ai Free, navigate to the _Configuration -> Database_ screen:
 
 1. Enter the Database Username: `WALKTHROUGH`
-1. Enter the Database Password for the database user: `OrA_41_M_SANDBOX`
+1. Enter the Database Password for the database user: `OrA_41_EXPLORER`
 1. Enter the Database Connection String: `//localhost:1521/FREEPDB1`
 1. Save
 
-![Configure Database](../sandbox/configuration/images/database_config.png)
+![Configure Database](../client/configuration/images/database_config.png)
 
-{{% icon star %}} More information about configuring the database in the **{{< param "ShortName" >}}** can be found in the [Database Configuration](../sandbox/configuration/db_config) documentation.
+{{% icon star %}} More information about configuring the database can be found in the [Database Configuration](../client/configuration/db_config) documentation.
 
 ## Split and Embed
 
@@ -285,9 +285,9 @@ Depending on the infrastructure, the embedding process can take a few minutes. A
 ![Split and Embed](images/split_embed_web.png)
 
 {{% notice style="code" title="Thumb Twiddling" icon="circle-info" %}}
-You can watch the progress of the embedding by streaming the **{{< param "ShortName" >}}** logs: `podman logs -f oaim-sandbox-aio`
+You can watch the progress of the embedding by streaming the logs: `podman logs -f oaim-explorer-aio`
 
-Chunks are processed in batches. Wait until the **{{< param "ShortName" >}}** logs output: `POST Response: <Response [200]>` before continuing.
+Chunks are processed in batches. Wait until the logs output: `POST Response: <Response [200]>` before continuing.
 {{% /notice %}}
 
 ### Query the Vector Store
@@ -299,7 +299,7 @@ From the command line:
 1. Connect to the Oracle Database 23ai Database:
 
    ```bash
-   podman exec -it oaim-db sqlplus 'WALKTHROUGH/OrA_41_M_SANDBOX@FREEPDB1'
+   podman exec -it oaim-db sqlplus 'WALKTHROUGH/OrA_41_EXPLORER@FREEPDB1'
    ```
 
 1. Query the Vector Store:
@@ -310,7 +310,7 @@ From the command line:
 
 ## Experiment
 
-With the **{{< param "LongName" >}}**configured, you're ready for some experimentation.
+With the {{< short_app_ref >}} configured, you're ready for some experimentation.
 
 Navigate back to the _ChatBot_. There will be no more configuration warnings.
 
@@ -342,12 +342,12 @@ Depending on your hardware, this may cause the response to be **_significantly_*
 
 ![Enable RAG](images/chatbot_rag_enable.png)
 
-By asking `Are you sure?`, you are taking advantage of the **{{< param "ShortName" >}}**'s history and context functionality.  
+By asking `Are you sure?`, you are taking advantage of the {{< short_app_ref >}}'s history and context functionality.  
 The response should be different and include references to `DBMS_VECTOR` and links to the embedded documentation where this information can be found. It might even include an apology!
 
 ## What's Next?
 
-You should now have a solid foundation in utilizing the **{{< param "LongName" >}}**.
+You should now have a solid foundation in utilizing the {{< short_app_ref >}}.
 To take your experiments to the next level, consider exploring these additional bits of functionality:
 
 - Turn On/Off/Clear history
@@ -361,6 +361,6 @@ To cleanup the walkthrough "Infrastructure", stop and remove the containers.
 
 ```bash
 podman container rm oaim-db --force
-podman container rm oaim-sandbox-aio --force
+podman container rm oaim-explorer-aio --force
 podman container rm ollama --force
 ```

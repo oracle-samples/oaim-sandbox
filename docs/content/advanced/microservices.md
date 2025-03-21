@@ -7,14 +7,14 @@ weight = 5
 Copyright (c) 2024, 2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
-spell-checker: ignore opentofu ocid oraclecloud oaim  ollama crds ADBDB finalizers mxbai sandboxdb
+spell-checker: ignore opentofu ocid oraclecloud oaim  ollama crds ADBDB finalizers mxbai 
 -->
 
-The **{{< param "LongName" >}}** (the **{{< param "ShortName" >}}**) was specifically designed to run on infrastructure supporting microservices architecture, including [Kubernetes](https://kubernetes.io/).
+The {{< full_app_ref >}} was specifically designed to run on infrastructure supporting microservices architecture, including [Kubernetes](https://kubernetes.io/).
 
 ## Oracle Kubernetes Engine
 
-The following example shows running the **{{< param "ShortName" >}}** in [Oracle Kubernetes Engine](https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengoverview.htm) (**OKE**).  The Infrastructure as Code (**IaC**) provided in the source [opentofu](https://github.com/oracle-samples/oaim-sandbox/tree/main/opentofu) directory was used to provision the infrastructure in Oracle Cloud Infrastructure (**OCI**).
+The following example shows running the {{< short_app_ref >}} in [Oracle Kubernetes Engine](https://docs.oracle.com/en-us/iaas/Content/ContEng/Concepts/contengoverview.htm) (**OKE**).  The Infrastructure as Code (**IaC**) provided in the source [opentofu](https://github.com/oracle-samples/oaim-sandbox/tree/main/opentofu) directory was used to provision the infrastructure in Oracle Cloud Infrastructure (**OCI**).
 
 ![OCI OKE](../images/infra_oci.png)
 
@@ -22,9 +22,9 @@ The command to connect to the **OKE** cluster will be output as part of the **Ia
 
 ### Ingress
 
-To access the **{{< param "ShortName" >}}** GUI and API Server, you can either use a port-forward or an Ingress service.  For demonstration purposes, the [Ingress-Nginx Controller](https://kubernetes.github.io/ingress-nginx/deploy/) will be used to create a [Flexible LoadBalancer](https://docs.oracle.com/en-us/iaas/Content/NetworkLoadBalancer/overview.htm) in **OCI**.
+To access the {{< short_app_ref >}} GUI and API Server, you can either use a port-forward or an Ingress service.  For demonstration purposes, the [Ingress-Nginx Controller](https://kubernetes.github.io/ingress-nginx/deploy/) will be used to create a [Flexible LoadBalancer](https://docs.oracle.com/en-us/iaas/Content/NetworkLoadBalancer/overview.htm) in **OCI**.
 
-This example will create the loadbalancer exposing port 80 for the **{{< param "ShortName" >}}** GUI and port 8000 for the **{{< param "ShortName" >}}** API Server.  It is _HIGHLY_ recommended to protect these ports with [Network Security Groups](https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/networksecuritygroups.htm)(**NSG**).
+This example will create the loadbalancer exposing port 80 for the {{< short_app_ref >}} GUI and port 8000 for the {{< short_app_ref >}} API Server.  It is _HIGHLY_ recommended to protect these ports with [Network Security Groups](https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/networksecuritygroups.htm) (**NSGs**).
 
 The service manifest has two values that should be supplied:
 
@@ -83,7 +83,7 @@ These will be output as part of the **IaC** but can be removed from the code if 
         loadBalancerIP: "<lb_reserved_ip>"
         ports:
         - appProtocol: http
-          name: sandbox
+          name: client
           port: 80
           protocol: TCP
           targetPort: http
@@ -106,15 +106,15 @@ These will be output as part of the **IaC** but can be removed from the code if 
 
 ### Images
 
-You will need to build the **{{< param "ShortName" >}}** container images and stage them in a container registry, such as the [OCI Container Registry](https://docs.oracle.com/en-us/iaas/Content/Registry/Concepts/registryoverview.htm) (**OCIR**).
+You will need to build the {{< short_app_ref >}} container images and stage them in a container registry, such as the [OCI Container Registry](https://docs.oracle.com/en-us/iaas/Content/Registry/Concepts/registryoverview.htm) (**OCIR**).
 
-1. Build the **{{< param "ShortName" >}}** images:
+1. Build the {{< short_app_ref >}} images:
 
     From the code source `src/` directory:
     ```bash
-    podman build --arch amd64 -f sandbox/Dockerfile -t oaim-sandbox:latest .
+    podman build --arch amd64 -f client/Dockerfile -t oai-client:latest .
 
-    podman build --arch amd64 -f server/Dockerfile -t oaim-server:latest .
+    podman build --arch amd64 -f server/Dockerfile -t oai-server:latest .
     ```
 
 1. Log into your container registry:
@@ -132,38 +132,38 @@ You will need to build the **{{< param "ShortName" >}}** container images and st
 
     You will be prompted for a username and token password.
 
-1. Push the **{{< param "ShortName" >}}** images:
+1. Push the {{< short_app_ref >}} images:
 
     More information on pushing images to **OCIR** can be found [here](https://docs.oracle.com/en-us/iaas/Content/Registry/Tasks/registrypushingimagesusingthedockercli.htm).
 
     Example (the values for `<server_repository>` and `<server_repository>` are provided from the **IaC**):
     ```bash
-    podman tag oaim-sandbox:latest <sandbox_repository>:latest
-    podman push <sandbox_repository>:latest
+    podman tag oai-client:latest <client_repository>:latest
+    podman push <client_repository>:latest
 
-    podman tag oaim-server:latest <server_repository>:latest
+    podman tag oai-server:latest <server_repository>:latest
     podman push <server_repository>:latest
     ```
 
-### **{{< param "LongName" >}}**
+### The {{< short_app_ref >}}
 
-The **{{< param "ShortName" >}}** can be deployed using the [Helm](https://helm.sh/) chart provided with the source:
-[**{{< param "ShortName" >}}** Helm Chart](https://github.com/oracle-samples/oaim-sandbox/tree/main/helm).  A list of all values can be found in [values_summary.md](https://github.com/oracle-samples/oaim-sandbox/tree/main/helm/values_summary.md).
+The {{< short_app_ref >}} can be deployed using the [Helm](https://helm.sh/) chart provided with the source:
+[{{< short_app_ref >}} Helm Chart](https://github.com/oracle-samples/oaim-sandbox/tree/main/helm).  A list of all values can be found in [values_summary.md](https://github.com/oracle-samples/oaim-sandbox/tree/main/helm/values_summary.md).
 
 If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama and enable a Large Language and Embedding Model out-of-the-box.
 
-1. Create the `oai-client` namespace:
+1. Create the `oai-explorer` namespace:
     
     ```bash
-    kubectl create namespace oai-client
+    kubectl create namespace oai-explorer
     ```
 
 1. Create a secret to hold the API Key:
 
     ```bash
-    kubectl create secret generic client-api-key \
+    kubectl create secret generic api-key \
       --from-literal=apiKey=$(openssl rand -hex 32) \
-      --namespace=oai-client
+      --namespace=oai-explorer
     ```
 
 1. Create a secret to hold the Database Authentication:
@@ -174,16 +174,16 @@ If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama an
     - `<adb_service>` - The Service Name (i.e. ADBDB_TP)
 
     ```bash
-    kubectl create secret generic sandboxdb-authn \
+    kubectl create secret generic db-authn \
       --from-literal=username='ADMIN' \
       --from-literal=password='<adb_password>' \
       --from-literal=service='<adb_service>' \
-      --namespace=oaim-sandbox
+      --namespace=oai-explorer
     ```
 
     These will be output as part of the **IaC**.
 
-    {{< icon "star" >}} While the example shows the ADMIN user, it is advisable to [create a new non-privileged database user](../sandbox/configuration/db_config/#database-user).
+    {{< icon "star" >}} While the example shows the ADMIN user, it is advisable to [create a new non-privileged database user](../client/configuration/db_config/#database-user).
 
 
 1. Create the `values.yaml` file for the Helm Chart:
@@ -192,7 +192,7 @@ If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama an
 
     - `<lb_reserved_ip>` - A reserved IP address for the Loadbalancer
     - `<adb_ocid>` - Autonomous Database OCID
-    - `<sandbox_repository>` - Full path to the repository for the **{{< param "ShortName" >}}** Image 
+    - `<client_repository>` - Full path to the repository for the {{< short_app_ref >}} Image 
     - `<server_repository>` - Full path to the repository for the API Server Image
 
     These will be output as part of the **IaC**.
@@ -202,10 +202,10 @@ If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama an
     ```yaml
     global:
       api:
-        secretName: "sandbox-api-key"
+        secretName: "api-key"
 
     # -- API Server configuration
-    oaim-server:
+    oai-server:
       enabled: true
       image:
         repository: <server_repository>
@@ -222,12 +222,12 @@ If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama an
         ocid: "<adb_ocid>"
         mtlsWallet: ""
         authN:
-          secretName: "sandboxdb-authn"
+          secretName: "db-authn"
 
-    oaim-sandbox:
+    oai-client:
       enabled: true
       image:
-        repository: <sandbox_repository>
+        repository: <client_repository>
         tag: "latest"
 
       ingress:
@@ -235,7 +235,7 @@ If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama an
         annotations:
           nginx.ingress.kubernetes.io/upstream-vhost: "<lb_reserved_ip>"
 
-      sandbox:
+      client:
         features:
           disableTestbed: "false"
           disableApi: "false"
@@ -261,23 +261,23 @@ If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama an
 
     ```bash
     helm upgrade \
-      --install oaim-sandbox . \
-      --namespace oaim-sandbox \
+      --install oai-explorer . \
+      --namespace oai-explorer \
       -f values.yaml
     ```
 
 ### Cleanup
 
-To remove the **{{< param "ShortName" >}}** from the OKE Cluster:
+To remove the {{< short_app_ref >}} from the OKE Cluster:
 
 1. Uninstall the Helm Chart:
 
     ```bash
-    helm uninstall oaim-sandbox -n oaim-sandbox
+    helm uninstall oai-explorer -n oai-explorer
     ```
 
-1. Delete the `oaim-sandbox` namespace:
+1. Delete the `oai-explorer` namespace:
 
     ```bash
-    kubectl delete namespace oaim-sandbox
+    kubectl delete namespace oai-explorer
     ```

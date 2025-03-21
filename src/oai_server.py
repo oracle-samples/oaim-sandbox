@@ -145,7 +145,15 @@ def verify_key(
 #############################################################################
 def create_app() -> FastAPI:
     """Create and configure the FastAPI app."""
-    app = FastAPI(title="Oracle AI Microservices Server", docs_url="/v1/docs", openapi_url="/v1/openapi.json")
+    app = FastAPI(
+        title="Oracle AI Explorer for Apps",
+        docs_url="/v1/docs",
+        openapi_url="/v1/openapi.json",
+        license_info={
+            "name": "Universal Permissive License",
+            "url": "http://oss.oracle.com/licenses/upl",
+        },
+    )
 
     noauth = APIRouter()
     auth = APIRouter(dependencies=[Depends(verify_key)])

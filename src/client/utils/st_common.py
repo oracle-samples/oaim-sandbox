@@ -112,13 +112,15 @@ def set_server_state() -> None:
 #############################################################################
 def history_sidebar() -> None:
     """History Sidebar"""
-    chat_history_enable = st.sidebar.checkbox(
-        "Enable History and Context?",
+    st.sidebar.subheader("History and Context", divider="red")
+    checkbox_col, button_col = st.sidebar.columns(2)
+    chat_history_enable = checkbox_col.checkbox(
+        "Enable?",
         value=True,
         key="selected_ll_model_chat_history",
         on_change=update_user_settings("ll_model"),
     )
-    if st.sidebar.button("Clear History", disabled=not chat_history_enable):
+    if button_col.button("Clear", disabled=not chat_history_enable, use_container_width=True):
         # Establish a new thread
         state.user_settings["client"] = client_gen_id()
         clear_state_key("user_client")

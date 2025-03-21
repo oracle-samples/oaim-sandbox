@@ -2,8 +2,8 @@
 title = " "
 menus = 'main'
 archetype = "home"
-description = 'AI Microservices Sandbox'
-keywords = 'oracle microservices development genai rag'
+description = 'Oracle AI Explorer for Apps'
+keywords = 'oracle explorer microservices development genai rag'
 +++  
 
 <!--
@@ -13,28 +13,29 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 spell-checker:ignore streamlit, genai, venv, oaim
 -->
 
-The **Oracle AI Microservices Sandbox** (the **Sandbox**) provides a streamlined environment where developers and data scientists can explore the potential of Generative Artificial Intelligence (**GenAI**) combined with Retrieval-Augmented Generation (**RAG**) capabilities. By integrating Oracle Database AI Vector Search, the **Sandbox** enables users to enhance existing Large Language Models (**LLM**s) through **RAG**. This method significantly improves the performance and accuracy of AI models, helping to avoid common issues such as knowledge cutoff and hallucinations.
+The {{< full_app_ref >}} provides a streamlined environment where developers and data scientists can explore the potential of Generative Artificial Intelligence (**GenAI**) combined with Retrieval-Augmented Generation (**RAG**) capabilities. By integrating Oracle Database AI Vector Search, the {{< short_app_ref >}} enables users to enhance existing Large Language Models (**LLM**s) through **RAG**. This method significantly improves the performance and accuracy of AI models, helping to avoid common issues such as knowledge cutoff and hallucinations.
 
 - **GenAI**: Powers the generation of text, images, or other data based on prompts using pre-trained **LLM**s.
 - **RAG**: Enhances **LLM**s by retrieving relevant, real-time information allowing models to provide up-to-date and accurate responses.
 - **Vector Database**: A database, including Oracle Database 23ai, that can natively store and manage vector embeddings and handle the unstructured data they describe, such as documents, images, video, or audio.
 
-## Sandbox Features
+## {{< short_app_ref >}} Features
 
-- [Configuring Embedding and Chat Models](sandbox/configuration/model_config)
-- [Splitting and Embedding Documentation](sandbox/tools/split_embed)
-- [Modifying System Prompts (Prompt Engineering)](sandbox/tools/prompt_eng)
-- [Experimenting with **LLM** Parameters](sandbox/chatbot)
-- [Testbed for auto-generated or existing Q&A datasets](sandbox/testbed)
+- [Configuring Embedding and Chat Models](client/configuration/model_config)
+- [Splitting and Embedding Documentation](client/tools/split_embed)
+- [Modifying System Prompts (Prompt Engineering)](client/tools/prompt_eng)
+- [Experimenting with **LLM** Parameters](client/chatbot)
+- [Testbed for auto-generated or existing Q&A datasets](client/testbed)
 
-The **Sandbox** streamlines the entire workflow from prototyping to production, making it easier to create and deploy RAG-powered GenAI solutions using the **Oracle Database**.
+The {{< short_app_ref >}} streamlines the entire workflow from prototyping to production, making it easier to create and deploy RAG-powered GenAI solutions using the **Oracle Database**.
 
 # Getting Started
 
-The **Sandbox** is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on bare-metal, within a container, or in a Kubernetes Cluster.
+The {{< short_app_ref >}} is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on bare-metal, within a container, or in a Kubernetes Cluster.
 
 {{% notice style="code" title="Prefer a Step-by-Step?" icon="circle-info" %}}
-The [Walkthrough](walkthrough) is a great way to familiarize yourself with the Sandbox and its features in a development environment.
+<!-- Hard-coding AI Explorer to avoid unsafe HTML, this is an exception -->
+The [Walkthrough](walkthrough) is a great way to familiarize yourself with the **AI Explorer** and its features in a development environment.
 {{% /notice %}}
 
 ## Prerequisites
@@ -46,11 +47,11 @@ The [Walkthrough](walkthrough) is a great way to familiarize yourself with the S
   - API Keys for Third-Party Models
   - On-Premises Models*
 
-~\*Oracle recommends running On-Premises Models on hardware with GPUs. For more information, please review the [The Sandbox](sandbox/) documentation.~
+~\*Oracle recommends running On-Premises Models on hardware with GPUs. For more information, please review the [{{< short_app_ref >}}](client/) documentation.~
 
 ### Bare-Metal Installation
 
-To run the application on bare-metal; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the `src/` directory:
+To run the application on bare-metal; download the [source]({{ .Site.Params.GitHubRepo }}) and from the `src/` directory:
 
 1. Create and activate a Python Virtual Environment:
 
@@ -64,18 +65,18 @@ To run the application on bare-metal; download the [source](https://github.com/o
 1. Install the Python modules:
 
    ```bash
-   pip3.11 install -r src/requirements.txt
+    pip3.11 install -e ".[all]"
    ```
 
 1. Start Streamlit:
 
    ```bash
-   streamlit run oaim_sandbox.py --server.port 8501
+   streamlit run oai_client.py --server.port 8501
    ```
 
 1. Navigate to `http://localhost:8501`.
 
-1. [Configure](sandbox/configuration) the Sandbox.
+1. [Configure](client/configuration) the {{< short_app_ref >}}.
 
 ### Container Installation
 
@@ -83,28 +84,28 @@ To run the application on bare-metal; download the [source](https://github.com/o
 References to `podman` commands, if applicable to your environment, can be substituted with `docker`.
 {{% /notice %}}
 
-To run the application in a container; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from the top-level directory:
+To run the application in a container; download the [source]({{ .Site.Params.GitHubRepo }}) and from the top-level directory:
 
 1. Build the image.
 
-   From inside the `src/` directory, build the *oaim-sandbox* image:
+   From inside the `src/` directory, build the *oai-explorer-aio* image:
 
    ```bash
    cd src/
-   podman build -t oaim-sandbox .
+   podman build -t oai-explorer-aio .
    ```
 
 1. Start the Container:
 
    ```bash
-   podman run -p 8501:8501 -it --rm oaim-sandbox
+   podman run -p 8501:8501 -it --rm oai-explorer-aio
    ```
 
 1. Navigate to `http://localhost:8501`.
 
-1. [Configure](sandbox/configuration) the Sandbox.
+1. [Configure](client/configuration) the {{< short_app_ref >}}.
 
 ### Advanced Installation
 
-The **Sandbox** is designed to operate within a Microservices Architecture, leveraging Microservices Infrastructure like Kubernetes.
-Review [The Sandbox](../sandbox) for more information on the components of the **Sandbox** and additional [Installation](../installation) options.
+The {{< short_app_ref >}} is designed to operate within a Microservices Architecture, leveraging Microservices Infrastructure like Kubernetes.
+Review [{{< short_app_ref >}}](client) components and the additional [Microservices](advanced/microservices) documentation for more information.
