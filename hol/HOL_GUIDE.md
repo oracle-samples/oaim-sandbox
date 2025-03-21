@@ -310,3 +310,12 @@ The second part of the report provides details about each single questions submi
 * You can also dowload the **Full Report** and **Failures** list as a *.csv* file selecting each frame as shown in the following snapshot:
 
   ![csv](./images/download_csv.png)
+
+* Now redo the test, setting to **0** the Model **Temperature** in the left pane, section **Language Model Parameters**. Why? The Q&As generated are usually done with a low level of creativity to be less random in the content and express the core concepts avoiding "frills". So, repeat the test to check if there are any improvements in the **Overall Correctness Score**. 
+
+* To compare with previous results, click on dropdown list unde **Previous Evaluations for...** and click on **View** button to show the overall report.
+
+  ![previosu](./images/previous.png)
+
+
+* Repeat the tests as many time you desire changing: **Vector Store**, **Search Type** and **Top K** to execute the same kind of tuning you have done at the previous steps with just a few interactive questions, now on a massive test on curated and comparable assets.
