@@ -122,16 +122,16 @@ class TestServerFunctions:
         # Assert that st.success was called (don't check the exact message)
         assert mock_st.success.called
 
-    @patch("oai_server.stop_server")
-    @patch("oai_server.start_server")
+    @patch("ai_explorer_server.stop_server")
+    @patch("ai_explorer_server.start_server")
     @patch("time.sleep")
     def test_server_restart(self, mock_sleep, mock_start_server, mock_stop_server, monkeypatch, app_test):
         """Test the server_restart function using the conftest environment variables"""
-        # Skip this test if oai_server is not available
+        # Skip this test if ai_explorer_server is not available
         try:
-            import ai_explorer_server as server
+            import ai_explorer_server
         except ImportError:
-            pytest.skip("oai_server not available, skipping restart test")
+            pytest.skip("ai_explorer_server not available, skipping restart test")
 
         # Import the function to test
         from client.content.server import server_restart

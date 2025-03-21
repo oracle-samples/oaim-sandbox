@@ -32,7 +32,7 @@ RUN source /opt/.venv/bin/activate && \
 ##################################################
 # Application
 ##################################################
-FROM server_pyenv AS oai_server
+FROM server_pyenv AS ai_explorer_server
 ENV PATH=/opt/.venv/bin:$PATH
 ENV TOKENIZERS_PARALLELISM=true
 ENV TEMP=/app/tmp
