@@ -333,7 +333,7 @@ The second part of the report provides details about each single questions submi
 
 ### Export and run the chatbot as a Spring AI microservice
 
-The AI Explorer allows to export the chatbot defined as a ready-to-run microservice built in Java, Spring Boot and Spring AI framework, that will run independently by the AI Explorer, leveraging only the vector store table created, and the LLM servers used. In the current relase are supported only fully Ollama configuration (embeddings + chat model) or OpenAI. 
+The AI Explorer allows to export the chatbot defined as a ready-to-run microservice built in Java, Spring Boot and Spring AI framework, that will run independently by the AI Explorer, leveraging only the vector store table created, and the LLM servers used. In the current relase are supported only fully Ollama configuration (embeddings + chat model) or OpenAI.
 
 #### Pre-requisites
 To run the microservice exported you need:
@@ -343,13 +343,13 @@ To run the microservice exported you need:
 
 #### Execute the Ollama version
 
-* If the ChatBot configuration is based on the Ollama LLM server provider for both LLMs, embeddings and chat, go to the **Settings** menu in the left pane side. You'll find the **Download SpringAI** button available. 
+* **Select Alias:** as **TEST1** vector store, and **LLama3.1** as **Chat model**. In this way the configuration will be based on the Ollama LLM server provider for both LLMs, embeddings and chat, and go to the **Settings** menu in the left pane side. You'll find the **Download SpringAI** button available. This
+
 If you'll find a message like this:
 
   ![notollama](./images/diff_llm_springai.png)
 
 don't worry: choose for the **Chat model:** the **llama3.1** and the button will appear.
-
 
 * Download one of them through the `Download SpringAI` button. 
 
@@ -385,7 +385,7 @@ COMMIT;
      -d '{"message": "Can I use any kind of development environment to run the example?"}'  
   ```
 
-  The response with RAG, on the TEST1 Vector store, it will be like this:
+  The response with RAG, on the **TEST1** Vector store, it will be like this:
 
   ``` 
   {
@@ -411,3 +411,6 @@ COMMIT;
     "completion": "Yes, you can use various development environments to run examples, depending on the programming language and the specific example you are working with. Here are some common options:\n\n1. **Integrated Development Environments (IDEs)**:\n   - **Visual Studio Code**: A versatile code editor that supports many languages through extensions.\n   - **PyCharm**: Great for Python development.\n   - **Eclipse**: Commonly used for Java development.\n   - **IntelliJ IDEA**: Another popular choice for Java and other languages.\n   - **Xcode**: For macOS and iOS development (Swift, Objective-C).\n\n2. **Text Editors**:\n   - **Sublime Text**: A lightweight text editor with support for many languages.\n   - **Atom**: A hackable text editor for the 21st century.\n   - **Notepad++**: A free source code editor for Windows.\n\n3. **Command Line Interfaces**:\n   - You can run"
   }
   ```
+
+#### Execute the OpenAI version
+Proceed as in the previous step, choosing in **Select Alias:** the **TEST2** vector store, and **LLama3.1** as **Chat model**. In the terminal where you'll run the Spring Boot microservice, be sure that the **OPENAI_API_KEY** is correctly set.
