@@ -4,7 +4,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "oai-server.serviceName" . }}
+  name: {{ include "ai-explorer-server.serviceName" . }}
   labels: 
     {{- include "oai.labels" . | nindent 4 }}
 spec:

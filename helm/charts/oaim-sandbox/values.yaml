@@ -3,7 +3,7 @@
 
 replicaCount: 1
 image:
-  repository: localhost/oai-client
+  repository: localhost/ai-explorer-client
   tag: "latest"
 imagePullPolicy: IfNotPresent
 imagePullSecrets: []

@@ -17,12 +17,12 @@ Expand the name of the chart.
 {{/*
 Define the ServiceName of the API Server for Client Access.
 */}}
-{{- define "oai-server.serviceName" -}}
-{{ include "release.name" . }}-oai-server-http
+{{- define "ai-explorer-server.serviceName" -}}
+{{ include "release.name" . }}-ai-explorer-server-http
 {{- end -}}
 
-{{- define "oai-server.serviceUrl" -}}
-http://{{ include "oai-server.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local
+{{- define "ai-explorer-server.serviceUrl" -}}
+http://{{ include "ai-explorer-server.serviceName" . }}.{{ .Release.Namespace }}.svc.cluster.local
 {{- end -}}
 
 {{/*

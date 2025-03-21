@@ -8,7 +8,7 @@ weight = 5
 Copyright (c) 2024, 2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
-spell-checker: ignore mxbai, ollama, oaim, sqlplus, sysdba, spfile, freepdb, tablespace, firewalld, hnsw
+spell-checker: ignore mxbai, ollama, sqlplus, sysdba, spfile, freepdb, tablespace, firewalld, hnsw
 -->
 
 This walkthrough will guide you through a basic installation of the {{< full_app_ref >}}. It will allow you to experiment with GenAI, using Retrieval-Augmented Generation (**RAG**) with Oracle Database 23ai at the core.
@@ -61,13 +61,13 @@ To start Oracle Database 23ai Free:
 1. Start the container:
 
    ```bash
-   podman run -d --name oaim-db -p 1521:1521 container-registry.oracle.com/database/free:latest
+   podman run -d --name ai-explorer-db -p 1521:1521 container-registry.oracle.com/database/free:latest
    ```
 
 1. Alter the `vector_memory_size` parameter and create a [new database user](../client/configuration/db_config#database-user):
 
    ```bash
-   podman exec -it oaim-db sqlplus '/ as sysdba'
+   podman exec -it ai-explorer-db sqlplus '/ as sysdba'
    ```
 
    ```sql
@@ -87,7 +87,7 @@ To start Oracle Database 23ai Free:
 1. Bounce the database for the `vector_memory_size` to take effect:
 
    ```bash
-   podman container restart oaim-db
+   podman container restart ai-explorer-db
    ```
 
 ### LLM - llama3.1
@@ -169,22 +169,22 @@ The {{< short_app_ref >}} provides an easy to use front-end for experimenting wi
 1. Download and Unzip the latest version of the {{< short_app_ref >}}:
 
    ```bash
-   curl -L -o oai-explorer.tar.gz https://github.com/oracle-samples/oaim-sandbox/archive/refs/heads/main.tar.gz
-   mkdir oai-explorer
-   tar zxf oai-explorer.tar.gz --strip-components=1 -C oai-explorer
+   curl -L -o ai-explorer.tar.gz https://github.com/oracle-samples/ai-explorer/archive/refs/heads/main.tar.gz
+   mkdir ai-explorer
+   tar zxf ai-explorer.tar.gz --strip-components=1 -C ai-explorer
    ```
 
 1. Build the Container Image
 
    ```bash
-   cd oai-client/src
-   podman build --arch amd64 -t localhost/oai-explorer-aio:latest .
+   cd ai-explorer-client/src
+   podman build --arch amd64 -t localhost/ai-explorer-aio:latest .
    ```
 
 1. Start the {{< short_app_ref >}}:
 
    ```bash
-   podman run -d --name oai-explorer-aio --network=host localhost/oai-explorer-aio:latest
+   podman run -d --name ai-explorer-aio --network=host localhost/ai-explorer-aio:latest
    ```
 
    Operating System specific instructions:
@@ -285,7 +285,7 @@ Depending on the infrastructure, the embedding process can take a few minutes. A
 ![Split and Embed](images/split_embed_web.png)
 
 {{% notice style="code" title="Thumb Twiddling" icon="circle-info" %}}
-You can watch the progress of the embedding by streaming the logs: `podman logs -f oaim-explorer-aio`
+You can watch the progress of the embedding by streaming the logs: `podman logs -f ai-explorer-aio`
 
 Chunks are processed in batches. Wait until the logs output: `POST Response: <Response [200]>` before continuing.
 {{% /notice %}}
@@ -299,7 +299,7 @@ From the command line:
 1. Connect to the Oracle Database 23ai Database:
 
    ```bash
-   podman exec -it oaim-db sqlplus 'WALKTHROUGH/OrA_41_EXPLORER@FREEPDB1'
+   podman exec -it ai-explorer-db sqlplus 'WALKTHROUGH/OrA_41_EXPLORER@FREEPDB1'
    ```
 
 1. Query the Vector Store:
@@ -360,7 +360,7 @@ To take your experiments to the next level, consider exploring these additional 
 To cleanup the walkthrough "Infrastructure", stop and remove the containers.
 
 ```bash
-podman container rm oaim-db --force
-podman container rm oaim-explorer-aio --force
+podman container rm ai-explorer-db --force
+podman container rm ai-explorer-aio --force
 podman container rm ollama --force
 ```

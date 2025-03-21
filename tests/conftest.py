@@ -161,9 +161,9 @@ def _client() -> Generator[TestClient, None, None]:
     os.environ["OCI_CLI_CONFIG_FILE"] = "/non/existant/path"
 
     # Lazy import to for OS env
-    import oai_server  # pylint: disable=import-outside-toplevel
+    import ai_explorer_server  # pylint: disable=import-outside-toplevel
 
-    app = oai_server.create_app()
+    app = ai_explorer_server.create_app()
     with TestClient(app) as client:
         # Bootstrap Settings
         client.post("/v1/settings", headers=TEST_HEADERS, params={"client": TEST_CONFIG["test_client"]})
@@ -370,7 +370,7 @@ def start_fastapi_server():
     # Prevent picking up default OCI config file
     os.environ["OCI_CLI_CONFIG_FILE"] = "/non/existant/path"
 
-    server_process = subprocess.Popen(["python", "oai_server.py"], cwd="src")
+    server_process = subprocess.Popen(["python", "ai_explorer_server.py"], cwd="src")
     wait_for_server()
     yield
     # Terminate the server after tests

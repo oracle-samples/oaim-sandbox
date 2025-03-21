@@ -16,7 +16,7 @@ logging.basicConfig(
     format="%(asctime)s - %(levelname)-8s - (%(name)s): %(message)s",
     datefmt="%Y-%b-%d %H:%M:%S",
     handlers=[
-        # logging.FileHandler("oai-explorer.log"),
+        # logging.FileHandler("ai-explorer.log"),
         logging.StreamHandler()
     ],
 )

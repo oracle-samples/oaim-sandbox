@@ -17,12 +17,12 @@ from client.utils.st_common import set_server_state, client_gen_id
 
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("oai_client")
+logger = logging_config.logging.getLogger("ai_explorer_client")
 
-# Import oai_server if it exists
+# Import ai_explorer_server if it exists
 REMOTE_SERVER = False
 try:
-    from oai_server import start_server, get_api_key
+    from ai_explorer_server import start_server, get_api_key
 
     _ = get_api_key()
     logger.debug("Imported API Server.")
@@ -41,8 +41,8 @@ def main() -> None:
         layout="wide",
         initial_sidebar_state="expanded",
         menu_items={
-            "Get Help": "https://oracle-samples.github.io/oaim-sandbox/",
-            "Report a bug": "https://github.com/oracle-samples/oaim-sandbox/issues/new",
+            "Get Help": "https://oracle-samples.github.io/ai-explorer/",
+            "Report a bug": "https://github.com/oracle-samples/ai-explorer/issues/new",
         },
     )
     st.html(

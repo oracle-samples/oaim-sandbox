@@ -23,7 +23,7 @@ from common.schema import ClientIdType
 logger = logging_config.logging.getLogger("client.content.server")
 
 try:
-    import oai_server
+    import ai_explorer_server
 
     REMOTE_SERVER = False
 except ImportError:
@@ -55,8 +55,8 @@ def server_restart() -> None:
     state.server["port"] = state.user_server_port
     state.server["key"] = os.getenv("API_SERVER_KEY")
 
-    oai_server.stop_server(state.server["pid"])
-    state.server["pid"] = oai_server.start_server(state.server["port"])
+    ai_explorer_server.stop_server(state.server["pid"])
+    state.server["pid"] = ai_explorer_server.start_server(state.server["port"])
     time.sleep(10)
     state.pop("sever_client", None)
 

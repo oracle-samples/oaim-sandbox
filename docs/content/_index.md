@@ -10,7 +10,7 @@ keywords = 'oracle explorer microservices development genai rag'
 Copyright (c) 2024, 2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
-spell-checker:ignore streamlit, genai, venv, oaim
+spell-checker:ignore streamlit, genai, venv
 -->
 
 The {{< full_app_ref >}} provides a streamlined environment where developers and data scientists can explore the potential of Generative Artificial Intelligence (**GenAI**) combined with Retrieval-Augmented Generation (**RAG**) capabilities. By integrating Oracle Database AI Vector Search, the {{< short_app_ref >}} enables users to enhance existing Large Language Models (**LLM**s) through **RAG**. This method significantly improves the performance and accuracy of AI models, helping to avoid common issues such as knowledge cutoff and hallucinations.
@@ -71,7 +71,7 @@ To run the application on bare-metal; download the [source]({{ .Site.Params.GitH
 1. Start Streamlit:
 
    ```bash
-   streamlit run oai_client.py --server.port 8501
+   streamlit run ai_explorer_client.py --server.port 8501
    ```
 
 1. Navigate to `http://localhost:8501`.
@@ -88,17 +88,17 @@ To run the application in a container; download the [source]({{ .Site.Params.Git
 
 1. Build the image.
 
-   From inside the `src/` directory, build the *oai-explorer-aio* image:
+   From inside the `src/` directory, build the *ai-explorer-aio* image:
 
    ```bash
    cd src/
-   podman build -t oai-explorer-aio .
+   podman build -t ai-explorer-aio .
    ```
 
 1. Start the Container:
 
    ```bash
-   podman run -p 8501:8501 -it --rm oai-explorer-aio
+   podman run -p 8501:8501 -it --rm ai-explorer-aio
    ```
 
 1. Navigate to `http://localhost:8501`.

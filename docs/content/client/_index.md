@@ -7,10 +7,10 @@ weight = 20
 Copyright (c) 2024, 2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
-spell-checker:ignore streamlit, oaim, uvicorn
+spell-checker:ignore streamlit, uvicorn
 -->
 
-The {{< full_app_ref >}} consists of an API Server ([**oai-server**](#api-server-oai-server)) and an _optional_ web-based GUI ([**oai-client**](#client-oai-client)) component.  Both the API Server and GUI can be run on bare-metal or inside containers.  
+The {{< full_app_ref >}} consists of an API Server ([**ai-explorer-server**](#api-server-ai-explorer-server)) and an _optional_ web-based GUI ([**ai-explorer-client**](#client-ai-explorer-client)) component.  Both the API Server and GUI can be run on bare-metal or inside containers.  
 
 ![Architecture Overview](images/arch_overview.png)
 
@@ -21,19 +21,19 @@ The following additional components, not delivered with the {{< short_app_ref >}
 
 The {{< short_app_ref >}} is specifically designed to run in container orchestration systems, such as [Kubernetes](https://kubernetes.io/).  For more information on deploying the {{< short_app_ref >}} in Kubernetes, using a Helm Chart, please review the [Advanced - Microservices](/advanced/microservices) documentation.
 
-## API Server (OAI Server)
+## API Server (AI Explorer Server)
 
-The workhorse of the {{< short_app_ref >}} is the API Server, referred to as the **OAI Server**.  By default, the **OAI Server** will start on port 8000
+The workhorse of the {{< short_app_ref >}} is the API Server, referred to as the **AI Explorer Server**.  By default, the **AI Explorer Server** will start on port 8000
 
 {{% notice style="code" title="All the docs" icon="circle-info" %}}
-The **OAI Server** API documentation can be accessed at `http://<IP Address>:<Port>/v1/docs#` of a running instance. 
+The **AI Explorer Server** API documentation can be accessed at `http://<IP Address>:<Port>/v1/docs#` of a running instance. 
 {{% /notice %}}
 
 ![API Server](images/api_server.png)
 
-Powered by [FastAPI](https://fastapi.tiangolo.com/) and [Uvicorn](https://www.uvicorn.org/), the **OAI Server** acts as an intermediary between the clients, AI Models, and the Oracle Database.
+Powered by [FastAPI](https://fastapi.tiangolo.com/) and [Uvicorn](https://www.uvicorn.org/), the **AI Explorer Server** acts as an intermediary between the clients, AI Models, and the Oracle Database.
 
-## Client (OAI Client)
+## Client (AI Explorer Client)
 
 The provided web-based GUI client is built with [Streamlit](https://streamlit.io/) and interacts with the API Server via REST calls.  
 

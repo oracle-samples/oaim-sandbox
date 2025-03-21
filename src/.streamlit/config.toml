@@ -8,7 +8,7 @@ gatherUsageStats = false
 serverAddress = "localhost"
 
 [server]
-cookieSecret = "oai-client-cookie"
+cookieSecret = "oaie-client-cookie"
 headless = true
 
 [client]

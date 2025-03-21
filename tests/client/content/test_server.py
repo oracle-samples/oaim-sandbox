@@ -129,7 +129,7 @@ class TestServerFunctions:
         """Test the server_restart function using the conftest environment variables"""
         # Skip this test if oai_server is not available
         try:
-            import oai_server
+            import ai_explorer_server as server
         except ImportError:
             pytest.skip("oai_server not available, skipping restart test")
 
