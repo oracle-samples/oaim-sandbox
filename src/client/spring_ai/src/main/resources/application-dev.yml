@@ -12,7 +12,7 @@ spring:
         distance-type: ${DISTANCE_TYPE}
         remove-existing-vector-store-table: True
         initialize-schema: True
-        index-type: None
+        index-type: ${INDEX_TYPE}
     openai:
       base-url: {OPENAI_URL}
       api-key: {OPENAI_API_KEY}
