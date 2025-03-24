@@ -250,7 +250,7 @@ The platform allows to generate as many questions and answer you desire, based o
 
 ![generate](./images/generatenew.png)
 
-* Upload the document used to create the vector store, getting from this [this link](https://docs.oracle.com/en/database/oracle/oracle-database/23/tdpjd/get-started-java-development.pdf).
+* Upload the document used to create the vector store, getting from [this link](https://docs.oracle.com/en/database/oracle/oracle-database/23/tdpjd/get-started-java-development.pdf).
 
 * Increase the number to be generated to 10 or more. Take in consideration that the process it's quite long, especially if you will use local LLM for Q&A generation without enough hardware capacity. In case of OpenAI remote model, the process it's less affected by increasing the number of Q&As than the private LLM approach.
 
