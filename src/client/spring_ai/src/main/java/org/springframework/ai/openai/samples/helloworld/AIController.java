@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.ai.vectorstore.OracleVectorStore;
+import org.springframework.ai.vectorstore.oracle.OracleVectorStore;
 
 import jakarta.annotation.PostConstruct;
 
@@ -96,28 +96,29 @@ class AIController {
 		String sqlUser = "SELECT USER FROM DUAL";
 		String user = "";
 		String sql = "";
+		String newTable = legacyTable+"_SPRINGAI";
 
 		user = jdbcTemplate.queryForObject(sqlUser, String.class);
 		if (doesTableExist(legacyTable,user)!=-1) {
 			// RUNNING LOCAL
 			logger.info("Running local with user: " + user);
-			sql = "INSERT INTO " + user + ".SPRING_AI_VECTORS (ID, CONTENT, METADATA, EMBEDDING) " +
+			sql = "INSERT INTO " + user + "." + newTable + " (ID, CONTENT, METADATA, EMBEDDING) " +
 					"SELECT ID, TEXT, METADATA, EMBEDDING FROM " + user + "." + legacyTable;
 		} else {
 			// RUNNING in OBAAS
 			logger.info("Running on OBaaS with user: " + user);
-			sql = "INSERT INTO " + user + ".SPRING_AI_VECTORS (ID, CONTENT, METADATA, EMBEDDING) " +
+			sql = "INSERT INTO " + user + "." + newTable+ " (ID, CONTENT, METADATA, EMBEDDING) " +
 					"SELECT ID, TEXT, METADATA, EMBEDDING FROM ADMIN." + legacyTable;
 		}
 		// Execute the insert
-		logger.info("doesExist"+  user + ": "+ doesTableExist("SPRING_AI_VECTORS",user));
-		if (countRecordsInTable("SPRING_AI_VECTORS",user)==0) {
+		logger.info("doesExist"+  user + ": "+ doesTableExist(newTable,user));
+		if (countRecordsInTable(newTable,user)==0) {
 			// First microservice execution
-			logger.info("Table " + user + ".SPRING_AI_VECTORS doesn't exist: create from ADMIN/USER." + legacyTable);
+			logger.info("Table " + user + "." + newTable+ " doesn't exist: create from ADMIN/USER." + legacyTable);
 			jdbcTemplate.update(sql);
 		} else {
 			// Table conversion already done
-			logger.info("Table SPRING_AI_VECTORS exists: drop before if you want use new contents " + legacyTable);
+			logger.info("Table +"+ newTable+" exists: drop before if you want use with new contents " + legacyTable);
 		}
 	}
 
@@ -175,11 +176,11 @@ class AIController {
 				""";
 		
 		//This template doesn't work with agent pattern, but only via RAG 
-		//The contextInstr coming from client can't be used here: default only
+		//The contextInstr coming from AI sandbox can't be used here: default only
 		template = template + "\n" + default_Instr;
 
 		List<Document> similarDocuments = this.vectorStore.similaritySearch(
-				SearchRequest.query(message).withTopK(TOPK));
+				SearchRequest.builder().query(message).topK(TOPK).build());
 
 		StringBuilder context = createContext(similarDocuments);
 
@@ -231,9 +232,10 @@ class AIController {
 	List<Map<String, Object>> search(@RequestParam(value = "message", defaultValue = "Tell me a joke") String query,
 			@RequestParam(value = "topk", defaultValue = "5") Integer topK) {
 
-		List<Document> similarDocs = vectorStore.similaritySearch(SearchRequest.defaults()
-				.withQuery(query)
-				.withTopK(topK));
+		List<Document> similarDocs = vectorStore.similaritySearch(SearchRequest.builder()
+			.query(query)
+			.topK(topK)
+			.build());
 
 		List<Map<String, Object>> resultList = new ArrayList<>();
 		for (Document d : similarDocs) {

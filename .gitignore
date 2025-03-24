@@ -47,7 +47,7 @@ spring_ai/src/main/resources/data/explorer_settings.json
 spring_ai/target/**
 spring_ai/create_user.sql
 spring_ai/drop.sql
-start.sh
+/start.sh
 spring_ai/env.sh
 temp/rag_agent.ipynb
 temp/tools.ipynb
@@ -57,3 +57,4 @@ client.sh
 server.sh
 temp/genai_work.py
 temp/test_oci.py
+src/client/spring_ai/target/classes/*
