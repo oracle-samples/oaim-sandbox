@@ -58,3 +58,5 @@ server.sh
 temp/genai_work.py
 temp/test_oci.py
 src/client/spring_ai/target/classes/*
+sandbox.sh
+api_server_key
