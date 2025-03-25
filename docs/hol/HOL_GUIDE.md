@@ -1,7 +1,7 @@
 # Hands-on-lab Guide
 
 ## Set up macOS M*
-In this first step we are going to set up all the required components to run the AI Explorer for Apps.
+In this first step we are going to set up all the required components to run the AI Explorer for Apps. As pre-requisites install **docker**.
 
 ### Containers runtime engine
 We begin by starting our container runtime engine. We will be using Colima here,
@@ -9,7 +9,9 @@ and assuming that you are using an Apple Silicon Mac.
 Start the container runtime engine.  If you already have a profile that you use, please double-check that it uses 4
 CPUs and 8GB of memory.
 ```bash
-colima start --vm-type vz --vz-rosetta --mount-type virtiofs --cpu 4 --memory 8
+brew install colima
+brew insatll qemu
+colima start x86 --arch x86_64 --mount-type virtiofs --cpu 4 --memory 8
 ```
 
 ### Install and start Oracle DB 23ai
