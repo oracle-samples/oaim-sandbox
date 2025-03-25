@@ -189,13 +189,13 @@ to start a conversation with the same questions, and compare the answers. Note t
 Proceed as shown [here](SPLIT-EMBED.md) to prepare a vectorstore to augment the answers provided by the chatbot compare with a plain LLM that hasn't enough context info to answer on a topic.
 
 ### 2.6 RAG test
-Now that we have two vector store, let's start to test the first knowledge base created with the local LLMs based on the OLLAMA server:`TEST1`
+Now that we have two vector store, let's start to test the first knowledge base created with the local LLMs based on the OpenAI service:`TEST2`
 
 * Clear history pressing button **Clear** and choose llama3.1 model for initial test.
 
 * Scrolling down the left side pane, **Enable RAG?**. 
 
-* In **Select Alias** dropdown box, select the `TEST1` vector store table. You will see the rest of the fields of **Vector Store** menu automatically populated, since each of them represent a search parameter that could be used to select the vector store created. In this case, the alias is enough to determine what you are looking for but, from the other side, you have the evidence of the parameteres used to create the chunk and related embeddings vector.
+* In **Select Alias** dropdown box, select the `TEST2` vector store table. You will see the rest of the fields of **Vector Store** menu automatically populated, since each of them represent a search parameter that could be used to select the vector store created. In this case, the alias is enough to determine what you are looking for but, from the other side, you have the evidence of the parameteres used to create the chunk and related embeddings vector.
 
 * Let's ask again the same questions to which the LLM has provided generic anwers since not related to the document loaded that the LLM ignored in its training or not enough addressed in the questions:
 
