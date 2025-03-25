@@ -47,7 +47,7 @@ ollama pull mxbai-embed-large
 For OpenAI you need the OPENAI_API_KEY to authenticate and use their services. 
 
 ### 1.2 Clone the right branch
-* Make sure to clone the branch `hol`. In a `<project_dir>` proceed in this way:
+* Make sure to clone the branch `cdb`. In a `<project_dir>` proceed in this way:
 ```bash
 git clone --branch cdb --single-branch https://github.com/oracle-samples/oaim-sandbox.git
 ```
