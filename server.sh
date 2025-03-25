@@ -1,3 +1,4 @@
+export API_SERVER_KEY=<generated_key>
 export API_SERVER_URL="http://localhost"
 export API_SERVER_PORT=8000
 #export OPENAI_API_KEY=
