@@ -307,7 +307,7 @@ change in :
 
   * Under **Language Model Parameters**, select in the **Chat model** dropdown list **gpt-4o-mini**
   * **Enable RAG?** if for any reason hasn't been selected
-  * Choose in the **Select Alias** dropdown list the **TEST1** value.
+  * Choose in the **Select Alias** dropdown list the **TEST2** value.
   * Leave unchanged the default parameters on the left pane.
 
 * Leaving the default one model to judge, **gpt-4o-mini**, click on **Start Evaluation** button and wait a few seconds. All the questions will be submitted to the chatbot as configured in the left pane:
@@ -430,7 +430,7 @@ don't worry: choose for the **Chat model:** the **llama3.1** and the button will
   ```
 
 ### 3.3 Execute the OpenAI version
-Proceed as in the previous step, choosing in **Select Alias:** the **TEST2** vector store, and **LLama3.1** as **Chat model**. In the terminal where you'll run the Spring Boot microservice, be sure that the **OPENAI_API_KEY** is correctly set.
+Proceed as in the previous step, choosing in **Select Alias:** the **TEST2** vector store, and **gpt-4o-mini** as **Chat model**. In the terminal where you'll run the Spring Boot microservice, be sure that the **OPENAI_API_KEY** is correctly set.
 
 
 ## 4. Backup Env
