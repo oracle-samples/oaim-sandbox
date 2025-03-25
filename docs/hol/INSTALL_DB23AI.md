@@ -13,7 +13,7 @@ AI Vector Search in Oracle Database 23ai provides the ability to store and query
 If you are running this lab on a MacOS system, you would need to simulate podman using colima. Run this command to start colima with profile x86:
 
 ```bash
-alias podman = docker 
+alias podman=docker 
 colima start x86
 ```
 
