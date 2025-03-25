@@ -83,22 +83,20 @@ Install Python 3.11:
 
 
 ### 1.4 Startup 
-The two scripts `server.sh` hold env variables needed to connect the DB and OpenAI, instead the `client.sh` the key to be authorized on the AI Explorer. Set the `OPENAI_API_KEY` in the server script. If, for any reasons, you need to adapt the DBMS to a different instance and setup, change the variables accordingly.
+The script `server.sh` hold env variables needed to connect the DB and OpenAI and the `API_SERVER_KEY` to authenticate the client. Set the `OPENAI_API_KEY` in the server script. The `client.sh` needs only the `API_SERVER_KEY` to be authorized on the AI Explorer. If, for any reasons, you need to adapt the DBMS to a different instance and setup, change the variables accordingly.
+
+* Update the `API_SERVER_KEY` with an authorization code like, for example, `abc12345` in both scripts:
+  
+  ```bash
+  export API_SERVER_KEY=<generated_key>
+  ```
 
 * In a separate shell:
 
     ```bash
     <project_dir>source ./server.sh
     ```
-
-and get api-key from logs:
-![API-KEY](images/api-key.png)
-
-* set in `client.sh` the server API key:
-  ```bash
-  export API_SERVER_KEY=<generated_key>
-  ```
-
+    
 * in another terminal:
   ```bash
   <project_dir>source ./client.sh
