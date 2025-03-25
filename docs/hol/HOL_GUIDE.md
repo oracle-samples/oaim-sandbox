@@ -1,9 +1,10 @@
 # Hands-on-lab Guide
 
-## Set up macOS M*
+## 1. Installation
+### 1.1 Set up macOS M*
 In this first step we are going to set up all the required components to run the AI Explorer for Apps. As pre-requisites install **docker**.
 
-### Containers runtime engine
+#### 1.1.1 Containers runtime engine
 We begin by starting our container runtime engine. We will be using Colima here,
 and assuming that you are using an Apple Silicon Mac.
 Start the container runtime engine.  If you already have a profile that you use, please double-check that it uses 4
@@ -14,12 +15,12 @@ brew insatll qemu
 colima start x86 --arch x86_64 --mount-type virtiofs --cpu 4 --memory 8
 ```
 
-### Install and start Oracle DB 23ai
+#### 1.1.2 Install and start Oracle DB 23ai
 
 We are going to use Oracle Database 23ai to take advantage of the vector search feature among other things, so we spin up a container with it. Proceed as describd here: [DB](INSTALL_DB23AI.md)
 
 
-### LLM runtime
+#### 1.1.3 LLM runtime
 We would like to interact with different LLMs locally and we are going to use Ollama for running them. We are going to use it in if Ollama isn't installed in your system already, you can use brew:
 
 ```bash
@@ -45,15 +46,15 @@ ollama pull mxbai-embed-large
 
 For OpenAI you need the OPENAI_API_KEY to authenticate and use their services. 
 
-### Clone the right branch
+### 1.2 Clone the right branch
 * Make sure to clone the branch `hol`. In a `<project_dir>` proceed in this way:
 ```bash
 git clone --branch cdb --single-branch https://github.com/oracle-samples/oaim-sandbox.git
 ```
 
-### Install requirements:
+### 1.3 Install requirements:
 
-#### Python version
+#### 1.3.1 Python version
 
 AI Explorer for Apps requires exactly Python 3.11, neither older nor newer.  If you are using a recent version of macOS,
 you will need to install that version side by side with the builtin one.
@@ -64,7 +65,7 @@ Install Python 3.11:
   python3.11 --version
   ```
 
-#### Create environment
+#### 1.3.2 Create environment
 
   ```bash
    cd src/
@@ -72,7 +73,8 @@ Install Python 3.11:
    source .venv/bin/activate
    pip3.11 install --upgrade pip wheel setuptools
   ```
-#### Install the Python modules:
+
+#### 1.3.3 Install the Python modules:
 
    ```bash
    pip3.11 install -e ".[all]"
@@ -80,7 +82,7 @@ Install Python 3.11:
    ```
 
 
-### Startup 
+### 1.4 Startup 
 The two scripts `server.sh` hold env variables needed to connect the DB and OpenAI, instead the `client.sh` the key to be authorized on the AI Explorer. Set the `OPENAI_API_KEY` in the server script. If, for any reasons, you need to adapt the DBMS to a different instance and setup, change the variables accordingly.
 
 * In a separate shell:
@@ -102,10 +104,10 @@ and get api-key from logs:
   <project_dir>source ./client.sh
   ```
 
-## Explore the env
+## 2. Explore the env
 In a browser, open the link: `http://localhost:8502/`
 
-### DB connection
+### 2.1 DB connection
 
 Let's check if the DB is correctly connected:
 
@@ -113,7 +115,7 @@ Let's check if the DB is correctly connected:
 
 * You should see the message: `Current Status: Connected`
 
-### OCI Credentials
+### 2.2 OCI Credentials
 
 In the OCI configuration tab, you can add your Oracle Cloud Infrastructure (OCI) credentials to authenticate with your OCI tenancy. This will enable access to objects and documents stored in your cloud compartments.
 
@@ -127,7 +129,7 @@ After entering your credentials, click the Save button. If the credentials are c
 
 ![OCI-CREDENTIALS](images/oci-credentials-success.png)
 
-### LLM config:
+### 2.3 LLM config
 
 Let's check models available:
 
@@ -163,7 +165,7 @@ Let's check models available:
   ![new_llama32](images/addllama32.png)
 
 
-### Chat
+### 2.4 Chat
 The two LLMs availble could be tested straightful to understand their behaviour with generic questions. Before to access the chat GUI
 
 ![chat](images/chat.png)
@@ -185,10 +187,10 @@ to start a conversation with the same questions, and compare the answers. Note t
 * Play with the **Temperature** parameter, and the others to compare the quality of the answers, for each LLM available. Clear the history pressing button **Clear** after each cycle.
 
 
-### Prepare vector store
+### 2.5 Prepare vector store
 Proceed as shown [here](SPLIT-EMBED.md) to prepare a vectorstore to augment the answers provided by the chatbot compare with a plain LLM that hasn't enough context info to answer on a topic.
 
-### RAG test
+### 2.6 RAG test
 Now that we have two vector store, let's start to test the first knowledge base created with the local LLMs based on the OLLAMA server:`TEST1`
 
 * Clear history pressing button **Clear** and choose llama3.1 model for initial test.
@@ -263,7 +265,7 @@ A: You can use the Oracle Database to run the Java Web example application. The 
 * Repeat the tests with local LLMs based on the OLLAMA server:`TEST2`, and choose **gpt-4o-mini** in **Chat model** dropdown menu tp have same LLM provider.
  
 
-### Testbed
+### 2.7 Testbed
 We are confident that changing some parameters the quality and accuracy of the answers improve. But are you sure that on a large scale deployment your setup it's reliable on hundreds or thousands of different questions?
 Testbed helps you to massive test your chatbot, generating for you a Q&A test dataset and automatically try on your current configuration. Let's access to the Testbed from left pane menu:
 
@@ -355,17 +357,17 @@ The second part of the report provides details about each single questions submi
 
 * Repeat the tests as many time you desire changing: **Vector Store**, **Search Type** and **Top K** to execute the same kind of tuning you have done at the previous steps with just a few interactive questions, now on a massive test on curated and comparable assets.
 
-### Export and run the chatbot as a Spring AI microservice
+## 3. Export and run the chatbot as a Spring AI microservice
 
 The AI Explorer allows to export the chatbot defined as a ready-to-run microservice built in Java, Spring Boot and Spring AI framework, that will run independently by the AI Explorer, leveraging only the vector store table created, and the LLM servers used. In the current relase are supported only fully Ollama configuration (embeddings + chat model) or OpenAI.
 
-#### Pre-requisites
+### 3.1 Pre-requisites
 To run the microservice exported you need:
   * JDK 21.x 
   * Apache Maven 3.8.x
   * curl command
 
-#### Execute the Ollama version
+### 3.2 Execute the Ollama version
 
 * **Select Alias:** as **TEST1** vector store, and **LLama3.1** as **Chat model**. In this way the configuration will be based on the Ollama LLM server provider for both LLMs, embeddings and chat, and go to the **Settings** menu in the left pane side. You'll find the **Download SpringAI** button available. This
 
@@ -429,11 +431,11 @@ don't worry: choose for the **Chat model:** the **llama3.1** and the button will
   }
   ```
 
-#### Execute the OpenAI version
+### 3.3 Execute the OpenAI version
 Proceed as in the previous step, choosing in **Select Alias:** the **TEST2** vector store, and **LLama3.1** as **Chat model**. In the terminal where you'll run the Spring Boot microservice, be sure that the **OPENAI_API_KEY** is correctly set.
 
 
-### Explore Settings
+## 4. Backup Env
 All the AI Explorer server can be exported to save the configuration as backup and imported in another server.
 
 * Go to the left pane menu **Settings**:
