@@ -53,8 +53,6 @@ temp/rag_agent.ipynb
 temp/tools.ipynb
 temp/tools.py
 temp/json-dual.sql
-client.sh
-server.sh
 temp/genai_work.py
 temp/test_oci.py
 src/client/spring_ai/target/classes/*
