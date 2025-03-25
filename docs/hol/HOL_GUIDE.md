@@ -189,9 +189,9 @@ to start a conversation with the same questions, and compare the answers. Note t
 Proceed as shown [here](SPLIT-EMBED.md) to prepare a vectorstore to augment the answers provided by the chatbot compare with a plain LLM that hasn't enough context info to answer on a topic.
 
 ### 2.6 RAG test
-Now that we have two vector store, let's start to test the first knowledge base created with the local LLMs based on the OpenAI service:`TEST2`
+Now that we have two vector store, let's start to test the second knowledge base created with the OpenAI service:`TEST2` to use classical public resources.
 
-* Clear history pressing button **Clear** and choose llama3.1 model for initial test.
+* Clear history pressing button **Clear** and choose **gpt-4o-mini** model for initial test.
 
 * Scrolling down the left side pane, **Enable RAG?**. 
 
@@ -204,7 +204,7 @@ Which kind of database you can use to run the Java Web example application?
 Which Java environment should be used to run this example?
 ```
 
-On TEST1 vector store you will try with the main params set in the following way, how will change the quality of the answers.
+On TEST2 vector store you will try with the main params set in the following way, how will change the quality of the answers.
 
   * LLM:gpt-4o-mini
   * TopK: 4
@@ -260,7 +260,8 @@ A: You can use the Oracle Database to run the Java Web example application. The 
 
 * Clear history, pressing button **Clear**
 
-* Repeat the tests with local LLMs based on the OLLAMA server:`TEST2`, and choose **gpt-4o-mini** in **Chat model** dropdown menu tp have same LLM provider.
+### 2.6.1 OLLAMA test.
+Repeat the tests with local LLMs based on the OLLAMA server and vector store: `TEST1`, and choose **llama3.1** in **Chat model** dropdown menu to have the same LLM provider.
  
 
 ### 2.7 Testbed
