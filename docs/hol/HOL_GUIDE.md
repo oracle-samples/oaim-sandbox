@@ -11,7 +11,7 @@ Start the container runtime engine.  If you already have a profile that you use,
 CPUs and 8GB of memory.
 ```bash
 brew install colima
-brew insatll qemu
+brew install qemu
 colima start x86 --arch x86_64 --mount-type virtiofs --cpu 4 --memory 8
 ```
 
