@@ -60,3 +60,5 @@ sandbox.sh
 api_server_key
 client.sh
 server.sh
+client.sh
+server.sh
