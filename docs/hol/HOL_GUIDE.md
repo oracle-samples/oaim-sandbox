@@ -83,13 +83,38 @@ Install Python 3.11:
 
 
 ### 1.4 Startup 
-The script `server.sh` hold env variables needed to connect the DB and OpenAI and the `API_SERVER_KEY` to authenticate the client. Set the `OPENAI_API_KEY` in the server script. The `client.sh` needs only the `API_SERVER_KEY` to be authorized on the AI Explorer. If, for any reasons, you need to adapt the DBMS to a different instance and setup, change the variables accordingly.
 
-* Update the `API_SERVER_KEY` with an authorization code like, for example, `abc12345` in both scripts:
-  
+* Create a `server.sh` file in the <project_dir>:
+ 
   ```bash
-  export API_SERVER_KEY=<generated_key>
+  export API_SERVER_KEY=<API_SERVER_KEY>
+  export API_SERVER_URL="http://localhost"
+  export API_SERVER_PORT=8000
+  export OPENAI_API_KEY=<OPENAI_API_KEY>
+  export DB_USERNAME=vector
+  export DB_PASSWORD=vector
+  export DB_DSN="localhost:1521/FREEPDB1"
+
+  export ON_PREM_OLLAMA_URL="http://localhost:11434"
+
+  cd src  
+  source .venv/bin/activate
+  python oai_server.py
   ```
+
+The script `server.sh` hold env variables needed to connect the DB and OpenAI and the `API_SERVER_KEY` to authenticate the client. Set one, for example, `abc12345` and use the same in the following `client.sh`. Set the `OPENAI_API_KEY` in the server script. 
+If, for any reasons, you need to adapt the DBMS to a different instance and setup, change the variables accordingly.
+
+* Create a `client.sh` file in the <project_dir>:
+
+```bash
+export API_SERVER_KEY=<API_SERVER_KEY>
+cd src
+source .venv/bin/activate
+streamlit run oai_client.py --server.port 8502
+```
+
+Set the same `<API_SERVER_KEY>` to be authorized on the AI Explorer.
 
 * In a separate shell:
 

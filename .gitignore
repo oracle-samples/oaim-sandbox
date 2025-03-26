@@ -58,3 +58,5 @@ temp/test_oci.py
 src/client/spring_ai/target/classes/*
 sandbox.sh
 api_server_key
+client.sh
+server.sh
