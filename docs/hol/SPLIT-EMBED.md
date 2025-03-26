@@ -6,7 +6,8 @@ In the **Split/Embed** tab, the AI Explorer allows you to upload various types o
 
 ![split-embed-interface](images/split-embed.png)
 
-You can choose from the embedding models you selected during the initial configuration using a drop-down menu and adjust their parameters accordingly. The chunk size defines the length of each segment into which the document will be split, while the chunk overlap represents the percentage of overlap between consecutive chunks relative to the chunk size.
+You can choose from the embedding models you selected during the initial configuration using a drop-down menu and adjust their parameters accordingly.
+For the first one choose **mxbai-embed-large**. The chunk size defines the length of each segment into which the document will be split, while the chunk overlap represents the percentage of overlap between consecutive chunks relative to the chunk size.
 
 Additionally, you can select different distance metrics and index types to experiment with various vector representations of the same document, allowing you to identify the configuration that best meets your needs.
 
@@ -42,7 +43,7 @@ select * from VECTOR.TEST1_MXBAI_EMBED_LARGE_512_103_COSINE_HNSW;
 
 What you see in the image above are chunks of text from the input document, which have been transformed into vector format and stored in the Oracle database. Essentially, you’ve replicated the knowledge contained in the document within your database!
 
-By following the sames steps, we can creat another vector store using the same document but with a different embedding model, *text-embedding-3-small* from the OpenAI models. We will give the alias ***TEST2*** to this vector store. 
+By following the sames steps, we can creat another vector store using the same document but with a different embedding model, **text-embedding-3-small** from the OpenAI models. We will give the alias ***TEST2*** to this vector store. 
 In this case, we will get a smaller number of chunks, since the model supports a chunk size of 8191 instead of the 512 given by *mxbai-embed-large*:
 
 ![text-embedding-3-small](images/text-embedding-3-small.png)
