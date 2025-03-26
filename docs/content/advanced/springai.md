@@ -23,10 +23,10 @@ Setting the API key is all you need to run the application. However, you can fin
 
 You have simply to:
 
-* change the permissions to the `env.sh` file to be executed with: 
+* change the permissions to the `start.sh` file to be executed with: 
 
 ```bash
-chmod 755 ./env.sh
+chmod 755 ./start.sh
 ```
 
 * add the password for the user used to connect from the {{ .Site.Params.LongName | markdownify }} to the Oracle DB23ai used as vectorstore: 
