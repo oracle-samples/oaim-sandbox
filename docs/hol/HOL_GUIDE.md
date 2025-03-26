@@ -206,7 +206,8 @@ Which kind of database you can use to run the Java Web example application?
 Which Java environment should be used to run this example?
 ```
 
-On TEST2 vector store you will try with the main params set in the following way, how will change the quality of the answers.
+On TEST2 vector store you will try with the main params set in the following way, how will change the quality of the answers. 
+**IMPORTANT**: Clear history, pressing button **Clear** after each question, also if you change the parameters and repeat the same question.
 
   * LLM:gpt-4o-mini
   * TopK: 4
@@ -216,7 +217,7 @@ On TEST2 vector store you will try with the main params set in the following way
 ```
 Q: Which Java environment should be used to run this example?
 
-A: The example should be run in a Java environment that includes a servlet and JSP container, specifically using Apache Tomcat as the web server for deploying the JSP pages. Additionally, it requires the appropriate JDBC drivers, which can be downloaded from Maven Central. Make sure to set the PATH environment variable for the JDK as well.
+A: The example should be run in an integrated development environment (IDE), specifically using IntelliJ IDEA community version as recommended in the documentation. Additionally, it will require a Web server with a servlet and JSP container, with Apache Tomcat being the server suggested for deploying the JSP pages (as per the guide).
 ```
 
   * LLM: gpt-4o-mini
@@ -227,10 +228,10 @@ A: The example should be run in a Java environment that includes a servlet and J
 ```
 Q: Which Java environment should be used to run this example?
 
-A: The example suggests using the Apache Tomcat server as the web server with a servlet and JSP container for deploying the Java web application. Additionally, it recommends using IntelliJ IDEA as the integrated development environment (IDE) for developing the application. You will also need to set the PATH environment variable for the JDK and download necessary JDBC drivers from Maven Central for the application.
+A: The example is recommended to be developed in an integrated development environment (IDE) like IntelliJ IDEA, specifically the community version, for ease of development. Additionally, the application uses Apache Tomcat as the web server for deploying the JavaServer Pages (JSP) technology in the HR Web application. For database connectivity, the Java code should be run on the Oracle Database, leveraging the capabilities of the Oracle JDBC Thin driver with a Java Virtual Machine (JVM) (Chapter 4 and Chapter 1).
 ```
 
-**COMMENT**: as you can see with more chunks provided, the bot start to mention also the IDE IntelliJ as part of a Java environment to be used, compared with the previuos one that mention only Java/JDK/Maven.
+**COMMENT**: as you can see with more chunks provided, the bot mentions also other technologies like Oracle JDBC, JVM and the Oracle Database.
 
 
   * LLM: gpt-4o-mini
@@ -240,7 +241,7 @@ A: The example suggests using the Apache Tomcat server as the web server with a 
 ```
 Q: Which kind of database you can use to run the Java Web example application?
 
-A:You can use the Oracle Database to run the Java Web example application. Specifically, you need a working installation of Oracle Database along with the HR schema, as mentioned in the introduction to JDBC and the application structure provided in your documents.
+A: You can use the Oracle Database, specifically the Autonomous Transaction Processing database, to run the Java Web example application. This is part of the requirements for developing the HR web application, which operates within the Oracle Database environment (see Chapter 4, "What You Need to Install").
 ```
 
   * LLM: gpt-4o-mini
@@ -251,14 +252,16 @@ A:You can use the Oracle Database to run the Java Web example application. Speci
 ```
 Q: Which kind of database you can use to run the Java Web example application?
 
-A: You can use the Oracle Database to run the Java Web example application. The application requires a working installation of Oracle Database along with the HR schema. Additionally, you can opt for Oracle Autonomous Database Cloud Services, which provides access to Oracle Cloud Free Tier for creating databases (as mentioned in the document).
+A: You can use the Oracle Database to run the Java Web example application, specifically the HR schema within the Oracle Database. The application can be developed using either an on-premises installation of Oracle Database or Oracle Autonomous Database in the cloud (as part of Oracle Cloud Free Tier) which is recommended for its ease of access and automation (see Chapter 4).
 ```
 
-**COMMENT**: In the second answer it mentions the Autonomous Database Cloud Services
+**COMMENT**: In the second answer it mentions the Oracle Cloud Free Tier.
 
 * Conclusion: we can suppose that 10 chunks as TopK similar vector represents a better parameters than the deafult 4.
 
 * Play with Temperature to discover how much become reacher in terms of expressions the answers provided.
+
+* Follow a question by another like "more" to have the evidence that the history is considered providing the answer in the conversation.
 
 * Clear history, pressing button **Clear**
 
