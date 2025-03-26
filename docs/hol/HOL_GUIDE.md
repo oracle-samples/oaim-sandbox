@@ -177,6 +177,8 @@ and, with the **Enable RAG?** check-box not selected, choose the **gpt-4o-mini**
 Which kind of database you can use to run the Java Web example application?
 Can I use any kind of development environment to run the example?
 ```
+NOTICE: *if you see a message on top **Database has no Vector Stores. Disabling RAG.** don't care since you haven't yet create a vector store and you can't use the RAG*.
+
 As you can see, even if the question mean to refer a specific example, the LLM answer in a generic way. 
 
 * Click the button **Clear** under **History and Context**, and choose the other LLM available, **llama3.1**,
