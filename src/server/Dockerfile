@@ -32,7 +32,7 @@ RUN source /opt/.venv/bin/activate && \
 ##################################################
 # Application
 ##################################################
-FROM server_pyenv AS ai_explorer_server
+FROM server_pyenv AS server
 ENV PATH=/opt/.venv/bin:$PATH
 ENV TOKENIZERS_PARALLELISM=true
 ENV TEMP=/app/tmp
@@ -42,7 +42,7 @@ ENV TIKTOKEN_CACHE_DIR=/app/tmp
 ENV NLTK_DATA=/app/tmp
 
 COPY --chown=$RUNUSER:$RUNUSER . /app
-RUN rm -rf /app/client /app/.streamlit /app/client.py
+RUN rm -rf /app/client /app/.streamlit /app/launch_client.py
 
 # Remove the OCI file if not development; update the key path if so
 ENV ENVIRONMENT=${ENVIRONMENT}

@@ -71,7 +71,7 @@ To run the application on bare-metal; download the [source]({{ .Site.Params.GitH
 1. Start Streamlit:
 
    ```bash
-   streamlit run client.py --server.port 8501
+   streamlit run launch_client.py --server.port 8501
    ```
 
 1. Navigate to `http://localhost:8501`.

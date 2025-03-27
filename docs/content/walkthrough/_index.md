@@ -177,7 +177,7 @@ To start Oracle Database 23ai Free:
 1. Start the container:
 
    ```bash
-   podman run -d --name ai-explorer-db -p 1521:1521 container-registry.oracle.com/database/free:latest-lite
+   podman run -d --name ai-explorer-db -p 1521:1521 container-registry.oracle.com/database/free:latest
    ```
 
 1. Alter the `vector_memory_size` parameter and create a [new database user](../client/configuration/db_config#database-user):

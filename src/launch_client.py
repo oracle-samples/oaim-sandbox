@@ -17,12 +17,12 @@ from client.utils.st_common import set_server_state, client_gen_id
 
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("ai_explorer_client")
+logger = logging_config.logging.getLogger("client")
 
-# Import ai_explorer_server if it exists
+# Import launch_server if it exists
 REMOTE_SERVER = False
 try:
-    from ai_explorer_server import start_server, get_api_key
+    from launch_server import start_server, get_api_key
 
     _ = get_api_key()
     logger.debug("Imported API Server.")
@@ -99,7 +99,7 @@ def main() -> None:
         testbed = st.Page("client/content/testbed.py", title="Testbed", icon="🧪")
         navigation[""].append(testbed)
     if not state.disabled["api"]:
-        api_server = st.Page("client/content/server.py", title="API Server", icon="📡")
+        api_server = st.Page("client/content/api_server.py", title="API Server", icon="📡")
         navigation[""].append(api_server)
 
     # Tools

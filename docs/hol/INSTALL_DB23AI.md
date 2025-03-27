@@ -1,6 +1,6 @@
 # Install Oracle DB23ai
 
-<!-- spell-checker:ignore streamlit, venv, oaim -->
+<!-- spell-checker:ignore streamlit, venv -->
 
 ## Description
 

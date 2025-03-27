@@ -32,12 +32,12 @@ RUN source /opt/.venv/bin/activate && \
 ##################################################
 # Application
 ##################################################
-FROM client_pyenv AS oai_client
+FROM client_pyenv AS client
 ENV PATH=/opt/.venv/bin:$PATH
 ENV TEMP=/app/tmp
 
 COPY --chown=$RUNUSER:$RUNUSER . /app
-RUN rm -rf /app/server /app/.oci /app/server.py
+RUN rm -rf /app/server /app/.oci /app/launch_server.py
 
 # Set user and working directory
 USER $RUNUSER
