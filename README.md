@@ -10,17 +10,17 @@ The **Oracle AI Explorer for Apps** (the **AI Explorer**) provides a streamlined
 
 ## AI Explorer Features
 
-- [Configuring Embedding and Chat Models](https://oracle-samples.github.io/oaim-sandbox/sandbox/configuration/model_config)
-- [Splitting and Embedding Documentation](https://oracle-samples.github.io/oaim-sandbox/sandbox/tools/split_embed)
-- [Modifying System Prompts (Prompt Engineering)](https://oracle-samples.github.io/oaim-sandbox/sandbox/tools/prompt_eng)
-- [Experimenting with **LLM** Parameters](https://oracle-samples.github.io/oaim-sandbox/sandbox/chatbot)
-- [Testbed for auto-generated or existing Q&A datasets](https://oracle-samples.github.io/oaim-sandbox/sandbox/testbed)
+- [Configuring Embedding and Chat Models](https://oracle-samples.github.io/ai-explorer/client/configuration/model_config)
+- [Splitting and Embedding Documentation](https://oracle-samples.github.io/ai-explorer/client/tools/split_embed)
+- [Modifying System Prompts (Prompt Engineering)](https://oracle-samples.github.io/ai-explorer/client/tools/prompt_eng)
+- [Experimenting with **LLM** Parameters](https://oracle-samples.github.io/ai-explorer/client/chatbot)
+- [Testbed for auto-generated or existing Q&A datasets](https://oracle-samples.github.io/ai-explorer/client/testbed)
 
 ## Getting Started
 
 The **AI Explorer** is available to install in your own environment, which may be a developer's desktop, on-premises data center environment, or a cloud provider. It can be run either on bare-metal, within a container, or in a Kubernetes Cluster.
 
-For more information, including more details on **Setup and Configuration** please visit the [documentation](https://oracle-samples.github.io/oaim-sandbox).
+For more information, including more details on **Setup and Configuration** please visit the [documentation](https://oracle-samples.github.io/ai-explorer).
 
 ### Prerequisites
 
@@ -31,11 +31,11 @@ For more information, including more details on **Setup and Configuration** plea
   - API Keys for Third-Party Models
   - On-Premises Models<sub>\*</sub>
 
-<sub>\*Oracle recommends running On-Premises Models on hardware with GPUs. For more information, please review the [Infrastructure](https://oracle-samples.github.io/oaim-sandbox/infrastructure) documentation.</sub>
+<sub>\*Oracle recommends running On-Premises Models on hardware with GPUs. For more information, please review the [Infrastructure](https://oracle-samples.github.io/ai-explorer/infrastructure) documentation.</sub>
 
 #### Bare-Metal Installation
 
-To run the application on bare-metal; download the [source](https://github.com/oracle-samples/oaim-sandbox) and from `src/`:
+To run the application on bare-metal; download the [source](https://github.com/oracle-samples/ai-explorer) and from `src/`:
 
 1. Create and activate a Python Virtual Environment:
 
@@ -61,11 +61,11 @@ To run the application on bare-metal; download the [source](https://github.com/o
 
 1. Navigate to `http://localhost:8501`.
 
-1. [Configure](https://oracle-samples.github.io/oaim-sandbox/sandbox/configuration) the **Explorer**.
+1. [Configure](https://oracle-samples.github.io/ai-explorer/client/configuration) the **Explorer**.
 
 #### Container Installation
 
-To run the application in a container; download the [source](https://github.com/oracle-samples/oaim-sandbox):
+To run the application in a container; download the [source](https://github.com/oracle-samples/ai-explorer):
 
 1. Build the all-in-one image.
 
@@ -84,7 +84,7 @@ To run the application in a container; download the [source](https://github.com/
 
 1. Navigate to `http://localhost:8501`.
 
-1. [Configure](https://oracle-samples.github.io/oaim-sandbox/sandbox/configuration/index.html) the **Explorer**.
+1. [Configure](https://oracle-samples.github.io/ai-explorer/client/configuration/index.html) the **Explorer**.
 
 ## Contributing
 
