@@ -2,7 +2,7 @@
 ## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
 apiVersion: v2
-name: oai-server
+name: ai-explorer-server
 description: A Helm chart Oracle AI Explorer for Apps - API Server
 type: application
 version: 0.1.0
@@ -10,4 +10,4 @@ appVersion: "0.1.0"
 maintainers:
   - name: Oracle
     email: obaas_ww@oracle.com
-    url: https://github.com/oracle-samples/oaim-sandbox
+    url: https://github.com/oracle-samples/ai-explorer

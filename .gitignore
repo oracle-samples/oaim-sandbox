@@ -4,9 +4,6 @@
 ##############################################################################
 **/*.log
 **/requirements.txt
-!requirements.txt
-!app/server/requirements.txt
-!app/client/requirements.txt
 app/THIRD_PARTY_LICENSES.txt
 helm/values*.yaml
 helm/service.yaml
@@ -14,8 +11,12 @@ helm/ingress.yaml
 sbin/**
 **/*.bak
 **/tmp/**
+**/temp/**
 **/chatbot_graph.png
-sonar.sh
+**/*.sh
+!opentofu/oci/templates/cloudinit-oke.sh
+!src/entrypoint.sh
+!src/client/spring_ai/templates/env.sh
 
 ##############################################################################
 # Environment (PyVen, IDE, etc.)
@@ -42,23 +43,9 @@ __pycache__/
 ##############################################################################
 # Random
 ##############################################################################
-**/demo*.sh
 spring_ai/src/main/resources/data/explorer_settings.json
 spring_ai/target/**
 spring_ai/create_user.sql
 spring_ai/drop.sql
-/start.sh
-spring_ai/env.sh
-temp/rag_agent.ipynb
-temp/tools.ipynb
-temp/tools.py
-temp/json-dual.sql
-temp/genai_work.py
-temp/test_oci.py
 src/client/spring_ai/target/classes/*
-sandbox.sh
 api_server_key
-client.sh
-server.sh
-client.sh
-server.sh

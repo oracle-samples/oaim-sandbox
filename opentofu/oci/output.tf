@@ -30,8 +30,8 @@ output "oci_region" {
   value       = var.region
 }
 
-output "sandbox_repository" {
-  value = lower(format("%s.ocir.io/%s/%s", local.image_region, data.oci_objectstorage_namespace.objectstorage_namespace.namespace, oci_artifacts_container_repository.sandbox_repository.display_name))
+output "explorer_repository" {
+  value = lower(format("%s.ocir.io/%s/%s", local.image_region, data.oci_objectstorage_namespace.objectstorage_namespace.namespace, oci_artifacts_container_repository.explorer_repository.display_name))
 }
 
 output "server_repository" {
