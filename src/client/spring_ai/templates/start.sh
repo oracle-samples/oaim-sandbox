@@ -37,6 +37,7 @@ export DB_DSN="jdbc:oracle:thin:@{database_config[dsn]}"
 export DB_USERNAME="{database_config[user]}"
 export DB_PASSWORD="{database_config[password]}"
 export DISTANCE_TYPE="{rag[distance_metric]}"
+export INDEX_TYPE="{rag[index_type]}"
 export CONTEXT_INSTR="{ctx_prompt}"
 export TOP_K="{rag[top_k]}"
 
