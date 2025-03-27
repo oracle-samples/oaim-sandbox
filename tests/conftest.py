@@ -370,7 +370,7 @@ def start_fastapi_server():
     # Prevent picking up default OCI config file
     os.environ["OCI_CLI_CONFIG_FILE"] = "/non/existant/path"
 
-    server_process = subprocess.Popen(["python", "ai_explorer_server.py"], cwd="src")
+    server_process = subprocess.Popen(["python", "server.py"], cwd="src")
     wait_for_server()
     yield
     # Terminate the server after tests

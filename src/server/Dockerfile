@@ -42,7 +42,7 @@ ENV TIKTOKEN_CACHE_DIR=/app/tmp
 ENV NLTK_DATA=/app/tmp
 
 COPY --chown=$RUNUSER:$RUNUSER . /app
-RUN rm -rf /app/client /app/.streamlit /app/ai_explorer_client.py
+RUN rm -rf /app/client /app/.streamlit /app/client.py
 
 # Remove the OCI file if not development; update the key path if so
 ENV ENVIRONMENT=${ENVIRONMENT}

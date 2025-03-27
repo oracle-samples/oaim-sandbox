@@ -47,48 +47,10 @@ If you are using `docker`, make the walkthrough easier by aliasing the `podman` 
 
 You will run four container images to establish the "Infrastructure":
 
-- Vector Storage - Oracle Database 23ai Free
 - On-Premises **LLM** - llama3.1
 - On-Premises Embedding Model - mxbai-embed-large
+- Vector Storage - Oracle Database 23ai Free
 - The {{< short_app_ref >}}
-
-### Vector Storage - Oracle Database 23ai Free
-
-AI Vector Search in Oracle Database 23ai provides the ability to store and query private business data using a natural language interface. The {{< short_app_ref >}} uses these capabilities to provide more accurate and relevant **LLM** responses via Retrieval-Augmented Generation (**RAG**). [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) provides an ideal, no-cost vector store for this walkthrough.
-
-To start Oracle Database 23ai Free:
-
-1. Start the container:
-
-   ```bash
-   podman run -d --name ai-explorer-db -p 1521:1521 container-registry.oracle.com/database/free:latest
-   ```
-
-1. Alter the `vector_memory_size` parameter and create a [new database user](../client/configuration/db_config#database-user):
-
-   ```bash
-   podman exec -it ai-explorer-db sqlplus '/ as sysdba'
-   ```
-
-   ```sql
-   alter system set vector_memory_size=512M scope=spfile;
-
-   alter session set container=FREEPDB1;
-
-   CREATE USER "WALKTHROUGH" IDENTIFIED BY OrA_41_EXPLORER
-       DEFAULT TABLESPACE "USERS"
-       TEMPORARY TABLESPACE "TEMP";
-   GRANT "DB_DEVELOPER_ROLE" TO "WALKTHROUGH";
-   ALTER USER "WALKTHROUGH" DEFAULT ROLE ALL;
-   ALTER USER "WALKTHROUGH" QUOTA UNLIMITED ON USERS;
-   EXIT;
-   ```
-
-1. Bounce the database for the `vector_memory_size` to take effect:
-
-   ```bash
-   podman container restart ai-explorer-db
-   ```
 
 ### LLM - llama3.1
 
@@ -206,6 +168,43 @@ The {{< short_app_ref >}} provides an easy to use front-end for experimenting wi
    {{% /tab %}}
    {{% /tabs %}}
 
+### Vector Storage - Oracle Database 23ai Free
+
+AI Vector Search in Oracle Database 23ai provides the ability to store and query private business data using a natural language interface. The {{< short_app_ref >}} uses these capabilities to provide more accurate and relevant **LLM** responses via Retrieval-Augmented Generation (**RAG**). [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) provides an ideal, no-cost vector store for this walkthrough.
+
+To start Oracle Database 23ai Free:
+
+1. Start the container:
+
+   ```bash
+   podman run -d --name ai-explorer-db -p 1521:1521 container-registry.oracle.com/database/free:latest-lite
+   ```
+
+1. Alter the `vector_memory_size` parameter and create a [new database user](../client/configuration/db_config#database-user):
+
+   ```bash
+   podman exec -it ai-explorer-db sqlplus '/ as sysdba'
+   ```
+
+   ```sql
+   alter system set vector_memory_size=512M scope=spfile;
+
+   alter session set container=FREEPDB1;
+
+   CREATE USER "WALKTHROUGH" IDENTIFIED BY OrA_41_EXPLORER
+       DEFAULT TABLESPACE "USERS"
+       TEMPORARY TABLESPACE "TEMP";
+   GRANT "DB_DEVELOPER_ROLE" TO "WALKTHROUGH";
+   ALTER USER "WALKTHROUGH" DEFAULT ROLE ALL;
+   ALTER USER "WALKTHROUGH" QUOTA UNLIMITED ON USERS;
+   EXIT;
+   ```
+
+1. Bounce the database for the `vector_memory_size` to take effect:
+
+   ```bash
+   podman container restart ai-explorer-db
+   ```
 
 ## Configuration
 

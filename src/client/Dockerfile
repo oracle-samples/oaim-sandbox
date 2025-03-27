@@ -37,7 +37,7 @@ ENV PATH=/opt/.venv/bin:$PATH
 ENV TEMP=/app/tmp
 
 COPY --chown=$RUNUSER:$RUNUSER . /app
-RUN rm -rf /app/server /app/.oci /app/ai_explorer_server.py
+RUN rm -rf /app/server /app/.oci /app/server.py
 
 # Set user and working directory
 USER $RUNUSER

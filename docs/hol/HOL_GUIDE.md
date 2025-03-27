@@ -99,7 +99,7 @@ Install Python 3.11:
 
   cd src  
   source .venv/bin/activate
-  python oai_server.py
+  python server.py
   ```
 
 The script `server.sh` hold env variables needed to connect the DB and OpenAI and the `API_SERVER_KEY` to authenticate the client. Set one, for example, `abc12345` and use the same in the following `client.sh`. Set the `OPENAI_API_KEY` in the server script. 
@@ -111,7 +111,7 @@ If, for any reasons, you need to adapt the DBMS to a different instance and setu
 export API_SERVER_KEY=<API_SERVER_KEY>
 cd src
 source .venv/bin/activate
-streamlit run oai_client.py --server.port 8502
+streamlit run client.py --server.port 8502
 ```
 
 Set the same `<API_SERVER_KEY>` to be authorized on the AI Explorer.
