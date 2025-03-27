@@ -1,7 +1,7 @@
 # Spring AI template
 
 ## How to run:
-Prepare two configurations in the `oai-client`, based on vector stores created using this kind of configuration:
+Prepare two configurations in the `ai-explorer`, based on vector stores created using this kind of configuration:
 
 * OLLAMA: 
   * Embbeding model: mxbai-embed-large
@@ -18,9 +18,9 @@ Prepare two configurations in the `oai-client`, based on vector stores created u
 and loading a document like [Oracle® Database
 Get Started with Java Development](https://docs.oracle.com/en/database/oracle/oracle-database/23/tdpjd/get-started-java-development.pdf).
 
-Download one of them through the `Download SpringAI` button. Unzip the content and set the executable permission on the `env.sh`  with `chmod 755 ./env.sh`.
+Download one of them through the `Download SpringAI` button. Unzip the content and set the executable permission on the `start.sh`  with `chmod 755 ./start.sh`.
 
-Edit `env.sh` to add only the DB_PASSWORD not exported, as in this example:
+Edit `start.sh` to add only the DB_PASSWORD not exported, as in this example:
 ```
 export SPRING_AI_OPENAI_API_KEY=$OPENAI_API_KEY
 export DB_DSN="jdbc:oracle:thin:@localhost:1521/FREEPDB1"
@@ -39,17 +39,17 @@ export PROVIDER=openai
 mvn spring-boot:run -P openai
 ```
 
-Drop the table `SPRING_AI_VECTORS`, if exists, running in sql:
+Drop the table `<VECTOR_STORE>_SPRINGAI`, if exists, running in sql:
 
 ```
-DROP TABLE SPRING_AI_VECTORS CASCADE CONSTRAINTS;
+DROP TABLE <VECTOR_STORE>_SPRINGAI CASCADE CONSTRAINTS;
 COMMIT;
 ```
 
 Start with:
 
 ```
-./env.sh
+./start.sh
 ```
 
 This project contains a web service that will accept HTTP GET requests at
@@ -150,14 +150,14 @@ llama3.1:latest             a80c4f17acd5    2.0 GB    3 minutes ago
 kubectl -n ollama exec svc/ollama -- ollama run "llama3.1" "what is spring boot?"
 ```
 
-* **NOTE**: The Microservices will access to the ADB23ai on which the vector store table should be created as done in the local desktop example shown before. To access the **Oracle AI Explorer for Apps** running on **Oracle Backend for Microservices and AI** and create the same configuration, let's do:
+* **NOTE**: The Microservices will access to the ADB23ai on which the vector store table should be created as done in the local desktop example shown before. To access the ai-explorer running on **Oracle Backend for Microservices and AI** and create the same configuration, let's do:
   * tunnel:
   ```
-  kubectl -n oai-client port-forward svc/oai-client 8181:8501 
+  kubectl -n ai-explorer port-forward svc/ai-explorer 8181:8501 
   ```
   * on localhost:
   ```
-  http://localhost:8181/oai-client
+  http://localhost:8181/ai-sandbox
   ```
 
 * Deploy with `oractl` on a new schema `vector`:
@@ -173,9 +173,10 @@ kubectl -n ollama exec svc/ollama -- ollama run "llama3.1" "what is spring boot?
   ```
 
 
-* the `bind` will create the new user, if not exists, but to have the `SPRING_AI_VECTORS` table compatible with SpringAI Oracle vector store adapter, the microservices need to access to the vector store table created by the **Oracle AI Explorer for Apps** with user ADMIN on ADB:
+* the `bind` will create the new user, if not exists, but to have the `<VECTOR_STORE>_SPRINGAI` table compatible with SpringAI Oracle vector store adapter, the microservices need to access to the vector store table created by the ai-explorer with user ADMIN on ADB:
+
 ```
-GRANT SELECT ON ADMIN.MXBAI_EMBED_LARGE_512_103_COSINE TO vector;
+GRANT SELECT ON ADMIN.<VECTOR_STORE> TO vector;
 ```
 * then deploy:
 ```

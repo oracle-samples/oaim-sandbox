@@ -8,8 +8,7 @@ on:
       - synchronize
       - reopened
     paths:
-      - "src/server/**"
-      - "src/client/**"
+      - "src/**"
 
   # Allows running this workflow manually
   workflow_dispatch:

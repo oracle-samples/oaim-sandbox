@@ -256,9 +256,9 @@ def spring_ai_zip(provider, ll_model):
 
                     arc_name = os.path.relpath(file_path, dst_dir)  # Make the path relative
                     zip_file.write(file_path, arc_name)
-            env_content = spring_ai_obaas(src_dir, "env.sh", provider, ll_model)
+            env_content = spring_ai_obaas(src_dir, "start.sh", provider, ll_model)
             yaml_content = spring_ai_obaas(src_dir, "obaas.yaml", provider, ll_model)
-            zip_file.writestr("env.sh", env_content.encode("utf-8"))
+            zip_file.writestr("start.sh", env_content.encode("utf-8"))
             zip_file.writestr("src/main/resources/application-obaas.yml", yaml_content.encode("utf-8"))
         zip_buffer.seek(0)
     return zip_buffer

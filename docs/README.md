@@ -2,7 +2,7 @@
 
 ## Description
 
-This directory contains the documentation for the the [**Oracle AI Explorer for Apps**](https://github.com/oracle-samples/oaim-sandbox).
+This directory contains the documentation for the the [**Oracle AI Explorer for Apps**](https://github.com/oracle-samples/ai-explorer).
 
 ## Getting Started - Documentation
 
@@ -25,4 +25,4 @@ From the `docs` directory:
 
 1. Start Hugo: `hugo serve`
 
-This will serve the documentation on `http://localhost:1313/oaim-sandbox/` for review.
+This will serve the documentation on `http://localhost:1313/ai-explorer/` for review.

@@ -4,6 +4,7 @@ Licensed under the Universal Permissive License v1.0 as shown at http://oss.orac
 """
 # spell-checker: disable
 # pylint: disable=import-error
+# pylint: disable=import-outside-toplevel
 
 import os
 import time
@@ -12,6 +13,7 @@ import socket
 from typing import Generator
 from unittest.mock import patch, MagicMock
 import shutil
+from pathlib import Path
 from streamlit.testing.v1 import AppTest
 import docker
 from docker.errors import DockerException
@@ -19,7 +21,6 @@ from docker.models.containers import Container
 import requests
 import pytest
 from fastapi.testclient import TestClient
-from pathlib import Path
 
 
 # This contains all the environment variables we consume on startup (add as required)
@@ -160,10 +161,10 @@ def _client() -> Generator[TestClient, None, None]:
     # Prevent picking up default OCI config file
     os.environ["OCI_CLI_CONFIG_FILE"] = "/non/existant/path"
 
-    # Lazy import to for OS env
-    import ai_explorer_server  # pylint: disable=import-outside-toplevel
+    # Lazy import to ensure OS env is clean
+    from launch_server import create_app
 
-    app = ai_explorer_server.create_app()
+    app = create_app()
     with TestClient(app) as client:
         # Bootstrap Settings
         client.post("/v1/settings", headers=TEST_HEADERS, params={"client": TEST_CONFIG["test_client"]})
@@ -270,7 +271,7 @@ def embedding_container() -> Generator[Container, None, None]:
         while time.time() - start_time < TIMEOUT:
             try:
                 # Try to connect to Ollama API
-                response = requests.get("http://localhost:11434/api/version")
+                response = requests.get("http://localhost:11434/api/version", timeout=120)
                 if response.status_code == 200:
                     # Pull the embedding model
                     subprocess.run(["ollama", "pull", "nomic-embed-text"], check=True)
@@ -370,7 +371,7 @@ def start_fastapi_server():
     # Prevent picking up default OCI config file
     os.environ["OCI_CLI_CONFIG_FILE"] = "/non/existant/path"
 
-    server_process = subprocess.Popen(["python", "ai_explorer_server.py"], cwd="src")
+    server_process = subprocess.Popen(["python", "launch_server.py"], cwd="src")
     wait_for_server()
     yield
     # Terminate the server after tests

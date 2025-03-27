@@ -5,12 +5,12 @@
 
 if [ -d /app/server ] && [ -d /app/client ]; then
     echo "Starting Application (Client and Server)"
-    exec streamlit run ./ai_explorer_client.py
+    exec streamlit run ./launch_client.py
 fi
 
 if [ -d /app/server ] && [ ! -d /app/client ]; then
     echo "Starting Server"
-    python ./ai_explorer_server.py
+    python ./launch_server.py
 fi
 
 if [ ! -d /app/server ] && [ -d /app/client ]; then
@@ -19,5 +19,5 @@ if [ ! -d /app/server ] && [ -d /app/client ]; then
         echo "Error: Not all API_SERVER variables are set; unable to start the Client."
         exit 1
     fi
-    exec streamlit run ./ai_explorer_client.py
+    exec streamlit run ./launch_client.py
 fi

@@ -20,10 +20,10 @@ import client.utils.api_call as api_call
 import common.logging_config as logging_config
 from common.schema import ClientIdType
 
-logger = logging_config.logging.getLogger("client.content.server")
+logger = logging_config.logging.getLogger("client.content.api_server")
 
 try:
-    import ai_explorer_server
+    import launch_server
 
     REMOTE_SERVER = False
 except ImportError:
@@ -55,8 +55,8 @@ def server_restart() -> None:
     state.server["port"] = state.user_server_port
     state.server["key"] = os.getenv("API_SERVER_KEY")
 
-    ai_explorer_server.stop_server(state.server["pid"])
-    state.server["pid"] = ai_explorer_server.start_server(state.server["port"])
+    launch_server.stop_server(state.server["pid"])
+    state.server["pid"] = launch_server.start_server(state.server["port"])
     time.sleep(10)
     state.pop("sever_client", None)
 
