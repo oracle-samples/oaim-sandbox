@@ -35,7 +35,7 @@ import common.logging_config as logging_config
 # Endpoints
 from server.endpoints import register_endpoints
 
-logger = logging_config.logging.getLogger("server")
+logger = logging_config.logging.getLogger("launch_server")
 
 
 ##########################################
@@ -70,7 +70,7 @@ def start_server(port: int = 8000) -> int:
         process = subprocess.Popen(
             [
                 "uvicorn",
-                "server:create_app",
+                "launch_server:create_app",
                 "--factory",
                 "--host",
                 "0.0.0.0",

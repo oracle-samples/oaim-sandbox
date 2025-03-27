@@ -17,7 +17,7 @@ from client.utils.st_common import set_server_state, client_gen_id
 
 import common.logging_config as logging_config
 
-logger = logging_config.logging.getLogger("client")
+logger = logging_config.logging.getLogger("launch_client")
 
 # Import launch_server if it exists
 REMOTE_SERVER = False
