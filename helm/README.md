@@ -6,7 +6,7 @@ This Helm Chart requires three Kubernetes Secrets to be created prior to install
 
 ### Registry Credentials
 
-**Note**: This requirement maybe deprecated in OCI/OKE: [Credential Provider](https://github.com/oracle-devrel/oke-credential-provider-for-ocir/issues/2)
+**Note**: This requirement is deprecated in OCI/OKE when using the IaC from opentofu: [Credential Provider](https://github.com/oracle-devrel/oke-credential-provider-for-ocir/issues/2)
 
 ```yaml
 apiVersion: v1
@@ -21,7 +21,7 @@ stringData:
 Example:
 
 ```bash
-docker login iad.ocir.io -u <username>
+podman login iad.ocir.io -u <username>
 kubectl create secret docker-registry regcred --from-file=.dockerconfigjson=/run/user/1002/containers/auth.json
 ```
 
@@ -60,11 +60,11 @@ stringData:
 ## Install
 
 ```bash
-helm upgrade --install oai-explorer .
+helm upgrade --install ai-explorer .
 ```
 
 ## Uninstall
 
 ```bash
-helm uninstall oai-explorer
+helm uninstall ai-explorer
 ```

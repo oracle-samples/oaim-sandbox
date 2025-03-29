@@ -108,7 +108,6 @@ resource "oci_core_subnet" "private" {
   dns_label                  = oci_core_vcn.vcn.dns_label == null ? null : "priv"
   prohibit_public_ip_on_vnic = true
   route_table_id             = oci_core_route_table.private_route_table.id
-  depends_on                 = [var.private_subnet_depends_on]
   lifecycle {
     ignore_changes = [
       cidr_block,

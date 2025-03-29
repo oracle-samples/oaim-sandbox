@@ -19,6 +19,7 @@ RUN microdnf -y update && \
     useradd -u 10001 -g $RUNUSER -md /app $RUNUSER && \
     install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/.oci && \
     install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/tmp && \
+    install -d -m 0700 -o $RUNUSER -g $RUNUSER /opt/package/client && \
     install -d -m 0700 -o $RUNUSER -g $RUNUSER /opt/package/server && \
     install -d -m 0700 -o $RUNUSER -g $RUNUSER /opt/package/common
 
@@ -27,6 +28,7 @@ COPY pyproject.toml /opt/package/pyproject.toml
 # Use the virtual environment for pip installations
 RUN source /opt/.venv/bin/activate && \
     pip install --upgrade pip wheel setuptools && \
+    pip install torch==2.6.0+cpu -f https://download.pytorch.org/whl/cpu/torch && \
     pip install "/opt/package[server]"
 
 ##################################################

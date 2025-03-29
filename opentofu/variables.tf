@@ -61,12 +61,12 @@ variable "label_prefix" {
 variable "k8s_version" {
   description = "The version of Kubernetes to install into the cluster masters."
   type        = string
-  default     = "1.31.1"
+  default     = "1.32.1"
 }
 
 variable "k8s_api_is_public" {
   type    = bool
-  default = true
+  default = false
 }
 
 # This is a string and not a list to support ORM/MP input, it will be converted to a list in locals
@@ -93,7 +93,7 @@ variable "k8s_node_pool_cpu_size" {
 }
 
 variable "k8s_worker_cpu_shape" {
-  description = "Choose the shape of the Node Pool Workers."
+  description = "Choose the shape of the CPU Node Pool Workers."
   type        = string
   default     = "VM.Standard.E5.Flex"
   validation {
@@ -103,7 +103,7 @@ variable "k8s_worker_cpu_shape" {
 }
 
 variable "k8s_worker_cpu_ocpu" {
-  description = "The initial number of OCPU for the Node Pool Workers."
+  description = "The initial number of CPU(s) for the Node Pool Workers."
   type        = number
   default     = 2
 }
@@ -122,7 +122,7 @@ variable "k8s_node_pool_gpu_size" {
 }
 
 variable "k8s_worker_gpu_shape" {
-  description = "Choose the shape of the Node Pool Workers."
+  description = "Choose the shape of the GPU Node Pool Workers."
   type        = string
   default     = "VM.GPU.A10.1"
   validation {
@@ -137,61 +137,43 @@ variable "service_lb_is_public" {
   default = true
 }
 
-variable "service_lb_ingress" {
-  description = "Load Balancer Service Application."
-  type        = string
-  default     = "ingress-nginx"
-}
-
-variable "service_lb_min_shape" {
-  description = "Bandwidth in Mbps that determines the min bandwidth (ingress plus egress) that the load balancer can achieve."
-  type        = number
-  default     = 10
-}
-
-variable "service_lb_max_shape" {
-  description = "Bandwidth in Mbps that determines the max bandwidth (ingress plus egress) that the load balancer can achieve."
-  type        = number
-  default     = 100
-}
-
-variable "service_lb_allowed_http_cidrs" {
-  description = "Comma separated string of CIDR blocks from which the Load Balancer can be accessed."
+variable "service_lb_allowed_app_client_cidrs" {
+  description = "Comma separated string of CIDR blocks from which the application GUI can be accessed."
   type        = string
   default     = "0.0.0.0/0"
   validation {
-    condition     = can(regex("((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(3[0-2]|[1-2]?[0-9])(,?)( ?)){1,}$", var.service_lb_allowed_http_cidrs))
+    condition     = can(regex("((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(3[0-2]|[1-2]?[0-9])(,?)( ?)){1,}$", var.service_lb_allowed_app_client_cidrs))
     error_message = "Must be a comma separated string of valid CIDRs."
   }
 }
 
-variable "service_lb_allowed_http_ports" {
-  description = "Comma separated string of ports from which the Load Balancer allow access."
+variable "service_lb_allowed_app_client_port" {
+  description = "Port from which the application GUI can be accessed."
   type        = string
   default     = "80"
   validation {
-    condition     = can(regex("^(((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))(,?)( ?)){1,}$", var.service_lb_allowed_http_ports))
-    error_message = "Must be a comma separated string of valid ports."
+    condition     = can(regex("^(((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4})))$", var.service_lb_allowed_app_client_port))
+    error_message = "Must be a single valid port."
   }
 }
 
-variable "service_lb_allowed_api_cidrs" {
-  description = "Comma separated string of CIDR blocks from which the Load Balancer can be accessed."
+variable "service_lb_allowed_app_server_cidrs" {
+  description = "Comma separated string of CIDR blocks from which the application API Server can be accessed."
   type        = string
   default     = "0.0.0.0/0"
   validation {
-    condition     = can(regex("((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(3[0-2]|[1-2]?[0-9])(,?)( ?)){1,}$", var.service_lb_allowed_api_cidrs))
+    condition     = can(regex("((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(3[0-2]|[1-2]?[0-9])(,?)( ?)){1,}$", var.service_lb_allowed_app_server_cidrs))
     error_message = "Must be a comma separated string of valid CIDRs."
   }
 }
 
-variable "service_lb_allowed_api_ports" {
-  description = "Comma separated string of ports from which the Load Balancer allow access."
+variable "service_lb_allowed_app_server_port" {
+  description = "Port from which the application API Server can be accessed."
   type        = string
   default     = "8000"
   validation {
-    condition     = can(regex("^(((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4}))(,?)( ?)){1,}$", var.service_lb_allowed_api_ports))
-    error_message = "Must be a comma separated string of valid ports."
+    condition     = can(regex("^(((6553[0-5])|(655[0-2][0-9])|(65[0-4][0-9]{2})|(6[0-4][0-9]{3})|([1-5][0-9]{4})|([0-5]{0,5})|([0-9]{1,4})))$", var.service_lb_allowed_app_server_port))
+    error_message = "Must be a single valid port."
   }
 }
 
@@ -203,16 +185,6 @@ variable "adb_version" {
   validation {
     condition     = contains(["23ai"], var.adb_version)
     error_message = "Must be 23ai."
-  }
-}
-
-variable "adb_networking" {
-  description = "Choose the Autonomous Database Network Access."
-  type        = string
-  default     = "SECURE_ACCESS"
-  validation {
-    condition     = contains(["PRIVATE_ENDPOINT_ACCESS", "SECURE_ACCESS"], var.adb_networking)
-    error_message = "Must be either PRIVATE_ENDPOINT_ACCESS or SECURE_ACCESS."
   }
 }
 
@@ -274,17 +246,6 @@ variable "adb_whitelist_cidrs" {
   default     = "0.0.0.0/0"
   validation {
     condition     = can(regex("$|((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(3[0-2]|[1-2]?[0-9])(,?)( ?)){1,}$", var.adb_whitelist_cidrs))
-    error_message = "Must be a comma separated string of valid CIDRs."
-  }
-}
-
-variable "adb_bastion_cidrs" {
-  # This is a string and not a list to support ORM/MP input, it will be converted to a list in locals
-  description = "Comma separated string of CIDR blocks from which the ADB Bastion Service can be accessed."
-  type        = string
-  default     = "0.0.0.0/0"
-  validation {
-    condition     = can(regex("$|((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9]).(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])/(3[0-2]|[1-2]?[0-9])(,?)( ?)){1,}$", var.adb_bastion_cidrs))
     error_message = "Must be a comma separated string of valid CIDRs."
   }
 }

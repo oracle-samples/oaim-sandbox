@@ -30,39 +30,10 @@ data "oci_identity_availability_domains" "all" {
   compartment_id = var.tenancy_ocid
 }
 
-data "oci_identity_compartments" "all_compartments" {
-  count                     = data.oci_identity_user.identity_user.name == null ? 1 : 0
-  compartment_id            = var.tenancy_ocid
-  access_level              = "ANY"
-  compartment_id_in_subtree = true
-}
-
 data "oci_identity_regions" "identity_regions" {}
 
 data "oci_identity_user" "identity_user" {
   user_id = local.user_ocid
-}
-
-data "oci_identity_domains" "all_domains" {
-  for_each       = data.oci_identity_user.identity_user.name == null ? toset(concat(data.oci_identity_compartments.all_compartments[0].compartments[*].id, [var.tenancy_ocid])) : toset([])
-  compartment_id = each.key
-}
-
-data "oci_identity_domains_user" "domain_user" {
-  for_each = {
-    for url in flatten([
-      for compartment_id, compartment in data.oci_identity_domains.all_domains : [
-        for domain in compartment.domains : domain.url
-      ]
-    ]) : url => url
-  }
-  idcs_endpoint = each.value
-  user_id       = local.user_ocid
-}
-
-data "oci_identity_domain" "user_domain" {
-  count     = data.oci_identity_user.identity_user.name == null ? 1 : 0
-  domain_id = local.domain_user_details[0].domain_ocid
 }
 
 // oci_objectstorage

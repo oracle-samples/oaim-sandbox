@@ -1,0 +1,73 @@
+global:
+  api:
+    secretName: "${label}-api-keys"
+
+# -- API Server configuration
+server:
+  enabled: true
+  image:
+    repository: ${server_repository}
+    tag: "0.1.0"
+  imagePullPolicy: Always
+
+  ingress:
+    enabled: true
+    annotations:
+      nginx.ingress.kubernetes.io/upstream-vhost: "${lb_ip}"
+
+  models:
+    openAI:
+      secretName: "${label}-api-keys"
+      secretKey: "openaiApiKey"
+    perplexity:
+      secretName: ""
+      secretKey: ""
+    cohere:
+      secretName: ""
+      secretKey: ""
+
+  # -- Oracle Cloud Infrastructure Configuration
+  oci:
+    region: "${oci_region}"
+
+  # -- Oracle Autonomous Database Configuration
+  adb:
+    enabled: true
+    ocid: "${adb_ocid}"
+    mtlsWallet: ""
+    authN:
+      secretName: "${adb_name}-authn"
+      usernameKey: "username"
+      passwordKey: "password"
+      serviceKey: "service"
+
+client:
+  enabled: true
+  image:
+    repository: ${client_repository}
+    tag: "0.1.0"
+  imagePullPolicy: Always
+
+  ingress:
+    enabled: true
+    annotations:
+      nginx.ingress.kubernetes.io/upstream-vhost: "${lb_ip}"
+
+  sandbox:
+    features:
+      disableTestbed: "true"
+      disableApi: "false"
+      disableTools: "false"
+      disableDbCfg: "true"
+      disableModelCfg: "true"
+      disableOciCfg: "true"
+      disableSettings: "true"
+
+ollama:
+  enabled: ${k8s_node_pool_gpu_deploy}
+  models:
+    - gemma3
+    - mxbai-embed-large
+  resources:
+    limits:
+      nvidia.com/gpu: 1

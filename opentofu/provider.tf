@@ -8,7 +8,7 @@ terraform {
       version = "~> 6.27" // Last evaluated 21-Feb-2025
     }
   }
-  required_version = "~> 1.9" // openTofu version
+  required_version = ">= 1.5"
 }
 
 data "oci_identity_region_subscriptions" "home_region" {

@@ -8,7 +8,7 @@ FROM container-registry.oracle.com/os/oraclelinux:8-slim AS all_in_one_pyenv
 # NUMBA_DISABLE_JIT is for Apple Silicon support
 ENV TOKENIZERS_PARALLELISM=true \
     NUMBA_DISABLE_JIT=1 \
-    RUNUSER=oracleaim
+    RUNUSER=oracleai
 
 # Combine related commands into a single RUN layer to minimize image layers
 RUN microdnf -y update && \
@@ -28,6 +28,7 @@ COPY pyproject.toml /opt/package/pyproject.toml
 # Use the virtual environment for pip installations
 RUN source /opt/.venv/bin/activate && \
     pip install --upgrade pip wheel setuptools && \
+    pip install torch==2.6.0+cpu -f https://download.pytorch.org/whl/cpu/torch && \
     pip install "/opt/package[all]"
 
 ##################################################

@@ -13,8 +13,3 @@ variable "vcn_cidr" {
   type    = string
   default = "10.42.0.0/16"
 }
-
-variable "private_subnet_depends_on" {
-  type    = any
-  default = []
-}

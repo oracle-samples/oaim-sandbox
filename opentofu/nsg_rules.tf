@@ -5,11 +5,11 @@
 # Variable NSGs
 #########################################################################
 locals {
-  k8s_api_endpoint_allowed_cidrs = split(",", replace(var.k8s_api_endpoint_allowed_cidrs, "/\\s+/", ""))
-  service_lb_allowed_http_cidrs  = split(",", replace(var.service_lb_allowed_http_cidrs, "/\\s+/", ""))
-  service_lb_allowed_http_ports  = split(",", replace(var.service_lb_allowed_http_ports, "/\\s+/", ""))
-  service_lb_allowed_api_cidrs   = split(",", replace(var.service_lb_allowed_api_cidrs, "/\\s+/", ""))
-  service_lb_allowed_api_ports   = split(",", replace(var.service_lb_allowed_api_ports, "/\\s+/", ""))
+  k8s_api_endpoint_allowed_cidrs      = split(",", replace(var.k8s_api_endpoint_allowed_cidrs, "/\\s+/", ""))
+  service_lb_allowed_app_client_cidrs = split(",", replace(var.service_lb_allowed_app_client_cidrs, "/\\s+/", ""))
+  service_lb_allowed_app_client_port  = split(",", replace(var.service_lb_allowed_app_client_port, "/\\s+/", ""))
+  service_lb_allowed_app_server_cidrs = split(",", replace(var.service_lb_allowed_app_server_cidrs, "/\\s+/", ""))
+  service_lb_allowed_app_server_port  = split(",", replace(var.service_lb_allowed_app_server_port, "/\\s+/", ""))
 }
 
 locals {
@@ -20,23 +20,23 @@ locals {
     }
   } : {}
 
-  service_lb_http_rules = flatten([for cidr in local.service_lb_allowed_http_cidrs : [
-    for port in local.service_lb_allowed_http_ports :
+  service_lb_app_client_rules = flatten([for cidr in local.service_lb_allowed_app_client_cidrs : [
+    for port in local.service_lb_allowed_app_client_port :
     { cidr = cidr, port = port }]
   ])
-  service_lb_api_rules = flatten([for cidr in local.service_lb_allowed_api_cidrs : [
-    for port in local.service_lb_allowed_api_ports :
+  service_lb_app_server_rules = flatten([for cidr in local.service_lb_allowed_app_server_cidrs : [
+    for port in local.service_lb_allowed_app_server_port :
     { cidr = cidr, port = port }]
   ])
 
-  service_lb_cidr_port_http_rules = var.service_lb_is_public ? {
-    for rule in local.service_lb_http_rules :
+  service_lb_cidr_port_app_client_rules = var.service_lb_is_public ? {
+    for rule in local.service_lb_app_client_rules :
     "Allow custom ingress to Load Balancer HTTP port ${rule.port} from ${rule.cidr}" => {
       protocol = local.tcp_protocol, port = rule.port, source = rule.cidr, source_type = local.rule_type_cidr
     }
   } : {}
-  service_lb_cidr_port_api_rules = var.service_lb_is_public ? {
-    for rule in local.service_lb_api_rules :
+  service_lb_cidr_port_app_server_rules = var.service_lb_is_public ? {
+    for rule in local.service_lb_app_server_rules :
     "Allow custom ingress to Load Balancer API port ${rule.port} from ${rule.cidr}" => {
       protocol = local.tcp_protocol, port = rule.port, source = rule.cidr, source_type = local.rule_type_cidr
     }
@@ -117,7 +117,7 @@ locals {
     },
   }
 
-  service_lb_default_http_rules = var.service_lb_is_public ? {
+  service_lb_default_app_client_rules = var.service_lb_is_public ? {
     "Load Balancer HTTP from Workers (Health Checks)." : {
       protocol    = local.tcp_protocol, port = local.health_check_port,
       destination = module.network.private_subnet_cidr_block, destination_type = local.rule_type_cidr
@@ -128,7 +128,7 @@ locals {
     },
   } : {}
 
-  service_lb_default_api_rules = var.service_lb_is_public ? {
+  service_lb_default_app_server_rules = var.service_lb_is_public ? {
     "Load Balancer API from Workers (Health Checks)." : {
       protocol    = local.tcp_protocol, port = local.health_check_port,
       destination = module.network.private_subnet_cidr_block, destination_type = local.rule_type_cidr
@@ -136,17 +136,6 @@ locals {
     "Load Balancer API from Workers." : {
       protocol    = local.tcp_protocol, port_min = local.node_port_min, port_max = local.node_port_max,
       destination = module.network.private_subnet_cidr_block, destination_type = local.rule_type_cidr
-    },
-  } : {}
-
-  adb_private_endpoint_rules = var.adb_networking == "PRIVATE_ENDPOINT_ACCESS" ? {
-    "ADB from Workers." : {
-      protocol = local.tcp_protocol, port_min = 1521, port_max = 1522,
-      source   = module.network.private_subnet_cidr_block, source_type = local.rule_type_cidr
-    },
-    "ADB to the Internet." : {
-      protocol    = local.tcp_protocol, port = local.all_ports
-      destination = local.anywhere, destination_type = local.rule_type_cidr
     },
   } : {}
 }
@@ -160,11 +149,10 @@ locals {
     { for k, v in local.k8s_api_endpoint_default_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.k8s_api_endpoint.id }) },
     { for k, v in local.k8s_api_endpoint_cidr_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.k8s_api_endpoint.id }) },
     { for k, v in local.k8s_workers_default_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.k8s_workers.id }) },
-    { for k, v in local.service_lb_default_http_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb_http[0].id }) },
-    { for k, v in local.service_lb_cidr_port_http_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb_http[0].id }) },
-    { for k, v in local.service_lb_default_api_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb_api[0].id }) },
-    { for k, v in local.service_lb_cidr_port_api_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb_api[0].id }) },
-    { for k, v in local.adb_private_endpoint_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.adb[0].id }) },
+    { for k, v in local.service_lb_default_app_client_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb_app_client[0].id }) },
+    { for k, v in local.service_lb_cidr_port_app_client_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb_app_client[0].id }) },
+    { for k, v in local.service_lb_default_app_server_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb_app_server[0].id }) },
+    { for k, v in local.service_lb_cidr_port_app_server_rules : k => merge(v, { "nsg_id" = oci_core_network_security_group.service_lb_app_server[0].id }) },
     ) : x => merge(y, {
       description               = x
       network_security_group_id = lookup(y, "nsg_id")

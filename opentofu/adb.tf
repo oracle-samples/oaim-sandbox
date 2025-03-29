@@ -2,12 +2,7 @@
 # All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
 locals {
-  adb_enable_bastion         = var.adb_networking == "PRIVATE_ENDPOINT_ACCESS" ? true : false
-  adb_bastion_cidrs          = var.adb_networking == "PRIVATE_ENDPOINT_ACCESS" ? split(",", replace(var.adb_bastion_cidrs, "/\\s+/", "")) : []
-  adb_whitelist_cidrs        = var.adb_networking == "PRIVATE_ENDPOINT_ACCESS" ? null : concat(split(",", replace(var.adb_whitelist_cidrs, "/\\s+/", "")), [module.network.vcn_ocid])
-  adb_nsg                    = var.adb_networking == "PRIVATE_ENDPOINT_ACCESS" ? [oci_core_network_security_group.adb[0].id] : []
-  adb_subnet_id              = var.adb_networking == "PRIVATE_ENDPOINT_ACCESS" ? module.network.private_subnet_ocid : null
-  adb_private_endpoint_label = var.adb_networking == "PRIVATE_ENDPOINT_ACCESS" ? local.label_prefix : null
+  adb_whitelist_cidrs = concat(split(",", replace(var.adb_whitelist_cidrs, "/\\s+/", "")), [module.network.vcn_ocid])
 }
 
 resource "random_password" "adb_char" {
@@ -47,10 +42,8 @@ resource "oci_database_autonomous_database" "default_adb" {
   is_dedicated                         = false
   license_model                        = var.adb_license_model
   is_mtls_connection_required          = true //Always true, otherwise can't switch between Private Endpoint/Secure Access
-  nsg_ids                              = local.adb_nsg
   whitelisted_ips                      = local.adb_whitelist_cidrs
-  private_endpoint_label               = local.adb_private_endpoint_label
-  subnet_id                            = local.adb_subnet_id
+  subnet_id                            = module.network.private_subnet_ocid
   lifecycle {
     // cannot change from PRIVATE_ENDPOINT_ACCESS to SECURE_ACCESS
     ignore_changes = [whitelisted_ips, private_endpoint_label, subnet_id]

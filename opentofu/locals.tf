@@ -3,9 +3,11 @@
 
 // House-Keeping
 locals {
-  compartment_ocid = var.compartment_ocid != "" ? var.compartment_ocid : var.tenancy_ocid
-  label_prefix     = var.label_prefix != "" ? lower(var.label_prefix) : lower(random_pet.label.id)
-  k8s_cluster_name = format("%s-k8s", local.label_prefix)
+  compartment_ocid  = var.compartment_ocid != "" ? var.compartment_ocid : var.tenancy_ocid
+  label_prefix      = var.label_prefix != "" ? lower(var.label_prefix) : lower(random_pet.label.id)
+  k8s_cluster_name  = format("%s-k8s", local.label_prefix)
+  server_repository = lower(format("%s.ocir.io/%s/%s", local.image_region, data.oci_objectstorage_namespace.objectstorage_namespace.namespace, oci_artifacts_container_repository.server_repository.display_name))
+  client_repository = lower(format("%s.ocir.io/%s/%s", local.image_region, data.oci_objectstorage_namespace.objectstorage_namespace.namespace, oci_artifacts_container_repository.explorer_repository.display_name))
 }
 
 // ADs
@@ -56,12 +58,6 @@ locals {
   ]
 }
 
-// Tags
-locals {
-  tag_clusterNameKey = format("%s.%s", local.label_prefix, oci_identity_tag.identity_tag_clusterName.name)
-  tag_clusterNameVal = local.k8s_cluster_name
-}
-
 // Region Mapping
 locals {
   region_map = {
@@ -93,11 +89,6 @@ locals {
   rule_type_nsg     = "NETWORK_SECURITY_GROUP"
   rule_type_cidr    = "CIDR_BLOCK"
   rule_type_service = "SERVICE_CIDR_BLOCK"
-}
-
-// IAM
-locals {
-  domain_user_details = [for domain_id, domain in data.oci_identity_domains_user.domain_user : domain if domain.user_name != null]
 }
 
 // Worker Nodes
