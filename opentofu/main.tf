@@ -6,6 +6,21 @@ resource "random_pet" "label" {
   length = 1
 }
 
+// Tags for instance principles
+resource "oci_identity_tag_namespace" "tag_namespace" {
+  compartment_id = local.compartment_ocid
+  description    = format("%s Tag Namespace", local.label_prefix)
+  name           = local.label_prefix
+  provider       = oci.home_region
+}
+
+resource "oci_identity_tag" "identity_tag" {
+  description      = "K8s Cluster Name"
+  name             = "clusterName"
+  tag_namespace_id = oci_identity_tag_namespace.tag_namespace.id
+  provider         = oci.home_region
+}
+
 // oci_artifacts_container_repository
 resource "oci_artifacts_container_repository" "server_repository" {
   compartment_id = local.compartment_ocid
@@ -40,8 +55,8 @@ resource "oci_identity_dynamic_group" "node_dynamic_group" {
   name           = format("%s-worker-dyngrp", local.label_prefix)
   description    = format("%s Dynamic Group - K8s Nodes", local.label_prefix)
   matching_rule = format(
-    "All {instance.compartment.id = '%s', tag.*.CreatedBy.value = '%s'}",
-    local.compartment_ocid, oci_containerengine_node_pool.default_node_pool_details.id
+    "All {instance.compartment.id = '%s', tag.%s.value = '%s'}",
+    local.compartment_ocid, local.identity_tag_key, local.identity_tag_val
   )
   provider = oci.home_region
 }
@@ -188,11 +203,17 @@ resource "oci_containerengine_node_pool" "default_node_pool_details" {
     }
     size    = var.k8s_node_pool_cpu_size
     nsg_ids = [oci_core_network_security_group.k8s_workers.id]
+    // Used for Instance Principles
+    defined_tags = { (local.identity_tag_key) = local.identity_tag_val }
   }
   node_eviction_node_pool_settings {
-    #Optional
     eviction_grace_duration              = "PT5M"
     is_force_delete_after_grace_duration = true
+  }
+  node_pool_cycling_details {
+    is_node_cycling_enabled = true
+    maximum_surge           = "25%"
+    maximum_unavailable     = "25%"
   }
   node_shape = var.k8s_worker_cpu_shape
   node_shape_config {
@@ -240,9 +261,13 @@ resource "oci_containerengine_node_pool" "gpu_node_pool_details" {
     nsg_ids = [oci_core_network_security_group.k8s_workers.id]
   }
   node_eviction_node_pool_settings {
-    #Optional
     eviction_grace_duration              = "PT5M"
     is_force_delete_after_grace_duration = true
+  }
+  node_pool_cycling_details {
+    is_node_cycling_enabled = true
+    maximum_surge           = "25%"
+    maximum_unavailable     = "25%"
   }
   node_shape = var.k8s_worker_gpu_shape
   node_source_details {

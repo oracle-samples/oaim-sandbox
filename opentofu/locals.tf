@@ -8,6 +8,8 @@ locals {
   k8s_cluster_name  = format("%s-k8s", local.label_prefix)
   server_repository = lower(format("%s.ocir.io/%s/%s", local.image_region, data.oci_objectstorage_namespace.objectstorage_namespace.namespace, oci_artifacts_container_repository.server_repository.display_name))
   client_repository = lower(format("%s.ocir.io/%s/%s", local.image_region, data.oci_objectstorage_namespace.objectstorage_namespace.namespace, oci_artifacts_container_repository.explorer_repository.display_name))
+  identity_tag_key  = format("%s.%s", oci_identity_tag_namespace.tag_namespace.name, oci_identity_tag.identity_tag.name)
+  identity_tag_val  = local.k8s_cluster_name
 }
 
 // ADs
