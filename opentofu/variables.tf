@@ -137,6 +137,14 @@ variable "service_lb_is_public" {
   default = true
 }
 
+variable "service_lb_min_shape" {
+  default = 10
+}
+
+variable "service_lb_max_shape" {
+  default = 1250
+}
+
 variable "service_lb_allowed_app_client_cidrs" {
   description = "Comma separated string of CIDR blocks from which the application GUI can be accessed."
   type        = string

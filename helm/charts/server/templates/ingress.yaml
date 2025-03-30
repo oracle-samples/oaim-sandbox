@@ -10,9 +10,9 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "oai.fullname" . }}-http
+  name: {{ include "app.fullname" . }}-http
   labels: 
-    {{- include "oai.labels" . | nindent 4 }}
+    {{- include "app.labels" . | nindent 4 }}
   {{- with .Values.ingress.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -35,15 +35,15 @@ spec:
     - http:
         paths:
           - pathType: ImplementationSpecific
-            path: {{ include "getPath" . }}
+            path: {{ include "getPath" . }}v1
             backend:
               {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}
               service:
-                name: {{ include "oai.fullname" . }}-http
+                name: {{ include "server.serviceName" . }}
                 port:
-                  number: 8501
+                  number: 8000
               {{- else }}
-              serviceName: {{ include "oai.fullname" . }}-http
-              servicePort: 8501
+              serviceName: {{ include "server.serviceName" . }}
+              servicePort: 8000
               {{- end }}
 {{- end }}

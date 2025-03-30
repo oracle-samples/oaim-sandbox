@@ -5,9 +5,6 @@
 **/*.log
 **/requirements.txt
 app/THIRD_PARTY_LICENSES.txt
-helm/values*.yaml
-helm/service.yaml
-helm/ingress.yaml
 sbin/**
 **/*.bak
 **/tmp/**
@@ -47,6 +44,12 @@ __pycache__/
 **/.terraform*
 **/terraform.tfstate*
 opentofu/**/examples/*.yaml
+
+##############################################################################
+# Helm
+##############################################################################
+helm/values*.yaml
+!helm/values.yaml
 
 ##############################################################################
 # Random

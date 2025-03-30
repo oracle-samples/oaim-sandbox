@@ -1,6 +1,11 @@
+resource "random_string" "api_key" {
+  length  = 32
+  special = false
+  upper   = false
+}
+
 locals {
   adb_name = lower(format("%sdb", oci_database_autonomous_database.default_adb.db_name))
-
   helm_values = templatefile("templates/helm_values.yaml", {
     label                    = local.label_prefix
     server_repository        = local.server_repository
@@ -15,12 +20,16 @@ locals {
   k8s_manifest = templatefile("templates/k8s_manifest.yaml", {
     label            = local.label_prefix
     compartment_ocid = local.compartment_ocid
+    lb_ocid          = oci_load_balancer.service_lb[0].id
     lb_subnet_ocid   = module.network.public_subnet_ocid
     lb_ip_ocid       = oci_core_public_ip.service_lb[0].id
     lb_nsgs          = format("%s, %s", oci_core_network_security_group.service_lb_app_client[0].id, oci_core_network_security_group.service_lb_app_server[0].id)
+    lb_min_shape     = oci_load_balancer.service_lb[0].shape_details[0].minimum_bandwidth_in_mbps
+    lb_max_shape     = oci_load_balancer.service_lb[0].shape_details[0].maximum_bandwidth_in_mbps
     adb_name         = local.adb_name
     adb_password     = oci_database_autonomous_database.default_adb.admin_password
     adb_service      = format("%s_TP", oci_database_autonomous_database.default_adb.db_name)
+    api_key          = random_string.api_key.result
   })
 }
 

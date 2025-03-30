@@ -35,10 +35,34 @@ resource "oci_core_public_ip" "service_lb" {
 }
 
 // oci_identity
-resource "oci_identity_policy" "worker_node_policies" {
+resource "oci_identity_dynamic_group" "node_dynamic_group" {
   compartment_id = var.tenancy_ocid
-  name           = format("%s-worker-nodes-policy", local.label_prefix)
-  description    = format("%s Policy - Worker Nodes", local.label_prefix)
+  name           = format("%s-worker-dyngrp", local.label_prefix)
+  description    = format("%s Dynamic Group - K8s Nodes", local.label_prefix)
+  matching_rule = format(
+    "All {instance.compartment.id = '%s', tag.*.CreatedBy.value = '%s'}",
+    local.compartment_ocid, oci_containerengine_node_pool.default_node_pool_details.id
+  )
+  provider = oci.home_region
+}
+
+resource "oci_identity_policy" "identity_node_policies" {
+  compartment_id = var.tenancy_ocid
+  name           = format("%s-worker-instance-policy", local.label_prefix)
+  description    = format("%s InstancePrinciple - K8s Nodes", local.label_prefix)
+  statements = [
+    format(
+      "allow dynamic-group %s to manage repos in compartment id %s",
+      oci_identity_dynamic_group.node_dynamic_group.name, local.compartment_ocid
+    )
+  ]
+  provider = oci.home_region
+}
+
+resource "oci_identity_policy" "workload_node_policies" {
+  compartment_id = var.tenancy_ocid
+  name           = format("%s-worker-workload-policy", local.label_prefix)
+  description    = format("%s WorkloadPrinciple - K8s Nodes", local.label_prefix)
   statements = [
     format("allow any-user to manage autonomous-database-family in compartment id %s where all {request.principal.type = 'workload', request.principal.namespace = 'oracle-database-operator-system', request.principal.service_account = 'default', request.principal.cluster_id = '%s'}", local.compartment_ocid, oci_containerengine_cluster.default_cluster.id),
     format("allow any-user to manage load-balancers in compartment id %s where all {request.principal.type = 'workload', request.principal.namespace = 'native-ingress-controller-system', request.principal.service_account = 'oci-native-ingress-controller', request.principal.cluster_id = '%s'}", local.compartment_ocid, oci_containerengine_cluster.default_cluster.id),
@@ -233,4 +257,26 @@ resource "oci_containerengine_node_pool" "gpu_node_pool_details" {
     ignore_changes = [defined_tags, freeform_tags]
   }
   depends_on = [oci_core_network_security_group_security_rule.k8s]
+}
+
+resource "oci_load_balancer" "service_lb" {
+  count          = var.service_lb_is_public ? 1 : 0
+  compartment_id = local.compartment_ocid
+  display_name   = format("%s-lb", local.label_prefix)
+  shape          = "flexible"
+  is_private     = false
+  reserved_ips {
+    id = oci_core_public_ip.service_lb[0].id
+  }
+  shape_details {
+    minimum_bandwidth_in_mbps = var.service_lb_min_shape
+    maximum_bandwidth_in_mbps = var.service_lb_max_shape
+  }
+  subnet_ids = [
+    module.network.public_subnet_ocid
+  ]
+  network_security_group_ids = [
+    oci_core_network_security_group.service_lb_app_client[0].id,
+    oci_core_network_security_group.service_lb_app_server[0].id
+  ]
 }

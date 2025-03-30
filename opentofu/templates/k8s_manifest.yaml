@@ -7,6 +7,15 @@ metadata:
 apiVersion: v1
 kind: Secret
 metadata:
+  name: ${label}-api-key
+  namespace: ${label}
+type: Opaque
+stringData:
+  apiKey: ${api_key}
+---
+apiVersion: v1
+kind: Secret
+metadata:
   name: ${adb_name}-authn
   namespace: ${label}
 type: Opaque
@@ -26,8 +35,8 @@ spec:
   loadBalancerName: "${label}-lb"
   reservedPublicAddressId: ${lb_ip_ocid}
   isPrivate: false
-  maxBandwidthMbps: 100
-  minBandwidthMbps: 10
+  maxBandwidthMbps: ${lb_max_shape}
+  minBandwidthMbps: ${lb_min_shape}
 ---
 apiVersion: networking.k8s.io/v1
 kind: IngressClass
@@ -37,6 +46,8 @@ metadata:
   annotations:
     ingressclass.kubernetes.io/is-default-class: "true"
     oci-native-ingress.oraclecloud.com/network-security-group-ids: ${lb_nsgs}
+    oci-native-ingress.oraclecloud.com/id: ${lb_ocid}
+    oci-native-ingress.oraclecloud.com/delete-protection-enabled: "true"
 spec:
   controller: oci.oraclecloud.com/native-ingress-controller
   parameters:

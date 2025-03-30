@@ -4,9 +4,9 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "oai.fullname" . }}-st-config
+  name: {{ include "app.fullname" . }}-st-config
   labels: 
-    {{- include "oai.labels" . | nindent 4 }}
+    {{- include "app.labels" . | nindent 4 }}
 data:
   config.toml: |
     [global]

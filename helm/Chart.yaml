@@ -7,20 +7,21 @@ description: A Helm chart Oracle AI Explorer for Apps
 type: application
 version: 0.1.0
 appVersion: "0.1.0"
+icon: https://github.com/oracle-samples/ai-explorer/blob/main/src/client/media/logo.png
 maintainers:
   - name: Oracle
     email: obaas_ww@oracle.com
     url: https://github.com/oracle-samples/ai-explorer
 
 dependencies:
-  - name: ai-explorer-server
+  - name: server
     version: 0.1.0
-    repository: file://charts/ai-explorer-server
-    condition: ai-explorer-server.enabled
-  - name: ai-explorer-client
+    repository: file://charts/server
+    condition: server.enabled
+  - name: client
     version: 0.1.0
-    repository: file://charts/ai-explorer-client
-    condition: ai-explorer-client.enabled
+    repository: file://charts/client
+    condition: client.enabled
   - name: ollama
     version: 0.1.0
     repository: file://charts/ollama

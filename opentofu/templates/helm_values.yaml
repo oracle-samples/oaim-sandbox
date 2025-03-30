@@ -1,30 +1,21 @@
 global:
   api:
-    secretName: "${label}-api-keys"
+    secretName: "${label}-api-key"
 
 # -- API Server configuration
 server:
   enabled: true
   image:
     repository: ${server_repository}
-    tag: "0.1.0"
+    tag: "latest"
   imagePullPolicy: Always
 
   ingress:
     enabled: true
+    className: native-ic
     annotations:
       nginx.ingress.kubernetes.io/upstream-vhost: "${lb_ip}"
-
-  models:
-    openAI:
-      secretName: "${label}-api-keys"
-      secretKey: "openaiApiKey"
-    perplexity:
-      secretName: ""
-      secretKey: ""
-    cohere:
-      secretName: ""
-      secretKey: ""
+      oci-native-ingress.oraclecloud.com/http-listener-port: "8000"
 
   # -- Oracle Cloud Infrastructure Configuration
   oci:
@@ -45,13 +36,15 @@ client:
   enabled: true
   image:
     repository: ${client_repository}
-    tag: "0.1.0"
+    tag: "latest"
   imagePullPolicy: Always
 
   ingress:
     enabled: true
+    className: native-ic
     annotations:
       nginx.ingress.kubernetes.io/upstream-vhost: "${lb_ip}"
+      oci-native-ingress.oraclecloud.com/http-listener-port: "80"
 
   sandbox:
     features:

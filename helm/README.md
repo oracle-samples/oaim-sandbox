@@ -6,7 +6,7 @@ This Helm Chart requires three Kubernetes Secrets to be created prior to install
 
 ### Registry Credentials
 
-**Note**: This requirement is deprecated in OCI/OKE when using the IaC from opentofu: [Credential Provider](https://github.com/oracle-devrel/oke-credential-provider-for-ocir/issues/2)
+**Note**: This requirement is deprecated in OCI/OKE when using the IaC from opentofu: [Credential Provider](https://github.com/oracle-devrel/oke-credential-provider-for-ocir)
 
 ```yaml
 apiVersion: v1

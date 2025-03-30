@@ -32,10 +32,6 @@ data "oci_identity_availability_domains" "all" {
 
 data "oci_identity_regions" "identity_regions" {}
 
-data "oci_identity_user" "identity_user" {
-  user_id = local.user_ocid
-}
-
 // oci_objectstorage
 data "oci_objectstorage_namespace" "objectstorage_namespace" {
   compartment_id = local.compartment_ocid
