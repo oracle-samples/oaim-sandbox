@@ -1,5 +1,6 @@
 # Copyright (c) 2024, 2025, Oracle and/or its affiliates.
 # All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
+# spell-checker: disable
 
 // API Endpoint
 resource "oci_core_network_security_group" "k8s_api_endpoint" {
