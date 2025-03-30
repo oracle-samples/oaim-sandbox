@@ -1,15 +1,6 @@
 # Copyright (c) 2024, 2025, Oracle and/or its affiliates.
 # All rights reserved. The Universal Permissive License (UPL), Version 1.0 as shown at http://oss.oracle.com/licenses/upl
 
-// oci_artifacts
-data "oci_artifacts_container_repositories" "container_repositories" {
-  compartment_id = local.compartment_ocid
-  display_name   = lower(format("%s/*", local.label_prefix))
-  depends_on = [
-    oci_containerengine_cluster.default_cluster
-  ]
-}
-
 // oci_containerengine
 data "oci_containerengine_node_pool_option" "images" {
   node_pool_option_id = oci_containerengine_cluster.default_cluster.id
