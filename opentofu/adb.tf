@@ -41,11 +41,6 @@ resource "oci_database_autonomous_database" "default_adb" {
   is_auto_scaling_for_storage_enabled  = var.adb_is_storage_auto_scaling_enabled
   is_dedicated                         = false
   license_model                        = var.adb_license_model
-  is_mtls_connection_required          = true //Always true, otherwise can't switch between Private Endpoint/Secure Access
+  is_mtls_connection_required          = true
   whitelisted_ips                      = local.adb_whitelist_cidrs
-  subnet_id                            = module.network.private_subnet_ocid
-  lifecycle {
-    // cannot change from PRIVATE_ENDPOINT_ACCESS to SECURE_ACCESS
-    ignore_changes = [whitelisted_ips, private_endpoint_label, subnet_id]
-  }
 }

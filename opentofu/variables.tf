@@ -218,12 +218,12 @@ variable "adb_data_storage_size_in_gb" {
 
 variable "adb_is_cpu_auto_scaling_enabled" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "adb_is_storage_auto_scaling_enabled" {
   type    = bool
-  default = false
+  default = true
 }
 
 variable "adb_license_model" {
