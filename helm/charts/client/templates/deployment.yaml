@@ -45,13 +45,13 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.imagePullPolicy | default "IfNotPresent" }}
           ports:
-            - name: http
+            - name: client-port
               containerPort: 8501
               protocol: TCP
           livenessProbe:
             httpGet:
               path: {{ include "getPath" . }}ping
-              port: http
+              port: client-port
             initialDelaySeconds: 20
             periodSeconds: 20
             timeoutSeconds: 1
@@ -59,7 +59,7 @@ spec:
           readinessProbe:
             httpGet:
               path: {{ include "getPath" . }}ping
-              port: http
+              port: client-port
             initialDelaySeconds: 10
             periodSeconds: 15
             timeoutSeconds: 1

@@ -10,7 +10,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "app.fullname" . }}-http
+  name: {{ include "server.serviceName" . }}
   labels: 
     {{- include "app.labels" . | nindent 4 }}
   {{- with .Values.ingress.annotations }}
@@ -34,7 +34,7 @@ spec:
   rules:
     - http:
         paths:
-          - pathType: ImplementationSpecific
+          - pathType: Prefix
             path: {{ include "getPath" . }}v1
             backend:
               {{- if semverCompare ">=1.19-0" $.Capabilities.KubeVersion.GitVersion }}

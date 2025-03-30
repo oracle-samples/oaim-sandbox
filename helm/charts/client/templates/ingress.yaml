@@ -41,9 +41,9 @@ spec:
               service:
                 name: {{ include "app.fullname" . }}-http
                 port:
-                  number: 8501
+                  number: 80
               {{- else }}
               serviceName: {{ include "app.fullname" . }}-http
-              servicePort: 8501
+              servicePort: 80
               {{- end }}
 {{- end }}

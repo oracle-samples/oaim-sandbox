@@ -16,6 +16,11 @@ server:
     annotations:
       nginx.ingress.kubernetes.io/upstream-vhost: "${lb_ip}"
       oci-native-ingress.oraclecloud.com/http-listener-port: "8000"
+      oci-native-ingress.oraclecloud.com/protocol: TCP
+
+  service:
+    http:
+      type: "NodePort"
 
   # -- Oracle Cloud Infrastructure Configuration
   oci:
@@ -45,6 +50,11 @@ client:
     annotations:
       nginx.ingress.kubernetes.io/upstream-vhost: "${lb_ip}"
       oci-native-ingress.oraclecloud.com/http-listener-port: "80"
+      oci-native-ingress.oraclecloud.com/protocol: TCP
+
+  service:
+    http:
+      type: "NodePort"
 
   sandbox:
     features:

@@ -223,13 +223,12 @@ resource "oci_containerengine_node_pool" "default_node_pool_details" {
   node_source_details {
     image_id                = local.oke_worker_cpu_image
     source_type             = "IMAGE"
-    boot_volume_size_in_gbs = 100
   }
   node_metadata = {
     user_data = data.cloudinit_config.workers.rendered
   }
   lifecycle {
-    ignore_changes = [defined_tags, freeform_tags]
+    ignore_changes = [defined_tags, freeform_tags, node_config_details[0].size]
   }
   depends_on = [oci_core_network_security_group_security_rule.k8s]
 }
@@ -279,7 +278,7 @@ resource "oci_containerengine_node_pool" "gpu_node_pool_details" {
     user_data = data.cloudinit_config.workers.rendered
   }
   lifecycle {
-    ignore_changes = [defined_tags, freeform_tags]
+    ignore_changes = [defined_tags, freeform_tags, node_config_details[0].size]
   }
   depends_on = [oci_core_network_security_group_security_rule.k8s]
 }
