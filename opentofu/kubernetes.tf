@@ -23,7 +23,7 @@ locals {
 
   k8s_manifest = templatefile("templates/k8s_manifest.yaml", {
     label            = local.label_prefix
-    compartment_ocid = local.compartment_ocid
+    compartment_ocid = oci_load_balancer.service_lb[0].compartment_id
     lb_ocid          = oci_load_balancer.service_lb[0].id
     lb_subnet_ocid   = module.network.public_subnet_ocid
     lb_ip_ocid       = oci_core_public_ip.service_lb[0].id
