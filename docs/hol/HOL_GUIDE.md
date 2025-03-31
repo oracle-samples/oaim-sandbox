@@ -422,7 +422,7 @@ The second part of the report provides details about each single questions submi
 
   ![csv](./images/download_csv.png)
 
-* Now let's test through an external saved test datset, that you can download [here]([https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/getting_started-30_testset.json](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/artifacts/getting_started-30_testset.json) with 30 questions already generated. If you want to drop some Q&A that are not meaningful in your opinion, update it, save and reload as local file, following the steps shown in this snapshot:
+* Now let's test through an external saved test datset, that you can download [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/artifacts/getting_started-30_testset.json) with 30 questions already generated. If you want to drop some Q&A that are not meaningful in your opinion, update it, save and reload as local file, following the steps shown in this snapshot:
 
   ![load_tests](./images/load_tests.png)
 
