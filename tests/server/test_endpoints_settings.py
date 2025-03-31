@@ -117,7 +117,12 @@ class TestEndpoints:
         )
 
         # Update the settings
-        response = client.patch("/v1/settings", headers=TEST_HEADERS, json=updated_settings.model_dump())
+        response = client.patch(
+            "/v1/settings",
+            headers=TEST_HEADERS,
+            json=updated_settings.model_dump(),
+            params={"client": TEST_CONFIG["test_client"]},
+        )
         assert response.status_code == 200
         updated = response.json()
 
@@ -138,6 +143,11 @@ class TestEndpoints:
 
         updated_settings = Settings(client="nonexistent_client", ll_model=LargeLanguageSettings(model="test-model"))
 
-        response = client.patch("/v1/settings", headers=headers, json=updated_settings.model_dump())
+        response = client.patch(
+            "/v1/settings",
+            headers=headers,
+            json=updated_settings.model_dump(),
+            params={"client": TEST_CONFIG["test_client"]},
+        )
         assert response.status_code == 404
         assert response.json() == {"detail": "Client: nonexistent_client not found."}
