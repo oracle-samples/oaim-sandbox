@@ -1,90 +1,131 @@
 # Hands-on-lab Guide
 
 ## 1. Installation
-### 1.1 Set up macOS M*
-In this first step we are going to set up all the required components to run the AI Explorer for Apps. As pre-requisites install **docker**.
 
-#### 1.1.1 Containers runtime engine
-We begin by starting our container runtime engine. We will be using Colima here,
-and assuming that you are using an Apple Silicon Mac.
-Start the container runtime engine.  If you already have a profile that you use, please double-check that it uses 4
-CPUs and 8GB of memory.
+### 1.1 Database 
+
+The AI Vector Search in Oracle Database 23ai provides the ability to store and query private business data using a natural language interface. The **AI Explorer** uses these capabilities to provide more accurate and relevant LLM responses via Retrieval-Augmented Generation (**RAG**). [Oracle Database 23ai Free](https://www.oracle.com/database/free/get-started/) provides an ideal, no-cost vector store for this walkthrough.
+To proceed you need a Container Runtime e.g. docker/podman.
+
+---
+#### 1.1.1 Set up macOS option
+This lab works with a a Container Runtime as mentioned before. If you want to use a lighter VM, you have the option to use Colima too. In this case you need as a pre-requisite to install **docker**.
+Start the container runtime engine with a new profile. If you already have one that you want use, please double-check that it uses 4 CPUs and 8GB of memory at minimum. Otherwise:
+
 ```bash
 brew install colima
 brew install qemu
 colima start x86 --arch x86_64 --mount-type virtiofs --cpu 4 --memory 8
 ```
 
-#### 1.1.2 Install and start Oracle DB 23ai
-
-We are going to use Oracle Database 23ai to take advantage of the vector search feature among other things, so we spin up a container with it. Proceed as describd here: [DB](INSTALL_DB23AI.md)
-
-
-#### 1.1.3 LLM runtime
-We would like to interact with different LLMs locally and we are going to use Ollama for running them. We are going to use it in if Ollama isn't installed in your system already, you can use brew:
+To simulate podman using colima and start colima with profile x86:
 
 ```bash
-  brew install ollama
+alias podman=docker 
+colima start x86
 ```
 
-You can run Ollama as a service with:
+---
+
+#### 1.1.2 Run Oracle Database 23ai Free container:
+
+1. Start the container:
+
 ```bash
-  brew services start ollama
+podman run -d --name db23ai -p 1521:1521 container-registry.oracle.com/database/free:latest
 ```
 
-Or, if you don't want/need a background service you can just run:
+2. Alter the vector_memory_size parameter and create a new database user:
+
 ```bash
-  /opt/homebrew/opt/ollama/bin/ollama serve
+podman exec -it db23ai sqlplus '/ as sysdba'
 ```
 
-We are going to interact with some LLM models, so we need to install them in Ollama (llama3.1 and mxbai for the embeddings):
+```bash
+alter system set vector_memory_size=512M scope=spfile;
+
+alter session set container=FREEPDB1;
+
+CREATE USER "VECTOR" IDENTIFIED BY vector
+    DEFAULT TABLESPACE "USERS"
+    TEMPORARY TABLESPACE "TEMP";
+GRANT "DB_DEVELOPER_ROLE" TO "VECTOR";
+ALTER USER "VECTOR" DEFAULT ROLE ALL;
+ALTER USER "VECTOR" QUOTA UNLIMITED ON USERS;
+EXIT;
+```
+
+3. Bounce the database for the vector_memory_size to take effect:
+
+```bash
+podman container restart db23ai
+```
+
+In the next steps of this lab, you will need to check the items inside your database 23ai. In order to do so, install the VS Code **SQL Developer** plugin:
+
+![sql-developer-plugin](images/sql-developer-plugin.png)
+
+
+### 1.2 LLM runtime
+We'll to interact with different LLMs locally and we are going to use **Ollama** for running them. If Ollama isn't already installed in your system, follow the instruction **[here](https://ollama.com/download)** according your operating system.
+
+We need to install some LLMs in Ollama (llama3.1 and mxbai for the embeddings). To do this step, open a new shell and run:
 
 ```bash
 ollama pull llama3.1
 ollama pull mxbai-embed-large
 ```
 
-For OpenAI you need the OPENAI_API_KEY to authenticate and use their services. 
+For **OpenAI** you need an OPENAI_API_KEY to authenticate and use their services. To get it go **[here](https://platform.openai.com/settings/organization/api-keys)**.
 
-### 1.2 Clone the right branch
+### 1.3 Clone the right branch
 * Make sure to clone the branch `cdb`. Proceed in this way:
+
 ```bash
 git clone --branch cdb --single-branch https://github.com/oracle-samples/ai-explorer.git
 ```
 
-### 1.3 Install requirements:
+  It will be created a new dir named `ai-explorer`.
 
-#### 1.3.1 Python version
+### 1.4 Install requirements:
 
-AI Explorer for Apps requires exactly Python 3.11, neither older nor newer.  If you are using a recent version of macOS,
-you will need to install that version side by side with the builtin one.
-Install Python 3.11:
+#### 1.4.1 Python version
+
+AI Explorer for Apps requires exactly **Python 3.11**, neither older nor newer.  Download and follow the instruction **[here](https://www.python.org/downloads/release/python-3110/)** to install it on your system.
+
+##### 1.4.1.1 Install Python 3.11 on macOS
+If you are using a recent version of macOS, you will need to install that version side by side with the builtin one. In a shell run:
 
   ```bash
   brew install python@3.11
   python3.11 --version
   ```
 
-#### 1.3.2 Create environment
+#### 1.4.2 Create environment
+
+In a shell, run in the directory `ai-explorer`:
 
   ```bash
-   cd src/
+   cd src
    python3.11 -m venv .venv --copies
    source .venv/bin/activate
    pip3.11 install --upgrade pip wheel setuptools
   ```
 
-#### 1.3.3 Install the Python modules:
+#### 1.4.3 Install the Python modules:
+
+Always in the directory `ai-explorer` run:
 
    ```bash
+   cd src
    pip3.11 install -e ".[all]"
    source .venv/bin/activate
    ```
 
 
-### 1.4 Startup 
+### 1.5 Startup 
 
-* Create a `server.sh` file in the <project_dir>:
+* Create a `launch_server.sh` file in the directory `ai-explorer`:
  
   ```bash
   export API_SERVER_KEY=<API_SERVER_KEY>
@@ -102,10 +143,10 @@ Install Python 3.11:
   python launch_server.py
   ```
 
-The script `server.sh` hold env variables needed to connect the DB and OpenAI and the `API_SERVER_KEY` to authenticate the client. Set one, for example, `abc12345` and use the same in the following `client.sh`. Set the `OPENAI_API_KEY` in the server script. 
-If, for any reasons, you need to adapt the DBMS to a different instance and setup, change the variables accordingly.
+The script `launch_server.sh` hold env variables needed to connect the DB and OpenAI and the `API_SERVER_KEY` to authenticate the client. Set one, for example, `abc12345` and use the same in the following `launch_client.sh`. Set the `OPENAI_API_KEY` in the server script. 
+If, for any reason, you need to adapt the DBMS to a different instance and setup, change the variables accordingly.
 
-* Create a `launch_client.sh` file in the <project_dir>:
+* Create a `launch_client.sh` file in the directory `ai-explorer` :
 
 ```bash
 export API_SERVER_KEY=<API_SERVER_KEY>
@@ -114,17 +155,26 @@ source .venv/bin/activate
 streamlit run launch_client.py --server.port 8502
 ```
 
-Set the same `<API_SERVER_KEY>` to be authorized on the AI Explorer.
+  Set the same `<API_SERVER_KEY>` to be authorized on the AI Explorer.
 
-* In a separate shell:
+* In a separate shell, in the directory `ai-explorer` run:
 
     ```bash
-    <project_dir>source ./server.sh
+    . ./launch_server.sh
     ```
+
+  ⚠️ **Warning**
+
+    On MS Windows, if you will have an exception starting the server, please run this command and retry:
+
+    ```bash
+    pip3.11 install platformdirs
+    ```
+
     
-* in another terminal:
+* in another shell, in dir `ai-explorer` run:
   ```bash
-  <project_dir>source ./client.sh
+  . ./launch_client.sh
   ```
 
 ## 2. Explore the env
@@ -372,7 +422,7 @@ The second part of the report provides details about each single questions submi
 
   ![csv](./images/download_csv.png)
 
-* Now let's test through an external saved test datset, that you can download [here](getting_started-30_testset.json) with 30 questions already generated. If you want to drop some Q&A that are not meaningful in your opinion, update it, save and reload as local file, following the steps shown in this snapshot:
+* Now let's test through an external saved test datset, that you can download [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/artifacts/getting_started-30_testset.json) with 30 questions already generated. If you want to drop some Q&A that are not meaningful in your opinion, update it, save and reload as local file, following the steps shown in this snapshot:
 
   ![load_tests](./images/load_tests.png)
 
@@ -479,3 +529,7 @@ All the AI Explorer server can be exported to save the configuration as backup a
   * **Upload** and existing configuration file
   * **Download Settings** of the current configuration
   * Exclude by the download the credential parameters, unchecking the **Include Sensitive Settings**
+
+
+## 5. Challenge
+Using the following doc: [Oracle Government PaaS and IaaS Cloud Services - Service Descriptions](https://www.oracle.com/contracts/docs/us_gov_tech_cloud_3902270.pdf) and the Test Dataset created [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/artifacts/OCIGOV50_testset.json) get the best **Overall Correctness Score**. 
