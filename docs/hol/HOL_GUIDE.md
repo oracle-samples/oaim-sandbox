@@ -148,6 +148,8 @@ Detailed information on obtaining the required credentials is available in the [
 
 If you have previously created a .oci/config file, the AI Explorer will automatically read this file at startup and load the credentials from the Default profile for authentication.
 
+You can quickly install the OCI CLI and setup the config fil by following a quickstart tutorial at [this link](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm#Quickstart)
+
 After entering your credentials, click the Save button. If the credentials are correct, a green confirmation pop-up will appear, indicating successful authentication to your tenancy.
 
 ![OCI-CREDENTIALS](images/oci-credentials-success.png)
