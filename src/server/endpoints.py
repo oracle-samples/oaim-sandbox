@@ -557,7 +557,7 @@ def register_endpoints(noauth: FastAPI, auth: FastAPI) -> None:
         return get_client_settings(client)
 
     @auth.patch("/v1/settings", description="Update client settings")
-    async def settings_update(payload: schema.Settings, client: schema.ClientIdType = Header(...)) -> schema.Settings:
+    async def settings_update(payload: schema.Settings, client: schema.ClientIdType) -> schema.Settings:
         """Update a single client settings"""
         logger.debug("Received %s Client Payload: %s", client, payload)
         client_settings = get_client_settings(client)

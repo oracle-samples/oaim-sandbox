@@ -39,7 +39,7 @@ def copy_user_settings(new_client: ClientIdType) -> None:
     try:
         api_call.patch(
             endpoint="v1/settings",
-            payload={"json": state.user_settings},
+            payload={"json": state.user_settings, "client": new_client},
         )
         st.success(f"Settings for {new_client} - Updated", icon="✅")
         st_common.clear_state_key(f"{new_client}_settings")

@@ -33,19 +33,15 @@ class Client:
         self.request_defaults = {
             "headers": {
                 "Authorization": f"Bearer {server['key']}",
-                "Client": self.settings["client"],
                 "Content-Type": "application/json",
             },
             "params": {"client": self.settings["client"]},
             "timeout": timeout,
         }
 
-        def settings_request(method, extra_params=None):
+        def settings_request(method):
             """Send Settings to Server"""
             request_options = self.request_defaults.copy()  # Copy defaults to avoid modifying the original
-            if extra_params:
-                request_options.update(extra_params)
-
             with httpx.Client() as client:
                 return client.request(
                     method=method,
@@ -58,7 +54,7 @@ class Client:
         if response.status_code != 200:
             logger.error("Error updating settings with PATCH: %i - %s", response.status_code, response.text)
             # Retry with POST if PATCH fails
-            response = settings_request("POST", {"params": {"client": self.settings["client"]}})
+            response = settings_request("POST")
             if response.status_code != 200:
                 logger.error("Error updating settings with POST: %i - %s", response.status_code, response.text)
         logger.info("Established Client")
