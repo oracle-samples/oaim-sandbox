@@ -33,6 +33,7 @@ class Client:
         self.request_defaults = {
             "headers": {
                 "Authorization": f"Bearer {server['key']}",
+                "Client": self.settings["client"],
                 "Content-Type": "application/json",
             },
             "params": {"client": self.settings["client"]},
@@ -41,13 +42,12 @@ class Client:
 
         def settings_request(method):
             """Send Settings to Server"""
-            request_options = self.request_defaults.copy()  # Copy defaults to avoid modifying the original
             with httpx.Client() as client:
                 return client.request(
                     method=method,
                     url=f"{self.server_url}/v1/settings",
                     json=self.settings,
-                    **request_options,
+                    **self.request_defaults,
                 )
 
         response = settings_request("PATCH")

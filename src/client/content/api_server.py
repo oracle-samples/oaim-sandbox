@@ -39,12 +39,12 @@ def copy_user_settings(new_client: ClientIdType) -> None:
     try:
         api_call.patch(
             endpoint="v1/settings",
-            payload={"json": state.user_settings, "client": new_client},
+            payload={"json": state.user_settings},
+            params={"client": new_client},
         )
-        st.success(f"Settings for {new_client} - Updated", icon="✅")
         st_common.clear_state_key(f"{new_client}_settings")
     except api_call.ApiError as ex:
-        st.success(f"Settings for {new_client} - Update Failed", icon="❌")
+        st.error(f"Settings for {new_client} - Update Failed", icon="❌")
         logger.error("%s Settings Update failed: %s", new_client, ex)
 
 
