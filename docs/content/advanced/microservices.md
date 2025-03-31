@@ -20,6 +20,47 @@ The following example shows running the {{< short_app_ref >}} in [Oracle Kuberne
 
 The command to connect to the **OKE** cluster will be output as part of the **IaC**.
 
+### Images
+
+You will need to build the {{< short_app_ref >}} container images and stage them in a container registry, such as the [OCI Container Registry](https://docs.oracle.com/en-us/iaas/Content/Registry/Concepts/registryoverview.htm) (**OCIR**).
+
+1. Build the {{< short_app_ref >}} images:
+
+    From the code source `src/` directory:
+    ```bash
+    podman build --arch amd64 -f client/Dockerfile -t ai-explorer-client:latest .
+
+    podman build --arch amd64 -f server/Dockerfile -t ai-explorer-server:latest .
+    ```
+
+1. Log into your container registry:
+
+    More information on authenticating to **OCIR** can be found [here](https://docs.oracle.com/en-us/iaas/Content/Registry/Tasks/registrypushingimagesusingthedockercli.htm).
+
+    ```bash
+    podman login <registry-domain>
+    ```
+
+    Example:
+    ```bash
+    podman login iad.ocir.io
+    ```
+
+    You will be prompted for a username and token password.
+
+1. Push the {{< short_app_ref >}} images:
+
+    More information on pushing images to **OCIR** can be found [here](https://docs.oracle.com/en-us/iaas/Content/Registry/Tasks/registrypushingimagesusingthedockercli.htm).
+
+    Example (the values for `<server_repository>` and `<server_repository>` are provided from the **IaC**):
+    ```bash
+    podman tag ai-explorer-client:latest <client_repository>:latest
+    podman push <client_repository>:latest
+
+    podman tag ai-explorer-server:latest <server_repository>:latest
+    podman push <server_repository>:latest
+    ```
+
 ### Ingress
 
 To access the {{< short_app_ref >}} GUI and API Server, you can either use a port-forward or an Ingress service.  For demonstration purposes, the [Ingress-Nginx Controller](https://kubernetes.github.io/ingress-nginx/deploy/) will be used to create a [Flexible LoadBalancer](https://docs.oracle.com/en-us/iaas/Content/NetworkLoadBalancer/overview.htm) in **OCI**.
@@ -102,47 +143,6 @@ These will be output as part of the **IaC** but can be removed from the code if 
 1. Apply the Service:
     ```bash
     kubectl apply -f service.yaml
-    ```
-
-### Images
-
-You will need to build the {{< short_app_ref >}} container images and stage them in a container registry, such as the [OCI Container Registry](https://docs.oracle.com/en-us/iaas/Content/Registry/Concepts/registryoverview.htm) (**OCIR**).
-
-1. Build the {{< short_app_ref >}} images:
-
-    From the code source `src/` directory:
-    ```bash
-    podman build --arch amd64 -f client/Dockerfile -t ai-explorer-client:latest .
-
-    podman build --arch amd64 -f server/Dockerfile -t ai-explorer-server:latest .
-    ```
-
-1. Log into your container registry:
-
-    More information on authenticating to **OCIR** can be found [here](https://docs.oracle.com/en-us/iaas/Content/Registry/Tasks/registrypushingimagesusingthedockercli.htm).
-
-    ```bash
-    podman login <registry-domain>
-    ```
-
-    Example:
-    ```bash
-    podman login iad.ocir.io
-    ```
-
-    You will be prompted for a username and token password.
-
-1. Push the {{< short_app_ref >}} images:
-
-    More information on pushing images to **OCIR** can be found [here](https://docs.oracle.com/en-us/iaas/Content/Registry/Tasks/registrypushingimagesusingthedockercli.htm).
-
-    Example (the values for `<server_repository>` and `<server_repository>` are provided from the **IaC**):
-    ```bash
-    podman tag ai-explorer-client:latest <client_repository>:latest
-    podman push <client_repository>:latest
-
-    podman tag ai-explorer-server:latest <server_repository>:latest
-    podman push <server_repository>:latest
     ```
 
 ### The {{< short_app_ref >}}

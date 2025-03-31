@@ -12,7 +12,7 @@ global:
     # -- Name of the key in the secret containing the API Key, overrides the default key name "apiKey"
     secretKey: ""
 
-ai-explorer-server:
+server:
   replicaCount: 1
   image:
     repository: localhost/ai-explorer-server
@@ -95,7 +95,7 @@ ai-explorer-server:
     #   readOnly: true
 
 # -- Client GUI configuration
-ai-explorer-client:
+client:
   replicaCount: 1
   image:
     repository: localhost/ai-explorer-client

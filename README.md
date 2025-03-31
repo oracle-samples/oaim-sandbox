@@ -73,13 +73,13 @@ To run the application in a container; download the [source](https://github.com/
 
    ```bash
    cd src/
-   podman build -t oai-explorer-aio .
+   podman build -t ai-explorer-aio .
    ```
 
 1. Start the Container:
 
    ```bash
-   podman run -p 8501:8501 -it --rm oai-explorer-aio
+   podman run -p 8501:8501 -it --rm ai-explorer-aio
    ```
 
 1. Navigate to `http://localhost:8501`.

@@ -26,6 +26,10 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       serviceAccountName: {{ include "app.serviceAccountName" . }}
       securityContext:
         fsGroup: 10001
@@ -41,21 +45,21 @@ spec:
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.imagePullPolicy | default "IfNotPresent" }}
           ports:
-            - name: http
-              containerPort: 11434
+            - name: client-port
+              containerPort: 8501
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: {{ include "getPath" . }}api/version
-              port: http
+              path: {{ include "getPath" . }}ping
+              port: client-port
             initialDelaySeconds: 20
             periodSeconds: 20
             timeoutSeconds: 1
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: {{ include "getPath" . }}api/version
-              port: http
+              path: {{ include "getPath" . }}ping
+              port: client-port
             initialDelaySeconds: 10
             periodSeconds: 15
             timeoutSeconds: 1
@@ -64,30 +68,36 @@ spec:
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- end }}
+          env:
+            {{- range $key, $value := .Values.client.features }}
+            {{- if ne $value "false" }}
+            - name: {{ snakecase $key | upper }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- end }}
+            - name: API_SERVER_URL
+              value: {{ include "server.serviceUrl" . }}
+            - name: API_SERVER_PORT
+              value: "8000"
+            - name: API_SERVER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.global.api.secretName | default (printf "%s-api-key" (include "release.name" .)) }}
+                  key: {{ .Values.global.api.secretKey | default "apiKey" }}
           volumeMounts:
-            - name: key
-              mountPath: "/.ollama"
+            - name: tmp
+              mountPath: "/app/tmp"
+            - name: streamlit-config
+              mountPath: /app/.streamlit
           {{- with .Values.volumeMounts }}
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if .Values.models }}
-          lifecycle:
-            postStart:
-              exec:
-                command:
-                  - /bin/sh
-                  - -c
-                  - |
-                    while ! /bin/ollama ps > /dev/null 2>&1; do
-                      sleep 5
-                    done
-                    {{- if .Values.models }}
-                    echo "{{ include "ollama.modelPullList" . }}" | xargs -n1 /bin/ollama pull
-                    {{- end }}
-          {{- end }}         
       volumes:
-        - name: key
+        - name: tmp
           emptyDir: {}
+        - name: streamlit-config
+          configMap:
+            name: {{ include "app.fullname" . }}-st-config
       {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}

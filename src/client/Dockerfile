@@ -7,7 +7,7 @@
 #############################################################
 FROM container-registry.oracle.com/os/oraclelinux:8-slim AS client_pyenv
 
-ENV RUNUSER=oracleaim
+ENV RUNUSER=oracleai
 
 # Combine related commands into a single RUN layer to minimize image layers
 RUN microdnf -y update && \
@@ -16,9 +16,9 @@ RUN microdnf -y update && \
     python3.11 -m venv --symlinks --upgrade-deps /opt/.venv && \
     groupadd $RUNUSER && \
     useradd -u 10001 -g $RUNUSER -md /app $RUNUSER && \
-    install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/.oci && \
-    install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/tmp
+    install -d -m 0700 -o $RUNUSER -g $RUNUSER /app/tmp && \
     install -d -m 0700 -o $RUNUSER -g $RUNUSER /opt/package/client && \
+    install -d -m 0700 -o $RUNUSER -g $RUNUSER /opt/package/server && \
     install -d -m 0700 -o $RUNUSER -g $RUNUSER /opt/package/common
 
 # Copy only pyproject.toml for dependency installation
