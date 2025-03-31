@@ -532,4 +532,4 @@ All the AI Explorer server can be exported to save the configuration as backup a
 
 
 ## 5. Challenge
-Using the following doc :[Oracle Government PaaS and IaaS Cloud Services - Service Descriptions](https://www.oracle.com/contracts/docs/us_gov_tech_cloud_3902270.pdf) and the Test Dataset created [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/artifacts/OCIGOV50_testset.json) get the best **Overall Correctness Score**. 
+Using the following doc: [Oracle Government PaaS and IaaS Cloud Services - Service Descriptions](https://www.oracle.com/contracts/docs/us_gov_tech_cloud_3902270.pdf) and the Test Dataset created [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/artifacts/OCIGOV50_testset.json) get the best **Overall Correctness Score**. 
