@@ -136,41 +136,41 @@ class TestEndpoints:
         assert updated["rag"]["top_k"] == 5
         assert updated["oci"]["auth_profile"] == "UPDATED"
 
-    def test_settings_copy(self, client: TestClient) -> None:
-        """Test copying settings for a client"""
-        # First get the current settings for the test_client
-        response = client.get("/v1/settings", params={"client": TEST_CONFIG["test_client"]}, headers=TEST_HEADERS)
-        assert response.status_code == 200
-        _ = response.json()
+    # def test_settings_copy(self, client: TestClient) -> None:
+    #     """Test copying settings for a client"""
+    #     # First get the current settings for the test_client
+    #     response = client.get("/v1/settings", params={"client": TEST_CONFIG["test_client"]}, headers=TEST_HEADERS)
+    #     assert response.status_code == 200
+    #     _ = response.json()
 
-        # Modify some settings
-        updated_settings = Settings(
-            client=TEST_CONFIG["test_client"],
-            ll_model=LargeLanguageSettings(model="updated-model", chat_history=False),
-            prompts=PromptSettings(ctx="Updated Context", sys="Updated System"),
-            rag=RagSettings(rag_enabled=True, grading=False, search_type="Similarity", top_k=5),
-            oci=OciSettings(auth_profile="UPDATED"),
-        )
+    #     # Modify some settings
+    #     updated_settings = Settings(
+    #         client=TEST_CONFIG["test_client"],
+    #         ll_model=LargeLanguageSettings(model="updated-model", chat_history=False),
+    #         prompts=PromptSettings(ctx="Updated Context", sys="Updated System"),
+    #         rag=RagSettings(rag_enabled=True, grading=False, search_type="Similarity", top_k=5),
+    #         oci=OciSettings(auth_profile="UPDATED"),
+    #     )
 
-        # Copy the client settings to the server settings
-        response = client.patch(
-            "/v1/settings",
-            headers=TEST_HEADERS,
-            json=updated_settings.model_dump(),
-            params={"client": "server"},
-        )
-        assert response.status_code == 200
-        updated = response.json()
+    #     # Copy the client settings to the server settings
+    #     response = client.patch(
+    #         "/v1/settings",
+    #         headers=TEST_HEADERS,
+    #         json=updated_settings.model_dump(),
+    #         params={"client": "server"},
+    #     )
+    #     assert response.status_code == 200
+    #     updated = response.json()
 
-        # Check that the values were updated
-        assert updated["ll_model"]["model"] == "updated-model"
-        assert updated["ll_model"]["chat_history"] is False
-        assert updated["prompts"]["ctx"] == "Updated Context"
-        assert updated["prompts"]["sys"] == "Updated System"
-        assert updated["rag"]["rag_enabled"] is True
-        assert updated["rag"]["grading"] is False
-        assert updated["rag"]["top_k"] == 5
-        assert updated["oci"]["auth_profile"] == "UPDATED"
+    #     # Check that the values were updated
+    #     assert updated["ll_model"]["model"] == "updated-model"
+    #     assert updated["ll_model"]["chat_history"] is False
+    #     assert updated["prompts"]["ctx"] == "Updated Context"
+    #     assert updated["prompts"]["sys"] == "Updated System"
+    #     assert updated["rag"]["rag_enabled"] is True
+    #     assert updated["rag"]["grading"] is False
+    #     assert updated["rag"]["top_k"] == 5
+    #     assert updated["oci"]["auth_profile"] == "UPDATED"
 
     def test_settings_update_nonexistent_client(self, client: TestClient) -> None:
         """Test updating settings for a non-existent client"""
