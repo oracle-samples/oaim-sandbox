@@ -12,10 +12,10 @@ global:
     # -- Name of the key in the secret containing the API Key, overrides the default key name "apiKey"
     secretKey: ""
 
-oai-server:
+ai-explorer-server:
   replicaCount: 1
   image:
-    repository: localhost/oai-server
+    repository: localhost/ai-explorer-server
     tag: "latest"
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []
@@ -95,10 +95,10 @@ oai-server:
     #   readOnly: true
 
 # -- Client GUI configuration
-oai-client:
+ai-explorer-client:
   replicaCount: 1
   image:
-    repository: localhost/oai-client
+    repository: localhost/ai-explorer-client
     tag: "latest"
   imagePullPolicy: IfNotPresent
   imagePullSecrets: []

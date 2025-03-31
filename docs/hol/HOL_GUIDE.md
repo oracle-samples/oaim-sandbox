@@ -49,7 +49,7 @@ For OpenAI you need the OPENAI_API_KEY to authenticate and use their services.
 ### 1.2 Clone the right branch
 * Make sure to clone the branch `cdb`. Proceed in this way:
 ```bash
-git clone --branch cdb --single-branch https://github.com/oracle-samples/oaim-sandbox.git
+git clone --branch cdb --single-branch https://github.com/oracle-samples/ai-explorer.git
 ```
 
 ### 1.3 Install requirements:
@@ -99,19 +99,19 @@ Install Python 3.11:
 
   cd src  
   source .venv/bin/activate
-  python oai_server.py
+  python launch_server.py
   ```
 
 The script `server.sh` hold env variables needed to connect the DB and OpenAI and the `API_SERVER_KEY` to authenticate the client. Set one, for example, `abc12345` and use the same in the following `client.sh`. Set the `OPENAI_API_KEY` in the server script. 
 If, for any reasons, you need to adapt the DBMS to a different instance and setup, change the variables accordingly.
 
-* Create a `client.sh` file in the <project_dir>:
+* Create a `launch_client.sh` file in the <project_dir>:
 
 ```bash
 export API_SERVER_KEY=<API_SERVER_KEY>
 cd src
 source .venv/bin/activate
-streamlit run oai_client.py --server.port 8502
+streamlit run launch_client.py --server.port 8502
 ```
 
 Set the same `<API_SERVER_KEY>` to be authorized on the AI Explorer.

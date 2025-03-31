@@ -11,7 +11,7 @@ import os
 os.environ["LITELLM_LOCAL_MODEL_COST_MAP"] = "True"
 os.environ["GSK_DISABLE_SENTRY"] = "true"
 os.environ["GSK_DISABLE_ANALYTICS"] = "true"
-os.environ["USER_AGENT"] = "OAI-EXPLORER"
+os.environ["USER_AGENT"] = "ai-explorer"
 app_home = os.path.dirname(os.path.abspath(__file__))
 if "TNS_ADMIN" not in os.environ:
     os.environ["TNS_ADMIN"] = os.path.join(app_home, "tns_admin")
@@ -35,7 +35,7 @@ import common.logging_config as logging_config
 # Endpoints
 from server.endpoints import register_endpoints
 
-logger = logging_config.logging.getLogger("oai_server")
+logger = logging_config.logging.getLogger("launch_server")
 
 
 ##########################################
@@ -70,7 +70,7 @@ def start_server(port: int = 8000) -> int:
         process = subprocess.Popen(
             [
                 "uvicorn",
-                "oai_server:create_app",
+                "launch_server:create_app",
                 "--factory",
                 "--host",
                 "0.0.0.0",

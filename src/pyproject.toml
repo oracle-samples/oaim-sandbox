@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "oai-explorer"
+name = "ai-explorer"
 version = "0.1.0"
 description = "Oracle AI Explorer for Apps"
 requires-python = ">=3.11"
@@ -60,15 +60,15 @@ test = [
 
 # All-in-one installation (server + client)
 all = [
-    "oai-explorer[server]",
-    "oai-explorer[client]",
+    "ai-explorer[server]",
+    "ai-explorer[client]",
 ]
 
 # All-in-one with tests
 all-test = [
-    "oai-explorer[server]",
-    "oai-explorer[client]",
-    "oai-explorer[test]",
+    "ai-explorer[server]",
+    "ai-explorer[client]",
+    "ai-explorer[test]",
 ]
 
 [tool.setuptools]

@@ -22,15 +22,15 @@ class MockApiError(Exception):
 # Test Server Functions
 #############################################################################
 class TestServerFunctions:
-    """Test the utility functions in server.py"""
+    """Test the utility functions in launch_server.py"""
 
     def test_copy_user_settings_success(self, monkeypatch, app_test):
         """Test the copy_user_settings function with a successful API call"""
         # Import the function to test
-        from client.content.server import copy_user_settings
+        from client.content.api_server import copy_user_settings
 
         # Initialize app_test to get the session state
-        at = app_test("../src/client/content/server.py")
+        at = app_test("../src/client/content/launch_server.py")
 
         # Mock the API call to ensure a successful response
         mock_api_call = MagicMock()
@@ -39,15 +39,15 @@ class TestServerFunctions:
         mock_st = MagicMock()
         mock_st_common = MagicMock()
 
-        monkeypatch.setattr("client.content.server.api_call", mock_api_call)
-        monkeypatch.setattr("client.content.server.st", mock_st)
-        monkeypatch.setattr("client.content.server.st_common", mock_st_common)
-        monkeypatch.setattr("client.content.server.logger", MagicMock())
+        monkeypatch.setattr("client.content.api_server.api_call", mock_api_call)
+        monkeypatch.setattr("client.content.api_server.st", mock_st)
+        monkeypatch.setattr("client.content.api_server.st_common", mock_st_common)
+        monkeypatch.setattr("client.content.api_server.logger", MagicMock())
 
         # Use the actual session state instead of mocking
         # We only need to modify .user_settings for this test
         at.session_state.user_settings = {"key": "value"}
-        monkeypatch.setattr("client.content.server.state", at.session_state)
+        monkeypatch.setattr("client.content.api_server.state", at.session_state)
 
         # Call the function
         copy_user_settings("test_client")
@@ -66,10 +66,10 @@ class TestServerFunctions:
     def test_copy_user_settings_error(self, monkeypatch, app_test):
         """Test the copy_user_settings function when an error occurs"""
         # Import the function to test
-        from client.content.server import copy_user_settings
+        from client.content.api_server import copy_user_settings
 
         # Initialize app_test to get the session state
-        at = app_test("../src/client/content/server.py")
+        at = app_test("../src/client/content/launch_server.py")
 
         # Still need to mock API for error testing
         mock_api_call = MagicMock()
@@ -79,14 +79,14 @@ class TestServerFunctions:
         mock_st = MagicMock()
         mock_logger = MagicMock()
 
-        monkeypatch.setattr("client.content.server.api_call", mock_api_call)
-        monkeypatch.setattr("client.content.server.st", mock_st)
-        monkeypatch.setattr("client.content.server.st_common", MagicMock())
-        monkeypatch.setattr("client.content.server.logger", mock_logger)
+        monkeypatch.setattr("client.content.api_server.api_call", mock_api_call)
+        monkeypatch.setattr("client.content.api_server.st", mock_st)
+        monkeypatch.setattr("client.content.api_server.st_common", MagicMock())
+        monkeypatch.setattr("client.content.api_server.logger", mock_logger)
 
         # Use the actual session state - only need to modify user_settings
         at.session_state.user_settings = {"key": "value"}
-        monkeypatch.setattr("client.content.server.state", at.session_state)
+        monkeypatch.setattr("client.content.api_server.state", at.session_state)
 
         # Call the function
         copy_user_settings("test_client")
@@ -99,21 +99,21 @@ class TestServerFunctions:
     def test_copy_user_settings_real_api(self, monkeypatch, app_test):
         """Test the copy_user_settings function with real API call - just verify it doesn't crash"""
         # Import the function to test
-        from client.content.server import copy_user_settings
+        from client.content.api_server import copy_user_settings
 
         # Use app_test to get the properly initialized session state
-        at = app_test("../src/client/content/server.py")
+        at = app_test("../src/client/content/launch_server.py")
 
         # Mock only the streamlit UI components
         mock_st = MagicMock()
         mock_st_common = MagicMock()
 
-        monkeypatch.setattr("client.content.server.st", mock_st)
-        monkeypatch.setattr("client.content.server.st_common", mock_st_common)
-        monkeypatch.setattr("client.content.server.logger", MagicMock())
+        monkeypatch.setattr("client.content.api_server.st", mock_st)
+        monkeypatch.setattr("client.content.api_server.st_common", mock_st_common)
+        monkeypatch.setattr("client.content.api_server.logger", MagicMock())
 
         # Use the actual session state directly - no need to create a MockState class
-        monkeypatch.setattr("client.content.server.state", at.session_state)
+        monkeypatch.setattr("client.content.api_server.state", at.session_state)
         monkeypatch.setattr("client.utils.api_call.state", at.session_state)
 
         # Call the function
@@ -122,22 +122,16 @@ class TestServerFunctions:
         # Assert that st.success was called (don't check the exact message)
         assert mock_st.success.called
 
-    @patch("oai_server.stop_server")
-    @patch("oai_server.start_server")
+    @patch("launch_server.stop_server")
+    @patch("launch_server.start_server")
     @patch("time.sleep")
     def test_server_restart(self, mock_sleep, mock_start_server, mock_stop_server, monkeypatch, app_test):
         """Test the server_restart function using the conftest environment variables"""
-        # Skip this test if oai_server is not available
-        try:
-            import oai_server
-        except ImportError:
-            pytest.skip("oai_server not available, skipping restart test")
-
         # Import the function to test
-        from client.content.server import server_restart
+        from client.content.api_server import server_restart
 
         # Initialize app_test to get session state
-        at = app_test("../src/client/content/server.py")
+        at = app_test("../src/client/content/api_server.py")
 
         # Get the environment variables already set by conftest.py
         server_key = os.environ["API_SERVER_KEY"]
@@ -163,8 +157,8 @@ class TestServerFunctions:
         at.session_state.pop = mock_pop
 
         # Use the actual session state
-        monkeypatch.setattr("client.content.server.state", at.session_state)
-        monkeypatch.setattr("client.content.server.logger", MagicMock())
+        monkeypatch.setattr("client.content.api_server.state", at.session_state)
+        monkeypatch.setattr("client.content.api_server.logger", MagicMock())
 
         # Call the function - no need to mock os since conftest.py sets environment variables
         server_restart()

@@ -7,7 +7,7 @@ weight = 20
 Copyright (c) 2024, 2025, Oracle and/or its affiliates.
 Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
-spell-checker: ignore tablespace mycomplexsecret mycomplexwalletsecret oaim
+spell-checker: ignore tablespace mycomplexsecret mycomplexwalletsecret 
 -->
 
 To use the Retrieval-Augmented Generation (RAG) functionality of the {{< short_app_ref >}}, you will need to setup/enable an [embedding model](../model_config) and have access to an **Oracle Database 23ai**. Both the [Always Free Oracle Autonomous Database Serverless (ADB-S)](https://docs.oracle.com/en/cloud/paas/autonomous-database/serverless/adbsb/autonomous-always-free.html) and the [Oracle Database 23ai Free](https://www.oracle.com/uk/database/free/get-started/) are supported. They are a great, no-cost, way to get up and running quickly.
@@ -74,9 +74,9 @@ For bare-metal installations, set the `TNS_ADMIN` environment variable, or copy 
 
 For container installations, there are a couple of ways to include the contents of your `TNS_ADMIN` in the image:
 
-- Before building the image, copy the contents of your `TNS_ADMIN` to `src/tns_admin`. This will include your `TNS_ADMIN` as part of the image.
-- Mount your `TNS_ADMIN` directory into the container on startup, for example: `podman run -p 8501:8501 -v $TNS_ADMIN:/tns_admin -it --rm aim-explorer`
-- Copy the `TNS_ADMIN` directory into an existing running container, for example: `podman cp $TNS_ADMIN /app/tns_admin oai-explorer`
+- Before building the image, copy the contents of your `TNS_ADMIN` to `src/tns_admin`. This will include your `TNS_ADMIN` as part of the image build.
+- Mount your `TNS_ADMIN` directory into the container on startup, for example: `podman run -p 8501:8501 -v $TNS_ADMIN:/tns_admin -it --rm ai-explorer-server`
+- Copy the `TNS_ADMIN` directory into an existing running container, for example: `podman cp $TNS_ADMIN /app/tns_admin ai-explorer-server`
 
 ## Database User
 

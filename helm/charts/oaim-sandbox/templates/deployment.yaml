@@ -76,7 +76,7 @@ spec:
             {{- end }}
             {{- end }}
             - name: API_SERVER_URL
-              value: {{ include "oai-server.serviceUrl" . }}
+              value: {{ include "ai-explorer-server.serviceUrl" . }}
             - name: API_SERVER_PORT
               value: "8000"
             - name: API_SERVER_KEY

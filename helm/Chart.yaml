@@ -2,7 +2,7 @@
 ## Licensed under the Universal Permissive License v1.0 as shown at http://oss.oracle.com/licenses/upl.
 
 apiVersion: v2
-name: oai-explorer
+name: ai-explorer
 description: A Helm chart Oracle AI Explorer for Apps
 type: application
 version: 0.1.0
@@ -10,17 +10,17 @@ appVersion: "0.1.0"
 maintainers:
   - name: Oracle
     email: obaas_ww@oracle.com
-    url: https://github.com/oracle-samples/oaim-sandbox
+    url: https://github.com/oracle-samples/ai-explorer
 
 dependencies:
-  - name: oai-server
+  - name: ai-explorer-server
     version: 0.1.0
-    repository: file://charts/oai-server
-    condition: oai-server.enabled
-  - name: oai-client
+    repository: file://charts/ai-explorer-server
+    condition: ai-explorer-server.enabled
+  - name: ai-explorer-client
     version: 0.1.0
-    repository: file://charts/oai-client
-    condition: oai-client.enabled
+    repository: file://charts/ai-explorer-client
+    condition: ai-explorer-client.enabled
   - name: ollama
     version: 0.1.0
     repository: file://charts/ollama

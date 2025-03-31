@@ -1,6 +1,6 @@
 # Split/Embed Documents
 
-<!-- spell-checker:ignore streamlit, venv, oaim -->
+<!-- spell-checker:ignore streamlit, venv -->
 
 In the **Split/Embed** tab, the AI Explorer allows you to upload various types of documents and transform their content into vector embeddings in a format that is interpretable by LLMs.
 

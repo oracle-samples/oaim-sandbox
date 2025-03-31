@@ -34,7 +34,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      HUGO_VERSION: 0.134.1
+      HUGO_VERSION: 0.145.0
     steps:
       - name: Install Hugo CLI
         run: |
@@ -50,7 +50,9 @@ jobs:
       - name: Download Hugo Theme
         run: |
           mkdir -p docs/themes/relearn \
-          && wget -qO- $(curl -s https://api.github.com/repos/McShelby/hugo-theme-relearn/releases/latest | grep "tarball_url" | awk -F'"' '{print $4}') | tar --exclude='*/exampleSite' -xz -C docs/themes/relearn --strip-components=1
+          && curl -L $(curl -s https://api.github.com/repos/McShelby/hugo-theme-relearn/releases/latest \
+          | grep "tarball_url" | cut -d '"' -f 4) \
+          | tar -xz -C docs/themes/relearn --strip-components=1 --exclude='*/exampleSite'
       - name: Setup Pages
         id: pages
         uses: actions/configure-pages@v5
