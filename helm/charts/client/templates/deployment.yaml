@@ -69,7 +69,7 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
           {{- end }}
           env:
-            {{- range $key, $value := .Values.client.features }}
+            {{- range $key, $value := .Values.features }}
             {{- if ne $value "false" }}
             - name: {{ snakecase $key | upper }}
               value: {{ $value | quote }}

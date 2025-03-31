@@ -60,6 +60,8 @@ adb:
 
 # -- Model Configuration
 models:
+  ollama:
+    enabled: false
   openAI:
     secretName: ""
     secretKey: ""

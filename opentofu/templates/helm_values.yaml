@@ -41,6 +41,10 @@ server:
       passwordKey: "password"
       serviceKey: "service"
 
+  models:
+    ollama:
+      enabled: ${k8s_node_pool_gpu_deploy}
+
 client:
   enabled: true
   image:
@@ -60,15 +64,14 @@ client:
     http:
       type: "NodePort"
 
-  sandbox:
-    features:
-      disableTestbed: "true"
-      disableApi: "false"
-      disableTools: "false"
-      disableDbCfg: "true"
-      disableModelCfg: "true"
-      disableOciCfg: "true"
-      disableSettings: "true"
+  features:
+    disableTestbed: "true"
+    disableApi: "false"
+    disableTools: "false"
+    disableDbCfg: "true"
+    disableModelCfg: "true"
+    disableOciCfg: "true"
+    disableSettings: "true"
 
 ollama:
   enabled: ${k8s_node_pool_gpu_deploy}

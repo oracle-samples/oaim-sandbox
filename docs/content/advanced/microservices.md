@@ -63,86 +63,61 @@ You will need to build the {{< short_app_ref >}} container images and stage them
 
 ### Ingress
 
-To access the {{< short_app_ref >}} GUI and API Server, you can either use a port-forward or an Ingress service.  For demonstration purposes, the [Ingress-Nginx Controller](https://kubernetes.github.io/ingress-nginx/deploy/) will be used to create a [Flexible LoadBalancer](https://docs.oracle.com/en-us/iaas/Content/NetworkLoadBalancer/overview.htm) in **OCI**.
+To access the {{< short_app_ref >}} GUI and API Server, you can either use a port-forward or an Ingress service.  For demonstration purposes, the [OCI Native Ingress Controller](https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengsettingupnativeingresscontroller.htm), which was enabled on the **OKE** cluster as part of the **IaC**, will be used to for public Ingress access.
 
-This example will create the loadbalancer exposing port 80 for the {{< short_app_ref >}} GUI and port 8000 for the {{< short_app_ref >}} API Server.  It is _HIGHLY_ recommended to protect these ports with [Network Security Groups](https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/networksecuritygroups.htm) (**NSGs**).
+The [Flexible LoadBalancer](https://docs.oracle.com/en-us/iaas/Content/NetworkLoadBalancer/overview.htm) was provisioned using the **IaC**. This example will create the Listeners and Backends to expose port 80 for the {{< short_app_ref >}} GUI and port 8000 for the {{< short_app_ref >}} API Server on the existing LoadBalancer.  
 
-The service manifest has two values that should be supplied:
+It is _HIGHLY_ recommended to protect these ports with [Network Security Groups](https://docs.oracle.com/en-us/iaas/Content/Network/Concepts/networksecuritygroups.htm) (**NSGs**).
 
+The service manifest has five values that should be supplied:
+
+- `<lb_compartment_ocid>` - OCID of the LoadBalancer Compartment
+- `<lb_subnet_ocid>` - OCID of the Subnet for the LoadBalancer
+- `<lb_ocid>` - OCID of the LoadBalancer provisioned by IaC
 - `<lb_nsg_ocid>` - **NSG** OCID's to protect the LB ports
-- `<lb_reserved_ip>` - A reserved IP address for the Loadbalancer
+- `<lb_reserved_ip_ocid>` - A reserved IP address for the Loadbalancer
 
 These will be output as part of the **IaC** but can be removed from the code if not reserving an IP or protecting the Load Balancer.
 
-1. Create a `ingress.yaml`:
+1. Create a `native_ingress.yaml`:
     ```yaml
-    controller:
-      kind: DaemonSet
-      # Service is configured via its own manifest and is conditional
-      service:
-        enabled: false
-      config:
-        ssl-redirect: "false" # NGINX isn't using any TLS certificates, terminated at LB
-        use-forwarded-headers: "true" # NGINX will decide on redirection based on headers
-      updateStrategy:
-        rollingUpdate:
-          maxUnavailable: 1
-        type: RollingUpdate
-    ```
-
-1. Install the Ingress-Nginx Controller:
-    ```bash
-    helm upgrade \
-        --install ingress-nginx ingress-nginx \
-        --repo https://kubernetes.github.io/ingress-nginx \
-        --namespace ingress-nginx \
-        --create-namespace \
-        -f ingress.yaml
-    ```
-
-1. Create a `service.yaml` file (replace `<...>` values or remove):
-    ```yaml
-      apiVersion: v1
-      kind: Service
-      metadata:
-        annotations:
-          oci.oraclecloud.com/load-balancer-type: lb
-          service.beta.kubernetes.io/oci-load-balancer-shape: flexible
-          service.beta.kubernetes.io/oci-load-balancer-shape-flex-max: "100"
-          service.beta.kubernetes.io/oci-load-balancer-shape-flex-min: "10"
-          oci.oraclecloud.com/oci-network-security-groups: "<lb_nsg_ocid>"
-          service.beta.kubernetes.io/oci-load-balancer-security-list-management-mode: None
-        name: ingress-nginx-controller
-        namespace: ingress-nginx
-      spec:
-        allocateLoadBalancerNodePorts: true
-        externalTrafficPolicy: Cluster
-        internalTrafficPolicy: Cluster
-        ipFamilies:
-        - IPv4
-        ipFamilyPolicy: SingleStack
-        loadBalancerIP: "<lb_reserved_ip>"
-        ports:
-        - appProtocol: http
-          name: client
-          port: 80
-          protocol: TCP
-          targetPort: http
-        - appProtocol: http
-          name: server
-          port: 8000
-          protocol: TCP
-          targetPort: http
-        selector:
-          app.kubernetes.io/component: controller
-          app.kubernetes.io/instance: ingress-nginx
-          app.kubernetes.io/name: ingress-nginx
-        type: LoadBalancer
-      ```
-
-1. Apply the Service:
-    ```bash
-    kubectl apply -f service.yaml
+    apiVersion: v1
+    kind: Namespace
+    metadata:
+      name: hologram
+    ---
+    apiVersion: "ingress.oraclecloud.com/v1beta1"
+    kind: IngressClassParameters
+    metadata:
+      name: native-ic-params
+      namespace: ai-explorer
+    spec:
+      compartmentId: <compartment_ocid>
+      subnetId: <lb_subnet_ocid>
+      loadBalancerName: "ai-explorer-lb"
+      reservedPublicAddressId: <lb_reserved_ip_ocid>
+      isPrivate: false
+      maxBandwidthMbps: 1250
+      minBandwidthMbps: 10
+    ---
+    apiVersion: networking.k8s.io/v1
+    kind: IngressClass
+    metadata:
+      name: native-ic
+      namespace: hologram
+      annotations:
+        ingressclass.kubernetes.io/is-default-class: "true"
+        oci-native-ingress.oraclecloud.com/network-security-group-ids: <lb_nsg_ocid>
+        oci-native-ingress.oraclecloud.com/id: <lb_ocid>
+        oci-native-ingress.oraclecloud.com/delete-protection-enabled: "true"
+    spec:
+      controller: oci.oraclecloud.com/native-ingress-controller
+      parameters:
+        scope: Namespace
+        namespace: hologram
+        apiGroup: ingress.oraclecloud.com
+        kind: IngressClassParameters
+        name: native-ic-params
     ```
 
 ### The {{< short_app_ref >}}
@@ -205,7 +180,7 @@ If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama an
         secretName: "api-key"
 
     # -- API Server configuration
-    ai-explorer-server:
+    server:
       enabled: true
       image:
         repository: <server_repository>
@@ -213,8 +188,15 @@ If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama an
 
       ingress:
         enabled: true
+        className: native-ic
         annotations:
           nginx.ingress.kubernetes.io/upstream-vhost: "<lb_reserved_ip>"
+          oci-native-ingress.oraclecloud.com/http-listener-port: "8000"
+          oci-native-ingress.oraclecloud.com/protocol: TCP
+
+      service:
+        http:
+          type: "NodePort"
 
       # -- Oracle Autonomous Database Configuration
       adb:
@@ -224,7 +206,7 @@ If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama an
         authN:
           secretName: "db-authn"
 
-    ai-explorer-client:
+    client:
       enabled: true
       image:
         repository: <client_repository>
@@ -232,18 +214,24 @@ If you deployed a GPU node pool as part of the **IaC**, you can deploy Ollama an
 
       ingress:
         enabled: true
+        className: native-ic
         annotations:
           nginx.ingress.kubernetes.io/upstream-vhost: "<lb_reserved_ip>"
+          oci-native-ingress.oraclecloud.com/http-listener-port: "80"
+          oci-native-ingress.oraclecloud.com/protocol: TCP
 
-      client:
-        features:
-          disableTestbed: "false"
-          disableApi: "false"
-          disableTools: "false"
-          disableDbCfg: "true"
-          disableModelCfg: "false"
-          disableOciCfg: "true"
-          disableSettings: "true"
+      service:
+        http:
+          type: "NodePort"
+
+      features:
+        disableTestbed: "false"
+        disableApi: "false"
+        disableTools: "false"
+        disableDbCfg: "true"
+        disableModelCfg: "false"
+        disableOciCfg: "true"
+        disableSettings: "true"
 
     ollama:
       enabled: true
