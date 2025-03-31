@@ -17,6 +17,7 @@ dependencies = [
     "langchain-core==0.3.49",
     "httpx==0.28.1",
     "oracledb~=3.0",
+    "plotly==6.0.1",
 ]
 
 [project.optional-dependencies]
@@ -40,7 +41,6 @@ server = [
     "lxml==5.3.1",
     "matplotlib==3.10.1",
     "oci~=2.0",
-    "plotly==6.0.1",
     "psutil==7.0.0",
     "python-multipart==0.0.20",
     "umap-learn==0.5.7",
