@@ -264,9 +264,11 @@ to start a conversation with the same questions, and compare the answers. Note t
 
 ### 2.5 Prepare vector store
 
+#### 2.5.1 Split/Embed Documents
+
 In the **Split/Embed** tab, the AI Explorer allows you to upload various types of documents and transform their content into vector embeddings in a format that is interpretable by LLMs.
 
-![split-embed-interface](images/split-embed.png)
+![split-embed-interface](./images/split-embed.png)
 
 You can choose from the embedding models you selected during the initial configuration using a drop-down menu and adjust their parameters accordingly.
 For the first one choose **mxbai-embed-large**. The chunk size defines the length of each segment into which the document will be split, while the chunk overlap represents the percentage of overlap between consecutive chunks relative to the chunk size.
@@ -292,6 +294,8 @@ Once the process is complete, a green confirmation prompt will appear, indicatin
 ![vector-store-populated](images/vector-store-populated.png)
 
 This means that 224 vectors representations of the information from the input document have been created and stored.
+
+#### 2.5.2 Inspect the Vector DB
 
 As an example, you can query the vector store by connecting to your Oracle Database 23ai using the SQL Developer plugin we mentioned earlier:
 
