@@ -422,7 +422,7 @@ The second part of the report provides details about each single questions submi
 
   ![csv](./images/download_csv.png)
 
-* Now let's test through an external saved test datset, that you can download [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/main/docs/hol/getting_started-30_testset.json) with 30 questions already generated. If you want to drop some Q&A that are not meaningful in your opinion, update it, save and reload as local file, following the steps shown in this snapshot:
+* Now let's test through an external saved test datset, that you can download [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/getting_started-30_testset.json) with 30 questions already generated. If you want to drop some Q&A that are not meaningful in your opinion, update it, save and reload as local file, following the steps shown in this snapshot:
 
   ![load_tests](./images/load_tests.png)
 
@@ -532,4 +532,4 @@ All the AI Explorer server can be exported to save the configuration as backup a
 
 
 ## 5. Challenge
-Using the following doc :[Oracle Government PaaS and IaaS Cloud Services - Service Descriptions](https://www.oracle.com/contracts/docs/us_gov_tech_cloud_3902270.pdf) and the Test Dataset created [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/main/docs/hol/artifacts/OCIGOV50_testset.json) get the best **Overall Correctness Score**. 
+Using the following doc :[Oracle Government PaaS and IaaS Cloud Services - Service Descriptions](https://www.oracle.com/contracts/docs/us_gov_tech_cloud_3902270.pdf) and the Test Dataset created [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/artifacts/OCIGOV50_testset.json) get the best **Overall Correctness Score**. 
