@@ -585,4 +585,13 @@ All the AI Explorer server can be exported to save the configuration as backup a
 
 
 ## 5. Challenge
-Using the following doc: [Oracle Government PaaS and IaaS Cloud Services - Service Descriptions](https://www.oracle.com/contracts/docs/us_gov_tech_cloud_3902270.pdf) and the Test Dataset created [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/artifacts/OCIGOV50_testset.json) get the best **Overall Correctness Score**. 
+Let's test on a large scale your competencies gain so far with a challenge that, providing a doc, ask you to determine the best AI Explorer configuration to obtain the highest **Overall Correctness Score** on a knowledge base.
+The proposed doc to create the knowledge base is the: 
+
+**[Oracle Government PaaS and IaaS Cloud Services - Service Descriptions](https://www.oracle.com/contracts/docs/us_gov_tech_cloud_3902270.pdf)**
+
+ an Oracle's document related to the services available on the Oracle Cloud Infrastructure.
+To test the configuration setup, we provide a 50 Q&A pairs test dataset, you can download: [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/artifacts/OCIGOV50_testset.json), to be used as a benchmarch to evaluate your chatbot quality.
+
+Enjoy!
+
