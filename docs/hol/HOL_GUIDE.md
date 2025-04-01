@@ -231,7 +231,7 @@ Let's check models available:
   * Let's add the model LLama3.2:
 
   ```bash
-    ollama run llama3.2
+    ollama pull llama3.2
   ```
   * Now, we will enable in the model list. Under left menu **Models** / **Language Models**, press button **Add**, and complete the form with the values shown in the following snapshot:
 
