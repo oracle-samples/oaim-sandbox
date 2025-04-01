@@ -40,25 +40,21 @@ class Client:
             "timeout": timeout,
         }
 
-        def settings_request(method, extra_params=None):
+        def settings_request(method):
             """Send Settings to Server"""
-            request_options = self.request_defaults.copy()  # Copy defaults to avoid modifying the original
-            if extra_params:
-                request_options.update(extra_params)
-
             with httpx.Client() as client:
                 return client.request(
                     method=method,
                     url=f"{self.server_url}/v1/settings",
                     json=self.settings,
-                    **request_options,
+                    **self.request_defaults,
                 )
 
         response = settings_request("PATCH")
         if response.status_code != 200:
             logger.error("Error updating settings with PATCH: %i - %s", response.status_code, response.text)
             # Retry with POST if PATCH fails
-            response = settings_request("POST", {"params": {"client": self.settings["client"]}})
+            response = settings_request("POST")
             if response.status_code != 200:
                 logger.error("Error updating settings with POST: %i - %s", response.status_code, response.text)
         logger.info("Established Client")
@@ -99,3 +95,4 @@ class Client:
             return f"Error: {response.status_code} - {error_msg}"
         except httpx.ConnectError:
             logger.error("Unable to contact the API Server; will try again later.")
+
