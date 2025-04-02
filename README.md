@@ -88,7 +88,7 @@ To run the application in a container; download the [source](https://github.com/
 
    
 ## Hands-on-lab Documentation
-To access the hands-on-lab documentation, click **[here](.docs/hol/HOL_GUIDE.md)**.
+To access the hands-on-lab documentation, click **[here](docs/hol/HOL_GUIDE.md)**.
 
 ## Contributing
 
