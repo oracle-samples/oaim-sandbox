@@ -4,7 +4,7 @@
 
 ### 1.1 Database 
 
-The AI Vector Search in Oracle Database 23ai provides the ability to store and query private business data using a natural language interface. The **AI Explorer** uses these capabilities to provide more accurate and relevant LLM responses via Retrieval-Augmented Generation (**RAG**). [Oracle Database 23ai Free](https://www.oracle.com/database/free/get-started/) provides an ideal, no-cost vector store for this walkthrough.
+The AI Vector Search in Oracle Database 23ai provides the ability to store and query private business data using a natural language interface. This framework uses these capabilities to provide more accurate and relevant LLM responses via Retrieval-Augmented Generation (**RAG**). [Oracle Database 23ai Free](https://www.oracle.com/database/free/get-started/) provides an ideal, no-cost vector store for this walkthrough.
 To proceed you need a Container Runtime e.g. docker/podman.
 
 ---
@@ -91,7 +91,7 @@ git clone --branch cdb --single-branch https://github.com/oracle-samples/ai-expl
 
 #### 1.4.1 Python version
 
-AI Explorer for Apps requires exactly **Python 3.11**, neither older nor newer.  Download and follow the instruction **[here](https://www.python.org/downloads/release/python-3110/)** to install it on your system.
+The framework requires exactly **Python 3.11**, neither older nor newer.  Download and follow the instruction **[here](https://www.python.org/downloads/release/python-3110/)** to install it on your system.
 
 ##### 1.4.1.1 Install Python 3.11 on macOS
 If you are using a recent version of macOS, you will need to install that version side by side with the builtin one. In a shell run:
@@ -155,7 +155,7 @@ source .venv/bin/activate
 streamlit run launch_client.py --server.port 8502
 ```
 
-  Set the same `<API_SERVER_KEY>` to be authorized on the AI Explorer.
+  Set the same `<API_SERVER_KEY>` to be authorized on the framework.
 
 * In a separate shell, in the directory `ai-explorer` run:
 
@@ -184,7 +184,7 @@ In a browser, open the link: `http://localhost:8502/`
 
 Let's check if the DB is correctly connected:
 
-![DB](images/db.png)
+![DB](images/db.jpg)
 
 * You should see the message: `Current Status: Connected`
 
@@ -192,11 +192,11 @@ Let's check if the DB is correctly connected:
 
 In the OCI configuration tab, you can add your Oracle Cloud Infrastructure (OCI) credentials to authenticate with your OCI tenancy. This will enable access to objects and documents stored in your cloud compartments.
 
-![OCI](images/oci.png)
+![OCI](images/oci.jpg)
 
 Detailed information on obtaining the required credentials is available in the [Oracle Cloud Infrastructure Documentation](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm#Required_Keys_and_OCIDs).
 
-If you have previously created a .oci/config file, the AI Explorer will automatically read this file at startup and load the credentials from the Default profile for authentication.
+If you have previously created a .oci/config file, the framework will automatically read this file at startup and load the credentials from the Default profile for authentication.
 
 After entering your credentials, click the Save button. If the credentials are correct, a green confirmation pop-up will appear, indicating successful authentication to your tenancy.
 
@@ -206,7 +206,7 @@ After entering your credentials, click the Save button. If the credentials are c
 
 Let's check models available:
 
-![models menu](images/models.png)
+![models menu](images/models.jpg)
 
   * The default LLMs for chat completions are:
 
@@ -241,7 +241,7 @@ Let's check models available:
 ### 2.4 Chat
 The two LLMs availble could be tested straightful to understand their behaviour with generic questions. Before to access the chat GUI
 
-![chat](images/chat.png)
+![chat](images/chat.jpg)
 
 scroll down the left side menu to find the **Chat model** menu:
 
@@ -266,9 +266,9 @@ to start a conversation with the same questions, and compare the answers. Note t
 
 #### 2.5.1 Split/Embed Documents
 
-In the **Split/Embed** tab, the AI Explorer allows you to upload various types of documents and transform their content into vector embeddings in a format that is interpretable by LLMs.
+In the **Split/Embed** tab, the framework allows you to upload various types of documents and transform their content into vector embeddings in a format that is interpretable by LLMs.
 
-![split-embed-interface](./images/split-embed.png)
+![split-embed-interface](./images/split-embed.jpg)
 
 You can choose from the embedding models you selected during the initial configuration using a drop-down menu and adjust their parameters accordingly.
 For the first one choose **mxbai-embed-large**. The chunk size defines the length of each segment into which the document will be split, while the chunk overlap represents the percentage of overlap between consecutive chunks relative to the chunk size.
@@ -314,7 +314,7 @@ In this case, we will get a smaller number of chunks, since the model supports a
 
 ![text-embedding-3-small](images/text-embedding-3-small.png)
 
-You can now navigate to the Database tab in the AI Explorer to see the list of all the vector stores that have been created. If needed, you can easily delete them with a single click.
+You can now navigate to the Database tab in the framework to see the list of all the vector stores that have been created. If needed, you can easily delete them with a single click.
 
 ![database-vector-store-list](images/database-vector-store-list.png)
 
@@ -404,7 +404,7 @@ Testbed helps you to massive test your chatbot, generating for you a Q&A test da
 ![testbed](./images/tesbed.png)
 
 #### Generate a Q&A Test dataset
-The platform allows to generate as many questions and answer you desire, based on a single document, that it's part of the knowledge base you have store as vector store with their own embeddings. Selecting the proper radio button you will access to the AI Explorer test dataset generation capabilities:
+The platform allows to generate as many questions and answer you desire, based on a single document, that it's part of the knowledge base you have store as vector store with their own embeddings. Selecting the proper radio button you will access to the framework test dataset generation capabilities:
 
 ![generate](./images/generatenew.png)
 
@@ -491,7 +491,7 @@ The second part of the report provides details about each single questions submi
 
 ## 3. Export and run the chatbot as a Spring AI microservice
 
-The AI Explorer allows to export the chatbot defined as a ready-to-run microservice built in Java, Spring Boot and Spring AI framework, that will run independently by the AI Explorer, leveraging only the vector store table created, and the LLM servers used. In the current relase are supported only fully Ollama configuration (embeddings + chat model) or OpenAI.
+The rramework allows to export the chatbot defined as a ready-to-run microservice built in Java, Spring Boot and Spring AI framework, that will run independently by the framework, leveraging only the vector store table created, and the LLM servers used. In the current relase are supported only fully Ollama configuration (embeddings + chat model) or OpenAI.
 
 ### 3.1 Pre-requisites
 To run the microservice exported you need:
@@ -568,7 +568,7 @@ Proceed as in the previous step, choosing in **Select Alias:** the **TEST2** vec
 
 
 ## 4. Backup Env
-All the AI Explorer server can be exported to save the configuration as backup and imported in another server.
+All the condig related to the server can be exported to save the configuration as backup and imported in another server.
 
 * Go to the left pane menu **Settings**:
 
@@ -585,7 +585,7 @@ All the AI Explorer server can be exported to save the configuration as backup a
 
 
 ## 5. Challenge
-Let's test on a large scale your competencies gain so far with a challenge that, providing a doc, ask you to determine the best AI Explorer configuration to obtain the highest **Overall Correctness Score** on a knowledge base.
+Let's test on a large scale your competencies gain so far with a challenge that, providing a doc, ask you to determine the best framework configuration to obtain the highest **Overall Correctness Score** on a knowledge base.
 The proposed doc to create the knowledge base is the: 
 
 **[Oracle Government PaaS and IaaS Cloud Services - Service Descriptions](https://www.oracle.com/contracts/docs/us_gov_tech_cloud_3902270.pdf)**
