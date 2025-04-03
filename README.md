@@ -87,15 +87,21 @@ To run the application in a container; download the [source](https://github.com/
 1. [Configure](https://oracle-samples.github.io/ai-explorer/client/configuration/index.html) the **Explorer**.
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
    
 ## Hands-on-lab Documentation
 To access the hands-on-lab documentation, click **[here](docs/hol/HOL_GUIDE.md)**.
 =======
+=======
+>>>>>>> Stashed changes
 
 ## Hands-on-lab Documentation
 To access the hands-on-lab documentation, click **[here](./hol/HOL_GUIDE.md)**.
 
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 ## Contributing
