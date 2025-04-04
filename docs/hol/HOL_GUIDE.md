@@ -268,7 +268,7 @@ scroll down the left side menu to find the **Chat model** menu:
 
 ![chat models](images/chatmodel.png)
 
-and, with the **Enable RAG?** check-box not selected, choose the **gpt-4o-mini** and ask generic question like:
+and, with the **Enable RAG?** check-box not selected, choose the **gpt-4o-mini** and ask generic questions like these:
 
 ```
 Which kind of database you can use to run the Java Web example application?
@@ -278,12 +278,12 @@ Which kind of database you can use to run the Java Web example application?
 Can I use any kind of development environment to run the example?
 ```
 
-NOTICE: *if you see a message on top **Database has no Vector Stores. Disabling RAG.** don't care since you haven't yet create a vector store and you can't use the RAG*.
+NOTICE: *if you see a message on top **Database has no Vector Stores. Disabling RAG.** don't worry since you haven't yet create a vector store and you can't use the RAG*.
 
-As you can see, even if the question mean to refer a specific example, the LLM answer in a generic way. 
+As you can see, even if the question means to refer a specific example, the LLM answers in a generic way. 
 
 * Click the button **Clear** under **History and Context**, and choose the other LLM available, **llama3.1**,
-to start a conversation with the same questions, and compare the answers. Note that the History is enabled by default. The **Clear** button reset the “context window” and start a fresh interaction with a model.
+to start a conversation with the same questions, and compare the answers. Note that the **History** is enabled by default. The **Clear** button resets the “context window” and starts a fresh conversation with a model.
 
 * Play with the **Temperature** parameter, and the others to compare the quality of the answers, for each LLM available. Clear the history pressing button **Clear** after each cycle.
 
@@ -296,22 +296,22 @@ In the **Split/Embed** tab, the framework allows you to upload various types of 
 
 ![split-embed-interface](./images/split-embed.jpg)
 
-You can choose from the embedding models you selected during the initial configuration using a drop-down menu and adjust their parameters accordingly.
-For the first one choose **mxbai-embed-large**. The chunk size defines the length of each segment into which the document will be split, while the chunk overlap represents the percentage of overlap between consecutive chunks relative to the chunk size.
+You will find the models enabled during the initial configuration and you can choose one of them using the drop-down menu and adjust their parameters accordingly.
+For the first one choose **mxbai-embed-large**. The chunk size defines the length of each segment into which the document will be splitted, while the chunk overlap represents the percentage of overlap between consecutive chunks relative to the chunk size.
 
-Additionally, you can select different distance metrics and index types to experiment with various vector representations of the same document, allowing you to identify the configuration that best meets your needs.
+Additionally, you can select different distance metrics and index types to experiment with various vector representations of the same document, allowing you to identify the configuration that best fits your needs.
 
-Once configured, scroll down to the Load and Split Documents section to upload the document you wish to store in your **Oracle Database 23ai**.
+Once configured, scroll down to the **Load and Split Documents** section to upload the document you wish to store in your **Oracle Database 23ai**. You can upload more than one at a time, but in this lab we will use just one.
 
 ![populate-vector-store](images/populate-vector-store.png)
 
 You can choose from three different file sources:
 
-* **OCI**: Navigate through your tenancy to select documents from the Object Storage. Ensure that your OCI credentials are properly configured in advance.
-* **Local**: Upload a document directly from your local environment.
-* **Web**: Import a document from a publicly accessible web URL.
+* **OCI**: Navigate through your tenancy to select documents from the Object Storage. Ensure that your OCI credentials are properly configured in advance. If not, you will not see the option.
+* **Local**: Upload documents directly from your local environment.
+* **Web**: Import a document from publicly accessible web URL.
 
-In this example, we will embed a document from the web, available at [this link](https://docs.oracle.com/en/database/oracle/oracle-database/23/tdpjd/get-started-java-development.pdf). We will give the alias ***TEST1*** to this vector store.
+In this example, we will embed a document availble on the web: **[Get started with java development](https://docs.oracle.com/en/database/oracle/oracle-database/23/tdpjd/get-started-java-development.pdf)**. We will give the alias ***TEST1*** to this vector store.
 
 You can then click on the **Populate Vector Store** button and start the embedding process.
 
@@ -319,15 +319,15 @@ Once the process is complete, a green confirmation prompt will appear, indicatin
 
 ![vector-store-populated](images/vector-store-populated.png)
 
-This means that 224 vectors representations of the information from the input document have been created and stored.
+This means that 224 vectors representations of the information from the input document have been chunked, created relative vector embeddings and stored.
 
 #### 2.5.2 Inspect the Vector DB
 
-As an example, you can query the vector store by connecting to your Oracle Database 23ai using the SQL Developer plugin we mentioned earlier:
+As an example, you can query the vector store by connecting to your Oracle Database 23ai instance using the SQL Developer plugin we mentioned earlier:
 
 ![query-vector-db](images/query-vector-db.png)
 
-Then, you can retrieve the rows from the newly created table with this command:
+If you haven't install it, you can run a query with **sqlplus** or any other Oracle DB client, to retrieve the rows from the newly created table with this command:
 
 ```sql 
 select * from VECTOR.TEST1_MXBAI_EMBED_LARGE_512_103_COSINE_HNSW;
@@ -335,7 +335,7 @@ select * from VECTOR.TEST1_MXBAI_EMBED_LARGE_512_103_COSINE_HNSW;
 
 What you see in the image above are chunks of text from the input document, which have been transformed into vector format and stored in the Oracle database. Essentially, you’ve replicated the knowledge contained in the document within your database!
 
-By following the sames steps, we can creat another vector store using the same document but with a different embedding model, **text-embedding-3-small** from the OpenAI models. We will give the alias ***TEST2*** to this vector store. 
+By following the sames steps, we can create another vector store using the same document, but with a different embedding model: **text-embedding-3-small** from the OpenAI catalog models. We will give the alias ***TEST2*** to this vector store. 
 In this case, we will get a smaller number of chunks, since the model supports a chunk size of 8191 instead of the 512 given by *mxbai-embed-large*:
 
 ![text-embedding-3-small](images/text-embedding-3-small.png)
@@ -344,8 +344,10 @@ You can now navigate to the Database tab in the framework to see the list of all
 
 ![database-vector-store-list](images/database-vector-store-list.png)
 
+Note that you can upload on the same vector store alias additional documents that will increase the knowledge base available to you chatbot.
+
 ### 2.6 RAG test
-Now that we have two vector store, let's start to test the second knowledge base created with the OpenAI service:`TEST2` to use classical public resources.
+Now that we have two vector stores, let's start to test the second knowledge base created with the OpenAI service:`TEST2` to use classical public resources.
 
 * Clear history pressing button **Clear** and choose **gpt-4o-mini** model for initial test.
 
