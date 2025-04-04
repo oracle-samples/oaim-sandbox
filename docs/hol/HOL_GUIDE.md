@@ -86,7 +86,7 @@ EXIT;
 podman container restart db23ai
 ```
 
-##### 1.1.2.1 Optional: Install VS Code SQL Developer Plug-in and connect to the DB
+##### 1.1.3.1 Optional: Install VS Code SQL Developer Plug-in and connect to the DB
 In the next steps of this lab, you will need to check the items inside your database 23ai. 
 
 1. In order to do so, install the VS Code **SQL Developer** plugin by opening the Extensions page (Ctrl-Shift-X or equivalent) and search for "sql developer":
