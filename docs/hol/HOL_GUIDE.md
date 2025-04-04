@@ -260,7 +260,7 @@ Let's check models available:
 
 
 ### 2.4 Chat
-The two LLMs availble could be tested straightful to understand their behaviour with generic questions. Before to access the chat GUI
+The two LLMs available could be tested straightful to understand their behaviour with generic questions. Before to access the chat GUI
 
 ![chat](images/chat.jpg)
 
