@@ -260,7 +260,7 @@ Always in the directory `ai-explorer` run:
 
 ### 1.5 Container Installation
 
-To run the application in a container; download the [source](https://github.com/oracle-samples/ai-explorer):
+To run the application in a container; download the [source](https://github.com/oracle-samples/ai-explorer/tree/cdb):
 
 1. Build the all-in-one image.
 
