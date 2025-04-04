@@ -203,6 +203,12 @@ Always in the directory `ai-explorer` run:
   python launch_server.py
   ```
 
+  Make sure the script is executable:
+
+  ```bash
+  chmod +x launch_server.sh
+  ```
+
   The script `launch_server.sh` holds environment variables needed to connect the database and OpenAI, and the `API_SERVER_KEY` to authenticate the client. Set one, for example, `abc12345` and use the same in the following `launch_client.sh`. 
 
   > Note: You can choose any value for the `API_SERVER_KEY`, but it must match in the server and client scripts.
@@ -223,6 +229,13 @@ Always in the directory `ai-explorer` run:
   ```
 
   Set the same `<API_SERVER_KEY>` as you used in the server script, so that the client can authenticate to the server.
+
+
+  Make sure the script is executable:
+
+  ```bash
+  chmod +x launch_client.sh
+  ```
 
 #### 1.5.1 Start the server
 
