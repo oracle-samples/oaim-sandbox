@@ -87,7 +87,7 @@ In the next steps of this lab, you will need to check the items inside your data
 4. Once all the details have been submitted you can click on the *Test* button below. If all the credentials are correct, a prompt message stating: `Test passed for connection: db23ai` will appear. You can then click on the *Connect* button to finally set up the connection
 
 ### 1.2 LLM runtime
-We'll to interact with different LLMs locally and we are going to use **Ollama** for running them. If Ollama isn't already installed in your system, follow the instruction **[here](https://ollama.com/download)** according your operating system.
+We'll interact with different LLMs locally and we are going to use **Ollama** for running them. If Ollama isn't already installed in your system, follow the instruction **[here](https://ollama.com/download)** according to your operating system.
 
 We need to install some LLMs in Ollama (llama3.1 and mxbai for the embeddings). To do this step, open a new shell and run:
 
@@ -96,7 +96,7 @@ ollama pull llama3.1
 ollama pull mxbai-embed-large
 ```
 
-For **OpenAI** you need an OPENAI_API_KEY to authenticate and use their services. To get it go **[here](https://platform.openai.com/settings/organization/api-keys)**.
+For **OpenAI** you need an **OPENAI_API_KEY** to authenticate and use their services. To get it go to the **[OpenAI developer platform](https://platform.openai.com/settings/organization/api-keys)**.
 
 ### 1.3 Clone the right branch
 * Make sure to clone the branch `cdb`. Proceed in this way:
