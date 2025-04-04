@@ -236,7 +236,7 @@ Always in the directory `ai-explorer` run:
   chmod +x launch_client.sh
   ```
 
-#### 1.4.5 Start the server
+##### 1.4.4.1 Start the server
 
 * In a separate shell, in the directory `ai-explorer` run:
 
@@ -251,7 +251,7 @@ Always in the directory `ai-explorer` run:
     ```bash
     pip3.11 install platformdirs
     ```
-#### 1.4.6 Start the client
+##### 1.4.4.1  Start the client
     
 * in another shell, in dir `ai-explorer` run:
   ```bash
