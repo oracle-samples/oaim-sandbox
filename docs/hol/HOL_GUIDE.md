@@ -706,7 +706,7 @@ The proposed doc to create the knowledge base is the:
 **[Oracle Government PaaS and IaaS Cloud Services - Service Descriptions](https://www.oracle.com/contracts/docs/us_gov_tech_cloud_3902270.pdf)**
 
 an Oracle's document related to the services available on the Oracle Cloud Infrastructure.
-To test the configuration setup, we provide a 50 Q&A pairs test dataset, you can download: [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/artifacts/OCIGOV50_testset.json), to be used as a benchmarch to evaluate your chatbot quality.
+To test the configuration setup, we provide a 50 Q&A pairs test dataset, you can download: [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/artifacts/OCIGOV50_testset.json), to be used as a benchmark to evaluate your chatbot quality.
 
 Enjoy!
 
