@@ -210,14 +210,14 @@ You should see the message: `Current Status: Connected`
 
 ### 2.2 Optional: OCI Credentials
 
-In this lab you will not use **Oracle Cloud Infrastructure**. Anyway, if you have an active OCI tenant, these are the instruction to use it.
+In this lab you will not use **Oracle Cloud Infrastructure**. Anyway, if you have an active OCI tenant, these are the instructions to use it.
 In the OCI configuration tab, you can add your Oracle Cloud Infrastructure (OCI) credentials to authenticate with your OCI tenancy. This will enable access to objects and documents stored in your cloud compartments.
 
 ![OCI](images/oci.jpg)
 
 Detailed information on obtaining the required credentials is available in the [Oracle Cloud Infrastructure Documentation](https://docs.oracle.com/en-us/iaas/Content/API/Concepts/apisigningkey.htm#Required_Keys_and_OCIDs).
 
-If you have previously created a .oci/config file, the framework will automatically read this file at startup and load the credentials from the Default profile for authentication.
+If you have previously created a `.oci/config` file, the framework will automatically read this file at startup and load the credentials from the Default profile for authentication. To create one, follow the instructions [here](https://docs.oracle.com/en-us/iaas/Content/API/SDKDocs/cliinstall.htm#Quickstart)
 
 After entering your credentials, click the Save button. If the credentials are correct, a green confirmation pop-up will appear, indicating successful authentication to your tenancy.
 
