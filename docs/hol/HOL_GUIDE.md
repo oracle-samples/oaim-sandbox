@@ -264,10 +264,15 @@ scroll down the left side menu to find the **Chat model** menu:
 ![chat models](images/chatmodel.png)
 
 and, with the **Enable RAG?** check-box not selected, choose the **gpt-4o-mini** and ask generic question like:
+
 ```
 Which kind of database you can use to run the Java Web example application?
+```
+
+```
 Can I use any kind of development environment to run the example?
 ```
+
 NOTICE: *if you see a message on top **Database has no Vector Stores. Disabling RAG.** don't care since you haven't yet create a vector store and you can't use the RAG*.
 
 As you can see, even if the question mean to refer a specific example, the LLM answer in a generic way. 
@@ -347,6 +352,9 @@ Now that we have two vector store, let's start to test the second knowledge base
 
 ```
 Which kind of database you can use to run the Java Web example application?
+```
+
+```
 Which Java environment should be used to run this example?
 ```
 
@@ -358,10 +366,13 @@ On TEST2 vector store you will try with the main params set in the following way
   * Search Type: Similarity
   * Temperature: 0
 
+Q:
 ```
-Q: Which Java environment should be used to run this example?
-
-A: The example should be run in an integrated development environment (IDE), specifically using IntelliJ IDEA community version as recommended in the documentation. Additionally, it will require a Web server with a servlet and JSP container, with Apache Tomcat being the server suggested for deploying the JSP pages (as per the guide).
+Which Java environment should be used to run this example?
+```
+A: 
+```
+The example should be run in an integrated development environment (IDE), specifically using IntelliJ IDEA community version as recommended in the documentation. Additionally, it will require a Web server with a servlet and JSP container, with Apache Tomcat being the server suggested for deploying the JSP pages (as per the guide).
 ```
 
   * LLM: gpt-4o-mini
@@ -369,10 +380,13 @@ A: The example should be run in an integrated development environment (IDE), spe
   * Search Type: Similarity
   * Temperature: 0
 
+Q:
 ```
-Q: Which Java environment should be used to run this example?
-
-A: The example is recommended to be developed in an integrated development environment (IDE) like IntelliJ IDEA, specifically the community version, for ease of development. Additionally, the application uses Apache Tomcat as the web server for deploying the JavaServer Pages (JSP) technology in the HR Web application. For database connectivity, the Java code should be run on the Oracle Database, leveraging the capabilities of the Oracle JDBC Thin driver with a Java Virtual Machine (JVM) (Chapter 4 and Chapter 1).
+Which Java environment should be used to run this example?
+```
+A: 
+```
+The example is recommended to be developed in an integrated development environment (IDE) like IntelliJ IDEA, specifically the community version, for ease of development. Additionally, the application uses Apache Tomcat as the web server for deploying the JavaServer Pages (JSP) technology in the HR Web application. For database connectivity, the Java code should be run on the Oracle Database, leveraging the capabilities of the Oracle JDBC Thin driver with a Java Virtual Machine (JVM) (Chapter 4 and Chapter 1).
 ```
 
 **COMMENT**: as you can see with more chunks provided, the bot mentions also other technologies like Oracle JDBC, JVM and the Oracle Database.
@@ -382,10 +396,15 @@ A: The example is recommended to be developed in an integrated development envir
   * TopK: 4
   * Search Type: Similarity
   * Temperature: 0
-```
-Q: Which kind of database you can use to run the Java Web example application?
 
-A: You can use the Oracle Database, specifically the Autonomous Transaction Processing database, to run the Java Web example application. This is part of the requirements for developing the HR web application, which operates within the Oracle Database environment (see Chapter 4, "What You Need to Install").
+Q:
+```
+Which kind of database you can use to run the Java Web example application?
+```
+
+A:
+```
+You can use the Oracle Database, specifically the Autonomous Transaction Processing database, to run the Java Web example application. This is part of the requirements for developing the HR web application, which operates within the Oracle Database environment (see Chapter 4, "What You Need to Install").
 ```
 
   * LLM: gpt-4o-mini
@@ -393,10 +412,13 @@ A: You can use the Oracle Database, specifically the Autonomous Transaction Proc
   * Search Type: Similarity
   * Temperature: 0
 
+Q:
 ```
-Q: Which kind of database you can use to run the Java Web example application?
-
-A: You can use the Oracle Database to run the Java Web example application, specifically the HR schema within the Oracle Database. The application can be developed using either an on-premises installation of Oracle Database or Oracle Autonomous Database in the cloud (as part of Oracle Cloud Free Tier) which is recommended for its ease of access and automation (see Chapter 4).
+Which kind of database you can use to run the Java Web example application?
+```
+A: 
+```
+You can use the Oracle Database to run the Java Web example application, specifically the HR schema within the Oracle Database. The application can be developed using either an on-premises installation of Oracle Database or Oracle Autonomous Database in the cloud (as part of Oracle Cloud Free Tier) which is recommended for its ease of access and automation (see Chapter 4).
 ```
 
 **COMMENT**: In the second answer it mentions the Oracle Cloud Free Tier.
