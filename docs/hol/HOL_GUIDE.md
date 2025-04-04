@@ -523,27 +523,28 @@ The second part of the report provides details about each single questions submi
 
 * You can get a copy of the results as an HTML page reporting the *Overall Correctness Score* and *Correctness By Topic* only, cliccking on the **Download Report** button. Click it to view how is the report. 
 
-* You can also dowload the **Full Report** and **Failures** list as a *.csv* file selecting each frame as shown in the following snapshot:
+* You can also download the **Full Report** and **Failures** list as a *.csv* file selecting each frame as shown in the following snapshot:
 
   ![csv](./images/download_csv.png)
 
-* Now let's test through an external saved test datset, that you can download [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/artifacts/getting_started-30_testset.json) with 30 questions already generated. If you want to drop some Q&A that are not meaningful in your opinion, update it, save and reload as local file, following the steps shown in this snapshot:
+11. Now let's test through an external saved test datset, that you can download [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/artifacts/getting_started-30_testset.json) with 30 questions already generated. If you want to drop some Q&A that are not meaningful in your opinion, update it, save and reload as local file, following the steps shown in this snapshot:
 
   ![load_tests](./images/load_tests.png)
 
-* Now redo the test to get the **Overall Correctness Score** with much more Q&A pairs.
+12. Now redo the test to get the **Overall Correctness Score** with much more Q&A pairs.
 
-* Let's change the Chat model parameters, setting to **0** the Model **Temperature** in the left pane, section **Language Model Parameters**. Why? The Q&As generated are usually done with a low level of creativity to be less random in the content and express the core concepts avoiding "frills". So, repeat the test to check if there are any improvements in the **Overall Correctness Score**. 
+* Let's change the Chat model parameters, setting to **0** the Model **Temperature** in the left pane, section **Language Model Parameters**. Why? Because the Q&As generated are usually done with a low level of creativity to be less random in the content provided and express the core concepts avoiding "frills". So, repeat the test to check if there are any improvements in the **Overall Correctness Score**. 
 
-* To compare with previous results, click on dropdown list unde **Previous Evaluations for...** and click on **View** button to show the overall report.
+13. To compare with previous results, click on dropdown list under **Previous Evaluations for...** and click on **View** button to show the overall report.
 
   ![previous](./images/previous.png)
 
-* Repeat the tests as many time you desire changing: **Vector Store**, **Search Type** and **Top K** to execute the same kind of tuning you have done at the previous steps with just a few interactive questions, now on a massive test on curated and comparable assets.
+14. Repeat the tests as many time you desire changing: **Vector Store**, **Search Type** and **Top K** to execute the same kind of tuning you have done at the previous steps with just a few interactive questions, now on a massive test on curated and comparable assets. *Remember to click on **Reset** button to choose again the vector store to be used during the test*.
+
 
 ## 3. Export and run the chatbot as a Spring AI microservice
 
-The rramework allows to export the chatbot defined as a ready-to-run microservice built in Java, Spring Boot and Spring AI framework, that will run independently by the framework, leveraging only the vector store table created, and the LLM servers used. In the current relase are supported only fully Ollama configuration (embeddings + chat model) or OpenAI.
+The framework allows to export the chatbot defined as a ready-to-run microservice built in Java, Spring Boot and Spring AI framework, that will run independently by the framework, leveraging only the vector store table created, and the LLM servers used. In the current release are supported only fully Ollama configuration (embeddings + chat model) or OpenAI.
 
 ### 3.1 Pre-requisites
 To run the microservice exported you need:
@@ -553,8 +554,8 @@ To run the microservice exported you need:
 
 ### 3.2 Execute the Ollama version
 
-* **Select Alias:** as **TEST1** vector store, and **LLama3.1** as **Chat model**. In this way the configuration will be based on the Ollama LLM server provider for both LLMs, embeddings and chat, and go to the **Settings** menu in the left pane side. You'll find the **Download SpringAI** button available. This
-
+* **Select Alias:** as **TEST1** vector store, and **LLama3.1** as **Chat model**. In this way the configuration will be based on the Ollama LLM server provider for both LLMs, embeddings and chat, and go to the **Settings** menu in the left pane side. You'll find the **Download SpringAI** button available.
+  
 If you'll find a message like this:
 
   ![notollama](./images/diff_llm_springai.png)
@@ -567,17 +568,17 @@ don't worry: choose for the **Chat model:** the **llama3.1** and the button will
 
 * Open a terminal and set the executable permission on the `env.sh` with `chmod 755 ./start.sh`.
 
-* Start the microservice a with:
+* Start the microservice with:
 
 ```
 ./start.sh
 ```
 
-* This microservice expose a web service that will accept HTTP GET requests at:
+* This microservice exposes a web service that will accept HTTP GET requests at:
 
   * `http://localhost:8080/v1/chat/completions`: to use RAG via OpenAI REST API;
   * `http://localhost:8080/v1/service/llm` : to chat straight with the LLM used;
-  * `http://localhost:8080/v1/service/search/`: to search for document similar to the message provided.
+  * `http://localhost:8080/v1/service/search/`: to search for documents similar to the message provided.
 
 * To test it, run a curl command like this in a new terminal:
 
@@ -588,7 +589,7 @@ don't worry: choose for the **Chat model:** the **llama3.1** and the button will
      -d '{"message": "Can I use any kind of development environment to run the example?"}'  
   ```
 
-  The response with RAG, on the **TEST1** Vector store, it will be like this:
+* The response with RAG, on the **TEST1** Vector store, it will be like this:
 
   ``` 
   {
@@ -602,7 +603,7 @@ don't worry: choose for the **Chat model:** the **llama3.1** and the button will
   }
   ```
 
-  A request without leverage RAG:
+  * A request without leverage RAG:
   ```
   curl --get --data-urlencode 'message=Can I use any kind of development environment to run the example?' localhost:8080/v1/service/llm 
   ```
@@ -620,7 +621,7 @@ Proceed as in the previous step, choosing in **Select Alias:** the **TEST2** vec
 
 
 ## 4. Backup Env
-All the condig related to the server can be exported to save the configuration as backup and imported in another server.
+All the config related to the server can be exported to save the configuration as backup or imported in another server.
 
 * Go to the left pane menu **Settings**:
 
@@ -631,7 +632,7 @@ All the condig related to the server can be exported to save the configuration a
 ![Settings_llama](images/settings_llama.png)
 
 * From this page you can:
-  * **Upload** and existing configuration file
+  * **Upload** an existing configuration file
   * **Download Settings** of the current configuration
   * Exclude by the download the credential parameters, unchecking the **Include Sensitive Settings**
 
@@ -642,7 +643,7 @@ The proposed doc to create the knowledge base is the:
 
 **[Oracle Government PaaS and IaaS Cloud Services - Service Descriptions](https://www.oracle.com/contracts/docs/us_gov_tech_cloud_3902270.pdf)**
 
- an Oracle's document related to the services available on the Oracle Cloud Infrastructure.
+an Oracle's document related to the services available on the Oracle Cloud Infrastructure.
 To test the configuration setup, we provide a 50 Q&A pairs test dataset, you can download: [here](https://raw.githubusercontent.com/oracle-samples/ai-explorer/refs/heads/cdb/docs/hol/artifacts/OCIGOV50_testset.json), to be used as a benchmarch to evaluate your chatbot quality.
 
 Enjoy!
