@@ -56,7 +56,7 @@ ALTER USER "VECTOR" QUOTA UNLIMITED ON USERS;
 EXIT;
 ```
 
-3. Bounce the database for the vector_memory_size to take effect:
+4. Bounce the database for the vector_memory_size to take effect:
 
 ```bash
 podman container restart db23ai
