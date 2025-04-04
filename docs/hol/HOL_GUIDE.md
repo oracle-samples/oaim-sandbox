@@ -472,6 +472,9 @@ It shows:
   * The chatbot's **Evaluation Settings** as it has been configured in the left side playground, before start the massive test
   * The **RAG Settings** for the Database and the relative Vector Store selected, with the name of the embedding **model** used and all the parameters set, from **chunk_size**, to the **top_k**.
   * The **Overall Correctness Score** that represents the percentage between the total number of questions submitted and the answers considered correct by the LLM used to judge the response compared the reference answer.
+
+  ![result](./images/topics.png)
+  
   * The **Correctness By Topic**: each question in the test dataset comes with a tag that represents the topic it belongs to. The list of topics it's extracted automatically at the creation step of the Q&A synthetic dataset. 
 
 The second part of the report provides details about each single questions submitted, with a focus on the collection by **Failures** and the **Full Report** list. To show all the fields, scrool from the right to left to see all info. In the following picture the second frame has been scrolled:
