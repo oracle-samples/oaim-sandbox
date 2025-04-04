@@ -366,11 +366,11 @@ On TEST2 vector store you will try with the main params set in the following way
   * Search Type: Similarity
   * Temperature: 0
 
-Q:
+*Question to submit:*
 ```
 Which Java environment should be used to run this example?
 ```
-A: 
+*Answer likely:*
 ```
 The example should be run in an integrated development environment (IDE), specifically using IntelliJ IDEA community version as recommended in the documentation. Additionally, it will require a Web server with a servlet and JSP container, with Apache Tomcat being the server suggested for deploying the JSP pages (as per the guide).
 ```
@@ -380,11 +380,11 @@ The example should be run in an integrated development environment (IDE), specif
   * Search Type: Similarity
   * Temperature: 0
 
-Q:
+*Question to submit:*
 ```
 Which Java environment should be used to run this example?
 ```
-A: 
+*Answer likely:*
 ```
 The example is recommended to be developed in an integrated development environment (IDE) like IntelliJ IDEA, specifically the community version, for ease of development. Additionally, the application uses Apache Tomcat as the web server for deploying the JavaServer Pages (JSP) technology in the HR Web application. For database connectivity, the Java code should be run on the Oracle Database, leveraging the capabilities of the Oracle JDBC Thin driver with a Java Virtual Machine (JVM) (Chapter 4 and Chapter 1).
 ```
@@ -397,12 +397,12 @@ The example is recommended to be developed in an integrated development environm
   * Search Type: Similarity
   * Temperature: 0
 
-Q:
+*Question to submit:*
 ```
 Which kind of database you can use to run the Java Web example application?
 ```
 
-A:
+*Answer likely:*
 ```
 You can use the Oracle Database, specifically the Autonomous Transaction Processing database, to run the Java Web example application. This is part of the requirements for developing the HR web application, which operates within the Oracle Database environment (see Chapter 4, "What You Need to Install").
 ```
@@ -412,11 +412,11 @@ You can use the Oracle Database, specifically the Autonomous Transaction Process
   * Search Type: Similarity
   * Temperature: 0
 
-Q:
+*Question to submit:*
 ```
 Which kind of database you can use to run the Java Web example application?
 ```
-A: 
+*Answer likely:*
 ```
 You can use the Oracle Database to run the Java Web example application, specifically the HR schema within the Oracle Database. The application can be developed using either an on-premises installation of Oracle Database or Oracle Autonomous Database in the cloud (as part of Oracle Cloud Free Tier) which is recommended for its ease of access and automation (see Chapter 4).
 ```
