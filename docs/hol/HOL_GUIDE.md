@@ -111,7 +111,7 @@ git clone --branch cdb --single-branch https://github.com/oracle-samples/ai-expl
 
 #### 1.4.1 Python version
 
-The framework requires exactly **Python 3.11**, neither older nor newer.  Download and follow the instruction **[here](https://www.python.org/downloads/release/python-3110/)** to install it on your system.
+The framework requires exactly **Python 3.11**, neither older nor newer.  Download and follow the instruction for **[Python 3.11 Download](https://www.python.org/downloads/release/python-3110/)** to install it on your system.
 
 ##### 1.4.1.1 Install Python 3.11 on macOS
 If you are using a recent version of macOS, you will need to install that version side by side with the builtin one. In a shell run:
