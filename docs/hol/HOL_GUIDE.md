@@ -115,7 +115,7 @@ In the next steps of this lab, you will need to check the items inside your data
 ### 1.2 LLM runtime
 We'll to interact with different LLMs and we are going to use **Ollama** for running them.  
 
-> Note: The lab instructor will provide you with details to connect to a shared, hosted Ollama instance.  If you are using the hosted instance, you can skip ahead to the next section.
+> Note: The lab instructor will provide you with details to connect to a shared, hosted Ollama instance.  If you are using the hosted instance, you can skip ahead to the next section **1.5**.
 
 If you prefer to run Ollama on your own local machine, and you have the necessary resources, including a suitable GPU and adequate disk space for the models, follow the instructions **[here](https://ollama.com/download)** according your operating system.
 
