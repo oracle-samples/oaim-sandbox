@@ -156,7 +156,10 @@ If you are using a recent version of macOS, you will need to install that versio
 ##### 1.4.1.2 Install Python 3.11 on Windows
 Open a Windows Subsystem for Linux terminal (this guide assumes you are using Ubuntu as your Linux distribution).
 
-XXXXX TODO
+```bash
+sudo apt install python3.11 python3.11-venv
+python3.11 --version
+```
 
 #### 1.4.2 Create environment
 
@@ -182,7 +185,7 @@ Always in the directory `ai-explorer` run:
 
 ### 1.5 Startup 
 
-* Create a `launch_server.sh` file in the directory `ai-explorer`:
+* Create a `launch_server.sh` file in the directory `ai-explorer` to set your environment variables (see below for details):
  
   ```bash
   export API_SERVER_KEY=<API_SERVER_KEY>
@@ -200,38 +203,47 @@ Always in the directory `ai-explorer` run:
   python launch_server.py
   ```
 
-The script `launch_server.sh` hold env variables needed to connect the DB and OpenAI and the `API_SERVER_KEY` to authenticate the client. Set one, for example, `abc12345` and use the same in the following `launch_client.sh`. Set the `OPENAI_API_KEY` in the server script. 
-If, for any reason, you need to adapt the DBMS to a different instance and setup, change the variables accordingly.
+  The script `launch_server.sh` holds environment variables needed to connect the database and OpenAI, and the `API_SERVER_KEY` to authenticate the client. Set one, for example, `abc12345` and use the same in the following `launch_client.sh`. 
 
-* Create a `launch_client.sh` file in the directory `ai-explorer` :
+  > Note: You can choose any value for the `API_SERVER_KEY`, but it must match in the server and client scripts.
 
-```bash
-export API_SERVER_KEY=<API_SERVER_KEY>
-cd src
-source .venv/bin/activate
-streamlit run launch_client.py --server.port 8502
-```
+  Set the `OPENAI_API_KEY` in the server script.  We recommend that you create an API Key for this hands-on lab that you can easily remove when you are finished the lab.
 
-  Set the same `<API_SERVER_KEY>` to be authorized on the framework.
+  If, for any reason, you need to adapt the DBMS to a different instance and setup, change the variables accordingly.
+
+  > Note: If you want to use the hosted Ollama server, use the connection details that the lab instructor gave you.  Only use localhost if you are running Ollama locally on your own machine.
+
+* Create a `launch_client.sh` file in the directory `ai-explorer`:
+
+  ```bash
+  export API_SERVER_KEY=<API_SERVER_KEY>
+  cd src
+  source .venv/bin/activate
+  streamlit run launch_client.py --server.port 8502
+  ```
+
+  Set the same `<API_SERVER_KEY>` as you used in the server script, so that the client can authenticate to the server.
+
+#### 1.5.1 Start the server
 
 * In a separate shell, in the directory `ai-explorer` run:
 
     ```bash
-    . ./launch_server.sh
+    ./launch_server.sh
     ```
 
   ⚠️ **Warning**
 
-    On MS Windows, if you will have an exception starting the server, please run this command and retry:
+    On Windows, you may see an exception starting the server. Please run this command and retry:
 
     ```bash
     pip3.11 install platformdirs
     ```
-
+#### 1.5.2 Start the client
     
 * in another shell, in dir `ai-explorer` run:
   ```bash
-  . ./launch_client.sh
+  ./launch_client.sh
   ```
 
 ## 2. Explore the env
