@@ -169,7 +169,7 @@ class RagSettings(DatabaseVectorStorage):
     """Store RAG Settings incl Vector Storage"""
 
     rag_enabled: bool = Field(default=False, description="RAG Enabled")
-    grading: bool = Field(default=False, description="Grade RAG Results")
+    grading: bool = Field(default=True, description="Grade RAG Results")
     search_type: Literal["Similarity", "Similarity Score Threshold", "Maximal Marginal Relevance"] = Field(
         default="Similarity", description="Search Type"
     )
