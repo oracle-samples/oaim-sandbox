@@ -10,7 +10,7 @@ To proceed you need a Container Runtime e.g. docker/podman.
 ---
 #### 1.1.1 Set up macOS option
 This lab works with a a Container Runtime as mentioned before. If you want to use a lighter VM, you have the option to use Colima too. In this case you need as a pre-requisite to install **docker**.
-Start the container runtime engine with a new profile. If you already have one that you want use, please double-check that it uses 4 CPUs and 8GB of memory at minimum. Otherwise:
+Start the container runtime engine with a new profile. If you already have one that you want to use, please double-check that it uses 4 CPUs and 8GB of memory at minimum. Otherwise:
 
 ```bash
 brew install colima
