@@ -35,12 +35,13 @@ colima start x86
 podman run -d --name db23ai -p 1521:1521 container-registry.oracle.com/database/free:latest
 ```
 
-2. Alter the vector_memory_size parameter and create a new database user:
+2. Connect to the database instance via sqlplus:
 
 ```bash
 podman exec -it db23ai sqlplus '/ as sysdba'
 ```
 
+3. Alter the vector_memory_size parameter and create a new database user:
 ```bash
 alter system set vector_memory_size=512M scope=spfile;
 
