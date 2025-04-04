@@ -5,10 +5,23 @@
 ### 1.1 Database 
 
 The AI Vector Search in Oracle Database 23ai provides the ability to store and query private business data using a natural language interface. This framework uses these capabilities to provide more accurate and relevant LLM responses via Retrieval-Augmented Generation (**RAG**). [Oracle Database 23ai Free](https://www.oracle.com/database/free/get-started/) provides an ideal, no-cost vector store for this walkthrough.
-To proceed you need a Container Runtime e.g. docker/podman.
+
+#### Requirements
+
+To complete this hands-on lab, you need the following:
+
+- macOS or Windows (with Windows Subsystem for Linux),
+- 32 GB RAM minimum recommended,
+- 10 GB free disk space recommended,
+- a Container runtime like Docker or Podman.
+
+> Note: If you have sufficient resources, you may run the LLMs locally using Ollama (or similar).  If you do not have an adequate GPU and storage, you can use a hosted Ollama instance.  The lab instructor will give you details to connect to this instance.
 
 ---
-#### 1.1.1 Set up macOS option
+#### 1.1.1 Set up for macOS option
+
+> Note: If you are using Windows, please skip to the next section.
+
 This lab works with a a Container Runtime as mentioned before. If you want to use a lighter VM, you have the option to use Colima too. In this case you need as a pre-requisite to install **docker**.
 Start the container runtime engine with a new profile. If you already have one that you want to use, please double-check that it uses 4 CPUs and 8GB of memory at minimum. Otherwise:
 
@@ -27,7 +40,18 @@ colima start x86
 
 ---
 
-#### 1.1.2 Run Oracle Database 23ai Free container:
+#### 1.1.2 Setup for Windows option
+
+This lab requires you to run one or more containers on your local machine.  Windows Subsystem for Linux is required, with a Linux distribution like Ubuntu.
+
+The instructions below use `podman`.  If you are using a different container runtime, you may wish to create an alias so you can copy and paste commands from the instructions:
+
+```
+alias podman=docker
+```
+
+
+#### 1.1.3 Run Oracle Database 23ai Free container:
 
 1. Start the container and wait for state `(healthy)`:
 
@@ -35,7 +59,7 @@ colima start x86
 podman run -d --name db23ai -p 1521:1521 container-registry.oracle.com/database/free:latest
 ```
 
-2. Connect to the database instance via sqlplus:
+2. Connect to the database instance as the SYS user using SQL*Plus:
 
 ```bash
 podman exec -it db23ai sqlplus '/ as sysdba'
@@ -65,7 +89,7 @@ podman container restart db23ai
 ##### 1.1.2.1 Optional: Install VS Code SQL Developer Plug-in and connect to the DB
 In the next steps of this lab, you will need to check the items inside your database 23ai. 
 
-1. In order to do so, install the VS Code **SQL Developer** plugin:
+1. In order to do so, install the VS Code **SQL Developer** plugin by opening the Extensions page (Ctrl-Shift-X or equivalent) and search for "sql developer":
 
 ![sql-developer-plugin](images/sql-developer-plugin.png)
 
@@ -82,12 +106,18 @@ In the next steps of this lab, you will need to check the items inside your data
 * **Hostname**: *localhost*
 * **Service Name**: *FREEPDB1*
 
+> Note: Depending on your configuration, you may need to use the IP address of the container in the hostname field, instead of `localhost`.  To find the IP address, use the command `podman inspect db23ai | grep IPA`.
+
 ![test-connection](images/test-connection.png)
 
 4. Once all the details have been submitted you can click on the *Test* button below. If all the credentials are correct, a prompt message stating: `Test passed for connection: db23ai` will appear. You can then click on the *Connect* button to finally set up the connection
 
 ### 1.2 LLM runtime
-We'll interact with different LLMs locally and we are going to use **Ollama** for running them. If Ollama isn't already installed in your system, follow the instruction **[here](https://ollama.com/download)** according to your operating system.
+We'll to interact with different LLMs and we are going to use **Ollama** for running them.  
+
+> Note: The lab instructor will provide you with details to connect to a shared, hosted Ollama instance.  If you are using the hosted instance, you can skip ahead to the next section.
+
+If you prefer to run Ollama on your own local machine, and you have the necessary resources, including a suitable GPU and adequate disk space for the models, follow the instructions **[here](https://ollama.com/download)** according your operating system.
 
 We need to install some LLMs in Ollama (llama3.1 and mxbai for the embeddings). To do this step, open a new shell and run:
 
@@ -109,6 +139,8 @@ git clone --branch cdb --single-branch https://github.com/oracle-samples/ai-expl
 
 ### 1.4 Install requirements:
 
+> Note: You can run AI Explorer locally on your machine, or in a container.  This section describes the local installation.  If you want to use a container, skip ahead to the next section.
+
 #### 1.4.1 Python version
 
 The framework requires exactly **Python 3.11**, neither older nor newer.  Download and follow the instruction for **[Python 3.11 Download](https://www.python.org/downloads/release/python-3110/)** to install it on your system.
@@ -120,6 +152,14 @@ If you are using a recent version of macOS, you will need to install that versio
   brew install python@3.11
   python3.11 --version
   ```
+
+##### 1.4.1.2 Install Python 3.11 on Windows
+Open a Windows Subsystem for Linux terminal (this guide assumes you are using Ubuntu as your Linux distribution).
+
+```bash
+sudo apt install python3.11 python3.11-venv
+python3.11 --version
+```
 
 #### 1.4.2 Create environment
 
@@ -145,7 +185,7 @@ Always in the directory `ai-explorer` run:
 
 ### 1.5 Startup 
 
-* Create a `launch_server.sh` file in the directory `ai-explorer`:
+* Create a `launch_server.sh` file in the directory `ai-explorer` to set your environment variables (see below for details):
  
   ```bash
   export API_SERVER_KEY=<API_SERVER_KEY>
@@ -163,38 +203,60 @@ Always in the directory `ai-explorer` run:
   python launch_server.py
   ```
 
-The script `launch_server.sh` hold env variables needed to connect the DB and OpenAI and the `API_SERVER_KEY` to authenticate the client. Set one, for example, `abc12345` and use the same in the following `launch_client.sh`. Set the `OPENAI_API_KEY` in the server script. 
-If, for any reason, you need to adapt the DBMS to a different instance and setup, change the variables accordingly.
+  Make sure the script is executable:
 
-* Create a `launch_client.sh` file in the directory `ai-explorer` :
+  ```bash
+  chmod +x launch_server.sh
+  ```
 
-```bash
-export API_SERVER_KEY=<API_SERVER_KEY>
-cd src
-source .venv/bin/activate
-streamlit run launch_client.py --server.port 8502
-```
+  The script `launch_server.sh` holds environment variables needed to connect the database and OpenAI, and the `API_SERVER_KEY` to authenticate the client. Set one, for example, `abc12345` and use the same in the following `launch_client.sh`. 
 
-  Set the same `<API_SERVER_KEY>` to be authorized on the framework.
+  > Note: You can choose any value for the `API_SERVER_KEY`, but it must match in the server and client scripts.
+
+  Set the `OPENAI_API_KEY` in the server script.  We recommend that you create an API Key for this hands-on lab that you can easily remove when you are finished the lab.
+
+  If, for any reason, you need to adapt the DBMS to a different instance and setup, change the variables accordingly.
+
+  > Note: If you want to use the hosted Ollama server, use the connection details that the lab instructor gave you.  Only use localhost if you are running Ollama locally on your own machine.
+
+* Create a `launch_client.sh` file in the directory `ai-explorer`:
+
+  ```bash
+  export API_SERVER_KEY=<API_SERVER_KEY>
+  cd src
+  source .venv/bin/activate
+  streamlit run launch_client.py --server.port 8502
+  ```
+
+  Set the same `<API_SERVER_KEY>` as you used in the server script, so that the client can authenticate to the server.
+
+
+  Make sure the script is executable:
+
+  ```bash
+  chmod +x launch_client.sh
+  ```
+
+#### 1.5.1 Start the server
 
 * In a separate shell, in the directory `ai-explorer` run:
 
     ```bash
-    . ./launch_server.sh
+    ./launch_server.sh
     ```
 
   ⚠️ **Warning**
 
-    On MS Windows, if you will have an exception starting the server, please run this command and retry:
+    On Windows, you may see an exception starting the server. Please run this command and retry:
 
     ```bash
     pip3.11 install platformdirs
     ```
-
+#### 1.5.2 Start the client
     
 * in another shell, in dir `ai-explorer` run:
   ```bash
-  . ./launch_client.sh
+  ./launch_client.sh
   ```
 
 ## 2. Explore the env
