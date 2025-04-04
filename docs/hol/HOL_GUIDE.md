@@ -251,7 +251,7 @@ Always in the directory `ai-explorer` run:
     ```bash
     pip3.11 install platformdirs
     ```
-##### 1.4.4.1  Start the client
+##### 1.4.4.2  Start the client
     
 * in another shell, in dir `ai-explorer` run:
   ```bash
