@@ -29,7 +29,7 @@ colima start x86
 
 #### 1.1.2 Run Oracle Database 23ai Free container:
 
-1. Start the container:
+1. Start the container and wait for state `(healthy)`:
 
 ```bash
 podman run -d --name db23ai -p 1521:1521 container-registry.oracle.com/database/free:latest
