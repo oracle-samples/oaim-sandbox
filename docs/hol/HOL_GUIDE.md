@@ -62,15 +62,18 @@ EXIT;
 podman container restart db23ai
 ```
 
-In the next steps of this lab, you will need to check the items inside your database 23ai. In order to do so, install the VS Code **SQL Developer** plugin:
+##### 1.1.2.1 Optional: Install VS Code SQL Developer Plug-in and connect to the DB
+In the next steps of this lab, you will need to check the items inside your database 23ai. 
+
+1. In order to do so, install the VS Code **SQL Developer** plugin:
 
 ![sql-developer-plugin](images/sql-developer-plugin.png)
 
-Once you have installed the VS Code plugin, navigate to it and click on the "+" button to setup a new connection:
+2. Once you have installed the VS Code plugin, navigate to it and click on the "+" button to setup a new connection:
 
 ![add-connection](images/add-connection.png)
 
-A prompt will appear. You will have to add the details for your connection by editing these fields:
+3. A prompt will appear. You will have to add the details for your connection by editing these fields:
 
 * **Connection Name**: *db23ai*, or whatever name you would like to use
 * **Username**: *vector* (the username we set up with the SQL commands from above)
@@ -81,7 +84,7 @@ A prompt will appear. You will have to add the details for your connection by ed
 
 ![test-connection](images/test-connection.png)
 
-Once all the details have been submitted you can click on the *Test* button below. If all the credentials are correct, a prompt message stating: `Test passed for connection: db23ai` will appear. You can then click on the *Connect* button to finally set up the connection
+4. Once all the details have been submitted you can click on the *Test* button below. If all the credentials are correct, a prompt message stating: `Test passed for connection: db23ai` will appear. You can then click on the *Connect* button to finally set up the connection
 
 ### 1.2 LLM runtime
 We'll to interact with different LLMs locally and we are going to use **Ollama** for running them. If Ollama isn't already installed in your system, follow the instruction **[here](https://ollama.com/download)** according your operating system.
