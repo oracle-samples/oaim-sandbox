@@ -139,7 +139,7 @@ git clone --branch cdb --single-branch https://github.com/oracle-samples/ai-expl
 
 ### 1.4 Install requirements:
 
-> Note: You can run AI Explorer locally on your machine, or in a container.  This section describes the local installation.  If you want to use a container, skip ahead to the next section.
+> Note: You can run AI Explorer locally on your machine, or in a container.  This section describes the local **bare metal** installation.  If you want to use a container, skip ahead to the next section.
 
 #### 1.4.1 Python version
 
@@ -182,8 +182,7 @@ Always in the directory `ai-explorer` run:
    source .venv/bin/activate
    ```
 
-
-### 1.5 Startup 
+#### 1.4.4 Startup 
 
 * Create a `launch_server.sh` file in the directory `ai-explorer` to set your environment variables (see below for details):
  
@@ -237,7 +236,7 @@ Always in the directory `ai-explorer` run:
   chmod +x launch_client.sh
   ```
 
-#### 1.5.1 Start the server
+#### 1.4.5 Start the server
 
 * In a separate shell, in the directory `ai-explorer` run:
 
@@ -252,12 +251,36 @@ Always in the directory `ai-explorer` run:
     ```bash
     pip3.11 install platformdirs
     ```
-#### 1.5.2 Start the client
+#### 1.4.6 Start the client
     
 * in another shell, in dir `ai-explorer` run:
   ```bash
   ./launch_client.sh
   ```
+
+### 1.5 Container Installation
+
+To run the application in a container; download the [source](https://github.com/oracle-samples/ai-explorer):
+
+1. Build the all-in-one image.
+
+   From the `src/` directory, build image:
+
+   ```bash
+   cd src/
+   podman build -t ai-explorer-aio .
+   ```
+
+1. Start the Container:
+
+   ```bash
+   podman run -p 8501:8501 -it --rm ai-explorer-aio
+   ```
+
+1. Navigate to `http://localhost:8501`.
+
+1. [Configure](https://oracle-samples.github.io/ai-explorer/client/configuration/index.html) the **Explorer**.
+
 
 ## 2. Explore the env
 In a browser, open the link: `http://localhost:8502/`
