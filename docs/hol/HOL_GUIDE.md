@@ -206,10 +206,11 @@ Let's check if the DB is correctly connected:
 
 ![DB](images/db.jpg)
 
-* You should see the message: `Current Status: Connected`
+You should see the message: `Current Status: Connected`
 
-### 2.2 OCI Credentials
+### 2.2 Optional: OCI Credentials
 
+In this lab you will not use OCI models. Anyway, if you have an active OCI tenant, these are the instruction to use it.
 In the OCI configuration tab, you can add your Oracle Cloud Infrastructure (OCI) credentials to authenticate with your OCI tenancy. This will enable access to objects and documents stored in your cloud compartments.
 
 ![OCI](images/oci.jpg)
