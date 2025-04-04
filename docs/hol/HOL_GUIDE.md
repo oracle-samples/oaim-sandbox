@@ -355,7 +355,7 @@ Now that we have two vector stores, let's start to test the second knowledge bas
 
 * In **Select Alias** dropdown box, select the `TEST2` vector store table. You will see the rest of the fields of **Vector Store** menu automatically populated, since each of them represent a search parameter that could be used to select the vector store created. In this case, the alias is enough to determine what you are looking for but, from the other side, you have the evidence of the parameteres used to create the chunk and related embeddings vector.
 
-* Let's ask again the same questions to which the LLM has provided generic anwers since not related to the document loaded that the LLM ignored in its training or not enough addressed in the questions:
+* Let's ask again the same previous questions to which the LLM has provided generic answers since it's likely that the LLM didn't use during its training. Now, with the document loaded in the datastore selected, let's see the difference:
 
 ```
 Which kind of database you can use to run the Java Web example application?
@@ -365,7 +365,7 @@ Which kind of database you can use to run the Java Web example application?
 Which Java environment should be used to run this example?
 ```
 
-On TEST2 vector store you will try with the main params set in the following way, how will change the quality of the answers. 
+On `TEST2` vector store you will try with the main params set in the following way, how will change the quality of the answers. 
 **IMPORTANT**: Clear history, pressing button **Clear** after each question, also if you change the parameters and repeat the same question.
 
   * LLM:gpt-4o-mini
@@ -430,42 +430,46 @@ You can use the Oracle Database to run the Java Web example application, specifi
 
 **COMMENT**: In the second answer it mentions the Oracle Cloud Free Tier.
 
-* Conclusion: we can suppose that 10 chunks as TopK similar vector represents a better parameters than the deafult 4.
+* NOTICE: *since the LLMs are probabilistic models, you would have slightly different answers*.
 
-* Play with Temperature to discover how much become reacher in terms of expressions the answers provided.
+* Conclusion: we can suppose that 10 chunks, as TopK similar vector, represents a better parameter than the deafult 4.
 
-* Follow a question by another like "more" to have the evidence that the history is considered providing the answer in the conversation.
+* Play with Temperature to discover how much become reacher in terms of expression the answers provided.
 
-* Clear history, pressing button **Clear**
+* Follow a question by another like "more info" to have the evidence that the history is considered providing the answer in the conversation.
+
+* Clear history, pressing button **Clear**.
 
 ### 2.6.1 OLLAMA test.
-Repeat the tests with local LLMs based on the OLLAMA server and vector store: `TEST1`. Click on **Reset** button to choose the new vector store table. Then choose **llama3.1** in **Chat model** dropdown menu to have the same LLM provider.
+Repeat the tests with local LLMs based on the OLLAMA server and the vector store: `TEST1`. Click on **Reset** button to choose the new vector store table. Then choose **llama3.1** in **Chat model** dropdown menu to have the same LLM provider.
  
 
 ### 2.7 Testbed
 We are confident that changing some parameters the quality and accuracy of the answers improve. But are you sure that on a large scale deployment your setup it's reliable on hundreds or thousands of different questions?
-Testbed helps you to massive test your chatbot, generating for you a Q&A test dataset and automatically try on your current configuration. Let's access to the Testbed from left pane menu:
+Testbed helps you to massively test your chatbot, generating for you a Q&A test dataset and automatically try on your current chat configuration. Let's access to the Testbed from left pane menu:
 
 ![testbed](./images/tesbed.png)
 
-#### Generate a Q&A Test dataset
-The platform allows to generate as many questions and answer you desire, based on a single document, that it's part of the knowledge base you have store as vector store with their own embeddings. Selecting the proper radio button **Generate Q&A Test Set** you will access to the framework test dataset generation capabilities:
+#### 2.7.1 Generate a Q&A Test dataset
+The platform allows to generate as many questions and answer you desire, based on a single document, that it's part of the knowledge base you have store as vector store with their own embeddings. 
+
+1. Selecting the proper radio button **Generate Q&A Test Set** you will access to the framework test dataset generation capabilities:
 
 ![generate](./images/generatenew.png)
 
-* Upload the document used to create the vector store, getting from this [this link](https://docs.oracle.com/en/database/oracle/oracle-database/23/tdpjd/get-started-java-development.pdf).
+2. Upload the document used to create the vector store, getting from this [this link](https://docs.oracle.com/en/database/oracle/oracle-database/23/tdpjd/get-started-java-development.pdf).
 
-* Increase the number to be generated to 10 or more. Take in consideration that the process it's quite long, especially if you will use local LLM for Q&A generation without enough hardware capacity. In case of OpenAI remote model, the process it's less affected by increasing the number of Q&As than the private LLM approach.
+3. Increase the number to be generated to 10 or more. Take in consideration that the process it's quite long, especially if you will use local LLM for Q&A generation without enough hardware capacity. In case of OpenAI remote model, the process it's less affected by increasing the number of Q&As than the private LLM approach.
 
-* Leave the default option for:
+4. Leave the default option for:
   * Q&A Language Model: **gpt-4o-mini**
   * Q&A Embedding Model: **text-embedding-3-small**
 
-* Click on **Generate Q&A** button and wait up to the process is over:
+5. Click on **Generate Q&A** button and wait up to the process is over:
 
   ![patience](./images/patience.png)
 
-* Update the **Test Set Name**, changing the default one automatically generated, in order to identify more easily later the test dataset for repeated tests on different chatbot configurations. For example, from:
+6. Update the **Test Set Name**, changing the default one automatically generated, in order to identify more easily later the test dataset for repeated tests on different chatbot configurations. For example, from:
 
   ![default_test_set](./images/default_test_set.png)
 
@@ -473,34 +477,34 @@ change in :
 
   ![test_rename](./images/test_rename.png)
 
-* Browse the questions and answers generated:
+7. Browse the questions and answers generated:
 
   ![qa_browse](./images/qa_browse.png)
 
-  Note that the **Question** and the **Answer** fields are editable, since you can correct at your convenience the proposed Q&A pairs based on the **Context** that has been extracted randomly and not editable, as well as the **Metadata** that are set by the Testbed engine. In Metadata field you'll find a **topic** tag that classify the Q&A. The topic list is generated automatically analyzing the text and added to each Q&A. It will used in the final report to drilldown the **Overall Correctness Score** and identify area in which the chatbot lacks of precision.
-  The **Download** allow to export and modify in each part the Q&A dataset generated. Open it in Visual Studio Code to see the content:
+  Note that the **Question** and the **Answer** fields are editable, since you can correct at your convenience the proposed Q&A pairs based on the **Context** that has been extracted randomly and not editable, as well as the **Metadata** that are set by the Testbed engine. In Metadata field you'll find a **topic** tag that classify the Q&A. The topic list is generated automatically analyzing the text and added to each Q&A. It will be used in the final report to drilldown the **Overall Correctness Score** and identify the area in which the chatbot lacks of precision.
+  The **Download** allows to export and modify the Q&A dataset generated in every part. Open it in Visual Studio Code to see the content:
 
   ![qa_json](./images/qa_json.png)
 
-* On the left pane menu:
+8. On the left pane menu:
 
   * Under **Language Model Parameters**, select in the **Chat model** dropdown list **gpt-4o-mini**
   * **Enable RAG?** if for any reason hasn't been selected
   * Choose in the **Select Alias** dropdown list the **TEST2** value.
   * Leave unchanged the default parameters on the left pane.
 
-* Leaving the default one model to judge, **gpt-4o-mini**, click on **Start Evaluation** button and wait a few seconds. All the questions will be submitted to the chatbot as configured in the left pane:
+9. Leaving the default one model to judge, **gpt-4o-mini**, click on **Start Evaluation** button and wait a few seconds. All the questions will be submitted to the chatbot as configured in the left pane:
 
   ![start_eval](./images/start_eval.png)
 
-* Let's examine the result report, starting from the first part:
+10. Let's examine the result report, starting from the first part:
 
   ![result](./images/result_topic.png)
 
 It shows:
-  * The chatbot's **Evaluation Settings** as it has been configured in the left side playground, before start the massive test
-  * The **RAG Settings** for the Database and the relative Vector Store selected, with the name of the embedding **model** used and all the parameters set, from **chunk_size**, to the **top_k**.
-  * The **Overall Correctness Score** that represents the percentage between the total number of questions submitted and the answers considered correct by the LLM used to judge the response compared the reference answer.
+  * The chatbot's **Evaluation Settings** as it has been configured in the left side playground, before start the massive test.
+  * The **RAG Settings** for the Database and the relative Vector Store selected, with the name of the embedding **model** used and all the parameters set, from **chunk_size** to the **top_k**.
+  * The **Overall Correctness Score** represents the percentage between the total number of questions submitted, and the answers considered correct by the LLM used to judge the response compared to the reference answer.
 
   ![result](./images/topics.png)
   
@@ -510,7 +514,7 @@ The second part of the report provides details about each single questions submi
 
   ![result](./images/result_question.png)
 
-  * **question**: question submitted
+  * **question**: questions submitted
   * **reference_asnwer**: represents the anwers that is considered correct an we aspect quite similar to the answer will be provided by the agent
   * **reference_context**: the section of document extracted and used to create the Q&A
   * **agent_answer**: the answer provided by the chatbot with the current configuration and knowledge base as vectorstore
