@@ -436,6 +436,14 @@ The platform allows to generate as many questions and answer you desire, based o
 
   ![patience](./images/patience.png)
 
+* Update the **Test Set Name**, changing the default one automatically generated, in order to identify more easily later the test dataset for repeated tests on different chatbot configurations. For example, from:
+
+  ![default_test_set](./images/default_test_set.png)
+
+change in :
+
+  ![test_rename](./images/test_rename.png)
+
 * Browse the questions and answers generated:
 
   ![qa_browse](./images/qa_browse.png)
@@ -444,14 +452,6 @@ The platform allows to generate as many questions and answer you desire, based o
   The **Download** allow to export and modify in each part the Q&A dataset generated. Open it in Visual Studio Code to see the content:
 
   ![qa_json](./images/qa_json.png)
-
-* Update the **Test Set Name**, changing the default one automatically generated, in order to identify more easily later the test dataset for repeated tests on different chatbot configurations. For example, from:
-
-  ![default_test_set](./images/default_test_set.png)
-
-change in :
-
-  ![test_rename](./images/test_rename.png)
 
 * On the left pane menu:
 
