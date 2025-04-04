@@ -394,7 +394,7 @@ A: You can use the Oracle Database to run the Java Web example application, spec
 * Clear history, pressing button **Clear**
 
 ### 2.6.1 OLLAMA test.
-Repeat the tests with local LLMs based on the OLLAMA server and vector store: `TEST1`, and choose **llama3.1** in **Chat model** dropdown menu to have the same LLM provider.
+Repeat the tests with local LLMs based on the OLLAMA server and vector store: `TEST1`. Click on **Reset** button to choose the new vector store table. Then choose **llama3.1** in **Chat model** dropdown menu to have the same LLM provider.
  
 
 ### 2.7 Testbed
